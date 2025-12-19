@@ -283,7 +283,7 @@ function CanvasViewInner() {
                         data: { title: url, url: url }
                     };
                     addNode(newNode);
-                    nodesApi.processUrl(url).then(apiNode => {
+                    nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(apiNode => {
                         useGraphStore.getState().updateNode(nodeId, {
                             title: apiNode.title,
                             snippet: apiNode.content?.slice(0, 100),
@@ -476,7 +476,9 @@ function CanvasViewInner() {
         const newEdge = {
             ...oldEdge,
             ...newConnection,
-            id: `e${newConnection.source}-${newConnection.target}`
+            id: `e${newConnection.source}-${newConnection.target}` // Kept as simple ID to avoid breaking existing edges if necessary, but actually we should use the same logic as onConnect. Wait, the user didn't complain about this, but it's better for consistency. 
+            // Actually, if I change the ID logic now, it might cause issues with existing edges in the DB. 
+            // Let's just ensure handles are preserved. They are.
         } as FlowEdge;
         addEdge(newEdge);
     }, []);
@@ -551,10 +553,8 @@ function CanvasViewInner() {
 
         if (action === 'note') {
             flowPos.x -= 225; // Center horizontally (450/2)
-            // y is kept as is to align the top with the drop point
         } else {
             flowPos.x -= 100; // Default center horizontally
-            // y is kept as is
         }
 
         switch (action) {
@@ -576,7 +576,7 @@ function CanvasViewInner() {
                         data: { title: 'Loading...', url },
                     };
                     // Trigger URL processing
-                    nodesApi.processUrl(url).then(result => {
+                    nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
                         useGraphStore.getState().updateNode(nodeId, {
                             title: result.title,
                             snippet: result.snippet,
@@ -596,13 +596,12 @@ function CanvasViewInner() {
                 const updatedEdge = {
                     ...reconnectingEdgeRef.current,
                     target: newNode.id,
-                    targetHandle: null // Reset target handle since we're connecting to node center/default
+                    targetHandle: null
                 };
                 addEdge(updatedEdge);
             }
             // If new connection, create edge from source
             else if (sourceNodeId) {
-                // Determine sensible target handle based on source handle position
                 let targetHandleId = 'top';
                 if (sourceHandleId === 'right') targetHandleId = 'left';
                 else if (sourceHandleId === 'left') targetHandleId = 'right';
@@ -619,17 +618,20 @@ function CanvasViewInner() {
                 } as FlowEdge);
             }
 
-            // Sync to backend
-            nodesApi.create({
-                id: newNode.id,
-                type: newNode.type,
-                title: newNode.data.title || 'Untitled',
-                data: {
-                    ...newNode.data,
-                    position: newNode.position,
-                    whiteboard_id: activeWhiteboardId,
-                },
-            }).catch(console.error);
+            // Sync to backend (only for non-article or wait for article?)
+            // For notes, we sync now. For articles, processUrl handles it.
+            if (action !== 'article') {
+                nodesApi.create({
+                    id: newNode.id,
+                    type: newNode.type,
+                    title: newNode.data.title || 'Untitled',
+                    data: {
+                        ...newNode.data,
+                        position: newNode.position,
+                        whiteboard_id: activeWhiteboardId,
+                    },
+                }).catch(console.error);
+            }
         }
 
         reconnectingEdgeRef.current = null;
@@ -639,10 +641,13 @@ function CanvasViewInner() {
 
     // Auto-grouping: when a node is dropped, check if it's inside a group
     const onNodeDragStop = useCallback((_event: React.MouseEvent, node: any) => {
-        if (node.type === 'group') return; // Don't group a group into itself
+        if (node.type === 'group') return;
 
         const groupNodes = nodes.filter(n => n.type === 'group');
         const updateNodeFull = useGraphStore.getState().updateNodeFull;
+
+        let finalParentId = node.parentId;
+        let finalPosition = node.position;
 
         // Check if node is inside any group's bounding box
         for (const group of groupNodes) {
@@ -658,7 +663,6 @@ function CanvasViewInner() {
             const nodeWidth = node.width || 200;
             const nodeHeight = node.height || 100;
 
-            // Check if node center is inside group bounds
             const nodeCenterX = nodeX + nodeWidth / 2;
             const nodeCenterY = nodeY + nodeHeight / 2;
 
@@ -669,18 +673,18 @@ function CanvasViewInner() {
                 nodeCenterY < groupY + groupHeight;
 
             if (isInside && node.parentId !== group.id) {
-                // Add to group: set parentId and convert position to relative
-                const relativePosition = {
+                finalParentId = group.id;
+                finalPosition = {
                     x: nodeX - groupX,
                     y: nodeY - groupY
                 };
-                updateNodeFull(node.id, { parentId: group.id, position: relativePosition });
-                return;
+                updateNodeFull(node.id, { parentId: finalParentId, position: finalPosition });
+                break;
             }
         }
 
         // If node has a parentId but is now outside its parent, remove from group
-        if (node.parentId) {
+        if (node.parentId && finalParentId === node.parentId) {
             const parentGroup = groupNodes.find(g => g.id === node.parentId);
             if (parentGroup) {
                 const groupWidth = Number(parentGroup.style?.width) || 400;
@@ -698,15 +702,24 @@ function CanvasViewInner() {
                     nodeCenterY < groupHeight;
 
                 if (!isStillInside) {
-                    // Remove from group: convert position to absolute
-                    const absolutePosition = {
+                    finalParentId = undefined;
+                    finalPosition = {
                         x: parentGroup.position.x + node.position.x,
                         y: parentGroup.position.y + node.position.y
                     };
-                    updateNodeFull(node.id, { parentId: undefined, position: absolutePosition });
+                    updateNodeFull(node.id, { parentId: finalParentId, position: finalPosition });
                 }
             }
         }
+
+        // Persist position and parent
+        nodesApi.update(node.id, {
+            metadata: {
+                ...node.data,
+                position: finalPosition,
+                parentId: finalParentId
+            }
+        }).catch(err => console.error("Failed to persist node update:", err));
     }, [nodes]);
 
 
