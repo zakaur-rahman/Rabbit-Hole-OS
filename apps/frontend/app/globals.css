@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ReactFlow Group Node transparent background override */
+.react-flow__node-group {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Ensure handles are always interactive and above other elements */
+.react-flow__handle {
+  z-index: 100 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure nodes inside groups can still receive connections */
+.react-flow__node {
+  pointer-events: auto !important;
+}
+
+/* Selected Edge Styles */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #22c55e !important;
+  /* Green-500 */
+  stroke-width: 3 !important;
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+.react-flow__edge.selected .react-flow__edge-textbg {
+  fill: #14532d !important;
+  /* Green-900 */
+}
+
+.react-flow__edge.selected .react-flow__edge-text {
+  fill: #fff !important;
+}
+
+/* Edge Hover Styles */
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: #4ade80 !important;
+  /* Green-400 (lighter than selection) */
+  stroke-width: 3 !important;
+  transition: stroke 0.2s, stroke-width 0.2s;
+  cursor: pointer;
+}
+
+.react-flow__edge:hover .react-flow__edge-text {
+  fill: #4ade80 !important;
+}
+
+/* Node Resizer Styles - Functional but Invisible */
+/* Using the correct class names identified via browser inspection */
+.react-flow__resize-control,
+.react-flow__resize-control.handle,
+.react-flow__resize-control.line,
+.react-flow__node-resizer,
+.react-flow__node-resizer__handle,
+.react-flow__node-resizer__line {
+  opacity: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure hit areas are large enough for invisible interaction */
+.react-flow__resize-control.handle {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.react-flow__resize-control.line {
+  border: 4px solid transparent !important;
+}

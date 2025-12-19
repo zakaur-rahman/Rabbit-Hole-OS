@@ -1,0 +1,1160 @@
+'use client';
+
+import React, { useCallback, useState, useMemo } from 'react';
+import ReactFlow, {
+    useReactFlow,
+    Background,
+    MiniMap,
+    Connection,
+    Edge as FlowEdge,
+    ReactFlowProvider,
+    SelectionMode,
+    ConnectionMode,
+    MarkerType,
+    reconnectEdge,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { useGraphStore } from '@/store/graph.store';
+import { nodesApi } from '@/lib/api';
+
+// Import all node types
+import ArticleNode from './nodes/ArticleNode';
+import VideoNode from './nodes/VideoNode';
+import SynthesisNode from './nodes/SynthesisNode';
+import ProductNode from './nodes/ProductNode';
+import CodeNode from './nodes/CodeNode';
+import AcademicNode from './nodes/AcademicNode';
+import GhostNode from './nodes/GhostNode';
+import NoteNode from './nodes/NoteNode';
+import GroupNode from './nodes/GroupNode';
+import TextNode from './nodes/TextNode';
+import AnnotationNode from './nodes/AnnotationNode';
+
+import GraphControls from './GraphControls';
+import SynthesisModal from '../synthesis/SynthesisModal';
+import EmptyGraphState from './EmptyGraphState';
+
+
+
+import HoverPreview from '../ui/HoverPreview';
+import WhiteboardSelector from './WhiteboardSelector';
+import TemplateModal from '../modals/TemplateModal';
+import ContextMenu from '../ui/ContextMenu';
+import { Scan, Scissors, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon } from 'lucide-react';
+
+// ... other imports
+
+function CanvasViewInner() {
+    const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId } = useGraphStore();
+    const [showSynthesis, setShowSynthesis] = useState(false);
+
+    // Register all custom node types
+    const nodeTypes = useMemo(() => ({
+        article: ArticleNode,
+        video: VideoNode,
+        synthesis: SynthesisNode,
+        product: ProductNode,
+        code: CodeNode,
+        academic: AcademicNode,
+        ghost: GhostNode,
+        note: NoteNode,
+        group: GroupNode,
+        text: TextNode,
+        annotation: AnnotationNode,
+    }), []);
+
+    // Fetch nodes on mount or whiteboard change
+    React.useEffect(() => {
+        fetchNodes();
+    }, [fetchNodes, activeWhiteboardId]);
+
+    // Hover State
+    const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+    const [hoverPosition, setHoverPosition] = useState<{ x: number, y: number } | null>(null);
+    const hoverTimeoutRef = React.useRef<NodeJS.Timeout>(null);
+
+    // File Drop Handling
+    const onDragOver = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    }, []);
+
+    const onDrop = useCallback(async (event: React.DragEvent) => {
+        event.preventDefault();
+
+        const file = event.dataTransfer.files[0];
+        if (!file) return;
+
+        // Simple validation
+        const isImage = file.type.startsWith('image/');
+        const isPdf = file.type === 'application/pdf';
+
+        if (!isImage && !isPdf) {
+            console.warn('Only images and PDFs are supported currently.');
+            return;
+        }
+
+        try {
+            // Calculate drop position relative to canvas
+            // We need to project screen coordinates to flow coordinates
+            // Since we can't easily access reactFlowInstance here without ref,
+            // we'll approximate or stick to center/random if needed, 
+            // OR use useReactFlow() hook which is available in CanvasViewInner!
+            // Wait, useReactFlow is not imported. Let's fix that.
+        } catch (error) {
+            console.error('File upload failed:', error);
+        }
+    }, [addNode]);
+
+    // We need useReactFlow to project coordinates
+    const { screenToFlowPosition, fitView: flowFitView, getNodes: flowGetNodes } = useReactFlow();
+
+    const onFitSelection = useCallback(() => {
+        const selectedNodes = flowGetNodes().filter(n => n.selected);
+        if (selectedNodes.length > 0) {
+            flowFitView({ nodes: selectedNodes, padding: 0.2, duration: 800 });
+        }
+    }, [flowFitView, flowGetNodes]);
+
+    const onDropReal = useCallback(async (event: React.DragEvent) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/') && file.type !== 'application/pdf') return;
+
+        // Upload
+        const { filesApi } = await import('@/lib/api');
+        try {
+            const uploaded = await filesApi.upload(file);
+
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+
+            const nodeId = `${isImage(file) ? 'img' : 'pdf'}-${Date.now()}`;
+            const type = isImage(file) ? 'note' : 'note'; // For now use 'note' with specific data, or maybe 'file' node?
+            // User asked for "File attachments (images, PDFs)"
+            // Usually this means a node that displays the image/pdf.
+            // Let's use a 'note' node but with special content or metadata? 
+            // Or create a new node type? 
+            // Existing types: article, video, etc. 
+            // Let's stick to 'note' for now and put markdown image/link in content.
+
+            const content = isImage(file)
+                ? `![${file.name}](${uploaded.url})`
+                : `[${file.name}](${uploaded.url})`;
+
+            const newNode = {
+                id: nodeId,
+                type: 'note',
+                position,
+                data: {
+                    title: file.name,
+                    content: content,
+                    tags: ['file'],
+                    whiteboard_id: activeWhiteboardId
+                },
+            };
+
+            addNode(newNode);
+
+            // Persist
+            await nodesApi.create({
+                id: newNode.id,
+                type: 'note',
+                title: newNode.data.title,
+                data: {
+                    ...newNode.data,
+                    position: newNode.position,
+                    whiteboard_id: useGraphStore.getState().activeWhiteboardId
+                }
+            });
+
+        } catch (e) {
+            console.error(e);
+        }
+    }, [addNode, screenToFlowPosition, activeWhiteboardId]);
+
+
+    const isImage = (file: File) => file.type.startsWith('image/');
+
+    // Context Menu Logic
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
+    const [paneContextMenu, setPaneContextMenu] = useState<{ x: number; y: number; visible: boolean; flowPos?: { x: number, y: number } }>({ x: 0, y: 0, visible: false });
+    const [snapToGrid, setSnapToGrid] = useState(false);
+    const [readOnly, setReadOnly] = useState(false);
+    const [edgeContextMenu, setEdgeContextMenu] = useState<{ x: number; y: number; visible: boolean; edgeId?: string }>({ x: 0, y: 0, visible: false });
+
+    const deleteKeyCode = useMemo(() => ['Backspace', 'Delete'], []);
+
+    const clipboardRef = React.useRef<any[]>([]);
+    const { getNodes } = useReactFlow(); // Already used elsewhere? No, check usages.
+
+    const onNodeContextMenu = useCallback((event: React.MouseEvent, node: any) => {
+        event.preventDefault();
+        setPaneContextMenu(prev => ({ ...prev, visible: false })); // Close pane menu
+
+        // If right-clicked node is not selected, select it exclusively
+        if (!node.selected) {
+            // We need a way to clear selection? ReactFlow usually handles this if we update 'selected' prop.
+            // But we are using a store. 
+            // Let's rely on standard ReactFlow behavior? No, we need to manually update if we control selection.
+            // Our store has 'selectNode'. Does it support multiple? 
+            // The store has `selectedNodeId` (single?) -> "selectedNodeId: string | null".
+            // Implementation seems to support single selection in store? 
+            // But ReactFlow supports multiple. Syncing is tricky. 
+            // Let's just set this node as selected in store for now.
+            selectNode(node.id);
+        }
+
+        setContextMenu({
+            visible: true,
+            x: event.clientX,
+            y: event.clientY,
+        });
+    }, [selectNode]);
+
+    const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        setContextMenu(prev => ({ ...prev, visible: false })); // Close node menu
+        setEdgeContextMenu(prev => ({ ...prev, visible: false })); // Close edge menu
+
+        const flowPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+        setPaneContextMenu({
+            visible: true,
+            x: event.clientX,
+            y: event.clientY,
+            flowPos
+        });
+    }, [screenToFlowPosition]);
+
+    const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: any) => {
+        event.preventDefault();
+        setContextMenu(prev => ({ ...prev, visible: false }));
+        setPaneContextMenu(prev => ({ ...prev, visible: false }));
+
+        setEdgeContextMenu({
+            visible: true,
+            x: event.clientX,
+            y: event.clientY,
+            edgeId: edge.id,
+        });
+    }, []);
+
+    const handleEdgeAction = useCallback((action: string) => {
+        if (action === 'delete' && edgeContextMenu.edgeId) {
+            useGraphStore.getState().removeEdge(edgeContextMenu.edgeId);
+        }
+        setEdgeContextMenu(prev => ({ ...prev, visible: false }));
+    }, [edgeContextMenu.edgeId]);
+
+    const edgeActions = useMemo(() => [
+        { label: 'Delete Edge', onClick: () => handleEdgeAction('delete'), icon: <Trash2 size={14} />, danger: true, shortcut: 'Del' },
+    ], [handleEdgeAction]);
+
+    const handlePaneAction = useCallback((action: string) => {
+        const { flowPos } = paneContextMenu;
+        if (!flowPos) return;
+
+        switch (action) {
+            case 'add-note': {
+                const nodeId = `note-${Date.now()}`;
+                const newNode = {
+                    id: nodeId,
+                    type: 'note',
+                    position: flowPos,
+                    data: { title: 'New Note', content: '' },
+                };
+                addNode(newNode);
+                nodesApi.create({ ...newNode, type: 'note', title: 'New Note', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
+                break;
+            }
+            case 'add-web': {
+                const url = prompt("Enter Web Page URL:");
+                if (url) {
+                    const nodeId = `article-${Date.now()}`;
+                    const newNode = {
+                        id: nodeId,
+                        type: 'article',
+                        position: flowPos,
+                        data: { title: url, url: url }
+                    };
+                    addNode(newNode);
+                    nodesApi.processUrl(url).then(apiNode => {
+                        useGraphStore.getState().updateNode(nodeId, {
+                            title: apiNode.title,
+                            snippet: apiNode.content?.slice(0, 100),
+                            favicon: apiNode.metadata?.favicon
+                        });
+                    }).catch(console.error);
+                }
+                break;
+            }
+            case 'create-group': {
+                const nodeId = `group-${Date.now()}`;
+                const newNode = {
+                    id: nodeId,
+                    type: 'group',
+                    position: flowPos,
+                    style: { width: 400, height: 300 },
+                    data: { label: 'New Group' },
+                    zIndex: -1
+                };
+                addNode(newNode);
+                nodesApi.create({ ...newNode, type: 'group', title: 'Group', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
+                break;
+            }
+            case 'paste': {
+                if (clipboardRef.current.length === 0) break;
+                let minX = Infinity, minY = Infinity;
+                clipboardRef.current.forEach(n => {
+                    if (n.position.x < minX) minX = n.position.x;
+                    if (n.position.y < minY) minY = n.position.y;
+                });
+
+                clipboardRef.current.forEach((n, i) => {
+                    const newId = `${n.type}-${Date.now()}-${i}`;
+                    const relX = n.position.x - minX;
+                    const relY = n.position.y - minY;
+
+                    const newNode = {
+                        ...n,
+                        id: newId,
+                        position: { x: flowPos.x + relX, y: flowPos.y + relY },
+                        selected: true,
+                    };
+                    addNode(newNode);
+                    nodesApi.create({ ...newNode, title: newNode.data.title || newNode.type, data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
+                });
+                break;
+            }
+            case 'toggle-snap':
+                setSnapToGrid(prev => !prev);
+                break;
+            case 'toggle-readonly':
+                setReadOnly(prev => !prev);
+                break;
+        }
+    }, [paneContextMenu, addNode, activeWhiteboardId]);
+
+    const paneActions = useMemo(() => [
+        { label: 'Add card', onClick: () => handlePaneAction('add-note'), icon: <StickyNote size={14} /> },
+        { label: 'Add web page', onClick: () => handlePaneAction('add-web'), icon: <Globe size={14} /> },
+        { label: 'Create group', onClick: () => handlePaneAction('create-group'), icon: <BoxSelect size={14} /> },
+        { separator: true, label: '', onClick: () => { } },
+        { label: 'Paste', onClick: () => handlePaneAction('paste'), icon: <Clipboard size={14} /> },
+        { separator: true, label: '', onClick: () => { } },
+        { label: 'Snap to grid', onClick: () => handlePaneAction('toggle-snap'), icon: <Grid size={14} /> },
+        { label: readOnly ? 'Enable editing' : 'Read-only', onClick: () => handlePaneAction('toggle-readonly'), icon: readOnly ? <Unlock size={14} /> : <Lock size={14} /> },
+    ], [handlePaneAction, readOnly]);
+
+    const handleContextMenuAction = useCallback((action: string) => {
+        const selectedNodes = nodes.filter(n => n.selected);
+
+        switch (action) {
+            case 'zoom':
+                onFitSelection();
+                break;
+            case 'group': {
+                if (selectedNodes.length === 0) break;
+                // Calculate bounds
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                selectedNodes.forEach(n => {
+                    if (n.position.x < minX) minX = n.position.x;
+                    if (n.position.y < minY) minY = n.position.y;
+                    // For width/height we need actual node dimensions. 
+                    // ReactFlow nodes have width/height if measured.
+                    const w = n.width || 200;
+                    const h = n.height || 100;
+                    if (n.position.x + w > maxX) maxX = n.position.x + w;
+                    if (n.position.y + h > maxY) maxY = n.position.y + h;
+                });
+
+                // Add padding
+                const padding = 20;
+                minX -= padding;
+                minY -= 60; // Extra top padding for label
+                maxX += padding;
+                maxY += padding;
+
+                const groupId = `group-${Date.now()}`;
+                const groupNode = {
+                    id: groupId,
+                    type: 'group',
+                    position: { x: minX, y: minY },
+                    style: { width: maxX - minX, height: maxY - minY },
+                    data: { label: 'New Group' },
+                    zIndex: -1, // Ensure behind
+                };
+
+                addNode(groupNode);
+                nodesApi.create({ ...groupNode, data: { ...groupNode.data, whiteboard_id: activeWhiteboardId }, title: 'Group' });
+                break;
+            }
+            case 'cut': {
+                clipboardRef.current = JSON.parse(JSON.stringify(selectedNodes));
+                selectedNodes.forEach(n => useGraphStore.getState().removeNode(n.id));
+                // Delete from backend? API doesn't support bulk delete yet, loop it.
+                // selectedNodes.forEach(n => nodesApi.delete(n.id)); // Assuming delete exists
+                break;
+            }
+            case 'copy': {
+                clipboardRef.current = JSON.parse(JSON.stringify(selectedNodes));
+                break;
+            }
+            case 'paste': {
+                if (clipboardRef.current.length === 0) break;
+                const offset = { x: 50, y: 50 };
+                clipboardRef.current.forEach((n, i) => {
+                    const newId = `${n.type}-${Date.now()}-${i}`;
+                    const newNode = {
+                        ...n,
+                        id: newId,
+                        position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
+                        selected: true,
+                        // Clear invalid fields if any
+                    };
+                    addNode(newNode);
+                    nodesApi.create({ ...newNode, title: newNode.data.title || newNode.type, data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
+                });
+                break;
+            }
+            case 'delete': {
+                selectedNodes.forEach(n => useGraphStore.getState().removeNode(n.id));
+                break;
+            }
+        }
+    }, [nodes, addNode, onFitSelection, activeWhiteboardId]);
+
+    const contextActions = useMemo(() => [
+        { label: 'Zoom to selection', onClick: () => handleContextMenuAction('zoom'), icon: <Scan size={14} /> },
+        { label: 'Create group', onClick: () => handleContextMenuAction('group'), icon: <BoxSelect size={14} /> },
+        { separator: true, label: '', onClick: () => { } },
+        { label: 'Cut', onClick: () => handleContextMenuAction('cut'), icon: <Scissors size={14} />, shortcut: 'Ctrl+X' },
+        { label: 'Copy', onClick: () => handleContextMenuAction('copy'), icon: <Copy size={14} />, shortcut: 'Ctrl+C' },
+        { label: 'Paste', onClick: () => handleContextMenuAction('paste'), icon: <Clipboard size={14} />, shortcut: 'Ctrl+V' },
+        { separator: true, label: '', onClick: () => { } },
+        { label: 'Delete', onClick: () => handleContextMenuAction('delete'), icon: <Trash2 size={14} />, danger: true, shortcut: 'Del' },
+    ], [handleContextMenuAction]);
+
+
+
+
+    // Previous hover logic
+    const onNodeMouseEnter = useCallback((event: React.MouseEvent, node: any) => {
+        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+
+        hoverTimeoutRef.current = setTimeout(() => {
+            setHoveredNodeId(node.id);
+            // Calculate position based on mouse or node? Mouse is easier for now.
+            setHoverPosition({ x: event.clientX, y: event.clientY });
+        }, 300); // 300ms delay
+    }, []);
+
+    const onNodeMouseLeave = useCallback(() => {
+        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+        setHoveredNodeId(null);
+        setHoverPosition(null);
+    }, []);
+
+    const onConnect = useCallback((params: Connection) => {
+        didConnectRef.current = true;
+        // Generate a unique ID that includes handle information to allow multiple edges
+        const edgeId = `e${params.source}-${params.sourceHandle || ''}-${params.target}-${params.targetHandle || ''}`;
+        addStoreEdge({ ...params, id: edgeId } as FlowEdge);
+    }, [addStoreEdge]);
+
+    const onReconnect = useCallback((oldEdge: FlowEdge, newConnection: Connection) => {
+        if (!newConnection.source || !newConnection.target) return;
+
+        didConnectRef.current = true;
+        const { addEdge } = useGraphStore.getState();
+
+        const newEdge = {
+            ...oldEdge,
+            ...newConnection,
+            id: `e${newConnection.source}-${newConnection.target}`
+        } as FlowEdge;
+        addEdge(newEdge);
+    }, []);
+
+    // Track connection/reconnection state
+    const connectionStartRef = React.useRef<{ nodeId: string | null; handleId: string | null }>({ nodeId: null, handleId: null });
+    const reconnectingEdgeRef = React.useRef<FlowEdge | null>(null);
+    const didConnectRef = React.useRef(false);
+
+    const onConnectStart = useCallback((_: any, params: { nodeId: string | null; handleId: string | null }) => {
+        connectionStartRef.current = params;
+        didConnectRef.current = false;
+    }, []);
+
+    const onReconnectStart = useCallback((event: React.MouseEvent, edge: FlowEdge) => {
+        reconnectingEdgeRef.current = edge;
+        didConnectRef.current = false;
+        // Remove edge immediately so it's not visible while dragging/connecting
+        useGraphStore.getState().removeEdge(edge.id);
+    }, []);
+
+    // Connection drop menu state
+    const [connectionDropMenu, setConnectionDropMenu] = useState<{
+        visible: boolean;
+        x: number;
+        y: number;
+        sourceNodeId: string | null;
+        sourceHandleId: string | null;
+    }>({ visible: false, x: 0, y: 0, sourceNodeId: null, sourceHandleId: null });
+
+
+
+    // Handle connection end - show menu if dropped on empty space
+    const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
+        if (didConnectRef.current) return;
+
+        const target = event.target as HTMLElement;
+        const isPane = target.classList.contains('react-flow__pane');
+
+        if (isPane && 'clientX' in event) {
+            // 1. Try connection start ref (New Connections)
+            let { nodeId: sourceNodeId, handleId: sourceHandleId } = connectionStartRef.current;
+
+            // 2. Try reconnecting edge ref (Existing Edge)
+            if (!sourceNodeId && reconnectingEdgeRef.current) {
+                sourceNodeId = reconnectingEdgeRef.current.source;
+                sourceHandleId = reconnectingEdgeRef.current.sourceHandle || null;
+            }
+
+            // 3. Fallback to DOM (Safety net)
+            if (!sourceNodeId) {
+                const connectingNode = document.querySelector('.react-flow__node.connecting');
+                sourceNodeId = connectingNode?.getAttribute('data-id') || null;
+            }
+
+            setConnectionDropMenu({
+                visible: true,
+                x: event.clientX,
+                y: event.clientY,
+                sourceNodeId: sourceNodeId || null,
+                sourceHandleId: sourceHandleId || null,
+            });
+        }
+    }, []);
+
+    // Handle connection drop menu action
+    const handleConnectionDropAction = useCallback((action: string) => {
+        const { x, y, sourceNodeId, sourceHandleId } = connectionDropMenu;
+        const flowPos = screenToFlowPosition({ x, y });
+        let newNode: any = null;
+        const nodeId = `${action}-${Date.now()}`;
+
+        if (action === 'note') {
+            flowPos.x -= 225; // Center horizontally (450/2)
+            // y is kept as is to align the top with the drop point
+        } else {
+            flowPos.x -= 100; // Default center horizontally
+            // y is kept as is
+        }
+
+        switch (action) {
+            case 'note':
+                newNode = {
+                    id: nodeId,
+                    type: 'note',
+                    position: flowPos,
+                    data: { title: 'New Note', content: '' },
+                };
+                break;
+            case 'article':
+                const url = prompt("Enter Web Page URL:");
+                if (url) {
+                    newNode = {
+                        id: nodeId,
+                        type: 'article',
+                        position: flowPos,
+                        data: { title: 'Loading...', url },
+                    };
+                    // Trigger URL processing
+                    nodesApi.processUrl(url).then(result => {
+                        useGraphStore.getState().updateNode(nodeId, {
+                            title: result.title,
+                            snippet: result.snippet,
+                        });
+                    }).catch(console.error);
+                }
+                break;
+        }
+
+        if (newNode) {
+            addNode(newNode);
+
+            // If reconnecting, update the existing edge
+            if (reconnectingEdgeRef.current) {
+                const { addEdge } = useGraphStore.getState();
+
+                const updatedEdge = {
+                    ...reconnectingEdgeRef.current,
+                    target: newNode.id,
+                    targetHandle: null // Reset target handle since we're connecting to node center/default
+                };
+                addEdge(updatedEdge);
+            }
+            // If new connection, create edge from source
+            else if (sourceNodeId) {
+                // Determine sensible target handle based on source handle position
+                let targetHandleId = 'top';
+                if (sourceHandleId === 'right') targetHandleId = 'left';
+                else if (sourceHandleId === 'left') targetHandleId = 'right';
+                else if (sourceHandleId === 'top') targetHandleId = 'bottom';
+                else if (sourceHandleId === 'bottom') targetHandleId = 'top';
+
+                const edgeId = `e${sourceNodeId}-${sourceHandleId || ''}-${nodeId}-${targetHandleId}`;
+                addStoreEdge({
+                    id: edgeId,
+                    source: sourceNodeId,
+                    sourceHandle: sourceHandleId,
+                    target: nodeId,
+                    targetHandle: targetHandleId
+                } as FlowEdge);
+            }
+
+            // Sync to backend
+            nodesApi.create({
+                id: newNode.id,
+                type: newNode.type,
+                title: newNode.data.title || 'Untitled',
+                data: {
+                    ...newNode.data,
+                    position: newNode.position,
+                    whiteboard_id: activeWhiteboardId,
+                },
+            }).catch(console.error);
+        }
+
+        reconnectingEdgeRef.current = null;
+        setConnectionDropMenu({ visible: false, x: 0, y: 0, sourceNodeId: null, sourceHandleId: null });
+    }, [connectionDropMenu, screenToFlowPosition, addNode, addStoreEdge, activeWhiteboardId]);
+
+
+    // Auto-grouping: when a node is dropped, check if it's inside a group
+    const onNodeDragStop = useCallback((_event: React.MouseEvent, node: any) => {
+        if (node.type === 'group') return; // Don't group a group into itself
+
+        const groupNodes = nodes.filter(n => n.type === 'group');
+        const updateNodeFull = useGraphStore.getState().updateNodeFull;
+
+        // Check if node is inside any group's bounding box
+        for (const group of groupNodes) {
+            if (group.id === node.id) continue;
+
+            const groupWidth = Number(group.style?.width) || 400;
+            const groupHeight = Number(group.style?.height) || 300;
+            const groupX = group.position.x;
+            const groupY = group.position.y;
+
+            const nodeX = node.position.x;
+            const nodeY = node.position.y;
+            const nodeWidth = node.width || 200;
+            const nodeHeight = node.height || 100;
+
+            // Check if node center is inside group bounds
+            const nodeCenterX = nodeX + nodeWidth / 2;
+            const nodeCenterY = nodeY + nodeHeight / 2;
+
+            const isInside =
+                nodeCenterX > groupX &&
+                nodeCenterX < groupX + groupWidth &&
+                nodeCenterY > groupY &&
+                nodeCenterY < groupY + groupHeight;
+
+            if (isInside && node.parentId !== group.id) {
+                // Add to group: set parentId and convert position to relative
+                const relativePosition = {
+                    x: nodeX - groupX,
+                    y: nodeY - groupY
+                };
+                updateNodeFull(node.id, { parentId: group.id, position: relativePosition });
+                return;
+            }
+        }
+
+        // If node has a parentId but is now outside its parent, remove from group
+        if (node.parentId) {
+            const parentGroup = groupNodes.find(g => g.id === node.parentId);
+            if (parentGroup) {
+                const groupWidth = Number(parentGroup.style?.width) || 400;
+                const groupHeight = Number(parentGroup.style?.height) || 300;
+
+                const nodeWidth = node.width || 200;
+                const nodeHeight = node.height || 100;
+                const nodeCenterX = node.position.x + nodeWidth / 2;
+                const nodeCenterY = node.position.y + nodeHeight / 2;
+
+                const isStillInside =
+                    nodeCenterX > 0 &&
+                    nodeCenterX < groupWidth &&
+                    nodeCenterY > 0 &&
+                    nodeCenterY < groupHeight;
+
+                if (!isStillInside) {
+                    // Remove from group: convert position to absolute
+                    const absolutePosition = {
+                        x: parentGroup.position.x + node.position.x,
+                        y: parentGroup.position.y + node.position.y
+                    };
+                    updateNodeFull(node.id, { parentId: undefined, position: absolutePosition });
+                }
+            }
+        }
+    }, [nodes]);
+
+
+    const onNodeClick = useCallback((_: React.MouseEvent, node: any) => {
+        selectNode(node.id);
+    }, [selectNode]);
+
+    const onPaneClick = useCallback(() => {
+        selectNode(null);
+        setContextMenu(prev => ({ ...prev, visible: false }));
+        setPaneContextMenu(prev => ({ ...prev, visible: false }));
+        setEdgeContextMenu(prev => ({ ...prev, visible: false }));
+    }, [selectNode]);
+
+    const handleAddNote = useCallback(async () => {
+        const nodeId = `note-${Date.now()}`;
+        const newNode = {
+            id: nodeId,
+            type: 'note',
+            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            data: { title: 'New Note', content: '' },
+        };
+        addNode(newNode);
+        try {
+            await nodesApi.create({
+                id: newNode.id,
+                type: 'note',
+                title: 'New Note',
+                data: {
+                    ...newNode.data,
+                    position: newNode.position,
+                    whiteboard_id: useGraphStore.getState().activeWhiteboardId
+                }
+            });
+        } catch (e) {
+            console.error('Failed to sync note to backend:', e);
+        }
+    }, [addNode]);
+
+    const handleAddGroup = useCallback(async () => {
+        const nodeId = `group-${Date.now()}`;
+        const newNode = {
+            id: nodeId,
+            type: 'group',
+            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            data: { label: 'New Section' },
+            style: { width: 400, height: 300 },
+        };
+        addNode(newNode);
+        try {
+            await nodesApi.create({
+                id: newNode.id,
+                type: 'group',
+                title: 'New Section',
+                data: {
+                    ...newNode.data,
+                    position: newNode.position,
+                    style: newNode.style,
+                    whiteboard_id: useGraphStore.getState().activeWhiteboardId
+                }
+            });
+        } catch (e) {
+            console.error('Failed to sync group to backend:', e);
+        }
+    }, [addNode]);
+
+    const handleAddText = useCallback(async () => {
+        const nodeId = `text-${Date.now()}`;
+        const newNode = {
+            id: nodeId,
+            type: 'text',
+            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            data: { text: 'Type something...' },
+        };
+        addNode(newNode);
+        try {
+            await nodesApi.create({
+                id: newNode.id,
+                type: 'text',
+                title: 'Text Node',
+                data: {
+                    ...newNode.data,
+                    position: newNode.position,
+                    whiteboard_id: useGraphStore.getState().activeWhiteboardId
+                }
+            });
+        } catch (e) {
+            console.error('Failed to sync text to backend:', e);
+        }
+    }, [addNode]);
+
+
+
+    const handleExport = useCallback(() => {
+        const { nodes, edges } = useGraphStore.getState();
+        import('@/lib/export').then(mod => {
+            mod.exportGraphToMarkdown(nodes, edges);
+        });
+    }, []);
+
+    // Template handling
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
+
+    const handleTemplateSelect = useCallback(async (template: any) => {
+        setShowTemplateModal(false);
+        const nodeId = `note-${Date.now()}`;
+        const newNode = {
+            id: nodeId,
+            type: 'note',
+            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            data: {
+                title: template.name,
+                content: template.content,
+                tags: template.tags
+            },
+        };
+        addNode(newNode);
+        try {
+            await nodesApi.create({
+                id: newNode.id,
+                type: 'note',
+                title: newNode.data.title,
+                data: {
+                    ...newNode.data,
+                    position: newNode.position,
+                    whiteboard_id: useGraphStore.getState().activeWhiteboardId
+                }
+            });
+        } catch (e) {
+            console.error('Failed to create template node', e);
+        }
+    }, [addNode, activeWhiteboardId]);
+
+
+
+    // Custom edge style - Obsidian-like smooth bezier with arrow
+    const defaultEdgeOptions = useMemo(() => ({
+        type: 'simplebezier',
+        style: {
+            stroke: '#9ca3af', // Neutral gray like Obsidian
+            strokeWidth: 2
+        },
+        markerEnd: {
+            type: MarkerType.Arrow,
+            color: '#9ca3af',
+        },
+        animated: false,
+    }), []);
+
+    const isEmpty = nodes.length === 0;
+
+    return (
+        <div className="w-full h-full bg-neutral-950 relative">
+
+            {/* ... stats badge ... */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-neutral-900/80 backdrop-blur border border-neutral-800 rounded-full">
+                <div className={`w-2 h-2 rounded-full ${isEmpty ? 'bg-neutral-500' : 'bg-green-500 animate-pulse'}`} />
+                <span className="text-xs font-medium text-neutral-300">
+                    {isEmpty ? 'NO NODES' : `${nodes.length} NODES`}
+                </span>
+            </div>
+
+            {/* Knowledge Graph Label */}
+            {!isEmpty && (
+                <div className="absolute top-4 left-4 z-10 bg-neutral-900/80 backdrop-blur border border-neutral-800 rounded-xl p-3">
+                    <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-2">Knowledge Graph</h3>
+                    <div className="flex flex-col gap-1 text-xs">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                            <span className="text-neutral-400">Articles</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-red-500" />
+                            <span className="text-neutral-400">Videos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-orange-500" />
+                            <span className="text-neutral-400">Code</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-purple-500" />
+                            <span className="text-neutral-400">Products</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                            <span className="text-neutral-400">Notes</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Empty State Overlay */}
+            {isEmpty && <EmptyGraphState />}
+
+            {/* Whiteboard Selector */}
+            <WhiteboardSelector />
+
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onReconnect={onReconnect}
+                edgesUpdatable={!readOnly}
+                onReconnectStart={onReconnectStart}
+                onConnectStart={onConnectStart}
+                onConnectEnd={onConnectEnd}
+                onNodeClick={onNodeClick}
+                onNodeContextMenu={onNodeContextMenu}
+                onEdgeContextMenu={onEdgeContextMenu}
+                onPaneClick={onPaneClick}
+                onPaneContextMenu={onPaneContextMenu}
+                onNodeMouseEnter={onNodeMouseEnter}
+                onNodeMouseLeave={onNodeMouseLeave}
+                onNodeDragStop={onNodeDragStop}
+                nodeTypes={nodeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
+                selectionMode={SelectionMode.Partial}
+                selectionOnDrag
+                panOnScroll
+                panOnDrag={[1, 2]}
+                selectNodesOnDrag
+                fitView
+                snapToGrid={snapToGrid}
+                nodesDraggable={!readOnly}
+                nodesConnectable={!readOnly}
+                elementsSelectable={!readOnly}
+                edgesFocusable={!readOnly}
+                deleteKeyCode={deleteKeyCode}
+                connectionMode={ConnectionMode.Loose}
+                connectionLineStyle={useMemo(() => ({
+                    stroke: '#9ca3af',
+                    strokeWidth: 2,
+                    opacity: connectionDropMenu.visible ? 0 : 1
+                }), [connectionDropMenu.visible])}
+                className={`bg-neutral-950 ${readOnly ? 'cursor-not-allowed' : ''}`}
+            >
+                <Background color="#1a1a1a" gap={20} size={1} />
+
+                {!isEmpty && (
+                    <MiniMap
+                        className="!bg-neutral-900 !border-neutral-800"
+                        maskColor="rgba(0,0,0,0.8)"
+                        nodeColor={(node) => {
+                            switch (node.type) {
+                                case 'synthesis': return '#22c55e';
+                                case 'video': return '#ef4444';
+                                case 'code': return '#f97316';
+                                case 'product': return '#a855f7';
+                                case 'academic': return '#3b82f6';
+                                case 'ghost': return '#6b7280';
+                                case 'note': return '#eab308';
+                                default: return '#22c55e';
+                            }
+                        }}
+                    />
+                )}
+                <GraphControls
+                    onSynthesis={() => setShowSynthesis(true)}
+                    onAddNote={handleAddNote}
+                    onAddGroup={handleAddGroup}
+                    onAddText={handleAddText}
+                    onTemplate={() => setShowTemplateModal(true)}
+                    onFitSelection={onFitSelection}
+                />
+            </ReactFlow>
+
+            {/* Context Menu */}
+            {contextMenu.visible && (
+                <ContextMenu
+                    position={{ x: contextMenu.x, y: contextMenu.y }}
+                    onClose={() => setContextMenu(prev => ({ ...prev, visible: false }))}
+                    actions={contextActions}
+                />
+            )}
+
+            {/* Pane Context Menu */}
+            {paneContextMenu.visible && (
+                <ContextMenu
+                    position={{ x: paneContextMenu.x, y: paneContextMenu.y }}
+                    onClose={() => setPaneContextMenu(prev => ({ ...prev, visible: false }))}
+                    actions={paneActions}
+                />
+            )}
+
+            {/* Edge Context Menu */}
+            {edgeContextMenu.visible && (
+                <ContextMenu
+                    position={{ x: edgeContextMenu.x, y: edgeContextMenu.y }}
+                    onClose={() => setEdgeContextMenu(prev => ({ ...prev, visible: false }))}
+                    actions={edgeActions}
+                />
+            )}
+
+            {/* Connection Drop Menu - Obsidian-like */}
+            {connectionDropMenu.visible && (
+                <div
+                    className="fixed z-50 bg-neutral-900/95 backdrop-blur-xl border border-neutral-700 rounded-lg shadow-2xl overflow-hidden"
+                    style={{
+                        left: connectionDropMenu.x,
+                        top: connectionDropMenu.y,
+                        transform: 'translateX(-50%)'
+                    }}
+                >
+                    <div className="py-1">
+                        <button
+                            className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800 flex items-center gap-2"
+                            onClick={() => handleConnectionDropAction('note')}
+                        >
+                            <StickyNote size={14} />
+                            Add card
+                        </button>
+                        <button
+                            className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800 flex items-center gap-2"
+                            onClick={() => handleConnectionDropAction('article')}
+                        >
+                            <Globe size={14} />
+                            Add web page
+                        </button>
+                    </div>
+                </div>
+            )}
+            {/* Click outside to close connection drop menu */}
+            {connectionDropMenu.visible && (
+                <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => {
+                        // Edge was already removed in onReconnectStart
+                        reconnectingEdgeRef.current = null;
+                        setConnectionDropMenu(prev => ({ ...prev, visible: false }));
+                    }}
+                />
+            )}
+
+            {/* Hover Preview */}
+            {hoveredNodeId && hoverPosition && (
+                <HoverPreview
+                    nodeId={hoveredNodeId}
+                    position={hoverPosition}
+                    onClose={() => setHoveredNodeId(null)}
+                />
+            )}
+
+            {/* Synthesis Modal */}
+            {showSynthesis && (
+                <SynthesisModal onClose={() => setShowSynthesis(false)} />
+            )}
+
+            {/* Template Modal */}
+            {showTemplateModal && (
+                <TemplateModal
+                    onClose={() => setShowTemplateModal(false)}
+                    onSelect={handleTemplateSelect}
+                />
+            )}
+            {/* Connection Line Overlay */}
+            {connectionDropMenu.visible && connectionDropMenu.sourceNodeId && (
+                <ConnectionLineOverlay
+                    sourceNodeId={connectionDropMenu.sourceNodeId!}
+                    sourceHandleId={connectionDropMenu.sourceHandleId}
+                    targetX={connectionDropMenu.x}
+                    targetY={connectionDropMenu.y}
+                />
+            )}
+        </div>
+    );
+}
+
+// Helper component to draw connection line to menu
+function ConnectionLineOverlay({
+    sourceNodeId,
+    sourceHandleId,
+    targetX,
+    targetY
+}: {
+    sourceNodeId: string,
+    sourceHandleId: string | null,
+    targetX: number,
+    targetY: number
+}) {
+    const [startPos, setStartPos] = React.useState<{ x: number, y: number } | null>(null);
+
+    React.useEffect(() => {
+        const updatePos = () => {
+            const nodeEl = document.querySelector(`.react-flow__node[data-id="${sourceNodeId}"]`);
+            if (!nodeEl) return;
+
+            let x, y;
+            if (sourceHandleId) {
+                const handleEl = nodeEl.querySelector(`.react-flow__handle[data-handleid="${sourceHandleId}"]`);
+                if (handleEl) {
+                    const rect = handleEl.getBoundingClientRect();
+                    x = rect.left + rect.width / 2;
+                    y = rect.top + rect.height / 2;
+                }
+            }
+
+            if (!x || !y) {
+                const rect = nodeEl.getBoundingClientRect();
+                x = rect.left + rect.width / 2;
+                y = rect.top + rect.height / 2;
+            }
+
+            setStartPos({ x, y });
+        };
+
+        updatePos();
+        window.addEventListener('resize', updatePos);
+        return () => window.removeEventListener('resize', updatePos);
+    }, [sourceNodeId, sourceHandleId]);
+
+    if (!startPos) return null;
+
+    const { x: startX, y: startY } = startPos;
+    const endX = targetX;
+    const endY = targetY;
+
+    // Determine path based on handle orientation
+    const isHorizontal = sourceHandleId?.includes('left') || sourceHandleId?.includes('right');
+    const path = isHorizontal
+        ? `M${startX},${startY} C${(startX + endX) / 2},${startY} ${(startX + endX) / 2},${endY} ${endX},${endY}`
+        : `M${startX},${startY} C${startX},${(startY + endY) / 2} ${endX},${(startY + endY) / 2} ${endX},${endY}`;
+
+    return (
+        <svg style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            pointerEvents: 'none',
+            zIndex: 999
+        }}>
+            <path
+                d={path}
+                fill="none"
+                stroke="#9ca3af"
+                strokeWidth={2}
+            />
+        </svg>
+    );
+}
+
+export default function CanvasView() {
+    return (
+        <ReactFlowProvider>
+            <CanvasViewInner />
+        </ReactFlowProvider>
+    );
+}
