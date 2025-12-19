@@ -3,10 +3,13 @@ node_modules
 .venv
 venv
 env
-bin
-lib
-include
-share
+/bin
+/lib
+/include
+/share
+# Or prefix with virtualenv names if specific
+# .venv/lib
+# venv/lib
 
 # Build / Output
 .next

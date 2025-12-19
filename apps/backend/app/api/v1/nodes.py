@@ -26,49 +26,53 @@ class ProcessUrlResponse(BaseModel):
 @router.post("/process_url", response_model=ProcessUrlResponse)
 async def process_url(
     url: str = Query(..., description="URL to process"),
-    whiteboard_id: Optional[str] = Query("main", description="Target whiteboard ID")
+    whiteboard_id: Optional[str] = Query("main", description="Target whiteboard ID"),
+    node_id: Optional[str] = Query(None, description="Optional ID of an existing node to update")
 ):
     """
-    Fetch a URL, extract content, and create a node.
+    Fetch a URL, extract content, and create or update a node.
     """
-    # Check if already processed for this whiteboard
-    for node in nodes_store.values():
-        if node.get("url") == url and node.get("metadata", {}).get("whiteboard_id") == whiteboard_id:
-            return node
+    # Check if already processed for this whiteboard (if no node_id provided)
+    if not node_id:
+        for node in nodes_store.values():
+            if node.get("url") == url and node.get("metadata", {}).get("whiteboard_id") == whiteboard_id:
+                return node
     
     # Extract content
     extracted = await extract_content(url)
     
+    target_id = node_id or str(uuid.uuid4())
+    
     if not extracted or not extracted.get("content"):
         # Return basic node even if extraction fails
-        node_id = str(uuid.uuid4())
         node = {
-            "id": node_id,
+            "id": target_id,
             "type": detect_content_type(url),
             "url": url,
             "title": url.split("/")[-1] or "Web Page",
             "content": "",
             "snippet": "Could not extract content",
-            "created_at": datetime.utcnow().isoformat() + "Z",
+            "created_at": nodes_store.get(target_id, {}).get("created_at") or datetime.utcnow().isoformat() + "Z",
             "metadata": {
+                **(nodes_store.get(target_id, {}).get("metadata", {})),
                 "whiteboard_id": whiteboard_id
             }
         }
-        nodes_store[node_id] = node
+        nodes_store[target_id] = node
         return node
     
-    node_id = str(uuid.uuid4())
     content = extracted.get("content", "")
     
     node = {
-        "id": node_id,
+        "id": target_id,
         "type": extracted.get("content_type", "article"),
         "url": url,
         "title": extracted.get("title", "Untitled"),
         "content": content,
         "snippet": content[:200] + "..." if len(content) > 200 else content,
-        "created_at": datetime.utcnow().isoformat() + "Z",
+        "created_at": nodes_store.get(target_id, {}).get("created_at") or datetime.utcnow().isoformat() + "Z",
         "metadata": {
+            **(nodes_store.get(target_id, {}).get("metadata", {})),
             "author": extracted.get("author"),
             "date": extracted.get("date"),
             "description": extracted.get("description"),
@@ -76,7 +80,7 @@ async def process_url(
         }
     }
     
-    nodes_store[node_id] = node
+    nodes_store[target_id] = node
     return node
 
 @router.post("/", response_model=ProcessUrlResponse)
@@ -110,11 +114,38 @@ async def create_node(node_data: dict = Body(...)):
     if not isinstance(new_node["metadata"], dict):
         new_node["metadata"] = {}
         
-    # Ensure required fields for ProcessUrlResponse
-    # ProcessUrlResponse requires: id, type, url, title, content, snippet, created_at, metadata
-    
     nodes_store[node_id] = new_node
     return new_node
+
+@router.put("/{node_id}", response_model=ProcessUrlResponse)
+async def update_node(node_id: str, node_data: dict = Body(...)):
+    """
+    Update an existing node.
+    """
+    if node_id not in nodes_store:
+        raise HTTPException(status_code=404, detail="Node not found")
+    
+    existing_node = nodes_store[node_id]
+    
+    # Update fields if provided
+    if "title" in node_data:
+        existing_node["title"] = node_data["title"]
+    if "type" in node_data:
+        existing_node["type"] = node_data["type"]
+    if "url" in node_data:
+        existing_node["url"] = node_data["url"]
+    if "content" in node_data:
+        existing_node["content"] = node_data["content"]
+        existing_node["snippet"] = node_data["content"][:200] + "..." if len(node_data["content"]) > 200 else node_data["content"]
+    
+    # Update metadata
+    if "data" in node_data:
+        existing_node["metadata"].update(node_data["data"])
+    if "metadata" in node_data:
+        existing_node["metadata"].update(node_data["metadata"])
+        
+    nodes_store[node_id] = existing_node
+    return existing_node
 
 @router.get("/", response_model=List[ProcessUrlResponse])
 async def list_nodes(

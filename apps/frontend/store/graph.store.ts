@@ -30,6 +30,7 @@ export interface GraphState {
   whiteboards: Whiteboard[];
   browserStates: Record<string, BrowserState>;
 
+  initialize: () => void;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setWhiteboard: (id: string) => Promise<void>;
@@ -57,9 +58,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   edges: [],
   selectedNodeId: null,
   activeWhiteboardId: 'main',
-  whiteboards: typeof window !== 'undefined' && localStorage.getItem('whiteboards') 
-    ? JSON.parse(localStorage.getItem('whiteboards')!) 
-    : [{ id: 'main', name: 'Main Brain' }],
+  whiteboards: [{ id: 'main', name: 'Main Brain' }],
   browserStates: {
       'main': { url: '', displayInput: '' }
   },
@@ -73,6 +72,19 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           }
       }
   })),
+
+  initialize: () => {
+    if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('whiteboards');
+        if (stored) {
+            try {
+                set({ whiteboards: JSON.parse(stored) });
+            } catch (e) {
+                console.error("Failed to parse whiteboards from localStorage", e);
+            }
+        }
+    }
+  },
 
   setNodes: (nodes: Node[]) => set({ nodes }),
   setEdges: (edges: Edge[]) => {
@@ -112,13 +124,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         const flowNodes = apiNodes.map(n => ({
             id: n.id,
             type: n.type || 'article', // Default type
-            position: { x: Math.random() * 500, y: Math.random() * 500 }, // Random pos if not stored
+            position: n.metadata?.position || { x: Math.random() * 500, y: Math.random() * 500 },
             data: { 
                 title: n.title,
                 url: n.url,
                 content: n.content,
                 ...n.metadata 
-            }
+            },
+            style: n.metadata?.style,
+            parentId: n.metadata?.parentId,
         }));
         set({ nodes: flowNodes, edges: apiEdges || [] });
     } catch(e) {
@@ -147,6 +161,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 ...n.metadata 
             },
             style: n.metadata?.style, // For group size
+            parentId: n.metadata?.parentId,
         }));
 
         set({ nodes: flowNodes, edges: apiEdges || [] });
@@ -361,7 +376,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           newEdges.push({
             id: `e-${sourceId}-${targetNode.id}`,
             source: sourceId,
+            sourceHandle: 'bottom',
             target: targetNode.id,
+            targetHandle: 'top',
             animated: true,
             style: { stroke: '#eab308', strokeWidth: 2 } // Yellow for manual links
           });

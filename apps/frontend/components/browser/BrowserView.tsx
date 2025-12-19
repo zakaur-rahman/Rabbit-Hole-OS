@@ -196,11 +196,24 @@ export default function BrowserView() {
             data: { ...nodeData, whiteboard_id: whiteboardId },
         });
 
+        // Trigger background processing to get rich metadata/favicon
+        import('@/lib/api').then(({ nodesApi }) => {
+            nodesApi.processUrl(url, whiteboardId, nodeId).then(result => {
+                useGraphStore.getState().updateNode(nodeId, {
+                    title: result.title,
+                    snippet: result.snippet,
+                    favicon: result.metadata?.favicon
+                });
+            }).catch(console.error);
+        });
+
         if (lastNodeIdRef.current && lastNodeIdRef.current !== nodeId) {
             addEdge({
                 id: `e-${lastNodeIdRef.current}-${nodeId}`,
                 source: lastNodeIdRef.current,
+                sourceHandle: 'bottom',
                 target: nodeId,
+                targetHandle: 'top',
                 animated: true,
             });
         }
@@ -254,21 +267,8 @@ export default function BrowserView() {
             if (!isSearchPage) {
                 const { activeWhiteboardId } = useGraphStore.getState();
                 setTimeout(() => {
-                    // Use ref for currentTitle if needed (though e.title isn't available here, we pass currentTitleRef.current)
-                    // But wait, autoAddNodeToGraph uses the PASSED title.
-                    // e.url is from event.
                     autoAddNodeToGraph(e.url, currentTitleRef.current || e.url, activeWhiteboardId);
                 }, 500);
-            }
-
-            // Notify backend
-            try {
-                import('@/lib/api').then(({ nodesApi }) => {
-                    const { activeWhiteboardId } = useGraphStore.getState();
-                    nodesApi.processUrl(e.url, activeWhiteboardId).catch(err => console.error('Error processing URL:', err));
-                });
-            } catch (err) {
-                console.error('Error triggering URL processing:', err);
             }
         };
 

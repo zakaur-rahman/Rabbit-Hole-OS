@@ -26,6 +26,13 @@ class NodeBase(BaseModel):
 class NodeCreate(NodeBase):
     pass
 
+class NodeUpdate(BaseModel):
+    title: Optional[str] = None
+    url: Optional[str] = None
+    type: Optional[NodeType] = None
+    content: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
 class Node(NodeBase):
     id: str
     created_at: datetime

@@ -5,6 +5,8 @@ class EdgeBase(BaseModel):
     id: str
     source: str
     target: str
+    sourceHandle: Optional[str] = None
+    targetHandle: Optional[str] = None
     type: Optional[str] = "default"
     animated: Optional[bool] = False
     style: Optional[Dict[str, Any]] = None

@@ -5,9 +5,15 @@ import { useGraphStore } from '@/store/graph.store';
 import { Plus, LayoutTemplate, X } from 'lucide-react';
 
 export default function WhiteboardSelector() {
-    const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, removeWhiteboard } = useGraphStore();
+    const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, removeWhiteboard, initialize } = useGraphStore();
     const [editingId, setEditingId] = React.useState<string | null>(null);
     const [tempName, setTempName] = React.useState('');
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+        initialize();
+    }, [initialize]);
 
     const handleCreate = () => {
         // For now just add a local mock whiteboard
@@ -49,6 +55,16 @@ export default function WhiteboardSelector() {
         if (e.key === 'Enter') saveRename(id);
         if (e.key === 'Escape') setEditingId(null);
     };
+
+    if (!mounted) {
+        return (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px] h-9">
+                <div className="flex items-center gap-1 overflow-x-auto flex-1 px-3">
+                    <span className="text-xs font-medium text-neutral-500">Main Brain</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px]">
