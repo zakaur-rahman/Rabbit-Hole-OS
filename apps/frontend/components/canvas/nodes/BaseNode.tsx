@@ -56,8 +56,8 @@ function BaseNode({
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
-                    group relative flex flex-col h-full w-full
-                    bg-neutral-900/60 backdrop-blur-xl border rounded-2xl overflow-hidden
+                    group relative flex flex-col h-auto min-h-full w-full
+                    bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
                     transition-all duration-300 shadow-2xl
                     ${selected
                         ? `border-${accentColor} shadow-${accentColor}/10 ring-1 ring-${accentColor}/20`
@@ -98,7 +98,7 @@ function BaseNode({
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 flex flex-col min-h-0 relative break-words overflow-hidden">
+                <div className="flex-1 flex flex-col min-h-0 relative break-words">
                     {children}
                 </div>
 

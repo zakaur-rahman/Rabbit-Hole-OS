@@ -266,6 +266,7 @@ function CanvasViewInner() {
                     id: nodeId,
                     type: 'note',
                     position: flowPos,
+                    style: { width: 350 },
                     data: { title: 'New Note', content: '' },
                 };
                 addNode(newNode);
@@ -280,6 +281,7 @@ function CanvasViewInner() {
                         id: nodeId,
                         type: 'article',
                         position: flowPos,
+                        style: { width: 350, height: 180 },
                         data: { title: url, url: url }
                     };
                     addNode(newNode);
@@ -563,7 +565,7 @@ function CanvasViewInner() {
                     id: nodeId,
                     type: 'note',
                     position: flowPos,
-                    style: { width: 320 },
+                    style: { width: 350 },
                     data: { title: 'New Note', content: '' },
                 };
                 break;
@@ -574,7 +576,7 @@ function CanvasViewInner() {
                         id: nodeId,
                         type: 'article',
                         position: flowPos,
-                        style: { width: 320 },
+                        style: { width: 350, height: 180 },
                         data: { title: 'Loading...', url },
                     };
                     // Trigger URL processing
@@ -742,6 +744,7 @@ function CanvasViewInner() {
             id: nodeId,
             type: 'note',
             position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            style: { width: 350 },
             data: { title: 'New Note', content: '' },
         };
         addNode(newNode);
@@ -794,6 +797,7 @@ function CanvasViewInner() {
             id: nodeId,
             type: 'text',
             position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            style: { width: 250, height: 100 },
             data: { text: 'Type something...' },
         };
         addNode(newNode);
@@ -1057,7 +1061,7 @@ function CanvasViewInner() {
                 />
             )}
 
-            {/* Hover Preview */}
+            {/* Hover Preview - Disabled for now
             {hoveredNodeId && hoverPosition && (
                 <HoverPreview
                     nodeId={hoveredNodeId}
@@ -1065,6 +1069,7 @@ function CanvasViewInner() {
                     onClose={() => setHoveredNodeId(null)}
                 />
             )}
+            */}
 
             {/* Synthesis Modal */}
             {showSynthesis && (
