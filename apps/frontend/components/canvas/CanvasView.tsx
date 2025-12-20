@@ -30,6 +30,9 @@ import GroupNode from './nodes/GroupNode';
 import TextNode from './nodes/TextNode';
 import AnnotationNode from './nodes/AnnotationNode';
 import ImageNode from './nodes/ImageNode';
+import dynamic from 'next/dynamic';
+
+const PdfNode = dynamic(() => import('./nodes/PdfNode'), { ssr: false });
 
 import GraphControls from './GraphControls';
 import SynthesisModal from '../synthesis/SynthesisModal';
@@ -75,6 +78,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         ghost: GhostNode,
         note: NoteNode,
         image: ImageNode,
+        pdf: PdfNode,
         group: GroupNode,
         text: TextNode,
         annotation: AnnotationNode,
@@ -150,26 +154,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 y: event.clientY,
             });
 
-            const nodeId = `${isImage(file) ? 'img' : 'pdf'}-${Date.now()}`;
-            const type = isImage(file) ? 'note' : 'note'; // For now use 'note' with specific data, or maybe 'file' node?
-            // User asked for "File attachments (images, PDFs)"
-            // Usually this means a node that displays the image/pdf.
-            // Let's use a 'note' node but with special content or metadata? 
-            // Or create a new node type? 
-            // Existing types: article, video, etc. 
-            // Let's stick to 'note' for now and put markdown image/link in content.
-
-            const content = isImage(file)
-                ? `![${file.name}](${uploaded.url})`
-                : `[${file.name}](${uploaded.url})`;
+            const isImg = isImage(file);
+            const nodeId = `${isImg ? 'image' : 'pdf'}-${Date.now()}`;
+            const type = isImg ? 'image' : 'pdf';
 
             const newNode = {
                 id: nodeId,
-                type: 'note',
+                type: type,
                 position,
+                style: isImg ? { width: 300 } : { width: 300, height: 400 },
                 data: {
                     title: file.name,
-                    content: content,
+                    url: uploaded.url,
                     tags: ['file'],
                     whiteboard_id: activeWhiteboardId
                 },
@@ -180,7 +176,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             // Persist
             await nodesApi.create({
                 id: newNode.id,
-                type: 'note',
+                type: type,
                 title: newNode.data.title,
                 data: {
                     ...newNode.data,
@@ -303,6 +299,19 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 nodesApi.create({ ...newNode, type: 'image', title: 'Image', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
+            case 'add-pdf': {
+                const nodeId = `pdf-${Date.now()}`;
+                const newNode = {
+                    id: nodeId,
+                    type: 'pdf',
+                    position: flowPos,
+                    style: { width: 300, height: 400 },
+                    data: { url: '' },
+                };
+                addNode(newNode);
+                nodesApi.create({ ...newNode, type: 'pdf', title: 'PDF', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
+                break;
+            }
             case 'add-web': {
                 const url = prompt("Enter Web Page URL:");
                 if (url) {
@@ -376,6 +385,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         { label: 'Add card', onClick: () => handlePaneAction('add-note'), icon: <StickyNote size={14} /> },
         { label: 'Add web page', onClick: () => handlePaneAction('add-web'), icon: <Globe size={14} /> },
         { label: 'Add image', onClick: () => handlePaneAction('add-image'), icon: <ImageIcon size={14} /> },
+        { label: 'Add PDF', onClick: () => handlePaneAction('add-pdf'), icon: <FileIcon size={14} /> },
         { label: 'Create group', onClick: () => handlePaneAction('create-group'), icon: <BoxSelect size={14} /> },
         { separator: true, label: '', onClick: () => { } },
         { label: 'Paste', onClick: () => handlePaneAction('paste'), icon: <Clipboard size={14} /> },
@@ -606,6 +616,15 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     type: 'image',
                     position: flowPos,
                     style: { width: 300 },
+                    data: { url: '' },
+                };
+                break;
+            case 'pdf':
+                newNode = {
+                    id: nodeId,
+                    type: 'pdf',
+                    position: flowPos,
+                    style: { width: 300, height: 400 },
                     data: { url: '' },
                 };
                 break;
@@ -1087,6 +1106,13 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         >
                             <ImageIcon size={14} />
                             Add image
+                        </button>
+                        <button
+                            className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800 flex items-center gap-2"
+                            onClick={() => handleConnectionDropAction('pdf')}
+                        >
+                            <FileIcon size={14} />
+                            Add PDF
                         </button>
                     </div>
                 </div>
