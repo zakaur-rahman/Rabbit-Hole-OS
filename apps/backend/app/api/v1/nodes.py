@@ -69,7 +69,7 @@ async def process_url(
         "url": url,
         "title": extracted.get("title", "Untitled"),
         "content": content,
-        "snippet": content[:200] + "..." if len(content) > 200 else content,
+        "snippet": extracted.get("snippet") or (content[:200] + "..." if len(content) > 200 else content),
         "created_at": nodes_store.get(target_id, {}).get("created_at") or datetime.utcnow().isoformat() + "Z",
         "metadata": {
             **(nodes_store.get(target_id, {}).get("metadata", {})),

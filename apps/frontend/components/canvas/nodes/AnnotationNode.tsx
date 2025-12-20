@@ -7,31 +7,33 @@ const AnnotationNode = ({ data, selected }: NodeProps) => {
             <NodeResizer
                 minWidth={50}
                 minHeight={50}
-                isVisible={true}
+                isVisible={selected}
                 lineClassName="border-blue-500"
                 handleClassName="h-3 w-3 bg-neutral-900 border-2 border-blue-500 rounded"
             />
-            <div className={`relative ${selected ? 'ring-2 ring-blue-500 rounded-lg' : ''} h-full w-full pointer-events-auto`}>
+            <div className={`relative h-full w-full pointer-events-auto transition-all duration-300 ${selected ? 'ring-2 ring-blue-500/50 rounded-lg shadow-lg shadow-blue-500/10' : ''}`}>
                 <svg
                     width="100%"
                     height="100%"
-                    viewBox={`0 0 ${data.width} ${data.height}`}
+                    viewBox={`0 0 ${data.width || 100} ${data.height || 100}`}
                     className="overflow-visible"
                     style={{ pointerEvents: 'none' }}
                 >
                     <path
                         d={data.path}
                         fill="none"
-                        stroke={data.color || '#ef4444'}
+                        stroke={data.color || '#3b82f6'}
                         strokeWidth={data.strokeWidth || 3}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     />
                 </svg>
 
-                {/* Handles to allow connecting if needed, though annotations usually don't connect */}
-                <Handle type="source" position={Position.Bottom} className="opacity-0 pointer-events-none" />
-                <Handle type="source" position={Position.Top} className="opacity-0 pointer-events-none" />
+                {/* Handles - standardized but invisible unless hovered */}
+                <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'opacity-0'}`}>
+                    <Handle type="source" position={Position.Top} id="top" className="!bg-blue-500 !-top-1 opacity-0 hover:opacity-100" />
+                    <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-blue-500 !-bottom-1 opacity-0 hover:opacity-100" />
+                </div>
             </div>
         </>
     );

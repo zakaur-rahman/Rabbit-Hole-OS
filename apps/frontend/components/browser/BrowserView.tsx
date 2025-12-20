@@ -193,6 +193,7 @@ export default function BrowserView() {
             id: nodeId,
             type: nodeType,
             position: { x: baseX, y: baseY },
+            style: { width: 320 },
             data: { ...nodeData, whiteboard_id: whiteboardId },
         });
 

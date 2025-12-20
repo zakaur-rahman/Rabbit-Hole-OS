@@ -1,8 +1,9 @@
 'use client';
 
 import React, { memo } from 'react';
-import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
+import { NodeProps } from 'reactflow';
 import { Sparkles, Link2 } from 'lucide-react';
+import BaseNode from './BaseNode';
 
 export interface SynthesisNodeData {
     title: string;
@@ -10,81 +11,55 @@ export interface SynthesisNodeData {
     sourceCount?: number;
 }
 
-function SynthesisNode({ data, selected }: NodeProps<SynthesisNodeData>) {
+function SynthesisNode({ data, selected, id }: NodeProps<SynthesisNodeData>) {
     return (
-        <>
-            <NodeResizer
-                minWidth={150}
-                minHeight={100}
-                isVisible={true}
-                lineClassName="border-green-500"
-                handleClassName="h-3 w-3 bg-neutral-900 border-2 border-green-500 rounded"
-            />
-            <div
-                className={`
-        group relative bg-gradient-to-br from-neutral-900 to-neutral-800 border rounded-2xl p-4 h-full w-full
-        transition-all duration-200 cursor-pointer
-        ${selected
-                        ? 'border-green-500 shadow-xl shadow-green-500/30'
-                        : 'border-green-500/30 hover:border-green-500/60'
-                    }
-      `}
-            >
-                {/* Glowing border effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-500/10 to-transparent -z-10" />
-
-                {/* Header with icon */}
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                        <Sparkles size={20} className="text-white" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-semibold text-white leading-tight">
-                            {data.title || 'Synthesis'}
-                        </h3>
-                        {data.sourceCount && (
-                            <p className="text-xs text-green-400 flex items-center gap-1">
-                                <Link2 size={10} />
-                                {data.sourceCount} Connected Sources
-                            </p>
-                        )}
-                    </div>
+        <BaseNode
+            id={id}
+            selected={selected}
+            title={data.title || 'Synthesis'}
+            subtitle="AI Synthesis"
+            icon={Sparkles}
+            iconColor="text-green-400"
+            accentColor="green-500"
+            minHeight={120}
+            className="group/synthesis"
+        >
+            <div className="flex-1 p-3 pt-0 relative overflow-hidden">
+                {/* AI Sparkle Pattern Background */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none group-hover/synthesis:opacity-[0.05] transition-opacity duration-500">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-green-500/20 via-transparent to-transparent" />
                 </div>
 
-                {/* Summary */}
-                {data.summary && (
-                    <p className="text-xs text-neutral-300 line-clamp-3 leading-relaxed">
-                        {data.summary}
-                    </p>
-                )}
+                {/* Content */}
+                <div className="relative space-y-3">
+                    {data.summary && (
+                        <p className="text-[11px] text-neutral-300 leading-relaxed font-medium">
+                            {data.summary}
+                        </p>
+                    )}
 
-                {/* Handles - multiple connection points */}
-                <Handle
-                    type="source"
-                    position={Position.Top}
-                    id="top"
-                    className="!w-3 !h-3 !bg-green-500 !border-2 !border-neutral-900"
-                />
-                <Handle
-                    type="source"
-                    position={Position.Left}
-                    id="left"
-                    className="!w-2 !h-2 !bg-green-500 !border-2 !border-neutral-900"
-                />
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    id="right"
-                    className="!w-2 !h-2 !bg-green-500 !border-2 !border-neutral-900"
-                />
-                <Handle
-                    type="source"
-                    position={Position.Bottom}
-                    id="bottom"
-                    className="!w-3 !h-3 !bg-green-500 !border-2 !border-neutral-900"
-                />
+                    {data.sourceCount !== undefined && (
+                        <div className="flex items-center gap-2">
+                            <div className="flex -space-x-1.5 overflow-hidden">
+                                {[...Array(Math.min(data.sourceCount, 3))].map((_, i) => (
+                                    <div key={i} className="inline-block h-4 w-4 rounded-full ring-2 ring-neutral-900 bg-neutral-800 flex items-center justify-center">
+                                        <Link2 size={8} className="text-green-400" />
+                                    </div>
+                                ))}
+                            </div>
+                            <span className="text-[9px] font-bold text-green-500/80 uppercase tracking-widest leading-none">
+                                {data.sourceCount} Sources Linked
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Subtle pulse for AI node */}
+                {selected && (
+                    <div className="absolute inset-0 bg-green-500/5 animate-pulse -z-10" />
+                )}
             </div>
-        </>
+        </BaseNode>
     );
 }
 

@@ -43,9 +43,34 @@ async def extract_content(url: str) -> Optional[dict]:
         # Detect content type based on URL patterns
         content_type = detect_content_type(url)
         
+        if not content:
+            content = ""
+        
+        # Clean up snippet: remove redundant pipe separators and excessive whitespace
+        # This specifically helps with Wikipedia tables/metadata being dumped at the start
+        snippet = content[:800]
+        
+        # Remove citations like [1], [a], [1][2]
+        snippet = re.sub(r'\[[a-zA-Z0-9]+\]', '', snippet)
+        
+        # Remove markdown table relics like |---|---| or | :--- |
+        snippet = re.sub(r'\|[\s\-:|]+\|', ' ', snippet)
+        snippet = re.sub(r'\|[\s\-:|]+', ' ', snippet)
+        
+        # Remove multiple pipes with surrounding space
+        snippet = re.sub(r'\s*\|\s*\|+\s*', ' | ', snippet)
+        
+        # Remove line breaks and multiple spaces
+        snippet = re.sub(r'\n+', ' ', snippet)
+        snippet = re.sub(r'\s+', ' ', snippet)
+        
+        # Remove leading pipes/whitespace
+        snippet = re.sub(r'^[\s|]+', '', snippet)
+        
         return {
             "title": title,
-            "content": content or "",
+            "content": content,
+            "snippet": snippet[:300].strip() + "..." if len(snippet) > 300 else snippet.strip(),
             "author": author,
             "date": date,
             "description": description,
