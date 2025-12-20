@@ -29,6 +29,7 @@ import NoteNode from './nodes/NoteNode';
 import GroupNode from './nodes/GroupNode';
 import TextNode from './nodes/TextNode';
 import AnnotationNode from './nodes/AnnotationNode';
+import ImageNode from './nodes/ImageNode';
 
 import GraphControls from './GraphControls';
 import SynthesisModal from '../synthesis/SynthesisModal';
@@ -44,9 +45,24 @@ import { Scan, Scissors, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, 
 
 // ... other imports
 
-function CanvasViewInner() {
+interface CanvasViewProps {
+    onNodeOpen?: (nodeId: string) => void;
+    onPaneClick?: () => void;
+}
+
+function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasViewProps) {
     const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId } = useGraphStore();
     const [showSynthesis, setShowSynthesis] = useState(false);
+
+    // ... (rest of the file) ...
+
+    const onPaneClick = useCallback(() => {
+        selectNode(null);
+        setContextMenu(prev => ({ ...prev, visible: false }));
+        setPaneContextMenu(prev => ({ ...prev, visible: false }));
+        setEdgeContextMenu(prev => ({ ...prev, visible: false }));
+        onPaneClickProp?.();
+    }, [selectNode, onPaneClickProp]);
 
     // Register all custom node types
     const nodeTypes = useMemo(() => ({
@@ -58,6 +74,7 @@ function CanvasViewInner() {
         academic: AcademicNode,
         ghost: GhostNode,
         note: NoteNode,
+        image: ImageNode,
         group: GroupNode,
         text: TextNode,
         annotation: AnnotationNode,
@@ -273,6 +290,19 @@ function CanvasViewInner() {
                 nodesApi.create({ ...newNode, type: 'note', title: 'New Note', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
+            case 'add-image': {
+                const nodeId = `image-${Date.now()}`;
+                const newNode = {
+                    id: nodeId,
+                    type: 'image',
+                    position: flowPos,
+                    style: { width: 300 },
+                    data: { url: '' },
+                };
+                addNode(newNode);
+                nodesApi.create({ ...newNode, type: 'image', title: 'Image', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
+                break;
+            }
             case 'add-web': {
                 const url = prompt("Enter Web Page URL:");
                 if (url) {
@@ -345,6 +375,7 @@ function CanvasViewInner() {
     const paneActions = useMemo(() => [
         { label: 'Add card', onClick: () => handlePaneAction('add-note'), icon: <StickyNote size={14} /> },
         { label: 'Add web page', onClick: () => handlePaneAction('add-web'), icon: <Globe size={14} /> },
+        { label: 'Add image', onClick: () => handlePaneAction('add-image'), icon: <ImageIcon size={14} /> },
         { label: 'Create group', onClick: () => handlePaneAction('create-group'), icon: <BoxSelect size={14} /> },
         { separator: true, label: '', onClick: () => { } },
         { label: 'Paste', onClick: () => handlePaneAction('paste'), icon: <Clipboard size={14} /> },
@@ -569,6 +600,15 @@ function CanvasViewInner() {
                     data: { title: 'New Note', content: '' },
                 };
                 break;
+            case 'image':
+                newNode = {
+                    id: nodeId,
+                    type: 'image',
+                    position: flowPos,
+                    style: { width: 300 },
+                    data: { url: '' },
+                };
+                break;
             case 'article':
                 const url = prompt("Enter Web Page URL:");
                 if (url) {
@@ -731,12 +771,6 @@ function CanvasViewInner() {
         selectNode(node.id);
     }, [selectNode]);
 
-    const onPaneClick = useCallback(() => {
-        selectNode(null);
-        setContextMenu(prev => ({ ...prev, visible: false }));
-        setPaneContextMenu(prev => ({ ...prev, visible: false }));
-        setEdgeContextMenu(prev => ({ ...prev, visible: false }));
-    }, [selectNode]);
 
     const handleAddNote = useCallback(async () => {
         const nodeId = `note-${Date.now()}`;
@@ -935,6 +969,7 @@ function CanvasViewInner() {
                 onConnectStart={onConnectStart}
                 onConnectEnd={onConnectEnd}
                 onNodeClick={onNodeClick}
+                onNodeDoubleClick={(_, node) => onNodeOpen?.(node.id)}
                 onNodeContextMenu={onNodeContextMenu}
                 onEdgeContextMenu={onEdgeContextMenu}
                 onPaneClick={onPaneClick}
@@ -1045,6 +1080,13 @@ function CanvasViewInner() {
                         >
                             <Globe size={14} />
                             Add web page
+                        </button>
+                        <button
+                            className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800 flex items-center gap-2"
+                            onClick={() => handleConnectionDropAction('image')}
+                        >
+                            <ImageIcon size={14} />
+                            Add image
                         </button>
                     </div>
                 </div>
@@ -1171,10 +1213,10 @@ function ConnectionLineOverlay({
     );
 }
 
-export default function CanvasView() {
+export default function CanvasView(props: CanvasViewProps) {
     return (
         <ReactFlowProvider>
-            <CanvasViewInner />
+            <CanvasViewInner {...props} />
         </ReactFlowProvider>
     );
 }
