@@ -69,7 +69,7 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
             Image.configure({
                 allowBase64: true,
                 HTMLAttributes: {
-                    class: 'rounded-lg max-w-full max-h-[500px] object-contain my-4 shadow-lg border border-white/10',
+                    class: 'rounded-lg w-full max-h-[500px] object-contain my-4 shadow-lg border border-white/10 block mx-auto',
                 },
             }),
         ],
@@ -259,9 +259,6 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
             <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-neutral-900/60 backdrop-blur-md border-b border-white/5 sticky top-0 z-10 overflow-x-auto no-scrollbar min-h-[40px]">
                 {inputMode ? (
                     <div className="flex items-center gap-2 px-2 w-full animate-in fade-in slide-in-from-top-1 duration-200">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 min-w-fit">
-                            {inputMode === 'link' ? 'Set Link' : 'Add Image'}
-                        </span>
                         <input
                             ref={inputRef}
                             type="text"
@@ -270,6 +267,15 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleInputConfirm();
                                 if (e.key === 'Escape') handleInputCancel();
+                            }}
+                            onPaste={(e) => {
+                                const text = e.clipboardData.getData('text');
+                                if (text && inputMode === 'image') {
+                                    e.preventDefault();
+                                    editor?.chain().focus().setImage({ src: text }).run();
+                                    setInputMode(null);
+                                    setInputValue('');
+                                }
                             }}
                             placeholder={inputMode === 'link' ? "https://..." : "Paste image URL or click Upload"}
                             className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs text-neutral-200 focus:outline-none focus:border-blue-500/50"
@@ -289,16 +295,10 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
                                     className="p-1 px-2 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded transition-colors text-[10px] font-bold flex items-center gap-1"
                                 >
                                     <Upload size={12} />
-                                    <span>Upload</span>
+                                    <span>Select</span>
                                 </button>
                             </>
                         )}
-                        <button
-                            onClick={handleInputConfirm}
-                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-[10px] font-bold transition-colors"
-                        >
-                            {inputMode === 'link' ? 'Apply' : 'Insert'}
-                        </button>
                         <button
                             onClick={handleInputCancel}
                             className="px-3 py-1 hover:bg-white/5 text-neutral-400 rounded text-[10px] font-medium transition-colors"
