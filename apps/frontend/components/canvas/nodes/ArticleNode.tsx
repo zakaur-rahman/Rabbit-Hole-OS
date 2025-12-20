@@ -40,15 +40,16 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData>) {
             icon={FileText}
             iconColor={iconColor}
             accentColor={accentColor}
+            minWidth={320}
             minHeight={80}
         >
             <div className="flex-1 p-3 pt-0 overflow-hidden relative">
                 {/* Markdown snippet */}
                 {data.snippet ? (
-                    <div className="prose prose-xs prose-invert max-w-none text-neutral-400 opacity-90 leading-relaxed select-text">
+                    <div className="prose prose-sm prose-invert max-w-none text-neutral-200 opacity-100 leading-relaxed select-text whitespace-normal break-words">
                         <MarkdownPreview
                             source={data.snippet}
-                            style={{ backgroundColor: 'transparent', color: 'inherit', fontSize: '11px', lineHeight: '1.6' }}
+                            style={{ backgroundColor: 'transparent', color: 'inherit', fontSize: '13px', lineHeight: '1.6' }}
                         />
                     </div>
                 ) : (

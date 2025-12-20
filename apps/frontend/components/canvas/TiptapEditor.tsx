@@ -69,7 +69,7 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
             Image.configure({
                 allowBase64: true,
                 HTMLAttributes: {
-                    class: 'rounded-lg max-w-full h-auto my-4 shadow-lg border border-white/10',
+                    class: 'rounded-lg max-w-full max-h-[500px] object-contain my-4 shadow-lg border border-white/10',
                 },
             }),
         ],

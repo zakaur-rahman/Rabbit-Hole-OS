@@ -33,7 +33,7 @@ function SynthesisNode({ data, selected, id }: NodeProps<SynthesisNodeData>) {
                 {/* Content */}
                 <div className="relative space-y-3">
                     {data.summary && (
-                        <p className="text-[11px] text-neutral-300 leading-relaxed font-medium">
+                        <p className="text-[13px] text-neutral-200 leading-relaxed font-medium whitespace-normal break-words">
                             {data.summary}
                         </p>
                     )}
