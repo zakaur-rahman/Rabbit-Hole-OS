@@ -70,9 +70,9 @@ function BaseNode({
                 <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${accentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 p-3 bg-neutral-950/20 border-b border-white/5">
+                <div className="flex items-center gap-2.5 p-1 bg-neutral-950/20 border-b border-white/5">
                     {Icon && (
-                        <div className={`p-1.5 rounded-lg bg-${accentColor}/10 ${iconColor} shadow-inner shrink-0`}>
+                        <div className={`p-1 rounded-lg bg-${accentColor}/10 ${iconColor} shadow-inner shrink-0`}>
                             <Icon size={14} />
                         </div>
                     )}
@@ -85,12 +85,12 @@ function BaseNode({
                                 placeholder="Untitled"
                             />
                         ) : (
-                            <h3 className="text-sm font-semibold text-white break-words line-clamp-2 leading-snug">
+                            <h3 className="text-sm font-medium text-white break-words line-clamp-2 leading-snug">
                                 {title || 'Untitled'}
                             </h3>
                         )}
                         {subtitle && (
-                            <p className="text-[10px] text-neutral-500 truncate mt-0.5 font-medium tracking-wide flex items-center gap-1 uppercase">
+                            <p className="text-[8px] text-neutral-500 truncate mt-0.5 font-small tracking-tight flex items-center gap-1 uppercase">
                                 {subtitle}
                             </p>
                         )}

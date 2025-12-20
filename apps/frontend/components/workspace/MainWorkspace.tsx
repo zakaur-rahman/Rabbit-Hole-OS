@@ -31,12 +31,8 @@ export default function MainWorkspace() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    // Sync active node to open tabs
-    useEffect(() => {
-        if (selectedNodeId && !openNodeIds.includes(selectedNodeId)) {
-            setOpenNodeIds(prev => [...prev, selectedNodeId]);
-        }
-    }, [selectedNodeId]);
+    // NOTE: Removed useEffect that auto-synced selectedNodeId to openNodeIds
+    // to allow double-click opening only.
 
     const handleCloseNode = (id: string) => {
         const newIds = openNodeIds.filter(n => n !== id);
@@ -47,8 +43,6 @@ export default function MainWorkspace() {
             selectNode(newIds.length > 0 ? newIds[newIds.length - 1] : null);
         }
     };
-
-    // ... useEffect ...
 
     const handleSearch = (query: string) => {
         // If searching, maybe switch to browser? Or just search modal?
@@ -111,7 +105,14 @@ export default function MainWorkspace() {
                 )}
 
                 <Panel defaultSize={60} minSize={60} className="flex flex-col relative bg-neutral-900 border-l border-neutral-800">
-                    <CanvasView />
+                    <CanvasView
+                        onNodeOpen={(id) => {
+                            if (!openNodeIds.includes(id)) {
+                                setOpenNodeIds(prev => [...prev, id]);
+                            }
+                        }}
+                        onPaneClick={() => setOpenNodeIds([])}
+                    />
 
                     {/* Node Details Panel (Tabs) */}
                     {openNodeIds.length > 0 && (
