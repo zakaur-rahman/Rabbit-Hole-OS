@@ -59,7 +59,7 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData>) {
                         autoFocus
                     />
                 ) : (
-                    <div className="p-4 prose prose-sm prose-invert max-w-none text-neutral-400 opacity-90 leading-relaxed overflow-hidden flex-1 h-full">
+                    <div className="p-4 prose prose-sm prose-invert max-w-none text-neutral-200 opacity-100 leading-relaxed overflow-hidden flex-1 h-full whitespace-normal break-words">
                         {content ? (
                             <div
                                 dangerouslySetInnerHTML={{ __html: content }}

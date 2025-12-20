@@ -57,7 +57,7 @@ function BaseNode({
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
                     group relative flex flex-col h-full w-full
-                    bg-neutral-900/40 backdrop-blur-xl border rounded-2xl overflow-hidden
+                    bg-neutral-900/60 backdrop-blur-xl border rounded-2xl overflow-hidden
                     transition-all duration-300 shadow-2xl
                     ${selected
                         ? `border-${accentColor} shadow-${accentColor}/10 ring-1 ring-${accentColor}/20`
