@@ -563,6 +563,7 @@ function CanvasViewInner() {
                     id: nodeId,
                     type: 'note',
                     position: flowPos,
+                    style: { width: 320 },
                     data: { title: 'New Note', content: '' },
                 };
                 break;
@@ -573,6 +574,7 @@ function CanvasViewInner() {
                         id: nodeId,
                         type: 'article',
                         position: flowPos,
+                        style: { width: 320 },
                         data: { title: 'Loading...', url },
                     };
                     // Trigger URL processing

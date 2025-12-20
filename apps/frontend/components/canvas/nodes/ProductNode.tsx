@@ -1,8 +1,9 @@
 'use client';
 
 import React, { memo } from 'react';
-import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
-import { ShoppingBag, Star, ExternalLink } from 'lucide-react';
+import { NodeProps } from 'reactflow';
+import { ShoppingBag, Star } from 'lucide-react';
+import BaseNode from './BaseNode';
 
 export interface ProductNodeData {
     title: string;
@@ -13,37 +14,39 @@ export interface ProductNodeData {
     inStock?: boolean;
 }
 
-function ProductNode({ data, selected }: NodeProps<ProductNodeData>) {
+function ProductNode({ data, selected, id }: NodeProps<ProductNodeData>) {
+    let subtitle = 'Product';
+    try {
+        if (data.url) {
+            subtitle = new URL(data.url).hostname.replace('www.', '');
+        }
+    } catch { }
+
     return (
-        <>
-            <NodeResizer
-                minWidth={150}
-                minHeight={100}
-                isVisible={true}
-                lineClassName="border-green-500"
-                handleClassName="h-3 w-3 bg-neutral-900 border-2 border-green-500 rounded"
-            />
-            <div
-                className={`
-        group relative bg-neutral-900 border rounded-xl overflow-hidden h-full w-full
-        transition-all duration-200 cursor-pointer
-        ${selected
-                        ? 'border-green-500 shadow-lg shadow-green-500/20'
-                        : 'border-neutral-700 hover:border-green-500/50'
-                    }
-      `}
-            >
+        <BaseNode
+            id={id}
+            selected={selected}
+            title={data.title}
+            subtitle={subtitle}
+            icon={ShoppingBag}
+            iconColor="text-purple-400"
+            accentColor="purple-500"
+            minHeight={120}
+        >
+            <div className="flex-1 flex flex-col min-h-0 relative">
                 {/* Thumbnail */}
-                <div className="relative h-28 bg-neutral-800 flex items-center justify-center">
+                <div className="relative h-28 bg-neutral-800/50 flex items-center justify-center overflow-hidden">
                     {data.thumbnail ? (
                         <img src={data.thumbnail} alt={data.title} className="w-full h-full object-cover" />
                     ) : (
-                        <ShoppingBag size={32} className="text-neutral-600" />
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
+                            <ShoppingBag size={32} className="text-neutral-600 opacity-50" />
+                        </div>
                     )}
 
                     {/* Stock Badge */}
                     {data.inStock !== undefined && (
-                        <span className={`absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full ${data.inStock ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        <span className={`absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold uppercase rounded-full border ${data.inStock ? 'bg-green-500/20 text-green-400 border-green-500/20' : 'bg-red-500/20 text-red-400 border-red-500/20'
                             }`}>
                             {data.inStock ? 'In Stock' : 'Out of Stock'}
                         </span>
@@ -51,30 +54,21 @@ function ProductNode({ data, selected }: NodeProps<ProductNodeData>) {
                 </div>
 
                 {/* Details */}
-                <div className="p-3">
-                    <h3 className="text-sm font-medium text-white line-clamp-2 leading-tight mb-1">
-                        {data.title || 'Product'}
-                    </h3>
-
-                    {data.price && (
-                        <p className="text-green-400 font-semibold text-sm">{data.price}</p>
-                    )}
-
-                    {data.rating && (
-                        <div className="flex items-center gap-1 mt-1">
-                            <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                            <span className="text-xs text-neutral-400">{data.rating}</span>
-                        </div>
-                    )}
+                <div className="p-3 bg-neutral-950/20">
+                    <div className="flex items-center justify-between gap-2">
+                        {data.price && (
+                            <p className="text-green-400 font-bold text-sm tracking-tight">{data.price}</p>
+                        )}
+                        {data.rating && (
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/10 rounded border border-yellow-500/10">
+                                <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                                <span className="text-[10px] font-bold text-yellow-500">{data.rating}</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
-
-                {/* Handles */}
-                <Handle type="source" position={Position.Top} id="top" className="!w-2 !h-2 !bg-green-500 !border-2 !border-neutral-900" />
-                <Handle type="source" position={Position.Bottom} id="bottom" className="!w-2 !h-2 !bg-green-500 !border-2 !border-neutral-900" />
-                <Handle type="source" position={Position.Left} id="left" className="!w-2 !h-2 !bg-green-500 !border-2 !border-neutral-900" />
-                <Handle type="source" position={Position.Right} id="right" className="!w-2 !h-2 !bg-green-500 !border-2 !border-neutral-900" />
             </div>
-        </>
+        </BaseNode>
     );
 }
 
