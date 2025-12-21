@@ -35,7 +35,7 @@ export interface GraphState {
   setEdges: (edges: Edge[]) => void;
   setWhiteboard: (id: string) => Promise<void>;
   fetchNodes: () => Promise<void>;
-  addNode: (node: Node) => Promise<void>;
+  addNode: (node: Node, persist?: boolean) => Promise<void>;
   addEdge: (edge: Edge) => Promise<void>;
   removeNode: (id: string) => void;
   removeEdge: (id: string) => Promise<void>;
@@ -95,7 +95,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         ...edge,
         type: 'simplebezier',
         animated: false,
-        style: { stroke: '#9ca3af', strokeWidth: 2 },
+        style: { stroke: '#9ca3af', strokeWidth: 2, strokeDasharray: 'none' },
         markerEnd: {
             type: MarkerType.Arrow,
             color: '#9ca3af',
@@ -134,7 +134,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             style: n.metadata?.style,
             parentId: n.metadata?.parentId,
         }));
-        set({ nodes: flowNodes, edges: apiEdges || [] });
+        
+        // Deduplicate
+        const uniqueNodes = Array.from(new Map(flowNodes.map(node => [node.id, node])).values());
+        
+        set({ nodes: uniqueNodes, edges: apiEdges || [] });
     } catch(e) {
         console.error("Failed to set whiteboard", e);
     }
@@ -164,13 +168,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             parentId: n.metadata?.parentId,
         }));
 
-        set({ nodes: flowNodes, edges: apiEdges || [] });
+        const uniqueNodes = Array.from(new Map(flowNodes.map(node => [node.id, node])).values());
+
+        set({ nodes: uniqueNodes, edges: apiEdges || [] });
       } catch (e) {
           console.error("[Store] Failed to fetchNodes", e);
       }
   },
 
-  addNode: async (node: Node) => {
+  addNode: async (node: Node, persist = true) => {
     const { activeWhiteboardId } = get();
     const nodeWithWb = {
         ...node,
@@ -184,16 +190,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       nodes: [...state.nodes, nodeWithWb] 
     }));
 
-    try {
-        await nodesApi.create({
-            id: node.id,
-            type: node.type || 'article',
-            title: node.data.title,
-            url: node.data.url,
-            data: nodeWithWb.data
-        });
-    } catch(e) {
-        console.error("Failed to persist node", e);
+    if (persist) {
+        try {
+            await nodesApi.create({
+                id: node.id,
+                type: node.type || 'article',
+                title: node.data.title,
+                url: node.data.url,
+                data: {
+                    ...nodeWithWb.data,
+                    style: node.style // Persist initial dimensions
+                }
+            });
+        } catch(e) {
+            console.error("Failed to persist node", e);
+        }
     }
   },
   
@@ -212,7 +223,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         ...edge,
         type: 'simplebezier',
         animated: false,
-        style: { stroke: '#9ca3af', strokeWidth: 2 },
+        style: { stroke: '#9ca3af', strokeWidth: 2, strokeDasharray: 'none' },
         markerEnd: {
           type: MarkerType.Arrow,
           color: '#9ca3af',

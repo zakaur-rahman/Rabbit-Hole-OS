@@ -1,10 +1,12 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Handle, Position, NodeResizer } from 'reactflow';
 import { LucideIcon } from 'lucide-react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
+import { nodesApi } from '@/lib/api';
+import { useGraphStore } from '@/store/graph.store';
 
 interface BaseNodeProps {
     id: string;
@@ -41,6 +43,20 @@ function BaseNode({
 }: BaseNodeProps) {
     const [isHovered, setIsHovered] = React.useState(false);
 
+    const onResizeEnd = useCallback((event: any, params: any) => {
+        const { width, height } = params;
+        const node = useGraphStore.getState().nodes.find((n) => n.id === id);
+
+        if (node) {
+            nodesApi.update(id, {
+                metadata: {
+                    ...node.data,
+                    style: { width, height }
+                }
+            }).catch(console.error);
+        }
+    }, [id]);
+
     return (
         <>
             {showResizer && (
@@ -50,6 +66,7 @@ function BaseNode({
                     isVisible={selected || isHovered}
                     lineClassName={`border-${accentColor}`}
                     handleClassName={`h-3 w-3 bg-neutral-900 border-2 border-${accentColor} rounded`}
+                    onResizeEnd={onResizeEnd}
                 />
             )}
             <div

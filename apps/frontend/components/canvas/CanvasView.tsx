@@ -323,7 +323,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         style: { width: 350, height: 180 },
                         data: { title: url, url: url }
                     };
-                    addNode(newNode);
+                    addNode(newNode, false);
                     nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(apiNode => {
                         useGraphStore.getState().updateNode(nodeId, {
                             title: apiNode.title,
@@ -638,7 +638,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         style: { width: 350, height: 180 },
                         data: { title: 'Loading...', url },
                     };
-                    // Trigger URL processing
+                    // Trigger URL processing - persist only via backend, skip local addNode persistence
                     nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
                         useGraphStore.getState().updateNode(nodeId, {
                             title: result.title,
@@ -650,7 +650,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         }
 
         if (newNode) {
-            addNode(newNode);
+            // If article, we let processUrl handle persistence to avoid duplicates
+            const shouldPersist = newNode.type !== 'article';
+            addNode(newNode, shouldPersist);
 
             // If reconnecting, update the existing edge
             if (reconnectingEdgeRef.current) {
@@ -780,7 +782,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             metadata: {
                 ...node.data,
                 position: finalPosition,
-                parentId: finalParentId
+                parentId: finalParentId,
+                style: node.style // Ensure style is preserved on move
             }
         }).catch(err => console.error("Failed to persist node update:", err));
     }, [nodes]);
@@ -919,7 +922,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         type: 'simplebezier',
         style: {
             stroke: '#9ca3af', // Neutral gray like Obsidian
-            strokeWidth: 2
+            strokeWidth: 2,
+            strokeDasharray: 'none', // Force solid line
         },
         markerEnd: {
             type: MarkerType.Arrow,
@@ -1014,6 +1018,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 connectionLineStyle={useMemo(() => ({
                     stroke: '#9ca3af',
                     strokeWidth: 2,
+                    strokeDasharray: 'none', // Force solid line
                     opacity: connectionDropMenu.visible ? 0 : 1
                 }), [connectionDropMenu.visible])}
                 className={`bg-neutral-950 ${readOnly ? 'cursor-not-allowed' : ''}`}
