@@ -12,7 +12,10 @@ export interface VideoNodeData {
     duration?: string;
 }
 
-function VideoNode({ data, selected, id }: NodeProps<VideoNodeData>) {
+function VideoNode({ data, selected, id }: NodeProps<VideoNodeData & { isPreview?: boolean, color?: string }>) {
+    const isPreview = data.isPreview;
+    const accentColor = data.color || "red-500";
+    const iconColor = accentColor === 'red-500' ? 'text-red-400' : `text-${accentColor.replace('500', '400')}`;
     let subtitle = 'Video';
     try {
         if (data.url) {
@@ -27,37 +30,40 @@ function VideoNode({ data, selected, id }: NodeProps<VideoNodeData>) {
             title={data.title}
             subtitle={subtitle}
             icon={VideoIcon}
-            iconColor="text-red-400"
-            accentColor="red-500"
+            iconColor={iconColor}
+            accentColor={accentColor}
             minHeight={120}
+            showResizer={!isPreview}
         >
             <div className="flex-1 flex flex-col min-h-0 relative">
                 {/* Thumbnail / Placeholder */}
-                <div className="relative h-24 bg-neutral-800/50 flex items-center justify-center overflow-hidden">
+                <div className={`relative ${isPreview ? 'h-20' : 'h-24'} bg-neutral-800/50 flex items-center justify-center overflow-hidden`}>
                     {data.thumbnail ? (
                         <img src={data.thumbnail} alt={data.title} className="w-full h-full object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
-                            <VideoIcon size={32} className="text-neutral-600 opacity-50" />
+                            <VideoIcon size={isPreview ? 24 : 32} className="text-neutral-600 opacity-50" />
                         </div>
                     )}
 
                     {/* Play button overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
-                        <div className="w-10 h-10 rounded-full bg-red-500 shadow-lg shadow-red-500/20 flex items-center justify-center animate-in zoom-in-75 duration-200">
-                            <Play size={18} className="text-white ml-0.5" fill="white" />
+                    {!isPreview && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
+                            <div className="w-10 h-10 rounded-full bg-red-500 shadow-lg shadow-red-500/20 flex items-center justify-center animate-in zoom-in-75 duration-200">
+                                <Play size={18} className="text-white ml-0.5" fill="white" />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Duration badge */}
                     {data.duration && (
-                        <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-bold text-white bg-black/80 backdrop-blur-md rounded border border-white/10 uppercase tracking-tighter">
+                        <span className={`absolute bottom-1 right-1 px-1.5 py-0.5 ${isPreview ? 'text-[8px]' : 'text-[10px]'} font-bold text-white bg-black/80 backdrop-blur-md rounded border border-white/10 uppercase tracking-tighter`}>
                             {data.duration}
                         </span>
                     )}
                 </div>
 
-                {data.url && (
+                {data.url && !isPreview && (
                     <div className="absolute bottom-1 left-2 pointer-events-none opacity-50">
                         <p className="text-[9px] text-neutral-400 truncate max-w-[100px]">
                             {data.url}

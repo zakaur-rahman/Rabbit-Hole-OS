@@ -15,7 +15,10 @@ export interface AcademicNodeData {
     category?: 'economic' | 'military' | 'political' | 'social';
 }
 
-function AcademicNode({ data, selected, id }: NodeProps<AcademicNodeData>) {
+function AcademicNode({ data, selected, id }: NodeProps<AcademicNodeData & { color?: string }>) {
+    const accentColor = data.color || "green-500";
+    const iconColor = accentColor === 'green-500' ? 'text-green-400' : `text-${accentColor.replace('500', '400')}`;
+
     const categoryColors: Record<string, { bg: string; text: string; icon: string }> = {
         economic: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: '💰' },
         military: { bg: 'bg-red-500/20', text: 'text-red-400', icon: '⚔️' },
@@ -34,8 +37,8 @@ function AcademicNode({ data, selected, id }: NodeProps<AcademicNodeData>) {
             title={data.title}
             subtitle={subtitle}
             icon={BookOpen}
-            iconColor="text-green-400"
-            accentColor="green-500"
+            iconColor={iconColor}
+            accentColor={accentColor}
             minHeight={100}
         >
             <div className="flex-1 p-3 pt-0">

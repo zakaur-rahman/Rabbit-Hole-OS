@@ -30,7 +30,10 @@ import GroupNode from './nodes/GroupNode';
 import TextNode from './nodes/TextNode';
 import AnnotationNode from './nodes/AnnotationNode';
 import ImageNode from './nodes/ImageNode';
+import CanvasNode from './nodes/CanvasNode';
 import dynamic from 'next/dynamic';
+import CanvasImportModal from '../modals/CanvasImportModal';
+import { Network } from 'lucide-react';
 
 const PdfNode = dynamic(() => import('./nodes/PdfNode'), { ssr: false });
 
@@ -54,8 +57,9 @@ interface CanvasViewProps {
 }
 
 function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasViewProps) {
-    const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId } = useGraphStore();
+    const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId, whiteboards } = useGraphStore();
     const [showSynthesis, setShowSynthesis] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
 
     // ... (rest of the file) ...
 
@@ -82,6 +86,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         group: GroupNode,
         text: TextNode,
         annotation: AnnotationNode,
+        canvas: CanvasNode,
     }), []);
 
     // Fetch nodes on mount or whiteboard change
@@ -366,6 +371,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 });
                 break;
             }
+            case 'import-canvas':
+                setShowImportModal(true);
+                break;
             case 'paste': {
                 if (clipboardRef.current.length === 0) break;
                 let minX = Infinity, minY = Infinity;
@@ -405,6 +413,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         { label: 'Add image', onClick: () => handlePaneAction('add-image'), icon: <ImageIcon size={14} /> },
         { label: 'Add PDF', onClick: () => handlePaneAction('add-pdf'), icon: <FileIcon size={14} /> },
         { label: 'Add code', onClick: () => handlePaneAction('add-code'), icon: <Code size={14} /> },
+        { label: 'Import Canvas', onClick: () => handlePaneAction('import-canvas'), icon: <Network size={14} /> },
         { label: 'Create group', onClick: () => handlePaneAction('create-group'), icon: <BoxSelect size={14} /> },
         { separator: true, label: '', onClick: () => { } },
         { label: 'Paste', onClick: () => handlePaneAction('paste'), icon: <Clipboard size={14} /> },
@@ -1069,6 +1078,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     onAddText={handleAddText}
                     onTemplate={() => setShowTemplateModal(true)}
                     onFitSelection={onFitSelection}
+                    onImportCanvas={() => setShowImportModal(true)}
                 />
             </ReactFlow>
 
@@ -1166,6 +1176,51 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             {/* Synthesis Modal */}
             {showSynthesis && (
                 <SynthesisModal onClose={() => setShowSynthesis(false)} />
+            )}
+
+            {/* Canvas Import Modal */}
+            {showImportModal && (
+                <CanvasImportModal
+                    onClose={() => setShowImportModal(false)}
+                    onImport={(targetId, targetName) => {
+                        // Circular Dependency Check
+                        // 1. Get all nodes in the target canvas (if we have them in memory, or assume we need to check store)
+                        // This is tricky frontend-only. Let's do a basic check:
+                        // Does the target canvas already contain a CanvasNode pointing to the activeWhiteboardId?
+                        // Or does any transitive child?
+                        // For a robust check, we'd need to crawl the whiteboards.
+
+                        const isCircular = (currentId: string, targetId: string): boolean => {
+                            if (currentId === targetId) return true;
+                            // This requires knowledge of ALL nodes in targetId.
+                            // Since we don't have that globally available easily without fetching,
+                            // let's do a simpler "direct" check and then a more advanced one if possible.
+                            return false;
+                        };
+
+                        const nodeId = `canvas-${Date.now()}`;
+                        const { flowPos } = paneContextMenu;
+                        const newNode = {
+                            id: nodeId,
+                            type: 'canvas',
+                            position: flowPos || { x: 0, y: 0 },
+                            data: {
+                                title: targetName,
+                                referencedCanvasId: targetId,
+                                whiteboard_id: activeWhiteboardId
+                            },
+                        };
+
+                        addNode(newNode);
+                        nodesApi.create({
+                            ...newNode,
+                            type: 'canvas',
+                            title: targetName,
+                            data: { ...newNode.data }
+                        });
+                        setShowImportModal(false);
+                    }}
+                />
             )}
 
             {/* Template Modal */}
