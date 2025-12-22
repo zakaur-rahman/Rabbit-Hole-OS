@@ -7,6 +7,7 @@ import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { nodesApi } from '@/lib/api';
 import { useGraphStore } from '@/store/graph.store';
+import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
 interface BaseNodeProps {
     id: string;
@@ -23,6 +24,7 @@ interface BaseNodeProps {
     minHeight?: number;
     className?: string;
     onTitleChange?: (title: string) => void;
+    headerRight?: React.ReactNode;
 }
 
 function BaseNode({
@@ -39,9 +41,14 @@ function BaseNode({
     minWidth = 150,
     minHeight = 60,
     className = '',
-    onTitleChange
+    onTitleChange,
+    headerRight
 }: BaseNodeProps) {
     const [isHovered, setIsHovered] = React.useState(false);
+
+    // Subscribe to node data for color updates
+    const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
+    const effectiveAccentColor = nodeData?.color || accentColor;
 
     const onResizeEnd = useCallback((event: any, params: any) => {
         const { width, height } = params;
@@ -59,13 +66,14 @@ function BaseNode({
 
     return (
         <>
+            <NodeActionsToolbar nodeId={id} isVisible={!!selected} />
             {showResizer && (
                 <NodeResizer
                     minWidth={minWidth}
                     minHeight={minHeight}
-                    isVisible={selected || isHovered}
-                    lineClassName={`border-${accentColor}`}
-                    handleClassName={`h-3 w-3 bg-neutral-900 border-2 border-${accentColor} rounded`}
+                    isVisible={true}
+                    lineClassName={`border-${effectiveAccentColor}`}
+                    handleClassName={`h-3 w-3 bg-neutral-900 border-2 border-${effectiveAccentColor} rounded`}
                     onResizeEnd={onResizeEnd}
                 />
             )}
@@ -76,20 +84,26 @@ function BaseNode({
                     group relative flex flex-col h-auto min-h-full w-full
                     bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
                     transition-all duration-300 shadow-2xl
+                    antialiased subpixel-antialiased
                     ${selected
-                        ? `border-${accentColor} shadow-${accentColor}/10 ring-1 ring-${accentColor}/20`
-                        : 'border-neutral-800/80 hover:border-neutral-700 shadow-black/50'
+                        ? `border-${effectiveAccentColor} shadow-${effectiveAccentColor}/10 ring-1 ring-${effectiveAccentColor}/20`
+                        : `border-${effectiveAccentColor}/50 hover:border-${effectiveAccentColor} shadow-black/50`
                     }
                     ${className}
                 `}
+                style={{
+                    backfaceVisibility: 'hidden',
+                    transform: 'translateZ(0)',
+                    WebkitFontSmoothing: 'subpixel-antialiased',
+                }}
             >
                 {/* Accent line at the top */}
-                <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${accentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 p-1 bg-neutral-950/20 border-b border-white/5">
+                <div className="flex items-center gap-2.5 p-3 bg-neutral-950/20 border-b border-white/5">
                     {Icon && (
-                        <div className={`p-1 rounded-lg bg-${accentColor}/10 ${iconColor} shadow-inner shrink-0`}>
+                        <div className={`p-1 rounded-lg bg-${effectiveAccentColor}/10 ${iconColor} shadow-inner shrink-0`}>
                             <Icon size={14} />
                         </div>
                     )}
@@ -112,6 +126,12 @@ function BaseNode({
                             </p>
                         )}
                     </div>
+
+                    {headerRight && (
+                        <div className="flex items-center shrink-0 pr-1">
+                            {headerRight}
+                        </div>
+                    )}
                 </div>
 
                 {/* Body */}
@@ -132,25 +152,25 @@ function BaseNode({
                         type="source"
                         position={Position.Top}
                         id="top"
-                        className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !-top-1 transition-transform hover:scale-150`}
+                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-top-1 transition-transform hover:scale-150`}
                     />
                     <Handle
                         type="source"
                         position={Position.Bottom}
                         id="bottom"
-                        className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !-bottom-1 transition-transform hover:scale-150`}
+                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-bottom-1 transition-transform hover:scale-150`}
                     />
                     <Handle
                         type="source"
                         position={Position.Left}
                         id="left"
-                        className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !-left-1 transition-transform hover:scale-150`}
+                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-left-1 transition-transform hover:scale-150`}
                     />
                     <Handle
                         type="source"
                         position={Position.Right}
                         id="right"
-                        className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !-right-1 transition-transform hover:scale-150`}
+                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-right-1 transition-transform hover:scale-150`}
                     />
                 </div>
             </div>

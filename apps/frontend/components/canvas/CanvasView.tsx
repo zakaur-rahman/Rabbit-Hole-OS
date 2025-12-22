@@ -44,7 +44,7 @@ import HoverPreview from '../ui/HoverPreview';
 import WhiteboardSelector from './WhiteboardSelector';
 import TemplateModal from '../modals/TemplateModal';
 import ContextMenu from '../ui/ContextMenu';
-import { Scan, Scissors, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon } from 'lucide-react';
+import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon } from 'lucide-react';
 
 // ... other imports
 
@@ -348,6 +348,24 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 nodesApi.create({ ...newNode, type: 'group', title: 'Group', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
+            case 'add-code': {
+                const nodeId = `code-${Date.now()}`;
+                const newNode = {
+                    id: nodeId,
+                    type: 'code',
+                    position: flowPos,
+                    style: { width: 450, height: 350 },
+                    data: { title: 'New Snippet', content: '', language: 'python' },
+                };
+                addNode(newNode);
+                nodesApi.create({
+                    ...newNode,
+                    type: 'code',
+                    title: 'New Snippet',
+                    data: { ...newNode.data, whiteboard_id: activeWhiteboardId }
+                });
+                break;
+            }
             case 'paste': {
                 if (clipboardRef.current.length === 0) break;
                 let minX = Infinity, minY = Infinity;
@@ -386,6 +404,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         { label: 'Add web page', onClick: () => handlePaneAction('add-web'), icon: <Globe size={14} /> },
         { label: 'Add image', onClick: () => handlePaneAction('add-image'), icon: <ImageIcon size={14} /> },
         { label: 'Add PDF', onClick: () => handlePaneAction('add-pdf'), icon: <FileIcon size={14} /> },
+        { label: 'Add code', onClick: () => handlePaneAction('add-code'), icon: <Code size={14} /> },
         { label: 'Create group', onClick: () => handlePaneAction('create-group'), icon: <BoxSelect size={14} /> },
         { separator: true, label: '', onClick: () => { } },
         { label: 'Paste', onClick: () => handlePaneAction('paste'), icon: <Clipboard size={14} /> },
