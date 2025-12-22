@@ -14,7 +14,7 @@ interface BaseNodeProps {
     selected?: boolean;
     title?: string;
     subtitle?: string;
-    icon?: LucideIcon;
+    icon?: LucideIcon | string;
     iconColor?: string;
     children?: React.ReactNode;
     footer?: React.ReactNode;
@@ -25,6 +25,7 @@ interface BaseNodeProps {
     className?: string;
     onTitleChange?: (title: string) => void;
     headerRight?: React.ReactNode;
+    onResize?: (event: any, params: { width: number; height: number }) => void;
 }
 
 function BaseNode({
@@ -42,7 +43,8 @@ function BaseNode({
     minHeight = 60,
     className = '',
     onTitleChange,
-    headerRight
+    headerRight,
+    onResize
 }: BaseNodeProps) {
     const [isHovered, setIsHovered] = React.useState(false);
 
@@ -58,9 +60,10 @@ function BaseNode({
             nodesApi.update(id, {
                 metadata: {
                     ...node.data,
+                    position: node.position, // EXPLICITLY preserve position
                     style: { width, height }
                 }
-            }).catch(console.error);
+            }).catch(console.log);
         }
     }, [id]);
 
@@ -74,6 +77,7 @@ function BaseNode({
                     isVisible={true}
                     lineClassName={`border-${effectiveAccentColor}`}
                     handleClassName={`h-3 w-3 bg-neutral-900 border-2 border-${effectiveAccentColor} rounded`}
+                    onResize={onResize}
                     onResizeEnd={onResizeEnd}
                 />
             )}
@@ -101,34 +105,38 @@ function BaseNode({
                 <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 p-3 bg-neutral-950/20 border-b border-white/5">
+                <div className="flex items-center gap-2.5 p-3.5 bg-neutral-950/20 border-b border-white/5">
                     {Icon && (
-                        <div className={`p-1 rounded-lg bg-${effectiveAccentColor}/10 ${iconColor} shadow-inner shrink-0`}>
-                            <Icon size={14} />
+                        <div className={`p-1.5 rounded-lg bg-neutral-800/50 shadow-inner shrink-0 flex items-center justify-center`}>
+                            {typeof Icon === 'string' ? (
+                                <img src={Icon} alt="" className="w-3.5 h-3.5 object-contain" />
+                            ) : (
+                                <Icon size={14} className={iconColor} />
+                            )}
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
                         {onTitleChange ? (
                             <input
-                                className="bg-transparent border-none outline-none text-sm font-semibold text-white placeholder-neutral-600 w-full p-0 focus:ring-0"
+                                className="bg-transparent border-none outline-none text-sm font-bold text-white placeholder-neutral-600 w-full p-0 focus:ring-0"
                                 value={title}
                                 onChange={(e) => onTitleChange(e.target.value)}
                                 placeholder="Untitled"
                             />
                         ) : (
-                            <h3 className="text-sm font-medium text-white break-words line-clamp-2 leading-snug">
+                            <h3 className="text-[13px] font-bold text-white truncate leading-tight tracking-tight">
                                 {title || 'Untitled'}
                             </h3>
                         )}
                         {subtitle && (
-                            <p className="text-[8px] text-neutral-500 truncate mt-0.5 font-small tracking-tight flex items-center gap-1 uppercase">
+                            <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">
                                 {subtitle}
                             </p>
                         )}
                     </div>
 
                     {headerRight && (
-                        <div className="flex items-center shrink-0 pr-1">
+                        <div className="flex items-center shrink-0">
                             {headerRight}
                         </div>
                     )}

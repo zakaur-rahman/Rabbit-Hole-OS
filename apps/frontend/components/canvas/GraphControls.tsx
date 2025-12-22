@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useReactFlow } from 'reactflow';
-import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download } from 'lucide-react';
+import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download, Network } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 
 interface GraphControlsProps {
@@ -13,9 +13,10 @@ interface GraphControlsProps {
     onTemplate?: () => void;
     onExport?: () => void;
     onFitSelection?: () => void;
+    onImportCanvas?: () => void;
 }
 
-export default function GraphControls({ onSynthesis, onAddNote, onAddGroup, onAddText, onTemplate, onExport, onFitSelection }: GraphControlsProps) {
+export default function GraphControls({ onSynthesis, onAddNote, onAddGroup, onAddText, onTemplate, onExport, onFitSelection, onImportCanvas }: GraphControlsProps) {
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     return (
@@ -70,6 +71,13 @@ export default function GraphControls({ onSynthesis, onAddNote, onAddGroup, onAd
                     <Download size={18} />
                 </button>
                 <div className="h-px bg-neutral-800 mx-2" />
+                <button
+                    onClick={onImportCanvas}
+                    className="w-10 h-10 flex items-center justify-center text-indigo-400 hover:bg-white/10 transition-colors"
+                    title="Import Canvas"
+                >
+                    <Network size={18} />
+                </button>
             </div>
 
             {/* Navigation Tools */}

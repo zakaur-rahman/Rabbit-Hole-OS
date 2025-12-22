@@ -11,7 +11,10 @@ export interface NoteNodeData {
     tags?: string[];
 }
 
-function NoteNode({ data, selected, id }: NodeProps<NoteNodeData>) {
+function NoteNode({ data, selected, id }: NodeProps<NoteNodeData & { isPreview?: boolean, color?: string }>) {
+    const isPreview = data.isPreview;
+    const accentColor = data.color || "yellow-500";
+    const iconColor = accentColor === 'yellow-500' ? 'text-yellow-400' : `text-${accentColor.replace('500', '400')}`;
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(data.content || '');
     const [title, setTitle] = useState(data.title || '');
@@ -19,6 +22,7 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData>) {
 
     // Debounced sync
     useEffect(() => {
+        if (isPreview) return;
         const timer = setTimeout(() => {
             if (content !== data.content || title !== data.title) {
                 syncLinks(id, content);
@@ -27,9 +31,10 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData>) {
             }
         }, 1000);
         return () => clearTimeout(timer);
-    }, [content, title, id, syncLinks, data]);
+    }, [content, title, id, syncLinks, data, isPreview]);
 
     const onNoteClick = (e: React.MouseEvent) => {
+        if (isPreview) return;
         e.stopPropagation();
     };
 
@@ -38,20 +43,21 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData>) {
             id={id}
             selected={selected}
             title={title}
-            onTitleChange={setTitle}
-            subtitle="Note"
-            accentColor="yellow-500"
+            onTitleChange={isPreview ? undefined : setTitle}
+            subtitle="NOTE"
+            accentColor={accentColor}
             icon={FileEdit}
-            iconColor="text-yellow-400"
+            iconColor={iconColor}
             minWidth={300}
-            minHeight={200}
+            minHeight={150}
+            showResizer={!isPreview}
         >
             <div
-                className="flex-1 cursor-text nodrag relative h-auto flex flex-col"
+                className={`flex-1 ${isPreview ? '' : 'cursor-text'} nodrag relative h-auto flex flex-col`}
                 onClick={onNoteClick}
-                onDoubleClick={() => setIsEditing(true)}
+                onDoubleClick={() => !isPreview && setIsEditing(true)}
             >
-                {isEditing ? (
+                {isEditing && !isPreview ? (
                     <TiptapEditor
                         content={content}
                         onChange={setContent}
@@ -59,21 +65,26 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData>) {
                         autoFocus
                     />
                 ) : (
-                    <div className="p-4 prose prose-sm prose-invert max-w-none text-neutral-200 opacity-100 leading-relaxed flex-1 h-auto whitespace-normal break-words">
+                    <div className={`${isPreview ? 'p-3' : 'p-5'} prose prose-sm prose-invert max-w-none text-neutral-200 opacity-90 leading-relaxed flex-1 h-auto whitespace-normal break-words`}>
                         {content ? (
                             <div
                                 dangerouslySetInnerHTML={{ __html: content }}
                                 className="h-full"
+                                style={{ fontSize: isPreview ? '12px' : '13px', lineHeight: '1.7' }}
                             />
                         ) : (
-                            <p className="italic text-neutral-600">Double click to start writing...</p>
+                            !isPreview && (
+                                <p className="text-[13px] text-neutral-600 font-medium italic opacity-50">
+                                    Double click to start writing...
+                                </p>
+                            )
                         )}
                     </div>
                 )}
             </div>
 
             {
-                data.tags && data.tags.length > 0 && (
+                data.tags && data.tags.length > 0 && !isPreview && (
                     <div className="flex flex-wrap gap-1 p-2 bg-black/20 border-t border-white/5">
                         {data.tags.map((tag: string) => (
                             <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/5 text-neutral-400 rounded-md font-medium">

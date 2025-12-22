@@ -18,10 +18,12 @@ export interface ArticleNodeData {
     snippet?: string;
 }
 
-function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData>) {
+function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPreview?: boolean, color?: string }>) {
     const isWikipedia = data.url?.includes('wikipedia.org');
-    const accentColor = isWikipedia ? 'green-500' : 'blue-500';
-    const iconColor = isWikipedia ? 'text-green-400' : 'text-blue-400';
+    const defaultColor = isWikipedia ? 'green-500' : 'blue-500';
+    const accentColor = data.color || defaultColor;
+    const iconColor = accentColor === 'green-500' ? 'text-green-400' : (accentColor === 'blue-500' ? 'text-blue-400' : `text-${accentColor.replace('500', '400')}`);
+    const isPreview = data.isPreview;
 
     // Subtitle formatting
     let subtitle = 'Article';
@@ -37,41 +39,48 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData>) {
             selected={selected}
             title={data.title}
             subtitle={subtitle}
-            icon={FileText}
+            icon={data.favicon || FileText}
             iconColor={iconColor}
             accentColor={accentColor}
             minWidth={320}
-            minHeight={80}
+            minHeight={100}
+            showResizer={!isPreview}
         >
-            <div className="flex-1 p-3 pt-0 overflow-hidden relative">
+            <div className={`flex-1 ${isPreview ? 'p-3 pt-1.5' : 'p-4 pt-2'} overflow-hidden relative`}>
                 {/* Markdown snippet */}
                 {data.snippet ? (
-                    <div className="prose prose-sm prose-invert max-w-none text-neutral-200 opacity-100 leading-relaxed select-text whitespace-normal break-words">
+                    <div className="prose prose-sm prose-invert max-w-none text-neutral-200 opacity-90 leading-relaxed select-text whitespace-normal break-words">
                         <MarkdownPreview
                             source={data.snippet}
-                            style={{ backgroundColor: 'transparent', color: 'inherit', fontSize: '13px', lineHeight: '1.6' }}
+                            style={{
+                                backgroundColor: 'transparent',
+                                color: 'inherit',
+                                fontSize: isPreview ? '11px' : '12.5px',
+                                lineHeight: '1.65',
+                                letterSpacing: '-0.01em'
+                            }}
                         />
                     </div>
                 ) : (
-                    <p className="text-[11px] text-neutral-500 italic">No description available</p>
+                    <p className="text-[11px] text-neutral-600 italic">No description available</p>
                 )}
 
                 {/* External link indicator */}
-                {data.url && (
+                {data.url && !isPreview && (
                     <a
                         href={data.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="absolute bottom-2 right-2 p-1 rounded-md bg-white/5 hover:bg-white/10 text-neutral-500 hover:text-white transition-all nodrag"
+                        className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 text-neutral-500 hover:text-white transition-all border border-white/5 nodrag active:scale-95"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <ExternalLink size={10} />
+                        <ExternalLink size={12} />
                     </a>
                 )}
             </div>
 
             {/* Subtle glow for Wikipedia */}
-            {isWikipedia && (
+            {isWikipedia && !isPreview && (
                 <div className="absolute inset-0 bg-green-500/5 -z-10 pointer-events-none" />
             )}
         </BaseNode>
