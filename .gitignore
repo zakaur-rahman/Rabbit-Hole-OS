@@ -48,3 +48,5 @@ desktop.ini
 .turbo
 *.log
 .eslintcache
+apps/backend/storage/edges.json
+apps/backend/storage/nodes.json
