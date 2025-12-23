@@ -19,6 +19,7 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData & { isPreview?:
     const [content, setContent] = useState(data.content || '');
     const [title, setTitle] = useState(data.title || '');
     const syncLinks = useGraphStore(state => state.syncLinks);
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
     // Debounced sync
     useEffect(() => {
@@ -26,12 +27,13 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData & { isPreview?:
         const timer = setTimeout(() => {
             if (content !== data.content || title !== data.title) {
                 syncLinks(id, content);
-                data.content = content;
-                data.title = title;
+                updateNodeAndPersist(id, {
+                    data: { ...data, content, title }
+                });
             }
         }, 1000);
         return () => clearTimeout(timer);
-    }, [content, title, id, syncLinks, data, isPreview]);
+    }, [content, title, id, syncLinks, updateNodeAndPersist, data, isPreview]);
 
     const onNoteClick = (e: React.MouseEvent) => {
         if (isPreview) return;

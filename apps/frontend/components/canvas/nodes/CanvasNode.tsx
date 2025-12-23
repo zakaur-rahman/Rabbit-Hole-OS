@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState, useEffect, useMemo, useCallback } from 'react';
-import ReactFlow, { ReactFlowProvider, Background, ConnectionMode, useReactFlow } from 'reactflow';
+import ReactFlow, { ReactFlowProvider, Background, ConnectionMode, useReactFlow, MarkerType, Handle, Position } from 'reactflow';
 import { NodeProps } from 'reactflow';
 import { Layout, ArrowRightCircle, Network } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
@@ -32,8 +32,14 @@ const MiniCanvasNode = ({ data }: { data?: { color?: string } }) => {
     const accentColor = data?.color || 'indigo-500';
     const iconColor = `text-${accentColor.replace('500', '400')}`;
     return (
-        <div className={`w-full h-full bg-${accentColor}/10 border border-${accentColor}/30 rounded-lg flex items-center justify-center min-h-[30px]`}>
+        <div className={`w-full h-full bg-${accentColor}/10 border border-${accentColor}/30 rounded-lg flex items-center justify-center min-h-[30px] relative`}>
             <Network size={12} className={`${iconColor} opacity-40`} />
+
+            {/* Standard Handles for nested connectivity in preview */}
+            <Handle type="target" position={Position.Top} id="top" className="!opacity-0" />
+            <Handle type="source" position={Position.Bottom} id="bottom" className="!opacity-0" />
+            <Handle type="target" position={Position.Left} id="left" className="!opacity-0" />
+            <Handle type="source" position={Position.Right} id="right" className="!opacity-0" />
         </div>
     );
 };
@@ -51,21 +57,30 @@ const internalNodeTypes = {
     annotation: AnnotationNode,
     synthesis: SynthesisNode,
     canvas: MiniCanvasNode,
+    default: NoteNode // Fallback
 };
 
 function CanvasPreview({ nodes, edges, loading, width, height, accentColor = 'indigo-500' }: { nodes: any[], edges: any[], loading: boolean, width?: number, height?: number, accentColor?: string }) {
-    const { fitView } = useReactFlow();
     const iconColor = `text-${accentColor.replace('500', '400')}`;
+    const reactFlowInstance = React.useRef<any>(null);
 
     // Re-fit view when nodes or dimensions change
     useEffect(() => {
-        if (nodes.length > 0) {
+        if (nodes.length > 0 && reactFlowInstance.current) {
             const timer = setTimeout(() => {
-                fitView({ padding: 0.15, duration: 450, includeHiddenNodes: false });
-            }, 60); // Faster trigger, less padding for more "looking glass" feel
+                reactFlowInstance.current.fitView({ padding: 0.15, duration: 200 });
+            }, 100);
             return () => clearTimeout(timer);
         }
-    }, [nodes.length, fitView, width, height]); // Only track length of nodes to avoid circular refits
+    }, [nodes.length, width, height]);
+
+    const onInit = useCallback((instance: any) => {
+        reactFlowInstance.current = instance;
+        // Initial fit with a slight delay
+        setTimeout(() => {
+            instance.fitView({ padding: 0.15 });
+        }, 50);
+    }, []);
 
     if (loading) {
         return (
@@ -93,15 +108,24 @@ function CanvasPreview({ nodes, edges, loading, width, height, accentColor = 'in
             nodes={nodes}
             edges={edges}
             nodeTypes={internalNodeTypes}
-            nodesDraggable={false}
+            nodesDraggable={true}
             nodesConnectable={false}
             elementsSelectable={false}
-            panOnDrag={false}
-            zoomOnScroll={false}
-            zoomOnPinch={false}
-            zoomOnDoubleClick={false}
+            panOnDrag={true}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
+            zoomOnDoubleClick={true}
             connectionMode={ConnectionMode.Loose}
-            defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+            onInit={onInit}
+            defaultEdgeOptions={{
+                type: 'simplebezier',
+                animated: false,
+                style: { stroke: '#9ca3af', strokeWidth: 2 },
+                markerEnd: {
+                    type: MarkerType.Arrow,
+                    color: '#9ca3af',
+                },
+            }}
             style={{ width: '100%', height: '100%' }}
         >
             <Background color="#111" gap={20} size={1} />
@@ -134,6 +158,20 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
     const effectiveAccentColor = nodeData?.color || 'indigo-500';
     const effectiveIconColor = `text-${effectiveAccentColor.replace('500', '400')}`;
+    const [title, setTitle] = useState(data.title || '');
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+
+    // Debounced title sync
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (title !== data.title) {
+                updateNodeAndPersist(id, {
+                    data: { ...data, title }
+                });
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [title, id, updateNodeAndPersist, data]);
 
     useEffect(() => {
         if (data.referencedCanvasId) {
@@ -170,12 +208,34 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
     }, [childNodes]);
 
     const flowEdges = useMemo(() => {
-        return childEdges.map(edge => ({
-            ...edge,
-            id: `preview-${edge.id}`,
-            source: `preview-${edge.source}`,
-            target: `preview-${edge.target}`,
-        }));
+        return childEdges.map(edge => {
+            const sourceHandle = edge.sourceHandle || edge.source_handle || '';
+            const targetHandle = edge.targetHandle || edge.target_handle || '';
+
+            // Map common handle patterns to our standard ones
+            const mapHandle = (h: string, isSource: boolean) => {
+                if (h.includes('top')) return 'top';
+                if (h.includes('bottom')) return 'bottom';
+                if (h.includes('left')) return 'left';
+                if (h.includes('right')) return 'right';
+                return isSource ? 'bottom' : 'top';
+            };
+
+            return {
+                id: `preview-${edge.id}`,
+                source: `preview-${edge.source}`,
+                target: `preview-${edge.target}`,
+                sourceHandle: mapHandle(sourceHandle, true),
+                targetHandle: mapHandle(targetHandle, false),
+                type: 'simplebezier',
+                animated: false,
+                style: { stroke: '#9ca3af', strokeWidth: 2 },
+                markerEnd: {
+                    type: MarkerType.Arrow,
+                    color: '#9ca3af',
+                },
+            };
+        });
     }, [childEdges]);
 
     const handleEnter = (e: React.MouseEvent) => {
@@ -191,7 +251,8 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
         <BaseNode
             id={id}
             selected={selected}
-            title={data.title || 'Untitled Canvas'}
+            title={title}
+            onTitleChange={setTitle}
             subtitle={subtitle}
             icon={Layout}
             iconColor={effectiveIconColor}
@@ -209,10 +270,10 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
                 </button>
             }
         >
-            <div className="flex-1 p-2 flex flex-col gap-4 hover:bg-neutral-950/95 nodrag overflow-hidden">
+            <div className="flex-1 p-2 flex flex-col gap-4  nodrag overflow-hidden">
                 {/* Internal ReactFlow View */}
                 <div className={`flex-1 bg-neutral-950/95 rounded-2xl border-[1px] border-${effectiveAccentColor}/30 relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(var(--accent-rgb),0.05)] ring-1 ring-white/10 min-h-[280px]`}>
-                    <div className="absolute inset-0 pointer-events-none z-0">
+                    <div className="absolute inset-0 z-0">
                         <ReactFlowProvider>
                             <CanvasPreview
                                 nodes={flowNodes}
@@ -225,10 +286,10 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
                         </ReactFlowProvider>
                     </div>
 
-                    {/* Vignette Overlay for Depth */}
-                    <div className={`absolute inset-0 bg-gradient-to-tr from-${effectiveAccentColor}/[0.08] via-transparent to-transparent pointer-events-none z-10`} />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none z-10" />
-                    <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.9)] pointer-events-none z-10" />
+                    {/* Vignette Overlay for Depth - Slightly transparent to avoid obscuring */}
+                    <div className={`absolute inset-0 bg-gradient-to-tr from-${effectiveAccentColor}/[0.04] via-transparent to-transparent pointer-events-none z-10`} />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none z-10" />
+                    <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.7)] pointer-events-none z-10" />
 
                     {/* Glass Reflection */}
                     <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none z-10" />

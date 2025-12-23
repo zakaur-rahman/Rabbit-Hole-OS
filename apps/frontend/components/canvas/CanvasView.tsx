@@ -806,14 +806,11 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         }
 
         // Persist position and parent
-        nodesApi.update(node.id, {
-            metadata: {
-                ...node.data,
-                position: finalPosition,
-                parentId: finalParentId,
-                style: node.style // Ensure style is preserved on move
-            }
-        }).catch(err => console.error("Failed to persist node update:", err));
+        useGraphStore.getState().updateNodeAndPersist(node.id, {
+            position: finalPosition,
+            parentId: finalParentId,
+            style: node.style // Ensure style is preserved on move
+        });
     }, [nodes]);
 
 
@@ -1051,7 +1048,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 }), [connectionDropMenu.visible])}
                 className={`bg-neutral-950 ${readOnly ? 'cursor-not-allowed' : ''}`}
             >
-                <Background color="#1a1a1a" gap={20} size={1} />
+                <Background color="#1a1a1a" gap={20} size={2} />
 
                 {!isEmpty && (
                     <MiniMap
