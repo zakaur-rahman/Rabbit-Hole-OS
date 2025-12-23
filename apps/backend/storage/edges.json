@@ -57,50 +57,5 @@
       "whiteboard_id": "board-1766500366804"
     }
   },
-  "main": {
-    "e-node-1766508669213-node-1766508676368": {
-      "id": "e-node-1766508669213-node-1766508676368",
-      "source": "node-1766508669213",
-      "target": "node-1766508676368",
-      "sourceHandle": "bottom",
-      "targetHandle": "top",
-      "type": "default",
-      "animated": true,
-      "style": null,
-      "data": null,
-      "whiteboard_id": "main"
-    },
-    "ecanvas-1766508512606-note-1766508636389": {
-      "id": "ecanvas-1766508512606-note-1766508636389",
-      "source": "canvas-1766508512606",
-      "target": "note-1766508636389",
-      "sourceHandle": "top",
-      "targetHandle": "bottom",
-      "type": "simplebezier",
-      "animated": false,
-      "style": {
-        "stroke": "#9ca3af",
-        "strokeWidth": 2,
-        "strokeDasharray": "none"
-      },
-      "data": null,
-      "whiteboard_id": "main"
-    },
-    "enode-1766508676368-bottom-canvas-1766508512606-left": {
-      "id": "enode-1766508676368-bottom-canvas-1766508512606-left",
-      "source": "node-1766508676368",
-      "target": "canvas-1766508512606",
-      "sourceHandle": "bottom",
-      "targetHandle": "left",
-      "type": "simplebezier",
-      "animated": false,
-      "style": {
-        "stroke": "#9ca3af",
-        "strokeWidth": 2,
-        "strokeDasharray": "none"
-      },
-      "data": null,
-      "whiteboard_id": "main"
-    }
-  }
+  "main": {}
 }
