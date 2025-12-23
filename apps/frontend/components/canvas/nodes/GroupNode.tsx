@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { NodeProps, NodeResizer, Position, Handle } from 'reactflow';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import { useGraphStore } from '@/store/graph.store';
@@ -7,6 +7,20 @@ function GroupNode({ id, data, selected }: NodeProps) {
     // Subscribe to color
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
     const accentColor = nodeData?.color || 'green-500';
+    const [label, setLabel] = useState(data.label || '');
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+
+    // Debounced label sync
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (label !== data.label) {
+                updateNodeAndPersist(id, {
+                    data: { ...data, label }
+                });
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [label, id, updateNodeAndPersist, data]);
 
     return (
         <>
@@ -41,10 +55,8 @@ function GroupNode({ id, data, selected }: NodeProps) {
                         <input
                             className={`bg-transparent border-none outline-none text-sm font-medium text-${accentColor} placeholder-${accentColor}/50 w-full transition-colors`}
                             placeholder="Untitled group"
-                            defaultValue={data.label}
-                            onChange={(e) => {
-                                data.label = e.target.value;
-                            }}
+                            value={label}
+                            onChange={(e) => setLabel(e.target.value)}
                         />
                     </div>
                 </div>

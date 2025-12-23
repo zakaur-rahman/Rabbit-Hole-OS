@@ -1,7 +1,17 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
+import { useGraphStore } from '@/store/graph.store';
 
-const AnnotationNode = ({ data, selected }: NodeProps) => {
+const AnnotationNode = ({ id, data, selected }: NodeProps) => {
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+
+    const onResizeEnd = useCallback((_event: any, params: any) => {
+        const { width, height } = params;
+        updateNodeAndPersist(id, {
+            style: { width, height }
+        });
+    }, [id, updateNodeAndPersist]);
+
     return (
         <>
             <NodeResizer
@@ -10,6 +20,7 @@ const AnnotationNode = ({ data, selected }: NodeProps) => {
                 isVisible={selected}
                 lineClassName="border-blue-500"
                 handleClassName="h-3 w-3 bg-neutral-900 border-2 border-blue-500 rounded"
+                onResizeEnd={onResizeEnd}
             />
             <div className={`relative h-full w-full pointer-events-auto transition-all duration-300 ${selected ? 'ring-2 ring-blue-500/50 rounded-lg shadow-lg shadow-blue-500/10' : ''}`}>
                 <svg

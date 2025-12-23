@@ -5,13 +5,34 @@ from app.services.embeddings import get_embedding
 from app.schemas.node import NodeCreate, Node as NodeSchema
 from pydantic import BaseModel
 import uuid
+import json
+import os
 from datetime import datetime
+
+STORAGE_DIR = "storage"
+NODES_FILE = os.path.join(STORAGE_DIR, "nodes.json")
+
+def load_nodes():
+    if os.path.exists(NODES_FILE):
+        try:
+            with open(NODES_FILE, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading nodes: {e}")
+    return {}
+
+def save_nodes():
+    os.makedirs(STORAGE_DIR, exist_ok=True)
+    try:
+        with open(NODES_FILE, "w") as f:
+            json.dump(nodes_store, f, indent=2)
+    except Exception as e:
+        print(f"Error saving nodes: {e}")
 
 router = APIRouter()
 
-# In-memory storage (replace with database in production)
-# This allows frontend to sync without needing PostgreSQL running
-nodes_store: dict = {}
+# In-memory storage with file backup
+nodes_store: dict = load_nodes()
 
 class ProcessUrlResponse(BaseModel):
     id: str
@@ -59,6 +80,7 @@ async def process_url(
             }
         }
         nodes_store[target_id] = node
+        save_nodes()
         return node
     
     content = extracted.get("content", "")
@@ -81,6 +103,7 @@ async def process_url(
     }
     
     nodes_store[target_id] = node
+    save_nodes()
     return node
 
 @router.post("/", response_model=ProcessUrlResponse)
@@ -115,6 +138,7 @@ async def create_node(node_data: dict = Body(...)):
         new_node["metadata"] = {}
         
     nodes_store[node_id] = new_node
+    save_nodes()
     return new_node
 
 @router.put("/{node_id}", response_model=ProcessUrlResponse)
@@ -145,6 +169,7 @@ async def update_node(node_id: str, node_data: dict = Body(...)):
         existing_node["metadata"].update(node_data["metadata"])
         
     nodes_store[node_id] = existing_node
+    save_nodes()
     return existing_node
 
 @router.get("/", response_model=List[ProcessUrlResponse])
@@ -180,6 +205,7 @@ async def delete_node(node_id: str):
     if node_id not in nodes_store:
         raise HTTPException(status_code=404, detail="Node not found")
     del nodes_store[node_id]
+    save_nodes()
     return {"status": "deleted", "id": node_id}
 
 @router.get("/{node_id}/related", response_model=List[ProcessUrlResponse])

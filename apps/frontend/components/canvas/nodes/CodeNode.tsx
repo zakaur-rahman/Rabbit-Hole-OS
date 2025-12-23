@@ -26,6 +26,7 @@ function CodeNode({ data, selected, id }: NodeProps<CodeNodeData & { isPreview?:
     const [copied, setCopied] = useState(false);
     const [showLangMenu, setShowLangMenu] = useState(false);
     const syncLinks = useGraphStore(state => state.syncLinks);
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Debounced sync
@@ -34,13 +35,13 @@ function CodeNode({ data, selected, id }: NodeProps<CodeNodeData & { isPreview?:
         const timer = setTimeout(() => {
             if (content !== data.content || title !== data.title || language !== data.language) {
                 syncLinks(id, content);
-                data.content = content;
-                data.title = title;
-                data.language = language;
+                updateNodeAndPersist(id, {
+                    data: { ...data, content, title, language }
+                });
             }
         }, 1000);
         return () => clearTimeout(timer);
-    }, [content, title, language, id, syncLinks, data, isPreview]);
+    }, [content, title, language, id, syncLinks, updateNodeAndPersist, data, isPreview]);
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (isPreview) return;

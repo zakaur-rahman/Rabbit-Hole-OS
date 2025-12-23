@@ -57,13 +57,9 @@ function BaseNode({
         const node = useGraphStore.getState().nodes.find((n) => n.id === id);
 
         if (node) {
-            nodesApi.update(id, {
-                metadata: {
-                    ...node.data,
-                    position: node.position, // EXPLICITLY preserve position
-                    style: { width, height }
-                }
-            }).catch(console.log);
+            useGraphStore.getState().updateNodeAndPersist(id, {
+                style: { width, height }
+            });
         }
     }, [id]);
 

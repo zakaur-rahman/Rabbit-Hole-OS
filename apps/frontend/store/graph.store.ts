@@ -51,6 +51,7 @@ export interface GraphState {
   getSelectedNodes: () => Node[];
   clearGraph: () => void;
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => void;
+  updateNodeAndPersist: (id: string, updates: Partial<any>) => Promise<void>;
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({
@@ -242,11 +243,29 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
-  removeNode: (id: string) => set((state) => ({
-    nodes: state.nodes.filter(n => n.id !== id),
-    edges: state.edges.filter(e => e.source !== id && e.target !== id),
-    selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
-  })),
+  removeNode: async (id: string) => {
+    const { activeWhiteboardId, edges } = get();
+    
+    // Optimistic update
+    set((state) => ({
+      nodes: state.nodes.filter(n => n.id !== id),
+      edges: state.edges.filter(e => e.source !== id && e.target !== id),
+      selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
+    }));
+
+    try {
+        // Delete node on backend
+        await nodesApi.delete(id);
+        
+        // Find and delete all edges connected to this node
+        const edgesToDelete = edges.filter(e => e.source === id || e.target === id);
+        await Promise.all(edgesToDelete.map(e => 
+            edgesApi.delete(e.id, activeWhiteboardId).catch(() => {}) // Silently handle edge 404s
+        ));
+    } catch(e) {
+        console.error("Failed to persist node deletion", e);
+    }
+  },
 
   removeEdge: async (id: string) => {
     const { activeWhiteboardId, edges } = get();
@@ -293,6 +312,38 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     ),
   })),
 
+  updateNodeAndPersist: async (id: string, updates: Partial<any>) => {
+    const node = get().nodes.find(n => n.id === id);
+    if (!node) return;
+
+    // Local update
+    set((state) => ({
+      nodes: state.nodes.map(n => 
+        n.id === id ? { ...n, ...updates, data: { ...n.data, ...(updates.data || {}) } } : n
+      ),
+    }));
+
+    // Backend update
+    try {
+        const updatedNode = get().nodes.find(n => n.id === id);
+        if (updatedNode) {
+            await nodesApi.update(id, {
+                title: updatedNode.data.title,
+                type: updatedNode.type,
+                content: updatedNode.data.content,
+                metadata: {
+                    ...updatedNode.data,
+                    position: updatedNode.position,
+                    style: updatedNode.style,
+                    parentId: updatedNode.parentId
+                }
+            });
+        }
+    } catch(e) {
+        console.error("Failed to persist node update", e);
+    }
+  },
+
   removeWhiteboard: (id: string) => {
       const { activeWhiteboardId, whiteboards } = get();
       if (id === 'main') return; // Cannot delete main
@@ -306,6 +357,26 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   onNodesChange: (changes: NodeChange[]) => {
+    const { activeWhiteboardId, edges } = get();
+    
+    // Handle deletions
+    changes.forEach(change => {
+        if (change.type === 'remove') {
+            // Delete node on backend
+            nodesApi.delete(change.id).catch(err => {
+                if (!err.message?.includes('404')) {
+                    console.error("Failed to delete node in onNodesChange", err);
+                }
+            });
+
+            // Find and delete all edges connected to this node
+            const edgesToDelete = edges.filter(e => e.source === change.id || e.target === change.id);
+            edgesToDelete.forEach(edge => {
+                edgesApi.delete(edge.id, activeWhiteboardId).catch(() => {});
+            });
+        }
+    });
+
     set({
       nodes: applyNodeChanges(changes, get().nodes),
     });
