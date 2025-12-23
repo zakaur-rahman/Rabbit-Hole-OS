@@ -11,7 +11,7 @@ function TextNode({ id, data, selected }: NodeProps) {
 
     // Subscribe to color
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
-    const accentColor = nodeData?.color || 'neutral-500';
+    const accentColor = nodeData?.color || 'indigo-500';
 
     // Debounced sync
     useEffect(() => {
@@ -38,11 +38,11 @@ function TextNode({ id, data, selected }: NodeProps) {
             <div
                 className={`
                     group relative h-full w-full p-2
-                    bg-neutral-900/20 backdrop-blur-sm border rounded-lg
+                    bg-neutral-900/40 backdrop-blur-md border rounded-xl
                     transition-all duration-300
                     ${selected
-                        ? `border-${accentColor} shadow-xl shadow-${accentColor}/5`
-                        : `border-${accentColor}/30 hover:border-${accentColor}/80`
+                        ? `border-${accentColor} shadow-lg shadow-${accentColor}/20 ring-1 ring-${accentColor}/30`
+                        : `border-${accentColor}/50 hover:border-${accentColor}/80`
                     }
                 `}
             >
