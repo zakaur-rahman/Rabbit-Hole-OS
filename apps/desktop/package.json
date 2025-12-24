@@ -20,10 +20,6 @@
         ],
         "extraResources": [
             {
-                "from": "../backend/dist/rabbit-hole-backend.exe",
-                "to": "bin/rabbit-hole-backend.exe"
-            },
-            {
                 "from": "../frontend/out",
                 "to": "frontend"
             }
@@ -31,6 +27,25 @@
         "win": {
             "target": [
                 "nsis"
+            ],
+            "extraResources": [
+                {
+                    "from": "../backend/dist/rabbit-hole-backend.exe",
+                    "to": "bin/rabbit-hole-backend.exe"
+                }
+            ]
+        },
+        "mac": {
+            "target": [
+                "dmg",
+                "zip"
+            ],
+            "category": "public.app-category.productivity",
+            "extraResources": [
+                {
+                    "from": "../backend/dist/rabbit-hole-backend",
+                    "to": "bin/rabbit-hole-backend"
+                }
             ]
         },
         "nsis": {
