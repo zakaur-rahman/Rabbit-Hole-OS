@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict
 from app.schemas.edge import Edge, EdgeCreate
 
-STORAGE_DIR = "storage"
+STORAGE_DIR = os.environ.get("STORAGE_DIR", "storage")
 EDGES_FILE = os.path.join(STORAGE_DIR, "edges.json")
 
 def load_edges():

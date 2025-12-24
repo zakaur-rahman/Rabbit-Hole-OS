@@ -1,8 +1,16 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'path';
+import fs from 'fs';
+import url from 'url';
+import { spawn, ChildProcess } from 'child_process';
 
-// Use app.isPackaged instead of electron-is-dev (which is ESM-only now)
-const isDev = !app.isPackaged;
+// Robust production detection: check if app is inside an asar archive
+const appPath = app.getAppPath();
+const isPackagedApp = appPath.includes('app.asar') || fs.existsSync(path.join(process.resourcesPath, 'app.asar'));
+const isDev = !isPackagedApp;
+
+console.log('App Path:', appPath);
+console.log('Is Packaged App:', isPackagedApp, 'Is Dev:', isDev);
 
 // Global error handlers to prevent console spam from benign Electron errors
 process.on('unhandledRejection', (reason, promise) => {
@@ -15,6 +23,39 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 let mainWindow: BrowserWindow | null = null;
+let backendProcess: ChildProcess | null = null;
+
+function startBackend() {
+    const storageDir = isDev 
+        ? path.join(__dirname, '..', '..', '..', 'apps', 'backend', 'storage')
+        : path.join(app.getPath('userData'), 'storage');
+    
+    console.log('Using storage directory:', storageDir);
+
+    if (!fs.existsSync(storageDir)) {
+        try {
+            fs.mkdirSync(storageDir, { recursive: true });
+        } catch (e) {
+            console.error('Failed to create storage directory:', e);
+        }
+    }
+
+    const prodBackendPath = path.join(process.resourcesPath, 'bin', 'rabbit-hole-backend.exe');
+    
+    if (fs.existsSync(prodBackendPath)) {
+        console.log('Starting production backend from:', prodBackendPath);
+        backendProcess = spawn(prodBackendPath, [], {
+            env: { ...process.env, PORT: '8000', STORAGE_DIR: storageDir },
+            shell: false
+        });
+
+        backendProcess.stdout?.on('data', (data) => console.log(`Backend: ${data}`));
+        backendProcess.stderr?.on('data', (data) => console.error(`Backend Error: ${data}`));
+        backendProcess.on('close', (code) => console.log(`Backend process exited with code ${code}`));
+    } else {
+        console.log('Production backend not found at:', prodBackendPath, '- assuming development mode or external backend.');
+    }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -42,15 +83,36 @@ function createWindow() {
   
   mainWindow.setMenuBarVisibility(false);
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
-  } else {
-    // Usually we would serve the static export
-    // mainWindow.loadFile(...) 
-    // But let's keep it simple for now and focus on Dev
-    mainWindow.loadURL('http://localhost:3000'); 
-  }
+    const indexPath = path.join(process.resourcesPath, 'frontend', 'index.html');
+    const hasProdAssets = fs.existsSync(indexPath);
+
+    if (isDev && !hasProdAssets) {
+        console.log('Running in development mode, loading from localhost:3000');
+        mainWindow.loadURL('http://localhost:3000');
+        mainWindow.webContents.openDevTools();
+    } else {
+        // Serve static files from the bundled frontend
+        console.log('Running in production mode, attempting to load index.html from:', indexPath);
+        
+        if (hasProdAssets) {
+            const fileUrl = url.pathToFileURL(indexPath).toString();
+            console.log('Loading frontend from URL:', fileUrl);
+            mainWindow.loadURL(fileUrl).catch(err => {
+                console.error('Failed to load local index.html:', err);
+            });
+        } else {
+            const errorMsg = `Critical Error: Frontend assets not found at ${indexPath}`;
+            console.error(errorMsg);
+            dialog.showErrorBox('Startup Error', errorMsg);
+        }
+    }
+
+  // Allow opening DevTools in production with a shortcut for debugging
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+      mainWindow?.webContents.openDevTools();
+    }
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -66,7 +128,6 @@ function createWindow() {
   });
 }
 
-app.on('ready', createWindow);
 
 app.on('web-contents-created', (event, contents) => {
   // Intercept navigation errors in webviews to prevent console spam for aborted requests
@@ -82,9 +143,17 @@ app.on('web-contents-created', (event, contents) => {
 });
 
 app.on('window-all-closed', () => {
+  if (backendProcess) {
+    backendProcess.kill();
+  }
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('ready', () => {
+    startBackend();
+    createWindow();
 });
 
 app.on('activate', () => {
