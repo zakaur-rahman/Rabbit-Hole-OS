@@ -40,7 +40,10 @@ function startBackend() {
         }
     }
 
-    const prodBackendPath = path.join(process.resourcesPath, 'bin', 'rabbit-hole-backend.exe');
+    // Cross-platform backend path detection
+    const backendExeWin = path.join(process.resourcesPath, 'bin', 'rabbit-hole-backend.exe');
+    const backendExeMac = path.join(process.resourcesPath, 'bin', 'rabbit-hole-backend');
+    const prodBackendPath = fs.existsSync(backendExeWin) ? backendExeWin : backendExeMac;
     
     if (fs.existsSync(prodBackendPath)) {
         console.log('Starting production backend from:', prodBackendPath);

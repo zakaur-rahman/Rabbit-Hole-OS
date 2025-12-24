@@ -1,0 +1,91 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [created]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: apps/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build Frontend
+        run: npm run build:frontend
+
+      - name: Build Backend (Windows)
+        if: matrix.platform == 'win'
+        working-directory: apps/backend
+        run: python -m PyInstaller --noconfirm --onefile --windowed --name rabbit-hole-backend run_server.py
+
+      - name: Build Backend (macOS)
+        if: matrix.platform == 'mac'
+        working-directory: apps/backend
+        run: python -m PyInstaller --noconfirm --onefile --windowed --name rabbit-hole-backend run_server.py
+
+      - name: Build Electron App
+        working-directory: apps/desktop
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows Installer
+        if: matrix.platform == 'win'
+        uses: actions/upload-artifact@v4
+        with:
+          name: RabbitHole-OS-Windows
+          path: apps/desktop/dist/*.exe
+
+      - name: Upload macOS Installer
+        if: matrix.platform == 'mac'
+        uses: actions/upload-artifact@v4
+        with:
+          name: RabbitHole-OS-macOS
+          path: |
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.zip
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
