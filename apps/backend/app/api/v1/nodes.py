@@ -9,7 +9,7 @@ import json
 import os
 from datetime import datetime
 
-STORAGE_DIR = "storage"
+STORAGE_DIR = os.environ.get("STORAGE_DIR", "storage")
 NODES_FILE = os.path.join(STORAGE_DIR, "nodes.json")
 
 def load_nodes():

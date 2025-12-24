@@ -85,7 +85,7 @@ export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, activ
                             className={`flex items-center gap-2 px-3 py-2.5 min-w-[120px] max-w-[200px] border-r border-neutral-800 cursor-pointer group transition-colors ${isActive ? 'bg-neutral-900 text-white' : 'hover:bg-neutral-900/50 text-neutral-500'
                                 }`}
                         >
-                            <span className="shrink-0">{typeIcons[n.type] || <FileText size={14} />}</span>
+                            <span className="shrink-0">{(n.type && typeIcons[n.type]) || <FileText size={14} />}</span>
                             <span className={`text-xs truncate flex-1 ${isActive ? 'font-medium' : ''}`}>
                                 {n.data.title || 'Untitled'}
                             </span>
