@@ -203,7 +203,8 @@ export default function BrowserView() {
                 useGraphStore.getState().updateNode(nodeId, {
                     title: result.title,
                     snippet: result.snippet,
-                    favicon: result.metadata?.favicon
+                    favicon: result.metadata?.favicon,
+                    outline: result.outline
                 });
             }).catch(console.error);
         });

@@ -5,20 +5,107 @@ import hashlib
 # For real embeddings, we'd use OpenAI or a local model
 # This implementation supports both mock and real embeddings
 
-EMBEDDING_DIMENSION = 1536  # OpenAI ada-002 dimension
+# Embedding dimensions
+OPENAI_DIMENSION = 1536
+GEMINI_DIMENSION = 768
 
-async def get_embedding(text: str, use_real: bool = False) -> List[float]:
+async def get_embedding(text: str, use_real: bool = True) -> List[float]:
     """
     Generate embeddings for text.
-    If use_real is True and OPENAI_API_KEY is set, uses OpenAI.
-    Otherwise, uses a deterministic mock based on text hash.
+    Prioritizes Chutes, then Hugging Face, then Gemini, then OpenAI.
     """
-    api_key = os.environ.get("OPENAI_API_KEY")
+    chutes_key = os.environ.get("CHUTES_API_KEY")
+    hf_token = os.environ.get("HF_TOKEN")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    openai_key = os.environ.get("OPENAI_API_KEY")
     
-    if use_real and api_key:
-        return await get_openai_embedding(text, api_key)
-    else:
-        return get_mock_embedding(text)
+    if use_real:
+        if gemini_key:
+            return await get_gemini_embedding(text, gemini_key)
+        elif chutes_key:
+            return await get_chutes_embedding(text, chutes_key)
+        elif hf_token:
+            return await get_huggingface_embedding(text, hf_token)
+        elif openai_key:
+            return await get_openai_embedding(text, openai_key)
+    
+    return get_mock_embedding(text, OPENAI_DIMENSION)
+
+async def get_huggingface_embedding(text: str, hf_token: str) -> List[float]:
+    """Get real embedding from Hugging Face Inference API."""
+    try:
+        from huggingface_hub import InferenceClient
+        import asyncio
+        
+        # Using a high-quality small embedding model (384 dims)
+        model = "BAAI/bge-small-en-v1.5"
+        client = InferenceClient(model=model, token=hf_token)
+        
+        def call_hf():
+            return client.feature_extraction(text[:8000])
+
+        embedding = await asyncio.to_thread(call_hf)
+        return embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
+    except Exception as e:
+        print(f"Error getting Hugging Face embedding: {e}")
+        return get_mock_embedding(text, 384) # BGE small is 384
+
+async def get_chutes_embedding(text: str, api_key: str) -> List[float]:
+    """Get real embedding from Chutes API (OpenAI compatible)."""
+    try:
+        import httpx
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://llm.chutes.ai/v1/embeddings",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "text-embedding-3-small", # Chutes supports OpenAI model names
+                    "input": text[:8000]
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data["data"][0]["embedding"]
+            else:
+                print(f"Chutes embedding error: {response.status_code}")
+                return get_mock_embedding(text, OPENAI_DIMENSION)
+    except Exception as e:
+        print(f"Error getting Chutes embedding: {e}")
+        return get_mock_embedding(text, OPENAI_DIMENSION)
+
+async def get_gemini_embedding(text: str, api_key: str) -> List[float]:
+    """Get real embedding from Gemini API."""
+    try:
+        import httpx
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}",
+                headers={"Content-Type": "application/json"},
+                json={
+                    "model": "models/text-embedding-004",
+                    "content": {
+                        "parts": [{"text": text[:8000]}]
+                    }
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data["embedding"]["values"]
+            else:
+                print(f"Gemini embedding error: {response.status_code}")
+                return get_mock_embedding(text, GEMINI_DIMENSION)
+    except Exception as e:
+        print(f"Error getting Gemini embedding: {e}")
+        return get_mock_embedding(text, GEMINI_DIMENSION)
 
 async def get_openai_embedding(text: str, api_key: str) -> List[float]:
     """Get real embedding from OpenAI API."""
@@ -49,7 +136,7 @@ async def get_openai_embedding(text: str, api_key: str) -> List[float]:
         print(f"Error getting OpenAI embedding: {e}")
         return get_mock_embedding(text)
 
-def get_mock_embedding(text: str) -> List[float]:
+def get_mock_embedding(text: str, dimension: int = 1536) -> List[float]:
     """
     Generate a deterministic mock embedding based on text hash.
     Same text will always produce same embedding for consistency.
@@ -59,7 +146,7 @@ def get_mock_embedding(text: str) -> List[float]:
     
     # Use hash to seed a deterministic sequence
     embedding = []
-    for i in range(EMBEDDING_DIMENSION):
+    for i in range(dimension):
         # Take 2 hex chars at a time, cycling through the hash
         idx = (i * 2) % len(text_hash)
         val = int(text_hash[idx:idx+2], 16) / 255.0  # Normalize to 0-1

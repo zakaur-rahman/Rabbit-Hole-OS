@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, Body
 from typing import List, Optional
 from app.services.scraper import extract_content, detect_content_type
 from app.services.embeddings import get_embedding
+from app.services.outline import analyze_url, extract_outline
 from app.schemas.node import NodeCreate, Node as NodeSchema
 from pydantic import BaseModel
 import uuid
@@ -43,6 +44,7 @@ class ProcessUrlResponse(BaseModel):
     snippet: str
     created_at: str
     metadata: dict
+    outline: Optional[List[dict]] = None
 
 @router.post("/process_url", response_model=ProcessUrlResponse)
 async def process_url(
@@ -51,7 +53,7 @@ async def process_url(
     node_id: Optional[str] = Query(None, description="Optional ID of an existing node to update")
 ):
     """
-    Fetch a URL, extract content, and create or update a node.
+    Analyze a URL using AI and create a node with content and outline.
     """
     # Check if already processed for this whiteboard (if no node_id provided)
     if not node_id:
@@ -59,10 +61,39 @@ async def process_url(
             if node.get("url") == url and node.get("metadata", {}).get("whiteboard_id") == whiteboard_id:
                 return node
     
-    # Extract content
-    extracted = await extract_content(url)
-    
     target_id = node_id or str(uuid.uuid4())
+    
+    # Try AI-powered URL analysis first
+    print(f"Analyzing URL with AI: {url}")
+    try:
+        ai_result = await analyze_url(url)
+        
+        if ai_result and ai_result.get("title") and ai_result.get("outline"):
+            node = {
+                "id": target_id,
+                "type": "article",
+                "url": url,
+                "title": ai_result.get("title", "Untitled"),
+                "content": ai_result.get("content", ""),
+                "snippet": ai_result.get("snippet", ""),
+                "created_at": nodes_store.get(target_id, {}).get("created_at") or datetime.utcnow().isoformat() + "Z",
+                "metadata": {
+                    **(nodes_store.get(target_id, {}).get("metadata", {})),
+                    "whiteboard_id": whiteboard_id,
+                    "analyzed_by": "ai"
+                },
+                "outline": ai_result.get("outline", [])
+            }
+            nodes_store[target_id] = node
+            save_nodes()
+            print(f"Successfully created node with AI analysis: {node['title']}")
+            return node
+    except Exception as e:
+        print(f"AI analysis failed: {e}")
+    
+    # Fallback to scraper if AI fails
+    print(f"Falling back to scraper for: {url}")
+    extracted = await extract_content(url)
     
     if not extracted or not extracted.get("content"):
         # Return basic node even if extraction fails
@@ -70,26 +101,39 @@ async def process_url(
             "id": target_id,
             "type": detect_content_type(url),
             "url": url,
-            "title": url.split("/")[-1] or "Web Page",
+            "title": url.split("/")[-1].replace("_", " ").replace("-", " ").title() or "Web Page",
             "content": "",
-            "snippet": "Could not extract content",
+            "snippet": "Set CHUTES_API_KEY or OPENAI_API_KEY for AI-powered content analysis",
             "created_at": nodes_store.get(target_id, {}).get("created_at") or datetime.utcnow().isoformat() + "Z",
             "metadata": {
                 **(nodes_store.get(target_id, {}).get("metadata", {})),
                 "whiteboard_id": whiteboard_id
-            }
+            },
+            "outline": []
         }
         nodes_store[target_id] = node
         save_nodes()
         return node
     
     content = extracted.get("content", "")
+    node_type = extracted.get("content_type", "article")
+    node_title = extracted.get("title", "Untitled")
+    
+    # Try to extract outline from scraped content
+    outline = None
+    if node_type == "article" and content:
+        try:
+            outline = await extract_outline(content, node_title)
+            print(f"Extracted outline with {len(outline)} top-level sections")
+        except Exception as e:
+            print(f"Failed to extract outline: {e}")
+            outline = None
     
     node = {
         "id": target_id,
-        "type": extracted.get("content_type", "article"),
+        "type": node_type,
         "url": url,
-        "title": extracted.get("title", "Untitled"),
+        "title": node_title,
         "content": content,
         "snippet": extracted.get("snippet") or (content[:200] + "..." if len(content) > 200 else content),
         "created_at": nodes_store.get(target_id, {}).get("created_at") or datetime.utcnow().isoformat() + "Z",
@@ -99,7 +143,8 @@ async def process_url(
             "date": extracted.get("date"),
             "description": extracted.get("description"),
             "whiteboard_id": whiteboard_id
-        }
+        },
+        "outline": outline
     }
     
     nodes_store[target_id] = node

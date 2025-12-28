@@ -120,12 +120,12 @@ function BaseNode({
                                 placeholder="Untitled"
                             />
                         ) : (
-                            <h3 className="text-[13px] font-bold text-white truncate leading-tight tracking-tight">
+                            <h3 className="text-[13px] font-bold text-white truncate leading-tight tracking-tight nodrag cursor-text select-text">
                                 {title || 'Untitled'}
                             </h3>
                         )}
                         {subtitle && (
-                            <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">
+                            <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5 nodrag cursor-text select-text">
                                 {subtitle}
                             </p>
                         )}

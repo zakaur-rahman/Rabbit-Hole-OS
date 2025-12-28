@@ -8,4 +8,9 @@ asyncpg
 pgvector
 python-multipart
 trafilatura
+httpx
+python-dotenv
 langchain
+ollamafreeapi
+huggingface_hub
+google-genai

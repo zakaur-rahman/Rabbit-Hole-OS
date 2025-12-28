@@ -1,3 +1,11 @@
+# Load environment variables from .env file
+import os
+from dotenv import load_dotenv
+# Get the absolute path to the .env file in the backend root
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+load_dotenv(env_path)
+print(f"--- Backend: Loading .env from {env_path}")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router

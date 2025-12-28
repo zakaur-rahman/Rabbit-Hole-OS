@@ -40,6 +40,7 @@ export interface ApiNode {
     [key: string]: any;
   };
   data?: any;
+  outline?: any[];
 }
 
 // Nodes API
