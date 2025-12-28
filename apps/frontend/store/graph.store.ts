@@ -130,6 +130,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 title: n.title,
                 url: n.url,
                 content: n.content,
+                outline: n.outline,
                 ...n.metadata 
             },
             style: n.metadata?.style,

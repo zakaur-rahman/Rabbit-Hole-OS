@@ -2,10 +2,98 @@ import trafilatura
 from trafilatura.settings import use_config
 from typing import Optional, Tuple
 import re
+import httpx
 
 # Configure trafilatura for better extraction
 config = use_config()
 config.set("DEFAULT", "EXTRACTION_TIMEOUT", "30")
+
+# Browser-like headers for sites that block default requests
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
+
+async def fetch_wikipedia_content(url: str) -> Optional[dict]:
+    """Fetch Wikipedia content using their official REST API."""
+    import urllib.parse
+    
+    # Extract article title from URL
+    # e.g., https://en.wikipedia.org/wiki/India -> India
+    parsed = urllib.parse.urlparse(url)
+    if 'wikipedia.org' not in parsed.netloc:
+        return None
+    
+    path_parts = parsed.path.split('/wiki/')
+    if len(path_parts) < 2:
+        return None
+    
+    title = urllib.parse.unquote(path_parts[1])
+    lang = parsed.netloc.split('.')[0]  # e.g., 'en' from 'en.wikipedia.org'
+    
+    # Use Wikipedia's REST API
+    api_url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(title)}"
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(api_url, headers={
+                "User-Agent": "RabbitHoleOS/1.0 (https://github.com/rabbithole-os; contact@example.com)"
+            })
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Get the full article content from the mobile API for more text
+                mobile_url = f"https://{lang}.wikipedia.org/api/rest_v1/page/mobile-html/{urllib.parse.quote(title)}"
+                mobile_response = await client.get(mobile_url, headers={
+                    "User-Agent": "RabbitHoleOS/1.0 (https://github.com/rabbithole-os; contact@example.com)"
+                })
+                
+                full_content = ""
+                if mobile_response.status_code == 200:
+                    # Strip HTML tags for plain text
+                    html_content = mobile_response.text
+                    full_content = re.sub(r'<[^>]+>', ' ', html_content)
+                    full_content = re.sub(r'\s+', ' ', full_content).strip()
+                
+                return {
+                    "title": data.get("title", title),
+                    "content": full_content[:10000] if full_content else data.get("extract", ""),
+                    "snippet": data.get("extract", "")[:300] + "..." if len(data.get("extract", "")) > 300 else data.get("extract", ""),
+                    "description": data.get("description", ""),
+                    "content_type": "article",
+                    "author": None,
+                    "date": None,
+                    "url": url
+                }
+            else:
+                print(f"Wikipedia API returned {response.status_code} for {title}")
+    except Exception as e:
+        print(f"Wikipedia API error: {e}")
+    
+    return None
+
+async def fetch_with_fallback(url: str) -> Optional[str]:
+    """Fetch URL content with fallback to httpx if trafilatura fails."""
+    # Try trafilatura first
+    downloaded = trafilatura.fetch_url(url)
+    if downloaded:
+        return downloaded
+    
+    # Fallback to httpx with browser headers
+    print(f"Trafilatura fetch failed for {url}, trying httpx fallback...")
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+            response = await client.get(url, headers=HEADERS)
+            if response.status_code == 200:
+                return response.text
+            else:
+                print(f"HTTP {response.status_code} for {url}")
+    except Exception as e:
+        print(f"Httpx fallback failed: {e}")
+    
+    return None
 
 async def extract_content(url: str) -> Optional[dict]:
     """
@@ -13,8 +101,17 @@ async def extract_content(url: str) -> Optional[dict]:
     Returns a dict with title, content, and metadata.
     """
     try:
-        downloaded = trafilatura.fetch_url(url)
+        # Special handling for Wikipedia - use their API
+        if 'wikipedia.org' in url:
+            wiki_result = await fetch_wikipedia_content(url)
+            if wiki_result:
+                print(f"Successfully extracted Wikipedia content for: {url}")
+                return wiki_result
+            print(f"Wikipedia API failed, falling back to trafilatura")
+        
+        downloaded = await fetch_with_fallback(url)
         if not downloaded:
+            print(f"Could not fetch content from {url}")
             return None
         
         # Extract main content
