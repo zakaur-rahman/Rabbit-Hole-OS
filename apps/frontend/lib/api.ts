@@ -113,6 +113,16 @@ export const synthesisApi = {
       method: 'POST',
       body: JSON.stringify({ query, limit: 10 }),
     }),
+
+  generateResearchPdf: async (query: string, context_items: { title: string; content: string; url: string }[]): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/synthesis/research-pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, context_items }),
+    });
+    if (!response.ok) throw new Error("Failed to generate PDF");
+    return response.blob();
+  },
 };
 
 // Edges API

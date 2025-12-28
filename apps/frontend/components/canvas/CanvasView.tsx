@@ -39,6 +39,7 @@ const PdfNode = dynamic(() => import('./nodes/PdfNode'), { ssr: false });
 
 import GraphControls from './GraphControls';
 import SynthesisModal from '../synthesis/SynthesisModal';
+import ResearchPdfModal from '../modals/ResearchPdfModal';
 import EmptyGraphState from './EmptyGraphState';
 
 
@@ -58,8 +59,58 @@ interface CanvasViewProps {
 
 function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasViewProps) {
     const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId, whiteboards } = useGraphStore();
+    const { synthesisApi } = require('@/lib/api');
     const [showSynthesis, setShowSynthesis] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+
+    // Research Synthesis State
+    const [showPdfModal, setShowPdfModal] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const [isSynthesizing, setIsSynthesizing] = useState(false);
+
+    const handleSynthesis = useCallback(async () => {
+        const currentNodes = useGraphStore.getState().nodes;
+        if (currentNodes.length === 0) {
+            // alert("No nodes on canvas to synthesize!"); // Use toast ideally
+            return;
+        }
+
+        setShowPdfModal(true);
+        setIsSynthesizing(true);
+        setPdfUrl(null);
+
+        try {
+            const contextItems = currentNodes.map(node => {
+                let content = node.data.content || '';
+
+                // For Article nodes, filter content based on selection
+                if (node.type === 'article') {
+                    const selectedTopics = node.data.selectedTopics || [];
+                    if (selectedTopics.length > 0) {
+                        // Pass full content but emphasize selected topics
+                        // The LLM effectively filters based on these instructions
+                        const topics = selectedTopics.join(", ");
+                        content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
+                    }
+                }
+
+                return {
+                    title: node.data.title || 'Untitled',
+                    content: content,
+                    url: node.data.url || ''
+                };
+            });
+
+            // Trigger synthesis for all nodes present
+            const blob = await synthesisApi.generateResearchPdf("Synthesized Research Report", contextItems);
+            const url = URL.createObjectURL(blob);
+            setPdfUrl(url);
+        } catch (error) {
+            console.error("Synthesis failed:", error);
+        } finally {
+            setIsSynthesizing(false);
+        }
+    }, []);
 
     // ... (rest of the file) ...
 
@@ -1069,7 +1120,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     />
                 )}
                 <GraphControls
-                    onSynthesis={() => setShowSynthesis(true)}
+                    onSynthesis={handleSynthesis}
                     onAddNote={handleAddNote}
                     onAddGroup={handleAddGroup}
                     onAddText={handleAddText}
@@ -1078,6 +1129,13 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     onImportCanvas={() => setShowImportModal(true)}
                 />
             </ReactFlow>
+
+            <ResearchPdfModal
+                isOpen={showPdfModal}
+                onClose={() => setShowPdfModal(false)}
+                pdfUrl={pdfUrl}
+                isLoading={isSynthesizing}
+            />
 
             {/* Context Menu */}
             {contextMenu.visible && (

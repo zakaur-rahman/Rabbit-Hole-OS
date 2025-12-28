@@ -107,3 +107,100 @@ async def search_nodes(request: SearchRequest):
         results=results[:request.limit],
         query=request.query
     )
+
+
+# --- PDF Research Report Generation ---
+
+import io
+from fastapi.responses import StreamingResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
+from app.services.llm import generate_research_report
+
+class ResearchContextItem(BaseModel):
+    title: str
+    content: str  # Selected topics only or full content
+    url: str
+
+class ResearchPDFRequest(BaseModel):
+    query: str
+    context_items: List[ResearchContextItem]
+
+@router.post("/research-pdf")
+async def generate_research_pdf(request: ResearchPDFRequest):
+    """
+    Generate a full academic research PDF report from selected graph nodes.
+    """
+    # 1. Prepare context for LLM
+    context_str = ""
+    for i, item in enumerate(request.context_items):
+        context_str += f"Source {i+1} - {item.title} ({item.url}):\n{item.content}\n\n"
+    
+    # 2. Get structured report from AI
+    report_data = await generate_research_report(request.query, context_str)
+    
+    # 3. Generate PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='ResearchTitle', parent=styles['Title'], fontSize=24, spaceAfter=30))
+    styles.add(ParagraphStyle(name='ResearchHeading', parent=styles['Heading1'], fontSize=16, spaceBefore=20, spaceAfter=12))
+    styles.add(ParagraphStyle(name='ResearchSubHeading', parent=styles['Heading2'], fontSize=14, spaceBefore=15, spaceAfter=10))
+    styles.add(ParagraphStyle(name='ResearchBody', parent=styles['Normal'], fontSize=11, leading=16, spaceAfter=12, alignment=4)) # 4=Justify
+    styles.add(ParagraphStyle(name='AbstractBody', parent=styles['Italic'], fontSize=10, leading=14, leftIndent=40, rightIndent=40, spaceAfter=30))
+    
+    story = []
+    
+    # --- Title Page ---
+    story.append(Spacer(1, 2*inch))
+    story.append(Paragraph(report_data.get("title", f"Research Report: {request.query}"), styles['ResearchTitle']))
+    story.append(Spacer(1, 0.5*inch))
+    story.append(Paragraph(f"Synthesized Research on: {request.query}", styles['Normal']))
+    story.append(Spacer(1, 0.2*inch))
+    from datetime import datetime
+    story.append(Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
+    story.append(PageBreak())
+    
+    # --- Abstract & Introduction ---
+    story.append(Paragraph("Abstract", styles['ResearchHeading']))
+    story.append(Paragraph(report_data.get("abstract", "No abstract available"), styles['AbstractBody']))
+    
+    story.append(Paragraph("Introduction", styles['ResearchHeading']))
+    story.append(Paragraph(report_data.get("introduction", ""), styles['ResearchBody']))
+    
+    # --- Main Sections ---
+    sections = report_data.get("sections", [])
+    for section in sections:
+        story.append(Paragraph(section.get("heading", "Untitled Section"), styles['ResearchHeading']))
+        # Handle newlines in body
+        body_text = section.get("body", "").replace("\n", "<br/>")
+        story.append(Paragraph(body_text, styles['ResearchBody']))
+        
+    # --- Conclusion ---
+    story.append(Paragraph("Conclusion", styles['ResearchHeading']))
+    story.append(Paragraph(report_data.get("conclusion", ""), styles['ResearchBody']))
+    
+    # --- References ---
+    story.append(PageBreak())
+    story.append(Paragraph("References", styles['ResearchHeading']))
+    
+    refs = report_data.get("references", [])
+    for ref in refs:
+        story.append(Paragraph(ref, styles['BodyText']))
+        story.append(Spacer(1, 6))
+        
+    # Build PDF
+    doc.build(story)
+    
+    # Return buffer
+    buffer.seek(0)
+    
+    headers = {
+        'Content-Disposition': f'attachment; filename="Research_Report_{request.query.replace(" ", "_").lower()}.pdf"'
+    }
+    
+    return StreamingResponse(buffer, media_type='application/pdf', headers=headers)

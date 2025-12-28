@@ -57,5 +57,18 @@
       "whiteboard_id": "board-1766500366804"
     }
   },
-  "main": {}
+  "main": {
+    "enode-1766938253811-right-note-1766945154561-left": {
+      "id": "enode-1766938253811-right-note-1766945154561-left",
+      "source": "node-1766938253811",
+      "target": "note-1766945154561",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "type": "default",
+      "animated": false,
+      "style": null,
+      "data": null,
+      "whiteboard_id": "main"
+    }
+  }
 }

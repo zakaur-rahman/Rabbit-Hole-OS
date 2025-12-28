@@ -14,3 +14,4 @@ langchain
 ollamafreeapi
 huggingface_hub
 google-genai
+reportlab
