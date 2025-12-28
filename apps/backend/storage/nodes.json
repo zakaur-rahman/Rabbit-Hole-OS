@@ -165,7 +165,7 @@
     "url": "https://en.wikipedia.org/wiki/Delhi",
     "title": "Delhi",
     "content": "Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religions, and traditions, making it a microcosm of India itself. The city faces challenges such as rapid urbanization, pollution, and infrastructure strain, but it continues to evolve as a global city.",
-    "snippet": "Delhi, officially the National Capital Territory of Delhi (NCT), is a city and a union territory of India that encompasses the national capital New Delhi. It is the most populous city in India and the second most populous urban agglomeration in the world. Delhi is a significant administrative, cultural, and political centre of India.",
+    "snippet": "Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most p...",
     "created_at": "2025-12-28T16:10:54.131316Z",
     "metadata": {
       "title": "Delhi",
@@ -360,10 +360,20 @@
         }
       ],
       "position": {
-        "x": 100,
-        "y": 100
+        "x": 218.5568350494434,
+        "y": 78.7205680680486
       },
-      "selectedTopics": []
+      "selectedTopics": [
+        "4",
+        "4.1",
+        "4.2",
+        "4.3",
+        "6",
+        "6.1",
+        "6.2",
+        "6.3"
+      ],
+      "content": "Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religions, and traditions, making it a microcosm of India itself. The city faces challenges such as rapid urbanization, pollution, and infrastructure strain, but it continues to evolve as a global city."
     },
     "outline": [
       {
@@ -548,5 +558,27 @@
         ]
       }
     ]
+  },
+  "note-1766945154561": {
+    "id": "note-1766945154561",
+    "type": "note",
+    "url": "",
+    "title": "New Note",
+    "content": "<p>Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religi..</p>",
+    "snippet": "<p>Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second mos...",
+    "created_at": "2025-12-28T18:05:54.882691Z",
+    "metadata": {
+      "title": "New Note",
+      "content": "<p>Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religi..</p>",
+      "position": {
+        "x": 656.5519216646126,
+        "y": 516.053126028783
+      },
+      "whiteboard_id": "main",
+      "style": {
+        "width": 412,
+        "height": 281
+      }
+    }
   }
 }
