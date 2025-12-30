@@ -123,6 +123,116 @@ export const synthesisApi = {
     if (!response.ok) throw new Error("Failed to generate PDF");
     return response.blob();
   },
+
+  generateChunkedResearchPdf: async (
+    query: string,
+    context_items: {
+      node_id: string;
+      title: string;
+      content: string;
+      url: string;
+      selected_topics: string[];
+      outline: any[];
+    }[]
+  ): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/synthesis/research-pdf-chunked`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, context_items }),
+    });
+    if (!response.ok) throw new Error("Failed to generate chunked PDF");
+    return response.blob();
+  },
+
+  generateLatexResearchPdf: async (
+    query: string,
+    context_items: {
+      node_id: string;
+      title: string;
+      content: string;
+      url: string;
+      selected_topics: string[];
+      outline: any[];
+    }[],
+    return_tex: boolean = false
+  ): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/synthesis/research-latex`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, context_items, return_tex }),
+    });
+    if (!response.ok) throw new Error("Failed to generate LaTeX PDF");
+    return response.blob();
+  },
+
+  getResearchAST: async (
+    query: string,
+    context_items: {
+      node_id: string;
+      title: string;
+      content: string;
+      url: string;
+      selected_topics: string[];
+      outline: any[];
+    }[]
+  ): Promise<{ status: string; document: any }> => {
+    const response = await fetch(`${API_BASE}/synthesis/research-ast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, context_items }),
+    });
+    if (!response.ok) throw new Error("Failed to generate AST");
+    return response.json();
+  },
+
+  generateASTPdf: async (
+    query: string,
+    context_items: {
+      node_id: string;
+      title: string;
+      content: string;
+      url: string;
+      selected_topics: string[];
+      outline: any[];
+    }[]
+  ): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/synthesis/research-ast-pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, context_items }),
+    });
+    if (!response.ok) throw new Error("Failed to generate AST PDF");
+    return response.blob();
+  },
+
+  generatePdfFromAST: async (document: any): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/synthesis/research-pdf-from-ast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(document),
+    });
+    if (!response.ok) throw new Error("Failed to compile AST to PDF");
+    return response.blob();
+  },
+
+  regenerateSection: async (
+    section: any,
+    context_items: any[],
+    instruction?: string
+  ): Promise<any> => {
+    const response = await fetch(`${API_BASE}/synthesis/regenerate-section`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        section, 
+        context_items,
+        instruction
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to regenerate section");
+    return response.json();
+  },
+
 };
 
 // Edges API

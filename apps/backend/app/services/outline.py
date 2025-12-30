@@ -245,7 +245,7 @@ async def analyze_url_gemini(url: str, api_key: str) -> dict:
         
         # Initialize the client
         client = genai.Client(api_key=api_key)
-        model_id = "gemini-2.5-flash-lite"
+        model_id = "gemini-2.5-flash-preview-09-2025"
         
         # Using the robust prompt with explicit JSON schema instruction
         prompt = f"""You are a curator. Analyze the webpage at {url}.

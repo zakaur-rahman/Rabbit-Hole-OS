@@ -16,6 +16,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
+import { useASTStore } from '@/store/ast.store'; // Import store
+import ASTEditorModal from '../modals/ASTEditorModal'; // Import modal
 
 // Import all node types
 import ArticleNode from './nodes/ArticleNode';
@@ -68,6 +70,54 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [isSynthesizing, setIsSynthesizing] = useState(false);
 
+    const [showASTEditor, setShowASTEditor] = useState(false);
+    const [initialAST, setInitialAST] = useState<any>(null);
+
+    const handleOpenASTEditor = useCallback(async () => {
+        const currentNodes = useGraphStore.getState().nodes;
+        if (currentNodes.length === 0) {
+            return;
+        }
+
+        setShowASTEditor(true);
+        setInitialAST(null); // Clear previous
+
+        try {
+            // Build context items same as for PDF
+            const contextItems = currentNodes.map(node => {
+                let content = node.data.content || '';
+                const selectedTopics = node.data.selectedTopics || [];
+
+                if (node.type === 'article' && selectedTopics.length > 0) {
+                    const topics = selectedTopics.join(", ");
+                    content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
+                }
+
+                return {
+                    node_id: node.id,
+                    title: node.data.title || 'Untitled',
+                    content: content,
+                    url: node.data.url || '',
+                    selected_topics: selectedTopics,
+                    outline: node.data.outline || []
+                };
+            });
+
+            // Fetch AST
+            const response = await synthesisApi.getResearchAST("Synthesized Research Report", contextItems);
+            if (response.status === 'success' || response.status === 'partial') {
+                setInitialAST(response.document);
+            }
+        } catch (error) {
+            console.error("Failed to load AST:", error);
+            setShowASTEditor(false);
+        }
+    }, []);
+
+    const handleCompileAST = useCallback(async (ast: any) => {
+        return await synthesisApi.generatePdfFromAST(ast);
+    }, []);
+
     const handleSynthesis = useCallback(async () => {
         const currentNodes = useGraphStore.getState().nodes;
         if (currentNodes.length === 0) {
@@ -80,29 +130,32 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setPdfUrl(null);
 
         try {
+            // Build context items with full structure for LaTeX endpoint
             const contextItems = currentNodes.map(node => {
                 let content = node.data.content || '';
+                const selectedTopics = node.data.selectedTopics || [];
 
                 // For Article nodes, filter content based on selection
-                if (node.type === 'article') {
-                    const selectedTopics = node.data.selectedTopics || [];
-                    if (selectedTopics.length > 0) {
-                        // Pass full content but emphasize selected topics
-                        // The LLM effectively filters based on these instructions
-                        const topics = selectedTopics.join(", ");
-                        content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
-                    }
+                if (node.type === 'article' && selectedTopics.length > 0) {
+                    const topics = selectedTopics.join(", ");
+                    content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
                 }
 
                 return {
+                    node_id: node.id,
                     title: node.data.title || 'Untitled',
                     content: content,
-                    url: node.data.url || ''
+                    url: node.data.url || '',
+                    selected_topics: selectedTopics,
+                    outline: node.data.outline || []
                 };
             });
 
-            // Trigger synthesis for all nodes present
-            const blob = await synthesisApi.generateResearchPdf("Synthesized Research Report", contextItems);
+            // Use LaTeX-based PDF generation
+            const blob = await synthesisApi.generateLatexResearchPdf(
+                "Synthesized Research Report",
+                contextItems
+            );
             const url = URL.createObjectURL(blob);
             setPdfUrl(url);
         } catch (error) {
@@ -111,6 +164,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             setIsSynthesizing(false);
         }
     }, []);
+
+
 
     // ... (rest of the file) ...
 
@@ -1119,8 +1174,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         }}
                     />
                 )}
+
+                <ASTEditorModal
+                    isOpen={showASTEditor}
+                    onClose={() => setShowASTEditor(false)}
+                    initialAST={initialAST}
+                    onCompile={handleCompileAST}
+                />
+
                 <GraphControls
                     onSynthesis={handleSynthesis}
+                    onASTEditor={handleOpenASTEditor}
+
                     onAddNote={handleAddNote}
                     onAddGroup={handleAddGroup}
                     onAddText={handleAddText}

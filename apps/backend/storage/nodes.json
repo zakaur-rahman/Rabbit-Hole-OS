@@ -159,57 +159,113 @@
       "whiteboard_id": "board-1766333112453"
     }
   },
-  "node-1766938253811": {
-    "id": "node-1766938253811",
+  "node-1767112084103": {
+    "id": "node-1767112084103",
     "type": "article",
-    "url": "https://en.wikipedia.org/wiki/Delhi",
-    "title": "Delhi",
-    "content": "Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religions, and traditions, making it a microcosm of India itself. The city faces challenges such as rapid urbanization, pollution, and infrastructure strain, but it continues to evolve as a global city.",
-    "snippet": "Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most p...",
-    "created_at": "2025-12-28T16:10:54.131316Z",
+    "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
+    "title": "2008 financial crisis",
+    "content": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting global consequences. The crisis was fundamentally caused by the confluence of financial deregulation, particularly the repeal of Glass\u2013Steagall, and the aggressive expansion of subprime lending, which fueled an unsustainable housing bubble in the United States. Financial institutions utilized complex securitization techniques, packaging risky mortgages into instruments like Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), which were then falsely rated as safe by credit rating agencies, distributing systemic risk globally through the shadow banking system.\n\nThe article meticulously tracks the progression of the crisis, starting with early warning signs and culminating in the pivotal events of September 2008, including the government takeover of Fannie Mae and Freddie Mac, and the bankruptcy of Lehman Brothers. The failure of Lehman triggered a global credit freeze, necessitating massive government intervention, such as the Troubled Asset Relief Program (TARP) in the U.S. and coordinated international efforts to stabilize banks and inject liquidity. The immediate aftermath was the Great Recession, characterized by soaring unemployment, massive wealth destruction, and significant political upheaval.\n\nCrucially, the article explores the long-term consequences, focusing heavily on regulatory reform. This includes the passage of the Dodd\u2013Frank Act in the U.S. and the implementation of Basel III internationally, aimed at increasing capital requirements and reducing systemic risk. The analysis sections delve into ongoing debates regarding the primary causes, criticisms of the government response (particularly the lack of criminal prosecutions), and the role of the economics profession in failing to predict or adequately address the crisis. Overall, the article serves as a definitive resource, detailing how a failure in housing finance rapidly metastasized into a global economic catastrophe that fundamentally reshaped financial regulation and public trust.",
+    "snippet": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting glo...",
+    "created_at": "2025-12-30T16:28:04.112152Z",
     "metadata": {
-      "title": "Delhi",
-      "url": "https://en.wikipedia.org/wiki/Delhi",
+      "title": "2008 financial crisis",
+      "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
       "whiteboard_id": "main",
       "style": {
-        "width": 320
+        "width": 537,
+        "height": 436
       },
       "analyzed_by": "ai",
-      "snippet": "Delhi, officially the National Capital Territory of Delhi (NCT), is a city and a union territory of India that encompasses the national capital New Delhi. It is the most populous city in India and the second most populous urban agglomeration in the world. Delhi is a significant administrative, cultural, and political centre of India.",
+      "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing bubble and the subsequent failure of major financial institutions. This systemic failure was rooted in lax lending standards, the proliferation of complex subprime mortgage-backed securities, and inadequate regulatory oversight, plunging the global economy into the Great Recession.",
       "outline": [
         {
           "id": "1",
           "number": "1",
-          "title": "Etymology",
-          "children": []
+          "title": "Background",
+          "children": [
+            {
+              "id": "1.1",
+              "number": "1.1",
+              "title": "Financial deregulation",
+              "children": []
+            },
+            {
+              "id": "1.2",
+              "number": "1.2",
+              "title": "Housing bubble",
+              "children": []
+            },
+            {
+              "id": "1.3",
+              "number": "1.3",
+              "title": "Subprime lending",
+              "children": []
+            },
+            {
+              "id": "1.4",
+              "number": "1.4",
+              "title": "Securitization and derivatives",
+              "children": []
+            },
+            {
+              "id": "1.5",
+              "number": "1.5",
+              "title": "Credit rating agencies",
+              "children": []
+            },
+            {
+              "id": "1.6",
+              "number": "1.6",
+              "title": "Shadow banking system",
+              "children": []
+            },
+            {
+              "id": "1.7",
+              "number": "1.7",
+              "title": "Too big to fail",
+              "children": []
+            }
+          ]
         },
         {
           "id": "2",
           "number": "2",
-          "title": "History",
+          "title": "Crisis",
           "children": [
             {
               "id": "2.1",
               "number": "2.1",
-              "title": "Early history",
+              "title": "Early warning signs",
               "children": []
             },
             {
               "id": "2.2",
               "number": "2.2",
-              "title": "Sultanate and Mughal periods",
+              "title": "Bear Stearns and IndyMac",
               "children": []
             },
             {
               "id": "2.3",
               "number": "2.3",
-              "title": "British rule",
+              "title": "Fannie Mae and Freddie Mac",
               "children": []
             },
             {
               "id": "2.4",
               "number": "2.4",
-              "title": "Post-independence",
+              "title": "Lehman Brothers and AIG",
+              "children": []
+            },
+            {
+              "id": "2.5",
+              "number": "2.5",
+              "title": "Global contagion",
+              "children": []
+            },
+            {
+              "id": "2.6",
+              "number": "2.6",
+              "title": "Credit freeze",
               "children": []
             }
           ]
@@ -217,43 +273,100 @@
         {
           "id": "3",
           "number": "3",
-          "title": "Geography",
+          "title": "Response",
           "children": [
             {
               "id": "3.1",
               "number": "3.1",
-              "title": "Climate",
-              "children": []
+              "title": "United States",
+              "children": [
+                {
+                  "id": "3.1.1",
+                  "number": "3.1.1",
+                  "title": "TARP",
+                  "children": []
+                },
+                {
+                  "id": "3.1.2",
+                  "number": "3.1.2",
+                  "title": "Quantitative easing",
+                  "children": []
+                }
+              ]
             },
             {
               "id": "3.2",
               "number": "3.2",
-              "title": "Topography",
-              "children": []
+              "title": "International",
+              "children": [
+                {
+                  "id": "3.2.1",
+                  "number": "3.2.1",
+                  "title": "Europe",
+                  "children": []
+                },
+                {
+                  "id": "3.2.2",
+                  "number": "3.2.2",
+                  "title": "Asia",
+                  "children": []
+                }
+              ]
             }
           ]
         },
         {
           "id": "4",
           "number": "4",
-          "title": "Government and politics",
+          "title": "Aftermath and consequences",
           "children": [
             {
               "id": "4.1",
               "number": "4.1",
-              "title": "National Capital Territory",
+              "title": "Great Recession",
               "children": []
             },
             {
               "id": "4.2",
               "number": "4.2",
-              "title": "Municipal governance",
+              "title": "Income inequality",
               "children": []
             },
             {
               "id": "4.3",
               "number": "4.3",
-              "title": "National capital",
+              "title": "Political consequences",
+              "children": []
+            },
+            {
+              "id": "4.4",
+              "number": "4.4",
+              "title": "Regulatory reform",
+              "children": [
+                {
+                  "id": "4.4.1",
+                  "number": "4.4.1",
+                  "title": "Dodd\u2013Frank Act",
+                  "children": []
+                },
+                {
+                  "id": "4.4.2",
+                  "number": "4.4.2",
+                  "title": "Basel III",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "4.5",
+              "number": "4.5",
+              "title": "Criminal investigations",
+              "children": []
+            },
+            {
+              "id": "4.6",
+              "number": "4.6",
+              "title": "Subsequent crises",
               "children": []
             }
           ]
@@ -261,154 +374,149 @@
         {
           "id": "5",
           "number": "5",
-          "title": "Economy",
-          "children": []
+          "title": "Analysis and commentary",
+          "children": [
+            {
+              "id": "5.1",
+              "number": "5.1",
+              "title": "Causes",
+              "children": []
+            },
+            {
+              "id": "5.2",
+              "number": "5.2",
+              "title": "Criticisms of the response",
+              "children": []
+            },
+            {
+              "id": "5.3",
+              "number": "5.3",
+              "title": "Role of economics profession",
+              "children": []
+            }
+          ]
         },
         {
           "id": "6",
           "number": "6",
-          "title": "Demographics",
-          "children": [
-            {
-              "id": "6.1",
-              "number": "6.1",
-              "title": "Religion",
-              "children": []
-            },
-            {
-              "id": "6.2",
-              "number": "6.2",
-              "title": "Languages",
-              "children": []
-            },
-            {
-              "id": "6.3",
-              "number": "6.3",
-              "title": "Urban structure",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "7",
-          "number": "7",
-          "title": "Culture",
-          "children": [
-            {
-              "id": "7.1",
-              "number": "7.1",
-              "title": "Arts and performing arts",
-              "children": []
-            },
-            {
-              "id": "7.2",
-              "number": "7.2",
-              "title": "Cuisine",
-              "children": []
-            },
-            {
-              "id": "7.3",
-              "number": "7.3",
-              "title": "Festivals",
-              "children": []
-            },
-            {
-              "id": "7.4",
-              "number": "7.4",
-              "title": "Media",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "8",
-          "number": "8",
-          "title": "Education",
+          "title": "In popular culture",
           "children": []
-        },
-        {
-          "id": "9",
-          "number": "9",
-          "title": "Infrastructure",
-          "children": [
-            {
-              "id": "9.1",
-              "number": "9.1",
-              "title": "Transport",
-              "children": []
-            },
-            {
-              "id": "9.2",
-              "number": "9.2",
-              "title": "Utilities",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "10",
-          "number": "10",
-          "title": "Environment",
-          "children": [
-            {
-              "id": "10.1",
-              "number": "10.1",
-              "title": "Pollution",
-              "children": []
-            }
-          ]
         }
       ],
       "position": {
-        "x": 218.5568350494434,
-        "y": 78.7205680680486
+        "x": 32.55491760772475,
+        "y": -9.534301150612052
       },
       "selectedTopics": [
-        "4",
-        "4.1",
-        "4.2",
-        "4.3",
-        "6",
-        "6.1",
-        "6.2",
-        "6.3"
+        "1",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6",
+        "1.7",
+        "2",
+        "2.1",
+        "2.2",
+        "2.3",
+        "2.4",
+        "2.5",
+        "2.6",
+        "5",
+        "5.1"
       ],
-      "content": "Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religions, and traditions, making it a microcosm of India itself. The city faces challenges such as rapid urbanization, pollution, and infrastructure strain, but it continues to evolve as a global city."
+      "content": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting global consequences. The crisis was fundamentally caused by the confluence of financial deregulation, particularly the repeal of Glass\u2013Steagall, and the aggressive expansion of subprime lending, which fueled an unsustainable housing bubble in the United States. Financial institutions utilized complex securitization techniques, packaging risky mortgages into instruments like Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), which were then falsely rated as safe by credit rating agencies, distributing systemic risk globally through the shadow banking system.\n\nThe article meticulously tracks the progression of the crisis, starting with early warning signs and culminating in the pivotal events of September 2008, including the government takeover of Fannie Mae and Freddie Mac, and the bankruptcy of Lehman Brothers. The failure of Lehman triggered a global credit freeze, necessitating massive government intervention, such as the Troubled Asset Relief Program (TARP) in the U.S. and coordinated international efforts to stabilize banks and inject liquidity. The immediate aftermath was the Great Recession, characterized by soaring unemployment, massive wealth destruction, and significant political upheaval.\n\nCrucially, the article explores the long-term consequences, focusing heavily on regulatory reform. This includes the passage of the Dodd\u2013Frank Act in the U.S. and the implementation of Basel III internationally, aimed at increasing capital requirements and reducing systemic risk. The analysis sections delve into ongoing debates regarding the primary causes, criticisms of the government response (particularly the lack of criminal prosecutions), and the role of the economics profession in failing to predict or adequately address the crisis. Overall, the article serves as a definitive resource, detailing how a failure in housing finance rapidly metastasized into a global economic catastrophe that fundamentally reshaped financial regulation and public trust."
     },
     "outline": [
       {
         "id": "1",
         "number": "1",
-        "title": "Etymology",
-        "children": []
+        "title": "Background",
+        "children": [
+          {
+            "id": "1.1",
+            "number": "1.1",
+            "title": "Financial deregulation",
+            "children": []
+          },
+          {
+            "id": "1.2",
+            "number": "1.2",
+            "title": "Housing bubble",
+            "children": []
+          },
+          {
+            "id": "1.3",
+            "number": "1.3",
+            "title": "Subprime lending",
+            "children": []
+          },
+          {
+            "id": "1.4",
+            "number": "1.4",
+            "title": "Securitization and derivatives",
+            "children": []
+          },
+          {
+            "id": "1.5",
+            "number": "1.5",
+            "title": "Credit rating agencies",
+            "children": []
+          },
+          {
+            "id": "1.6",
+            "number": "1.6",
+            "title": "Shadow banking system",
+            "children": []
+          },
+          {
+            "id": "1.7",
+            "number": "1.7",
+            "title": "Too big to fail",
+            "children": []
+          }
+        ]
       },
       {
         "id": "2",
         "number": "2",
-        "title": "History",
+        "title": "Crisis",
         "children": [
           {
             "id": "2.1",
             "number": "2.1",
-            "title": "Early history",
+            "title": "Early warning signs",
             "children": []
           },
           {
             "id": "2.2",
             "number": "2.2",
-            "title": "Sultanate and Mughal periods",
+            "title": "Bear Stearns and IndyMac",
             "children": []
           },
           {
             "id": "2.3",
             "number": "2.3",
-            "title": "British rule",
+            "title": "Fannie Mae and Freddie Mac",
             "children": []
           },
           {
             "id": "2.4",
             "number": "2.4",
-            "title": "Post-independence",
+            "title": "Lehman Brothers and AIG",
+            "children": []
+          },
+          {
+            "id": "2.5",
+            "number": "2.5",
+            "title": "Global contagion",
+            "children": []
+          },
+          {
+            "id": "2.6",
+            "number": "2.6",
+            "title": "Credit freeze",
             "children": []
           }
         ]
@@ -416,43 +524,100 @@
       {
         "id": "3",
         "number": "3",
-        "title": "Geography",
+        "title": "Response",
         "children": [
           {
             "id": "3.1",
             "number": "3.1",
-            "title": "Climate",
-            "children": []
+            "title": "United States",
+            "children": [
+              {
+                "id": "3.1.1",
+                "number": "3.1.1",
+                "title": "TARP",
+                "children": []
+              },
+              {
+                "id": "3.1.2",
+                "number": "3.1.2",
+                "title": "Quantitative easing",
+                "children": []
+              }
+            ]
           },
           {
             "id": "3.2",
             "number": "3.2",
-            "title": "Topography",
-            "children": []
+            "title": "International",
+            "children": [
+              {
+                "id": "3.2.1",
+                "number": "3.2.1",
+                "title": "Europe",
+                "children": []
+              },
+              {
+                "id": "3.2.2",
+                "number": "3.2.2",
+                "title": "Asia",
+                "children": []
+              }
+            ]
           }
         ]
       },
       {
         "id": "4",
         "number": "4",
-        "title": "Government and politics",
+        "title": "Aftermath and consequences",
         "children": [
           {
             "id": "4.1",
             "number": "4.1",
-            "title": "National Capital Territory",
+            "title": "Great Recession",
             "children": []
           },
           {
             "id": "4.2",
             "number": "4.2",
-            "title": "Municipal governance",
+            "title": "Income inequality",
             "children": []
           },
           {
             "id": "4.3",
             "number": "4.3",
-            "title": "National capital",
+            "title": "Political consequences",
+            "children": []
+          },
+          {
+            "id": "4.4",
+            "number": "4.4",
+            "title": "Regulatory reform",
+            "children": [
+              {
+                "id": "4.4.1",
+                "number": "4.4.1",
+                "title": "Dodd\u2013Frank Act",
+                "children": []
+              },
+              {
+                "id": "4.4.2",
+                "number": "4.4.2",
+                "title": "Basel III",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "4.5",
+            "number": "4.5",
+            "title": "Criminal investigations",
+            "children": []
+          },
+          {
+            "id": "4.6",
+            "number": "4.6",
+            "title": "Subsequent crises",
             "children": []
           }
         ]
@@ -460,125 +625,155 @@
       {
         "id": "5",
         "number": "5",
-        "title": "Economy",
-        "children": []
+        "title": "Analysis and commentary",
+        "children": [
+          {
+            "id": "5.1",
+            "number": "5.1",
+            "title": "Causes",
+            "children": []
+          },
+          {
+            "id": "5.2",
+            "number": "5.2",
+            "title": "Criticisms of the response",
+            "children": []
+          },
+          {
+            "id": "5.3",
+            "number": "5.3",
+            "title": "Role of economics profession",
+            "children": []
+          }
+        ]
       },
       {
         "id": "6",
         "number": "6",
-        "title": "Demographics",
-        "children": [
-          {
-            "id": "6.1",
-            "number": "6.1",
-            "title": "Religion",
-            "children": []
-          },
-          {
-            "id": "6.2",
-            "number": "6.2",
-            "title": "Languages",
-            "children": []
-          },
-          {
-            "id": "6.3",
-            "number": "6.3",
-            "title": "Urban structure",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "7",
-        "number": "7",
-        "title": "Culture",
-        "children": [
-          {
-            "id": "7.1",
-            "number": "7.1",
-            "title": "Arts and performing arts",
-            "children": []
-          },
-          {
-            "id": "7.2",
-            "number": "7.2",
-            "title": "Cuisine",
-            "children": []
-          },
-          {
-            "id": "7.3",
-            "number": "7.3",
-            "title": "Festivals",
-            "children": []
-          },
-          {
-            "id": "7.4",
-            "number": "7.4",
-            "title": "Media",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "8",
-        "number": "8",
-        "title": "Education",
+        "title": "In popular culture",
         "children": []
-      },
-      {
-        "id": "9",
-        "number": "9",
-        "title": "Infrastructure",
-        "children": [
-          {
-            "id": "9.1",
-            "number": "9.1",
-            "title": "Transport",
-            "children": []
-          },
-          {
-            "id": "9.2",
-            "number": "9.2",
-            "title": "Utilities",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "10",
-        "number": "10",
-        "title": "Environment",
-        "children": [
-          {
-            "id": "10.1",
-            "number": "10.1",
-            "title": "Pollution",
-            "children": []
-          }
-        ]
       }
     ]
   },
-  "note-1766945154561": {
-    "id": "note-1766945154561",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "<p>Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religi..</p>",
-    "snippet": "<p>Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second mos...",
-    "created_at": "2025-12-28T18:05:54.882691Z",
+  "node-1767112113670": {
+    "id": "node-1767112113670",
+    "type": "article",
+    "url": "https://en.wikipedia.org/wiki/Liquidity_crisis",
+    "title": "Liquidity crisis",
+    "content": "A liquidity crisis is fundamentally a funding problem where institutions, despite potentially holding valuable assets, cannot convert those assets into cash quickly enough to meet immediate liabilities. This situation is often triggered by an unexpected shock or a sudden loss of confidence, leading to a rapid withdrawal of funds (a run) and a general hoarding of cash. The defining characteristic is the 'liquidity spiral,' where the inability to borrow forces institutions to sell assets at deeply discounted 'fire-sale' prices. These sales drive down overall asset values, eroding the collateral base of other institutions, which in turn triggers further margin calls and forced selling, intensifying the crisis.\n\nThe article clearly distinguishes liquidity (the ability to meet short-term cash needs) from solvency (the total value of assets exceeding liabilities). While an institution may be solvent, illiquidity can quickly render it insolvent if forced asset sales destroy its capital base. Key causes identified include excessive reliance on short-term wholesale funding, structural imbalances in the financial system (like the shadow banking sector), and contagion effects where the failure of one institution spreads fear throughout the market.\n\nHistorical examples, such as the 2007\u20132008 financial crisis, illustrate how the freezing of the interbank lending market\u2014the primary source of short-term funding\u2014can paralyze the global financial system. The 2020 stock market crash also demonstrated a liquidity crunch, driven by the rapid need for cash as investors sold off assets across the board. Mitigation strategies center on the central bank acting as the lender of last resort, injecting massive amounts of liquidity through tools like the discount window or open market operations to restore confidence and break the destructive liquidity spiral.",
+    "snippet": "A liquidity crisis is fundamentally a funding problem where institutions, despite potentially holding valuable assets, cannot convert those assets into cash quickly enough to meet immediate liabilitie...",
+    "created_at": "2025-12-30T16:28:35.636417Z",
     "metadata": {
-      "title": "New Note",
-      "content": "<p>Delhi, officially the National Capital Territory of Delhi (NCT), is a sprawling metropolis in Northern India that serves as the nation's capital. It is a vast urban agglomeration and the second most populous city in the world, encompassing the capital city of New Delhi. Historically, Delhi has been a significant political centre, with numerous empires and kingdoms establishing their capitals here. Its strategic location on the Yamuna River has contributed to its importance throughout history. The city is a blend of ancient monuments and modern infrastructure, reflecting its rich past and dynamic present. It is a major hub for education, commerce, and tourism, attracting millions of visitors annually. The NCT of Delhi is divided into eleven districts, each with its own administrative structure. The city's economy is diverse, with strong sectors in services, manufacturing, and information technology. Delhi's cultural landscape is vibrant, characterized by a multitude of languages, religi..</p>",
-      "position": {
-        "x": 656.5519216646126,
-        "y": 516.053126028783
-      },
+      "title": "Liquidity crisis",
+      "url": "https://en.wikipedia.org/wiki/Liquidity_crisis",
       "whiteboard_id": "main",
+      "analyzed_by": "ai",
+      "snippet": "A liquidity crisis occurs when financial markets or institutions face a sudden, severe shortage of cash or easily marketable assets, making it difficult to meet short-term obligations. This phenomenon is characterized by a rapid 'flight to quality' and a freezing of interbank lending, often requiring central bank intervention to prevent systemic collapse. It is distinct from, but often leads to, a solvency crisis.",
+      "outline": [
+        {
+          "id": "1",
+          "number": "1",
+          "title": "Causes",
+          "children": []
+        },
+        {
+          "id": "2",
+          "number": "2",
+          "title": "Liquidity spiral",
+          "children": []
+        },
+        {
+          "id": "3",
+          "number": "3",
+          "title": "Liquidity vs. solvency",
+          "children": []
+        },
+        {
+          "id": "4",
+          "number": "4",
+          "title": "Examples",
+          "children": [
+            {
+              "id": "4.1",
+              "number": "4.1",
+              "title": "The 2007\u20132008 financial crisis",
+              "children": []
+            },
+            {
+              "id": "4.2",
+              "number": "4.2",
+              "title": "The 2020 stock market crash",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "number": "5",
+          "title": "Mitigation",
+          "children": []
+        }
+      ],
+      "position": {
+        "x": 218.92988623592305,
+        "y": 630.8784326345695
+      },
       "style": {
-        "width": 412,
-        "height": 281
+        "width": 320
+      },
+      "selectedTopics": [
+        "1",
+        "4",
+        "4.1",
+        "4.2",
+        "3"
+      ],
+      "content": "A liquidity crisis is fundamentally a funding problem where institutions, despite potentially holding valuable assets, cannot convert those assets into cash quickly enough to meet immediate liabilities. This situation is often triggered by an unexpected shock or a sudden loss of confidence, leading to a rapid withdrawal of funds (a run) and a general hoarding of cash. The defining characteristic is the 'liquidity spiral,' where the inability to borrow forces institutions to sell assets at deeply discounted 'fire-sale' prices. These sales drive down overall asset values, eroding the collateral base of other institutions, which in turn triggers further margin calls and forced selling, intensifying the crisis.\n\nThe article clearly distinguishes liquidity (the ability to meet short-term cash needs) from solvency (the total value of assets exceeding liabilities). While an institution may be solvent, illiquidity can quickly render it insolvent if forced asset sales destroy its capital base. Key causes identified include excessive reliance on short-term wholesale funding, structural imbalances in the financial system (like the shadow banking sector), and contagion effects where the failure of one institution spreads fear throughout the market.\n\nHistorical examples, such as the 2007\u20132008 financial crisis, illustrate how the freezing of the interbank lending market\u2014the primary source of short-term funding\u2014can paralyze the global financial system. The 2020 stock market crash also demonstrated a liquidity crunch, driven by the rapid need for cash as investors sold off assets across the board. Mitigation strategies center on the central bank acting as the lender of last resort, injecting massive amounts of liquidity through tools like the discount window or open market operations to restore confidence and break the destructive liquidity spiral."
+    },
+    "outline": [
+      {
+        "id": "1",
+        "number": "1",
+        "title": "Causes",
+        "children": []
+      },
+      {
+        "id": "2",
+        "number": "2",
+        "title": "Liquidity spiral",
+        "children": []
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Liquidity vs. solvency",
+        "children": []
+      },
+      {
+        "id": "4",
+        "number": "4",
+        "title": "Examples",
+        "children": [
+          {
+            "id": "4.1",
+            "number": "4.1",
+            "title": "The 2007\u20132008 financial crisis",
+            "children": []
+          },
+          {
+            "id": "4.2",
+            "number": "4.2",
+            "title": "The 2020 stock market crash",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "number": "5",
+        "title": "Mitigation",
+        "children": []
       }
-    }
+    ]
   }
 }

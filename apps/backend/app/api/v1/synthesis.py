@@ -112,13 +112,43 @@ async def search_nodes(request: SearchRequest):
 # --- PDF Research Report Generation ---
 
 import io
+import asyncio
 from fastapi.responses import StreamingResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
-from app.services.llm import generate_research_report
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, Image
+from app.services.llm import (
+    generate_research_report,
+    summarize_topic_chunk,
+    merge_topic_sections,
+    assemble_research_document
+)
+from app.services.chart_renderer import render_chart
+from app.services.chunk_service import (
+    Chunk, NodeContext,
+    segment_nodes,
+    order_chunks_hierarchically,
+    enforce_token_budget,
+    group_chunks_by_topic,
+    prepare_synthesis_context,
+    build_source_map,
+    TOKEN_LIMITS
+)
+from app.services.latex_service import (
+    generate_latex_document,
+    compile_latex_to_pdf,
+    get_latex_only
+)
+from app.services.document_ast import (
+    DocumentAST,
+    parse_document_ast,
+    document_to_dict,
+    create_insufficient_data_block
+)
+from app.services.ast_to_latex import convert_document_to_latex
+from app.services.llm import generate_document_ast
 
 class ResearchContextItem(BaseModel):
     title: str
@@ -152,8 +182,10 @@ async def generate_research_pdf(request: ResearchPDFRequest):
     styles.add(ParagraphStyle(name='ResearchSubHeading', parent=styles['Heading2'], fontSize=14, spaceBefore=15, spaceAfter=10))
     styles.add(ParagraphStyle(name='ResearchBody', parent=styles['Normal'], fontSize=11, leading=16, spaceAfter=12, alignment=4)) # 4=Justify
     styles.add(ParagraphStyle(name='AbstractBody', parent=styles['Italic'], fontSize=10, leading=14, leftIndent=40, rightIndent=40, spaceAfter=30))
+    styles.add(ParagraphStyle(name='FigureCaption', parent=styles['Italic'], fontSize=9, leading=12, alignment=1, spaceBefore=6, spaceAfter=20))  # 1=Center
     
     story = []
+    figure_counter = 0  # Global figure counter
     
     # --- Title Page ---
     story.append(Spacer(1, 2*inch))
@@ -180,6 +212,34 @@ async def generate_research_pdf(request: ResearchPDFRequest):
         body_text = section.get("body", "").replace("\n", "<br/>")
         story.append(Paragraph(body_text, styles['ResearchBody']))
         
+        # --- Render Figures ---
+        figures = section.get("figures", [])
+        for fig in figures:
+            if not fig or not isinstance(fig, dict):
+                continue
+                
+            fig_type = fig.get("type", "")
+            if not fig_type or fig_type == "image_placeholder":
+                # Skip placeholders - we don't fabricate images
+                continue
+            
+            # Render the chart
+            chart_buffer = render_chart(fig)
+            if chart_buffer:
+                figure_counter += 1
+                
+                # Create Image flowable
+                img = Image(chart_buffer, width=5*inch, height=3.5*inch)
+                story.append(Spacer(1, 0.3*inch))
+                story.append(img)
+                
+                # Add caption
+                caption = fig.get("caption", f"Figure {figure_counter}")
+                source_ref = fig.get("source_ref", "")
+                if source_ref:
+                    caption = f"{caption} {source_ref}"
+                story.append(Paragraph(caption, styles['FigureCaption']))
+        
     # --- Conclusion ---
     story.append(Paragraph("Conclusion", styles['ResearchHeading']))
     story.append(Paragraph(report_data.get("conclusion", ""), styles['ResearchBody']))
@@ -204,3 +264,558 @@ async def generate_research_pdf(request: ResearchPDFRequest):
     }
     
     return StreamingResponse(buffer, media_type='application/pdf', headers=headers)
+
+
+# ============================================================
+# CHUNKED MULTI-PASS SYNTHESIS ENDPOINT
+# ============================================================
+
+class ChunkedContextItem(BaseModel):
+    """Enhanced context item with topic hierarchy info."""
+    node_id: str
+    title: str
+    content: str
+    url: str
+    selected_topics: List[str] = []
+    outline: List[dict] = []
+
+class ChunkedPDFRequest(BaseModel):
+    query: str
+    context_items: List[ChunkedContextItem]
+
+@router.post("/research-pdf-chunked")
+async def generate_chunked_research_pdf(request: ChunkedPDFRequest):
+    """
+    Generate a research PDF using token-efficient multi-pass synthesis.
+    
+    Pipeline:
+    1. Segment nodes into topic chunks
+    2. Pass 1: Summarize each chunk (parallel)
+    3. Pass 2: Merge topics across nodes
+    4. Pass 3: Assemble final document
+    5. Generate PDF
+    """
+    print(f"[Chunked PDF] Starting for query: {request.query}, nodes: {len(request.context_items)}")
+    
+    # 1. Convert to NodeContext and segment
+    node_contexts = [
+        NodeContext(
+            node_id=item.node_id,
+            url=item.url,
+            title=item.title,
+            content=item.content,
+            selected_topics=item.selected_topics,
+            outline=item.outline
+        )
+        for item in request.context_items
+    ]
+    
+    chunks = segment_nodes(node_contexts)
+    chunks = order_chunks_hierarchically(chunks)
+    chunks = enforce_token_budget(chunks, TOKEN_LIMITS["synthesis_pass"])
+    
+    print(f"[Chunked PDF] Created {len(chunks)} chunks")
+    
+    # 2. Pass 1: Parallel topic summarization
+    source_map = build_source_map(chunks)
+    
+    async def summarize_chunk(i: int, chunk: Chunk):
+        ref = f"[{i+1}]"
+        return await summarize_topic_chunk(chunk.content, chunk.heading, ref)
+    
+    summaries = await asyncio.gather(*[
+        summarize_chunk(i, chunk) for i, chunk in enumerate(chunks)
+    ])
+    
+    print(f"[Chunked PDF] Pass 1 complete: {len(summaries)} summaries")
+    
+    # 3. Pass 2: Group and merge by topic
+    topic_groups = group_chunks_by_topic(chunks)
+    merged_sections = []
+    
+    for topic_heading, topic_chunks in topic_groups.items():
+        # Get corresponding summaries
+        topic_summaries = []
+        for chunk in topic_chunks:
+            idx = chunks.index(chunk)
+            topic_summaries.append(summaries[idx])
+        
+        merged = await merge_topic_sections(topic_heading, topic_summaries)
+        merged_sections.append(merged)
+    
+    print(f"[Chunked PDF] Pass 2 complete: {len(merged_sections)} sections")
+    
+    # 4. Pass 3: Assemble document
+    report_data = await assemble_research_document(request.query, merged_sections, source_map)
+    
+    print(f"[Chunked PDF] Pass 3 complete, generating PDF...")
+    
+    # 5. Generate PDF (reuse existing PDF builder)
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='ResearchTitle', parent=styles['Title'], fontSize=24, spaceAfter=30))
+    styles.add(ParagraphStyle(name='ResearchHeading', parent=styles['Heading1'], fontSize=16, spaceBefore=20, spaceAfter=12))
+    styles.add(ParagraphStyle(name='ResearchBody', parent=styles['Normal'], fontSize=11, leading=16, spaceAfter=12, alignment=4))
+    styles.add(ParagraphStyle(name='AbstractBody', parent=styles['Italic'], fontSize=10, leading=14, leftIndent=40, rightIndent=40, spaceAfter=30))
+    styles.add(ParagraphStyle(name='FigureCaption', parent=styles['Italic'], fontSize=9, leading=12, alignment=1, spaceBefore=6, spaceAfter=20))
+    
+    story = []
+    figure_counter = 0
+    
+    # Title Page
+    story.append(Spacer(1, 2*inch))
+    story.append(Paragraph(report_data.get("title", f"Research Report: {request.query}"), styles['ResearchTitle']))
+    story.append(Spacer(1, 0.5*inch))
+    story.append(Paragraph(f"Multi-Pass Synthesis | {len(chunks)} Sources", styles['Normal']))
+    from datetime import datetime
+    story.append(Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
+    story.append(PageBreak())
+    
+    # Abstract & Introduction
+    story.append(Paragraph("Abstract", styles['ResearchHeading']))
+    story.append(Paragraph(report_data.get("abstract", ""), styles['AbstractBody']))
+    
+    story.append(Paragraph("Introduction", styles['ResearchHeading']))
+    story.append(Paragraph(report_data.get("introduction", ""), styles['ResearchBody']))
+    
+    # Sections with figures
+    for section in report_data.get("sections", []):
+        story.append(Paragraph(section.get("heading", ""), styles['ResearchHeading']))
+        body_text = section.get("body", "").replace("\n", "<br/>")
+        story.append(Paragraph(body_text, styles['ResearchBody']))
+        
+        # Render figures
+        for fig in section.get("figures", []):
+            if not fig or fig.get("type") == "image_placeholder":
+                continue
+            chart_buffer = render_chart(fig)
+            if chart_buffer:
+                figure_counter += 1
+                img = Image(chart_buffer, width=5*inch, height=3.5*inch)
+                story.append(Spacer(1, 0.3*inch))
+                story.append(img)
+                caption = fig.get("caption", f"Figure {figure_counter}")
+                story.append(Paragraph(caption, styles['FigureCaption']))
+    
+    # Conclusion
+    story.append(Paragraph("Conclusion", styles['ResearchHeading']))
+    story.append(Paragraph(report_data.get("conclusion", ""), styles['ResearchBody']))
+    
+    # References
+    story.append(PageBreak())
+    story.append(Paragraph("References", styles['ResearchHeading']))
+    for ref in report_data.get("references", []):
+        story.append(Paragraph(ref, styles['BodyText']))
+        story.append(Spacer(1, 6))
+    
+    doc.build(story)
+    buffer.seek(0)
+    
+    headers = {
+        'Content-Disposition': f'attachment; filename="Research_Report_Chunked_{request.query.replace(" ", "_").lower()}.pdf"'
+    }
+    
+    print(f"[Chunked PDF] Complete!")
+    return StreamingResponse(buffer, media_type='application/pdf', headers=headers)
+
+
+# ============================================================
+# LATEX PDF GENERATION ENDPOINT
+# ============================================================
+
+class LaTeXPDFRequest(BaseModel):
+    """Request for LaTeX-based PDF generation."""
+    query: str
+    context_items: List[ChunkedContextItem]
+    return_tex: bool = False  # If True, return .tex file instead of PDF
+
+@router.post("/research-latex")
+async def generate_latex_research_pdf(request: LaTeXPDFRequest):
+    """
+    Generate a publication-quality PDF using LaTeX.
+    
+    Pipeline:
+    1. Segment nodes into topic chunks
+    2. Multi-pass synthesis
+    3. Generate LaTeX document
+    4. Compile to PDF (tectonic or pdflatex)
+    5. Return PDF or .tex fallback
+    """
+    print(f"[LaTeX PDF] Starting for query: {request.query}, nodes: {len(request.context_items)}")
+    
+    # 1. Convert to NodeContext and segment
+    node_contexts = [
+        NodeContext(
+            node_id=item.node_id,
+            url=item.url,
+            title=item.title,
+            content=item.content,
+            selected_topics=item.selected_topics,
+            outline=item.outline
+        )
+        for item in request.context_items
+    ]
+    
+    chunks = segment_nodes(node_contexts)
+    chunks = order_chunks_hierarchically(chunks)
+    chunks = enforce_token_budget(chunks, TOKEN_LIMITS["synthesis_pass"])
+    
+    print(f"[LaTeX PDF] Created {len(chunks)} chunks")
+    
+    # 2. Pass 1: Parallel topic summarization
+    source_map = build_source_map(chunks)
+    
+    async def summarize_chunk(i: int, chunk: Chunk):
+        ref = f"[{i+1}]"
+        return await summarize_topic_chunk(chunk.content, chunk.heading, ref)
+    
+    summaries = await asyncio.gather(*[
+        summarize_chunk(i, chunk) for i, chunk in enumerate(chunks)
+    ])
+    
+    print(f"[LaTeX PDF] Pass 1 complete: {len(summaries)} summaries")
+    
+    # 3. Pass 2: Group and merge by topic
+    topic_groups = group_chunks_by_topic(chunks)
+    merged_sections = []
+    
+    for topic_heading, topic_chunks in topic_groups.items():
+        topic_summaries = []
+        for chunk in topic_chunks:
+            idx = chunks.index(chunk)
+            topic_summaries.append(summaries[idx])
+        
+        merged = await merge_topic_sections(topic_heading, topic_summaries)
+        merged_sections.append(merged)
+    
+    print(f"[LaTeX PDF] Pass 2 complete: {len(merged_sections)} sections")
+    
+    # 4. Pass 3: Assemble document
+    report_data = await assemble_research_document(request.query, merged_sections, source_map)
+    
+    print(f"[LaTeX PDF] Pass 3 complete, generating LaTeX...")
+    
+    # 5. Generate LaTeX
+    latex_code = generate_latex_document(report_data, source_map)
+    
+    # 6. If user wants raw .tex, return it
+    if request.return_tex:
+        buffer = io.BytesIO(latex_code.encode('utf-8'))
+        headers = {
+            'Content-Disposition': f'attachment; filename="Research_Report_{request.query.replace(" ", "_").lower()}.tex"'
+        }
+        return StreamingResponse(buffer, media_type='text/x-tex', headers=headers)
+    
+    # 7. Compile to PDF
+    pdf_buffer = compile_latex_to_pdf(latex_code)
+    
+    if pdf_buffer:
+        headers = {
+            'Content-Disposition': f'attachment; filename="Research_Report_{request.query.replace(" ", "_").lower()}.pdf"'
+        }
+        print(f"[LaTeX PDF] Complete!")
+        return StreamingResponse(pdf_buffer, media_type='application/pdf', headers=headers)
+    else:
+        # Fallback: return .tex file if compilation failed
+        print(f"[LaTeX PDF] Compilation failed, returning .tex file")
+        buffer = io.BytesIO(latex_code.encode('utf-8'))
+        headers = {
+            'Content-Disposition': f'attachment; filename="Research_Report_{request.query.replace(" ", "_").lower()}.tex"',
+            'X-Compilation-Failed': 'true'
+        }
+        return StreamingResponse(buffer, media_type='text/x-tex', headers=headers)
+
+
+# ============================================================
+# JSON AST DOCUMENT GENERATION ENDPOINTS
+# ============================================================
+
+class ASTPDFRequest(BaseModel):
+    """Request for AST-based document generation."""
+    query: str
+    context_items: List[ChunkedContextItem]
+
+@router.post("/research-ast")
+async def get_research_ast(request: ASTPDFRequest):
+    """
+    Generate and return the raw JSON AST for a research document.
+    
+    Useful for debugging, inspection, or client-side rendering.
+    """
+    print(f"[AST] Generating for query: {request.query}")
+    
+    # 1. Convert to NodeContext and segment
+    node_contexts = [
+        NodeContext(
+            node_id=item.node_id,
+            url=item.url,
+            title=item.title,
+            content=item.content,
+            selected_topics=item.selected_topics,
+            outline=item.outline
+        )
+        for item in request.context_items
+    ]
+    
+    chunks = segment_nodes(node_contexts)
+    chunks = order_chunks_hierarchically(chunks)
+    chunks = enforce_token_budget(chunks, TOKEN_LIMITS["synthesis_pass"])
+    
+    # 2. Build context and source map
+    context_str = prepare_synthesis_context(chunks)
+    source_map = build_source_map(chunks)
+    
+    print(f"[AST] Prepared {len(chunks)} chunks")
+    
+    # 3. Generate AST
+    ast_dict = await generate_document_ast(request.query, context_str, source_map)
+    
+    # 4. Validate against schema
+    try:
+        validated = parse_document_ast(ast_dict)
+        orphans = validated.validate_citations()
+        if orphans:
+            print(f"[AST] Warning: Orphaned citations: {orphans}")
+        
+        return {"status": "success", "document": document_to_dict(validated)}
+    except Exception as e:
+        print(f"[AST] Validation failed: {e}")
+        return {"status": "partial", "document": ast_dict, "validation_error": str(e)}
+
+
+@router.post("/research-ast-pdf")
+async def generate_ast_pdf(request: ASTPDFRequest):
+    """
+    Generate a PDF using the AST → LaTeX pipeline.
+    
+    Pipeline:
+    1. Generate JSON AST from context
+    2. Validate AST schema
+    3. Convert AST to LaTeX
+    4. Compile to PDF
+    """
+    print(f"[AST-PDF] Starting for query: {request.query}")
+    
+    # 1. Convert to NodeContext and segment
+    node_contexts = [
+        NodeContext(
+            node_id=item.node_id,
+            url=item.url,
+            title=item.title,
+            content=item.content,
+            selected_topics=item.selected_topics,
+            outline=item.outline
+        )
+        for item in request.context_items
+    ]
+    
+    chunks = segment_nodes(node_contexts)
+    chunks = order_chunks_hierarchically(chunks)
+    chunks = enforce_token_budget(chunks, TOKEN_LIMITS["synthesis_pass"])
+    
+    # 2. Build context and source map
+    context_str = prepare_synthesis_context(chunks)
+    source_map = build_source_map(chunks)
+    
+    print(f"[AST-PDF] Prepared {len(chunks)} chunks")
+    
+    # 3. Generate AST
+    ast_dict = await generate_document_ast(request.query, context_str, source_map)
+    
+    # 4. Validate and convert
+    try:
+        validated = parse_document_ast(ast_dict)
+        print(f"[AST-PDF] AST validated, converting to LaTeX...")
+    except Exception as e:
+        print(f"[AST-PDF] Validation warning: {e}")
+        # Continue with unvalidated dict
+        validated = DocumentAST(**ast_dict) if isinstance(ast_dict, dict) else None
+        if not validated:
+            return {"error": "AST generation failed"}
+    
+    # 5. Convert to LaTeX
+    latex_code = convert_document_to_latex(validated)
+    
+    print(f"[AST-PDF] LaTeX generated, compiling...")
+    
+    # 6. Compile to PDF
+    pdf_buffer = compile_latex_to_pdf(latex_code)
+    
+    if pdf_buffer:
+        headers = {
+            'Content-Disposition': f'attachment; filename="Research_AST_{request.query.replace(" ", "_").lower()}.pdf"'
+        }
+        print(f"[AST-PDF] Complete!")
+        return StreamingResponse(pdf_buffer, media_type='application/pdf', headers=headers)
+    else:
+        # Return .tex fallback
+        print(f"[AST-PDF] Compilation failed, returning .tex")
+        buffer = io.BytesIO(latex_code.encode('utf-8'))
+        headers = {
+            'Content-Disposition': f'attachment; filename="Research_AST_{request.query.replace(" ", "_").lower()}.tex"',
+            'X-Compilation-Failed': 'true'
+        }
+        return StreamingResponse(buffer, media_type='text/x-tex', headers=headers)
+
+
+@router.post("/research-pdf-from-ast")
+async def generate_pdf_from_ast(document: dict):
+    """
+    Generate a PDF directly from a provided JSON AST.
+    
+    Used by the advanced editor to compile the user's EDITED version.
+    """
+    print(f"[AST-Compile] Compiling edited AST: {document.get('title')}")
+    
+    try:
+        # 1. Parse and validate
+        validated = DocumentAST(**document)
+        # We skip strict validation here to allow flexibility during editing,
+        # but the DocumentAST constructor ensures basic schema conformity.
+        
+        # 2. Convert to LaTeX
+        latex_code = convert_document_to_latex(validated)
+        
+        print(f"[AST-Compile] LaTeX generated, compiling...")
+        
+        # 3. Compile to PDF
+        pdf_buffer = compile_latex_to_pdf(latex_code)
+        
+        safe_title = validated.title.replace(" ", "_").lower() if validated.title else "document"
+        
+        if pdf_buffer:
+            headers = {
+                'Content-Disposition': f'attachment; filename="{safe_title}.pdf"'
+            }
+            print(f"[AST-Compile] Complete!")
+            return StreamingResponse(pdf_buffer, media_type='application/pdf', headers=headers)
+        else:
+            # Return .tex fallback
+            print(f"[AST-Compile] Compilation failed, returning .tex")
+            buffer = io.BytesIO(latex_code.encode('utf-8'))
+            headers = {
+                'Content-Disposition': f'attachment; filename="{safe_title}.tex"',
+                'X-Compilation-Failed': 'true'
+            }
+            return StreamingResponse(buffer, media_type='text/x-tex', headers=headers)
+            
+    except Exception as e:
+        print(f"[AST-Compile] Error: {e}")
+        return {"error": str(e)}
+
+
+# ============================================================
+# SECTION REGENERATION ENDPOINT
+# ============================================================
+
+class RegenerateSectionRequest(BaseModel):
+    """Request for regenerating a specific section's content."""
+    section_id: str
+    section_title: str
+    current_content: str  # Current section body for context
+    source_context: str   # Relevant source material
+    reference_ids: List[str]  # Available reference IDs to cite
+
+@router.post("/regenerate-section")
+async def regenerate_section(request: RegenerateSectionRequest):
+    """
+    Regenerate a section's content using AI while preserving structure.
+    
+    - Keeps section title and ID
+    - Preserves reference IDs
+    - Only replaces content blocks
+    """
+    print(f"[Regenerate] Section: {request.section_title}")
+    
+    provider, api_key, _ = await get_ai_client()
+    
+    if provider != "gemini":
+        # Mock response
+        return {
+            "section_id": request.section_id,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "data": {
+                        "text": f"Regenerated content for {request.section_title}. This is a placeholder.",
+                        "citations": request.reference_ids[:2] if request.reference_ids else []
+                    }
+                }
+            ]
+        }
+    
+    try:
+        from google import genai
+        from google.genai import types
+        import asyncio
+        
+        client = genai.Client(api_key=api_key)
+        
+        prompt = f'''Regenerate ONLY the content blocks for this document section.
+
+SECTION TITLE: {request.section_title}
+SECTION ID: {request.section_id}
+
+CURRENT CONTENT (for reference):
+{request.current_content[:2000]}
+
+SOURCE MATERIAL:
+{request.source_context[:5000]}
+
+AVAILABLE REFERENCE IDs: {json.dumps(request.reference_ids)}
+
+OUTPUT FORMAT (STRICT JSON):
+{{
+  "content": [
+    {{
+      "type": "paragraph",
+      "data": {{
+        "text": "New content with citations [ref_id] inline.",
+        "citations": ["ref_id"]
+      }}
+    }}
+  ]
+}}
+
+RULES:
+1. Return ONLY valid JSON.
+2. Use ONLY reference IDs from the available list.
+3. Preserve factual accuracy from source material.
+4. Do NOT fabricate information.
+5. If data is insufficient, include a warning block.
+'''
+
+        def call():
+            return client.models.generate_content(
+                model="gemini-2.5-flash-preview-09-2025",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    max_output_tokens=2000,
+                    response_mime_type="application/json"
+                )
+            )
+        
+        response = await asyncio.to_thread(call)
+        
+        if response and response.text:
+            result = json.loads(response.text.strip())
+            return {
+                "section_id": request.section_id,
+                "content": result.get("content", [])
+            }
+    
+    except Exception as e:
+        print(f"[Regenerate] Error: {e}")
+    
+    return {
+        "section_id": request.section_id,
+        "content": [
+            {
+                "type": "warning",
+                "data": {"text": "Failed to regenerate section content."}
+            }
+        ]
+    }
