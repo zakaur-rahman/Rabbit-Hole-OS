@@ -58,14 +58,14 @@
     }
   },
   "main": {
-    "enode-1766938253811-right-note-1766945154561-left": {
-      "id": "enode-1766938253811-right-note-1766945154561-left",
-      "source": "node-1766938253811",
-      "target": "note-1766945154561",
-      "sourceHandle": "right",
-      "targetHandle": "left",
+    "e-node-1767112084103-node-1767112113670": {
+      "id": "e-node-1767112084103-node-1767112113670",
+      "source": "node-1767112084103",
+      "target": "node-1767112113670",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
       "type": "default",
-      "animated": false,
+      "animated": true,
       "style": null,
       "data": null,
       "whiteboard_id": "main"

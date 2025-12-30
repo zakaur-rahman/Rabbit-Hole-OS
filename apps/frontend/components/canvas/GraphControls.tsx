@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { useReactFlow } from 'reactflow';
-import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download, Network } from 'lucide-react';
+import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download, Network, FilePen } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 
 interface GraphControlsProps {
     onSynthesis?: () => void;
+    onASTEditor?: () => void;
     onAddNote?: () => void;
     onAddGroup?: () => void;
     onAddText?: () => void;
@@ -16,19 +17,28 @@ interface GraphControlsProps {
     onImportCanvas?: () => void;
 }
 
-export default function GraphControls({ onSynthesis, onAddNote, onAddGroup, onAddText, onTemplate, onExport, onFitSelection, onImportCanvas }: GraphControlsProps) {
+export default function GraphControls({ onSynthesis, onASTEditor, onAddNote, onAddGroup, onAddText, onTemplate, onExport, onFitSelection, onImportCanvas }: GraphControlsProps) {
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     return (
         <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-4 z-[60] pointer-events-auto">
             {/* AI Synthesis */}
-            <button
-                onClick={onSynthesis}
-                className="w-10 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-neutral-900 flex items-center justify-center shadow-lg shadow-black/20 transition-all hover:scale-110 active:scale-95"
-                title="AI Synthesis"
-            >
-                <Sparkles size={18} fill="currentColor" className="text-neutral-900" />
-            </button>
+            <div className="flex flex-col gap-2">
+                <button
+                    onClick={onSynthesis}
+                    className="w-10 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-neutral-900 flex items-center justify-center shadow-lg shadow-black/20 transition-all hover:scale-110 active:scale-95"
+                    title="Quick AI Synthesis (PDF)"
+                >
+                    <Sparkles size={18} fill="currentColor" className="text-neutral-900" />
+                </button>
+                <button
+                    onClick={onASTEditor}
+                    className="w-10 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white flex items-center justify-center shadow-lg shadow-black/20 transition-all hover:scale-110 active:scale-95"
+                    title="Advanced Document Editor (AST)"
+                >
+                    <FilePen size={18} />
+                </button>
+            </div>
 
             {/* Creation Tools */}
             <div className="flex flex-col bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-xl overflow-hidden shadow-xl shadow-black/20">
