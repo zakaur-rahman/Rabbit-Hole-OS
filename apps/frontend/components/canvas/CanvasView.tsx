@@ -33,8 +33,10 @@ import TextNode from './nodes/TextNode';
 import AnnotationNode from './nodes/AnnotationNode';
 import ImageNode from './nodes/ImageNode';
 import CanvasNode from './nodes/CanvasNode';
+import WebNode from './nodes/WebNode';
 import dynamic from 'next/dynamic';
 import CanvasImportModal from '../modals/CanvasImportModal';
+import WebUrlModal from '../modals/WebUrlModal';
 import { Network } from 'lucide-react';
 
 const PdfNode = dynamic(() => import('./nodes/PdfNode'), { ssr: false });
@@ -73,6 +75,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     // ... rest of component
 
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showWebUrlModal, setShowWebUrlModal] = useState(false);
+    const [pendingWebPosition, setPendingWebPosition] = useState<{ x: number; y: number } | null>(null);
 
     // Research Synthesis State
     const [showPdfModal, setShowPdfModal] = useState(false);
@@ -205,6 +209,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         text: TextNode,
         annotation: AnnotationNode,
         canvas: CanvasNode,
+        web: WebNode,
     }), []);
 
     // Fetch nodes on mount or whiteboard change
@@ -436,25 +441,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 break;
             }
             case 'add-web': {
-                const url = prompt("Enter Web Page URL:");
-                if (url) {
-                    const nodeId = `article-${Date.now()}`;
-                    const newNode = {
-                        id: nodeId,
-                        type: 'article',
-                        position: flowPos,
-                        style: { width: 350, height: 180 },
-                        data: { title: url, url: url }
-                    };
-                    addNode(newNode, false);
-                    nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(apiNode => {
-                        useGraphStore.getState().updateNode(nodeId, {
-                            title: apiNode.title,
-                            snippet: apiNode.content?.slice(0, 100),
-                            favicon: apiNode.metadata?.favicon
-                        });
-                    }).catch(console.error);
-                }
+                // Store position and open URL modal
+                setPendingWebPosition(flowPos);
+                setShowWebUrlModal(true);
                 break;
             }
             case 'create-group': {
@@ -524,6 +513,39 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 break;
         }
     }, [paneContextMenu, addNode, activeWhiteboardId]);
+
+    // Handle URL submission from WebUrlModal
+    const handleWebUrlSubmit = useCallback((url: string) => {
+        if (!pendingWebPosition) return;
+
+        const nodeId = `web-${Date.now()}`;
+        let domain = 'Web Page';
+        try {
+            domain = new URL(url).hostname.replace('www.', '');
+        } catch { }
+
+        const newNode = {
+            id: nodeId,
+            type: 'web',
+            position: pendingWebPosition,
+            style: { width: 500, height: 400 },
+            data: {
+                url: url,
+                title: domain,
+                favicon: `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+            }
+        };
+
+        addNode(newNode);
+        nodesApi.create({
+            ...newNode,
+            type: 'web',
+            title: domain,
+            data: { ...newNode.data, whiteboard_id: activeWhiteboardId }
+        });
+
+        setPendingWebPosition(null);
+    }, [pendingWebPosition, addNode, activeWhiteboardId]);
 
     const paneActions = useMemo(() => [
         { label: 'Add card', onClick: () => handlePaneAction('add-note'), icon: <StickyNote size={14} /> },
@@ -1216,6 +1238,12 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 pdfUrl={pdfUrl}
                 isLoading={isSynthesizing}
                 onOpenAdvancedEditor={handleOpenAdvancedEditor}
+            />
+
+            <WebUrlModal
+                isOpen={showWebUrlModal}
+                onClose={() => setShowWebUrlModal(false)}
+                onSubmit={handleWebUrlSubmit}
             />
 
             {/* Context Menu */}

@@ -296,8 +296,9 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
     current_error = None
     
     for i, line in enumerate(lines):
-        # 1. Tectonic/pdflatex style: document.tex:58: error: ...
-        match = re.search(r'document\.tex:(\d+):\s*(error|warning)?:\s*(.*)', line, re.IGNORECASE)
+        # 1. Tectonic/pdflatex style: document.tex:58: error: ... or document.tex:58: ! LaTeX...
+        # We make the second colon and error level optional
+        match = re.search(r'document\.tex:(\d+):(?:\s*(error|warning):)?\s*(.*)', line, re.IGNORECASE)
         if match:
             line_num = int(match.group(1))
             msg = match.group(3).strip()
@@ -309,22 +310,49 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
             current_error = errors[-1]
             continue
 
-        # 2. Standard LaTeX Error: "! LaTeX Error: <message>"
-        if line.startswith('! LaTeX Error:') or line.startswith('! Package') or line.startswith('! '):
+        # 2. Standard LaTeX Error: "! LaTeX Error: <message>" or "! Package <pkg> Error: <message>"
+        if line.startswith('! '):
+            msg = line[2:].strip()
+            if msg.startswith('LaTeX Error:'):
+                msg = msg.replace('LaTeX Error:', '').strip()
+            
             current_error = {
-                'message': line.replace('! LaTeX Error:', '').replace('! ', '').strip(),
+                'message': msg,
                 'line': 0,
                 'context': line.strip()
             }
             errors.append(current_error)
             continue
         
-        # 3. Line number indicator: "l.<line> <context>"
-        line_match = re.search(r'l\.(\d+)\s*(.*)', line)
+        # 3. Specific Tectonic style: "  error: <message>" followed by line info
+        tectonic_error_match = re.search(r'^\s*error:\s+(.*)', line)
+        if tectonic_error_match and not current_error:
+            current_error = {
+                'message': tectonic_error_match.group(1).strip(),
+                'line': 0,
+                'context': line.strip()
+            }
+            errors.append(current_error)
+            continue
+
+        # 4. Line number indicator: "l.<line> <context>" or "line <line>"
+        line_match = re.search(r'l\.(\d+)', line)
+        if not line_match:
+            line_match = re.search(r'line (\d+)', line, re.IGNORECASE)
+        
+        # 5. Tectonic pointer style: "  --> document.tex:5:1"
+        if not line_match:
+            line_match = re.search(r'-->\s+document\.tex:(\d+)', line)
+            
         if line_match and current_error:
-            # Only update if we don't have a line yet (or if it's more specific)
-            current_error['line'] = int(line_match.group(1))
-            current_error['context'] = line_match.group(2).strip() or line.strip()
+            # Only update if we don't have a line yet (line 0)
+            if current_error.get('line') == 0:
+                current_error['line'] = int(line_match.group(1))
+                # Add visual context if possible
+                context_match = re.search(r'(?:l\.\d+|-->.*?:\d+)\s+(.*)', line)
+                if context_match:
+                    current_error['context'] = context_match.group(1).strip()
+            continue
 
     return errors
 

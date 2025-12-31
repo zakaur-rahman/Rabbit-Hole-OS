@@ -751,12 +751,12 @@ async def generate_pdf_from_ast(request_data: dict):
                 }
             )
             
+    except HTTPException:
+        # Re-raise HTTPExceptions as-is to preserve detail objects
+        raise
     except Exception as e:
         print(f"[AST-Compile] Error: {e}")
-        # If it's already an HTTPException, re-raise
-        if isinstance(e, HTTPException):
-            raise e
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================
@@ -825,6 +825,9 @@ async def compile_raw_latex(request: LatexCompileRequest):
             return StreamingResponse(pdf_buffer, media_type='application/pdf', headers=headers)
         else:
             raise HTTPException(status_code=400, detail={"message": "LaTeX compilation failed", "errors": errors})
+    except HTTPException:
+        # Re-raise HTTPExceptions as-is to preserve detail objects
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

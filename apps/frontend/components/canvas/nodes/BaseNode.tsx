@@ -81,7 +81,7 @@ function BaseNode({
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
-                    group relative flex flex-col h-auto min-h-full w-full
+                    group relative flex flex-col h-full w-full
                     bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
                     transition-all duration-300 shadow-2xl
                     antialiased subpixel-antialiased
@@ -101,7 +101,7 @@ function BaseNode({
                 <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 p-3.5 bg-neutral-950/20 border-b border-white/5">
+                <div className="flex items-center gap-2.5 p-3.5 bg-neutral-950/20 border-b border-white/5 rounded-t-2xl">
                     {Icon && (
                         <div className={`p-1.5 rounded-lg bg-neutral-800/50 shadow-inner shrink-0 flex items-center justify-center`}>
                             {typeof Icon === 'string' ? (
@@ -139,13 +139,13 @@ function BaseNode({
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 flex flex-col min-h-0 relative break-words">
+                <div className={`flex-1 flex flex-col min-h-0 relative break-words ${!footer ? 'rounded-b-2xl' : ''} overflow-hidden`}>
                     {children}
                 </div>
 
                 {/* Footer */}
                 {footer && (
-                    <div className="p-2 border-t border-white/5 bg-neutral-950/10">
+                    <div className="p-2 border-t border-white/5 bg-neutral-950/10 rounded-b-2xl">
                         {footer}
                     </div>
                 )}

@@ -563,14 +563,21 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
             try {
                 const errorData = JSON.parse(err.message);
                 if (errorData.errors) {
-                    setCompileError(errorData.message || 'Compilation failed');
+                    setCompileError(errorData.errors[0]?.message || errorData.message || 'Compilation failed');
 
                     // Parse line numbers from error messages if needed for inline highlighting
                     const parsedErrors = errorData.errors.map((e: any) => {
                         let line = e.line;
                         if (line === 0 || !line) {
-                            const match = e.message.match(/Line (\d+):/);
-                            if (match) line = parseInt(match[1], 10);
+                            // Try multiple patterns: Line N:, line N:, document.tex:N
+                            const patterns = [/Line (\d+):/i, /line (\d+)/i, /document\.tex:(\d+)/i];
+                            for (const pattern of patterns) {
+                                const match = e.message.match(pattern);
+                                if (match) {
+                                    line = parseInt(match[1], 10);
+                                    break;
+                                }
+                            }
                         }
                         return { ...e, line };
                     });
