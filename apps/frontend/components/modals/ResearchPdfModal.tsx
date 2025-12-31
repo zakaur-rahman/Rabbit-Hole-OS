@@ -9,9 +9,10 @@ interface ResearchPdfModalProps {
     pdfUrl: string | null;
     isLoading: boolean;
     title?: string;
+    onOpenAdvancedEditor?: () => void;
 }
 
-export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, title }: ResearchPdfModalProps) {
+export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, title, onOpenAdvancedEditor }: ResearchPdfModalProps) {
     if (!isOpen) return null;
 
     return (
@@ -31,14 +32,25 @@ export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, t
                     </div>
                     <div className="flex items-center gap-2">
                         {pdfUrl && (
-                            <a
-                                href={pdfUrl}
-                                download={`Research_Report.pdf`}
-                                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg transition-colors font-medium text-sm"
-                            >
-                                <Download size={16} />
-                                Download PDF
-                            </a>
+                            <>
+                                {onOpenAdvancedEditor && (
+                                    <button
+                                        onClick={onOpenAdvancedEditor}
+                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-medium text-sm shadow-lg shadow-indigo-900/20 border border-indigo-400/30"
+                                    >
+                                        <Sparkles size={16} />
+                                        Open in Advanced Editor
+                                    </button>
+                                )}
+                                <a
+                                    href={pdfUrl}
+                                    download={`Research_Report.pdf`}
+                                    className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg transition-colors font-medium text-sm"
+                                >
+                                    <Download size={16} />
+                                    Download PDF
+                                </a>
+                            </>
                         )}
                         <button
                             onClick={onClose}

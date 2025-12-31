@@ -24,6 +24,12 @@ async function apiFetch<T>(
   return response.json();
 }
 
+export interface ValidationIssue {
+  severity: 'critical' | 'warning';
+  message: string;
+  location: string;
+}
+
 // Node Types
 export interface ApiNode {
   id: string;
@@ -110,15 +116,21 @@ export const synthesisApi = {
   
   search: (query: string): Promise<{ results: ApiNode[]; query: string }> =>
     apiFetch('/synthesis/search', {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ query, limit: 10 }),
     }),
 
-  generateResearchPdf: async (query: string, context_items: { title: string; content: string; url: string }[]): Promise<Blob> => {
+  validateAST: async (document: any): Promise<{ valid: boolean; issues: ValidationIssue[] }> =>
+    apiFetch('/synthesis/validate-ast', {
+      method: "POST",
+      body: JSON.stringify(document),
+    }),
+
+  generateResearchPdf: async (query: string, context_items: { title: string; content: string; url: string }[], use_dummy_data: boolean = false): Promise<Blob> => {
     const response = await fetch(`${API_BASE}/synthesis/research-pdf`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items }),
+      body: JSON.stringify({ query, context_items, use_dummy_data }),
     });
     if (!response.ok) throw new Error("Failed to generate PDF");
     return response.blob();
@@ -133,12 +145,13 @@ export const synthesisApi = {
       url: string;
       selected_topics: string[];
       outline: any[];
-    }[]
+    }[],
+    use_dummy_data: boolean = false
   ): Promise<Blob> => {
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-chunked`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items }),
+      body: JSON.stringify({ query, context_items, use_dummy_data }),
     });
     if (!response.ok) throw new Error("Failed to generate chunked PDF");
     return response.blob();
@@ -154,12 +167,13 @@ export const synthesisApi = {
       selected_topics: string[];
       outline: any[];
     }[],
-    return_tex: boolean = false
+    return_tex: boolean = false,
+    use_dummy_data: boolean = false
   ): Promise<Blob> => {
     const response = await fetch(`${API_BASE}/synthesis/research-latex`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items, return_tex }),
+      body: JSON.stringify({ query, context_items, return_tex, use_dummy_data }),
     });
     if (!response.ok) throw new Error("Failed to generate LaTeX PDF");
     return response.blob();
@@ -174,12 +188,13 @@ export const synthesisApi = {
       url: string;
       selected_topics: string[];
       outline: any[];
-    }[]
+    }[],
+    use_dummy_data: boolean = false
   ): Promise<{ status: string; document: any }> => {
     const response = await fetch(`${API_BASE}/synthesis/research-ast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items }),
+      body: JSON.stringify({ query, context_items, use_dummy_data }),
     });
     if (!response.ok) throw new Error("Failed to generate AST");
     return response.json();
@@ -194,45 +209,70 @@ export const synthesisApi = {
       url: string;
       selected_topics: string[];
       outline: any[];
-    }[]
+    }[],
+    use_dummy_data: boolean = false
   ): Promise<Blob> => {
     const response = await fetch(`${API_BASE}/synthesis/research-ast-pdf`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items }),
+      body: JSON.stringify({ query, context_items, use_dummy_data }),
     });
     if (!response.ok) throw new Error("Failed to generate AST PDF");
     return response.blob();
   },
 
-  generatePdfFromAST: async (document: any): Promise<Blob> => {
+  generatePdfFromAST: async (document: any, strict_mode: boolean = true): Promise<Blob> => {
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-from-ast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(document),
+      body: JSON.stringify({ document, strict_mode }),
     });
-    if (!response.ok) throw new Error("Failed to compile AST to PDF");
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Failed to compile AST to PDF' }));
+        // detail might be a string or the structured object { message, errors, broken_sections }
+        throw new Error(typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail));
+    }
     return response.blob();
   },
 
-  regenerateSection: async (
-    section: any,
-    context_items: any[],
-    instruction?: string
-  ): Promise<any> => {
+  regenerateSection: async (sectionId: string, sectionTitle: string, currentContent: string, sourceContext: string, referenceIds: string[]) => {
     const response = await fetch(`${API_BASE}/synthesis/regenerate-section`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        section, 
-        context_items,
-        instruction
-      }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        section_id: sectionId,
+        section_title: sectionTitle,
+        current_content: currentContent,
+        source_context: sourceContext,
+        reference_ids: referenceIds
+      })
     });
-    if (!response.ok) throw new Error("Failed to regenerate section");
+    if (!response.ok) throw new Error('Regeneration failed');
     return response.json();
   },
 
+  getLatexFromAST: async (ast: any) => {
+    const response = await fetch(`${API_BASE}/synthesis/research-ast-to-latex`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ast)
+    });
+    if (!response.ok) throw new Error('Failed to convert AST to LaTeX');
+    return response.json();
+  },
+
+  compileRawLatex: async (latexSource: string, strict_mode: boolean = true) => {
+    const response = await fetch(`${API_BASE}/synthesis/compile-latex`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ latex_source: latexSource, strict_mode: strict_mode })
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'LaTeX compilation failed' }));
+        throw new Error(typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail));
+    }
+    return response.blob();
+  }
 };
 
 // Edges API

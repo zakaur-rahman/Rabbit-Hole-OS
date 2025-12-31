@@ -44,6 +44,7 @@ export interface WarningData {
 export type BlockType = 'paragraph' | 'list' | 'table' | 'figure' | 'quote' | 'warning';
 
 export interface Block {
+  id: string;
   type: BlockType;
   data: ParagraphData | ListData | TableData | FigureData | QuoteData | WarningData;
 }
@@ -105,9 +106,9 @@ interface ASTStore {
   
   // Block operations
   addBlock: (sectionId: string, block: Block) => void;
-  updateBlock: (sectionId: string, blockIndex: number, block: Block) => void;
-  removeBlock: (sectionId: string, blockIndex: number) => void;
-  reorderBlocks: (sectionId: string, newOrder: number[]) => void;
+  updateBlock: (sectionId: string, blockId: string, block: Block) => void;
+  removeBlock: (sectionId: string, blockId: string) => void;
+  reorderBlocks: (sectionId: string, newOrder: string[]) => void;
   
   // Reference operations
   addReference: (ref: Reference) => void;
@@ -351,14 +352,14 @@ export const useASTStore = create<ASTStore>((set, get) => ({
   }),
   
   // Update block
-  updateBlock: (sectionId, blockIndex, block) => set(state => {
+  updateBlock: (sectionId, blockId, block) => set(state => {
     if (!state.document) return state;
     return {
       document: {
         ...state.document,
         sections: updateSectionInTree(state.document.sections, sectionId, s => ({
           ...s,
-          content: s.content.map((b, i) => i === blockIndex ? block : b)
+          content: s.content.map(b => b.id === blockId ? block : b)
         }))
       },
       isDirty: true
@@ -366,14 +367,14 @@ export const useASTStore = create<ASTStore>((set, get) => ({
   }),
   
   // Remove block
-  removeBlock: (sectionId, blockIndex) => set(state => {
+  removeBlock: (sectionId, blockId) => set(state => {
     if (!state.document) return state;
     return {
       document: {
         ...state.document,
         sections: updateSectionInTree(state.document.sections, sectionId, s => ({
           ...s,
-          content: s.content.filter((_, i) => i !== blockIndex)
+          content: s.content.filter(b => b.id !== blockId)
         }))
       },
       isDirty: true
@@ -388,7 +389,7 @@ export const useASTStore = create<ASTStore>((set, get) => ({
         ...state.document,
         sections: updateSectionInTree(state.document.sections, sectionId, s => ({
           ...s,
-          content: newOrder.map(i => s.content[i])
+          content: newOrder.map(id => s.content.find(b => b.id === id)).filter(Boolean) as Block[]
         }))
       },
       isDirty: true

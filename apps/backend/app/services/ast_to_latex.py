@@ -203,6 +203,19 @@ def convert_section(section: Section, parent_level: int = 0) -> str:
 # DOCUMENT CONVERTER
 # ============================================================
 
+def convert_section_to_standalone_latex(section: Section, references: List[Reference]) -> str:
+    """
+    Convert a single section to a standalone LaTeX document for isolation testing.
+    """
+    doc = DocumentAST(
+        title=f"Isolation Test: {section.title}",
+        authors=["Isolation Tester"],
+        sections=[section],
+        references=references
+    )
+    return convert_document_to_latex(doc)
+
+
 def convert_document_to_latex(doc: DocumentAST) -> str:
     """
     Convert a complete DocumentAST to compilable LaTeX code.
@@ -224,12 +237,12 @@ def convert_document_to_latex(doc: DocumentAST) -> str:
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 \usepackage{parskip}
 \usepackage{microtype}
+\usepackage{hyperref}
 
 % Page geometry
 \geometry{
@@ -273,7 +286,10 @@ def convert_document_to_latex(doc: DocumentAST) -> str:
 \renewcommand{\headrulewidth}{0.4pt}
 
 % Citation command (simple implementation)
-\newcommand{\cite}[1]{[#1]}
+% In a real LaTeX doc this would use biblatex, but for our AST converter
+% we use a simple bracketed cite or actual \cite if packages are loaded.
+% To prevent "undefined citation" errors during isolation tests, 
+% we ensure all cited keys exist in the bibliography.
 
 """
     
@@ -310,10 +326,18 @@ def convert_document_to_latex(doc: DocumentAST) -> str:
     
     # References
     refs_latex = "\n\\newpage\n\\begin{thebibliography}{99}\n"
-    for ref in doc.references:
-        ref_title = escape_latex(ref.title)
-        ref_url = ref.url
-        refs_latex += f"\\bibitem{{{ref.id}}} {ref_title}. \\url{{{ref_url}}}\n"
+    if not doc.references:
+         # Add a dummy ref if none exist to avoid empty thebibliography error
+         refs_latex += "\\bibitem{dummy} Dummy Reference\n"
+    else:
+        for ref in doc.references:
+            authors = ", ".join(ref.authors) if ref.authors else "Unknown Authors"
+            year_str = f" ({ref.year})" if ref.year else ""
+            ref_title = escape_latex(ref.title)
+            ref_url = ref.url
+            
+            # Format: Authors (Year). Title. \url{URL}
+            refs_latex += f"\\bibitem{{{ref.id}}} {authors}{year_str}. \\textit{{{ref_title}}}. \\url{{{ref_url}}}\n"
     refs_latex += "\\end{thebibliography}\n"
     
     # Combine all parts

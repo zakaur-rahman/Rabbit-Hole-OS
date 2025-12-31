@@ -106,12 +106,12 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 \usepackage{parskip}
 \usepackage{microtype}
+\usepackage{hyperref}
 
 % Page geometry
 \geometry{
@@ -225,17 +225,20 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
 \newpage
 \begin{thebibliography}{99}
 """)
-    
-    for i, ref in enumerate(references):
-        ref_clean = sanitize_for_latex(str(ref))
-        latex_parts.append(f"\\bibitem{{{i+1}}} {ref_clean}\n")
-    
-    # Also add source map entries not in references
-    for ref_num, ref_data in source_map.items():
-        url = ref_data.get("url", "")
-        title = sanitize_for_latex(ref_data.get("title", "Source"))
-        if url:
-            latex_parts.append(f"\\bibitem{{{ref_num}}} {title}. \\url{{{url}}}\n")
+
+    # Only use source_map for bibliography if available to avoid double listing
+    if source_map:
+        for ref_num, ref_data in sorted(source_map.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0):
+            url = ref_data.get("url", "")
+            title = sanitize_for_latex(ref_data.get("title", "Source"))
+            # Ensure ref_num is clean (no brackets)
+            clean_id = str(ref_num).strip("[]")
+            latex_parts.append(f"\\bibitem{{{clean_id}}} {title}. \\url{{{url}}}\n")
+    elif references:
+        # Fallback for reports that only have formatted strings
+        for i, ref in enumerate(references):
+            ref_clean = sanitize_for_latex(str(ref))
+            latex_parts.append(f"\\bibitem{{{i+1}}} {ref_clean}\n")
     
     latex_parts.append(r"""
 \end{thebibliography}
@@ -283,13 +286,159 @@ def _generate_latex_table(fig: Dict, caption: str) -> str:
     return table_latex
 
 
-def compile_latex_to_pdf(latex_code: str) -> Optional[io.BytesIO]:
+def parse_latex_log(log: str) -> List[Dict[str, Any]]:
+    """
+    Parse LaTeX compiler log to extract structured errors.
+    """
+    errors = []
+    lines = log.split('\n')
+    
+    current_error = None
+    
+    for i, line in enumerate(lines):
+        # 1. Tectonic/pdflatex style: document.tex:58: error: ...
+        match = re.search(r'document\.tex:(\d+):\s*(error|warning)?:\s*(.*)', line, re.IGNORECASE)
+        if match:
+            line_num = int(match.group(1))
+            msg = match.group(3).strip()
+            errors.append({
+                'message': msg,
+                'line': line_num,
+                'context': line.strip()
+            })
+            current_error = errors[-1]
+            continue
+
+        # 2. Standard LaTeX Error: "! LaTeX Error: <message>"
+        if line.startswith('! LaTeX Error:') or line.startswith('! Package') or line.startswith('! '):
+            current_error = {
+                'message': line.replace('! LaTeX Error:', '').replace('! ', '').strip(),
+                'line': 0,
+                'context': line.strip()
+            }
+            errors.append(current_error)
+            continue
+        
+        # 3. Line number indicator: "l.<line> <context>"
+        line_match = re.search(r'l\.(\d+)\s*(.*)', line)
+        if line_match and current_error:
+            # Only update if we don't have a line yet (or if it's more specific)
+            current_error['line'] = int(line_match.group(1))
+            current_error['context'] = line_match.group(2).strip() or line.strip()
+
+    return errors
+
+def validate_latex_safety(latex_code: str) -> List[str]:
+    """
+    Check LaTeX code for unsafe or disallowed commands (Strict Mode).
+    
+    Returns list of error messages if violations found.
+    """
+    violations = []
+    
+    # Safe packages whitelist
+    SAFE_PACKAGES = {
+        'inputenc', 'fontenc', 'geometry', 'graphicx', 'booktabs', 
+        'xcolor', 'fancyhdr', 'titlesec', 'parskip', 'microtype', 
+        'hyperref', 'amsmath', 'amssymb', 'amsfonts', 'url', 'enumitem',
+        'caption', 'subcaption', 'float', 'array', 'longtable'
+    }
+
+    # Safe commands whitelist (targets for \renewcommand, etc)
+    SAFE_REDEFINITIONS = {
+        '\\headrulewidth', '\\footrulewidth', '\\thesection', 
+        '\\thesubsection', '\\thesubsubsection', '\\contentsname',
+        '\\abstractname'
+    }
+
+    # High-risk commands that are always blocked
+    BLACKLIST = [
+        (r'\\write18', 'Shell execution (\\write18) is not allowed'),
+        (r'\\immediate', 'Command \\immediate is not allowed'),
+        (r'\\input\{', 'Command \\input is not allowed in Strict Mode (use the AST to structure documents)'),
+        (r'\\include\{', 'Command \\include is not allowed in Strict Mode'),
+        (r'\\closeout', 'File operations are not allowed'),
+        (r'\\newwrite', 'File operations are not allowed'),
+        (r'\\openin', 'File operations are not allowed'),
+        (r'\\openout', 'File operations are not allowed'),
+        (r'\\read', 'File operations are not allowed'),
+        (r'\\catcode', 'Catcode modification is not allowed'),
+    ]
+    
+    lines = latex_code.split('\n')
+    for i, line in enumerate(lines):
+        # Strip comments
+        clean_line = line.split('%')[0].strip()
+    
+    # Check for forbidden packages
+    FORBIDDEN_PACKAGES = [
+        'shellesc', 'write18', 'catchfile', 'pythontex', 'bashful'
+    ]
+    
+    for i, line in enumerate(lines):
+        # Strip comments for safety checks
+        clean_line = line.split('%')[0].strip()
+        if not clean_line:
+            continue
+            
+        # 1. Check for forbidden packages
+        for pkg in FORBIDDEN_PACKAGES:
+            if re.search(rf'\\usepackage(?:\s*\[[^\]]*\])?\s*\{{{pkg}\}}', clean_line):
+                violations.append({
+                    "message": f"Package '{pkg}' is forbidden for security reasons.",
+                    "line": i + 1,
+                    "context": "Strict Mode Violation"
+                })
+        
+        # 2. Check for high-risk commands
+        for pattern, msg in BLACKLIST:
+            if re.search(pattern, clean_line):
+                violations.append({
+                    "message": msg,
+                    "line": i + 1,
+                    "context": "Strict Mode Violation"
+                })
+        
+        # 3. Check for arbitrary redefinitions (preventing \def, \let, \renewcommand of core primitives)
+        # We allow a whitelist of redefinitions used in our standard template
+        SAFE_REDEFINITIONS = [
+            '\\headrulewidth', '\\footrulewidth', '\\thesection', '\\topmargin', 
+            '\\textheight', '\\textwidth', '\\oddsidemargin', '\\evensidemargin'
+        ]
+        
+        redef_match = re.search(r'(\\def(?![a-zA-Z])|\\let(?![a-zA-Z])|\\renewcommand)\s*(\\[a-zA-Z]+)', line)
+        if redef_match:
+            cmd = redef_match.group(2)
+            if cmd not in SAFE_REDEFINITIONS:
+                # Special case: \definecolor is safe
+                if not line.strip().startswith('\\definecolor'):
+                    violations.append({
+                        "message": f"Arbitrary redefinition ({cmd}) is not allowed in Strict Mode.",
+                        "line": i + 1,
+                        "context": "Strict Mode Violation"
+                    })
+
+    return violations
+
+
+def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional[io.BytesIO], List[Dict[str, Any]]):
     """
     Compile LaTeX code to PDF using tectonic or pdflatex.
     
+    Args:
+        latex_code: The LaTeX source.
+        strict_mode: If True, validate code against safety blacklist before compiling.
+        
     Returns:
-        BytesIO buffer with PDF content, or None if compilation fails.
+        Tuple (pdf_bytes, errors)
     """
+    # 1. Validation (Strict Mode)
+    if strict_mode:
+        violations = validate_latex_safety(latex_code)
+        if violations:
+            print(f"[LaTeX] Strict Mode violations: {violations}")
+            return None, violations
+
     # Find tectonic executable - check local directories first
     tectonic_paths = [
         Path(__file__).parent.parent.parent / "tectonic.exe",  # backend/tectonic.exe
@@ -307,6 +456,8 @@ def compile_latex_to_pdf(latex_code: str) -> Optional[io.BytesIO]:
                 break
         else:
             tectonic_exe = p  # Use system PATH
+    
+    errors = []
     
     with tempfile.TemporaryDirectory() as tmpdir:
         tex_path = Path(tmpdir) / "document.tex"
@@ -328,20 +479,27 @@ def compile_latex_to_pdf(latex_code: str) -> Optional[io.BytesIO]:
                 if pdf_path.exists():
                     print("[LaTeX] Compiled successfully with tectonic")
                     buffer = io.BytesIO(pdf_path.read_bytes())
-                    return buffer
+                    return buffer, []
                 else:
-                    print(f"[LaTeX] Tectonic failed: {result.stderr.decode()[:500]}")
+                    log_output = result.stdout.decode() + "\n" + result.stderr.decode()
+                    print(f"[LaTeX] Tectonic failed: {log_output[:500]}")
+                    errors = parse_latex_log(log_output)
+                    return None, errors
+                    
             except FileNotFoundError:
                 print("[LaTeX] Tectonic not found, trying pdflatex...")
             except subprocess.TimeoutExpired:
                 print("[LaTeX] Tectonic timed out")
+                errors.append({"message": "Tectonic compilation timed out", "line": 0})
             except Exception as e:
                 print(f"[LaTeX] Tectonic error: {e}")
+                errors.append({"message": str(e), "line": 0})
 
         
         # Try pdflatex
         try:
             # Run twice for TOC
+            result = None
             for _ in range(2):
                 result = subprocess.run(
                     ["pdflatex", "-interaction=nonstopmode", str(tex_path)],
@@ -353,17 +511,24 @@ def compile_latex_to_pdf(latex_code: str) -> Optional[io.BytesIO]:
             if pdf_path.exists():
                 print("[LaTeX] Compiled successfully with pdflatex")
                 buffer = io.BytesIO(pdf_path.read_bytes())
-                return buffer
+                return buffer, []
             else:
-                print(f"[LaTeX] pdflatex failed: {result.stderr.decode()[:500]}")
+                log_output = result.stdout.decode() if result else "No output"
+                print(f"[LaTeX] pdflatex failed: {log_output[:500]}")
+                errors = parse_latex_log(log_output)
+                return None, errors
+
         except FileNotFoundError:
             print("[LaTeX] pdflatex not found")
+            errors.append({"message": "No LaTeX compiler found (tectonic or pdflatex)", "line": 0})
         except subprocess.TimeoutExpired:
             print("[LaTeX] pdflatex timed out")
+            errors.append({"message": "pdflatex timed out", "line": 0})
         except Exception as e:
             print(f"[LaTeX] pdflatex error: {e}")
+            errors.append({"message": str(e), "line": 0})
     
-    return None
+    return None, errors
 
 
 def get_latex_only(report_data: Dict[str, Any], source_map: Dict[str, Dict]) -> str:

@@ -50,7 +50,7 @@ import HoverPreview from '../ui/HoverPreview';
 import WhiteboardSelector from './WhiteboardSelector';
 import TemplateModal from '../modals/TemplateModal';
 import ContextMenu from '../ui/ContextMenu';
-import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon } from 'lucide-react';
+import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon, Sparkles } from 'lucide-react';
 
 // ... other imports
 
@@ -63,6 +63,15 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId, whiteboards } = useGraphStore();
     const { synthesisApi } = require('@/lib/api');
     const [showSynthesis, setShowSynthesis] = useState(false);
+
+    // Import Sparkles icon if not already imported (it is in line 53? No, line 53 has others. Sparkles is in ResearchPdfModal import, let's add it to imports if missing)
+    // Checking imports... Sparkles is NOT imported in line 53.
+    // I will assume it needs to be imported or use another icon.
+    // Line 4 import { X, Download, Loader2, Sparkles } from 'lucide-react'; in ResearchPdfModal.
+    // In CanvasView.tsx line 53 imports lucide-react icons. I should check if Sparkles is there.
+
+    // ... rest of component
+
     const [showImportModal, setShowImportModal] = useState(false);
 
     // Research Synthesis State
@@ -118,7 +127,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         return await synthesisApi.generatePdfFromAST(ast);
     }, []);
 
-    const handleSynthesis = useCallback(async () => {
+    const handleSynthesis = useCallback(async (useDummyData: boolean = false) => {
         const currentNodes = useGraphStore.getState().nodes;
         if (currentNodes.length === 0) {
             // alert("No nodes on canvas to synthesize!"); // Use toast ideally
@@ -153,8 +162,10 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
             // Use LaTeX-based PDF generation
             const blob = await synthesisApi.generateLatexResearchPdf(
-                "Synthesized Research Report",
-                contextItems
+                useDummyData ? "Dummy Research Report" : "Synthesized Research Report",
+                contextItems,
+                false, // return_tex
+                useDummyData // use_dummy_data
             );
             const url = URL.createObjectURL(blob);
             setPdfUrl(url);
@@ -163,11 +174,12 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         } finally {
             setIsSynthesizing(false);
         }
-    }, []);
+    }, [handleOpenASTEditor]);
 
-
-
-    // ... (rest of the file) ...
+    const handleOpenAdvancedEditor = useCallback(() => {
+        setShowPdfModal(false);
+        handleOpenASTEditor();
+    }, [handleOpenASTEditor]);
 
     const onPaneClick = useCallback(() => {
         selectNode(null);
@@ -526,7 +538,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         { separator: true, label: '', onClick: () => { } },
         { label: 'Snap to grid', onClick: () => handlePaneAction('toggle-snap'), icon: <Grid size={14} /> },
         { label: readOnly ? 'Enable editing' : 'Read-only', onClick: () => handlePaneAction('toggle-readonly'), icon: readOnly ? <Unlock size={14} /> : <Lock size={14} /> },
-    ], [handlePaneAction, readOnly]);
+        { label: 'Generate Dummy Report', onClick: () => handleSynthesis(true), icon: <Sparkles size={14} /> },
+    ], [handlePaneAction, readOnly, handleSynthesis]);
 
     const handleContextMenuAction = useCallback((action: string) => {
         const selectedNodes = nodes.filter(n => n.selected);
@@ -1175,12 +1188,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     />
                 )}
 
-                <ASTEditorModal
-                    isOpen={showASTEditor}
-                    onClose={() => setShowASTEditor(false)}
-                    initialAST={initialAST}
-                    onCompile={handleCompileAST}
-                />
+
 
                 <GraphControls
                     onSynthesis={handleSynthesis}
@@ -1195,11 +1203,19 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 />
             </ReactFlow>
 
+            <ASTEditorModal
+                isOpen={showASTEditor}
+                onClose={() => setShowASTEditor(false)}
+                initialAST={initialAST}
+                onCompile={handleCompileAST}
+            />
+
             <ResearchPdfModal
                 isOpen={showPdfModal}
                 onClose={() => setShowPdfModal(false)}
                 pdfUrl={pdfUrl}
                 isLoading={isSynthesizing}
+                onOpenAdvancedEditor={handleOpenAdvancedEditor}
             />
 
             {/* Context Menu */}

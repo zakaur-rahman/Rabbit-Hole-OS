@@ -247,11 +247,14 @@ def group_chunks_by_topic(chunks: List[Chunk]) -> Dict[str, List[Chunk]]:
 def prepare_synthesis_context(chunks: List[Chunk]) -> str:
     """
     Format chunks into a context string for LLM synthesis.
+    Deduplicates citations by source URL.
     """
-    parts = []
+    url_to_ref = get_url_to_ref_map(chunks)
     
-    for i, chunk in enumerate(chunks):
-        source_ref = f"[{i+1}]"
+    parts = []
+    for chunk in chunks:
+        ref_id = url_to_ref.get(chunk.source_url, "0")
+        source_ref = f"[{ref_id}]"
         part = f"""
 {source_ref} Source: {chunk.source_title} ({chunk.source_url})
 Topic: {chunk.heading}
@@ -263,20 +266,39 @@ Topic: {chunk.heading}
     return "\n\n".join(parts)
 
 
+def get_url_to_ref_map(chunks: List[Chunk]) -> Dict[str, str]:
+    """
+    Create a mapping from source URL to a unique reference ID.
+    IDs are assigned in order of first appearance.
+    """
+    url_to_ref = {}
+    counter = 1
+    for chunk in chunks:
+        url = chunk.source_url
+        if url not in url_to_ref:
+            url_to_ref[url] = str(counter)
+            counter += 1
+    return url_to_ref
+
+
 def build_source_map(chunks: List[Chunk]) -> Dict[str, Dict[str, str]]:
     """
-    Build a map of source references for citation tracking.
+    Build a map of unique source references for citation tracking.
+    Deduplicates sources by URL.
     
-    Returns: {ref_number: {url, title, topic}}
+    Returns: {ref_id: {url, title, topic}}
     """
+    url_to_ref = get_url_to_ref_map(chunks)
     source_map = {}
     
-    for i, chunk in enumerate(chunks):
-        ref = str(i + 1)
-        source_map[ref] = {
-            "url": chunk.source_url,
-            "title": chunk.source_title,
-            "topic": chunk.heading
-        }
-    
+    # We want to store metadata for each unique ref
+    for chunk in chunks:
+        ref_id = url_to_ref[chunk.source_url]
+        if ref_id not in source_map:
+            source_map[ref_id] = {
+                "url": chunk.source_url,
+                "title": chunk.source_title,
+                "topic": chunk.heading  # Representative topic
+            }
+            
     return source_map
