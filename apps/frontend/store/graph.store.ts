@@ -17,9 +17,18 @@ export interface Whiteboard {
   name: string;
 }
 
+export interface Tab {
+  id: string;
+  url: string;
+  displayInput: string;
+  title: string;
+}
+
 export interface BrowserState {
   url: string;
   displayInput: string;
+  tabs: Tab[];
+  activeTabId: string;
 }
 
 export interface GraphState {
@@ -61,14 +70,24 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   activeWhiteboardId: 'main',
   whiteboards: [{ id: 'main', name: 'Main Brain' }],
   browserStates: {
-      'main': { url: '', displayInput: '' }
+      'main': { 
+          url: '', 
+          displayInput: '',
+          tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
+          activeTabId: '1'
+      }
   },
 
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => set((s) => ({
       browserStates: {
           ...s.browserStates,
           [whiteboardId]: {
-              ...(s.browserStates[whiteboardId] || { url: '', displayInput: '' }),
+              ...(s.browserStates[whiteboardId] || { 
+                  url: '', 
+                  displayInput: '',
+                  tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
+                  activeTabId: '1'
+              }),
               ...state
           }
       }
