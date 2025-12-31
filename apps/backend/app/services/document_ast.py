@@ -133,6 +133,15 @@ class Reference(BaseModel):
     id: str
     title: str
     url: str
+    authors: List[str] = Field(default_factory=list)
+    year: Optional[str] = None
+
+
+class ValidationIssue(BaseModel):
+    """A validation issue found in the AST."""
+    severity: Literal["critical", "warning"]
+    message: str
+    location: str
 
 
 class DocumentAST(BaseModel):
@@ -145,60 +154,90 @@ class DocumentAST(BaseModel):
     sections: List[Section] = Field(default_factory=list)
     references: List[Reference] = Field(default_factory=list)
     
-    def validate_citations(self) -> List[str]:
+    def validate_structure(self) -> List[ValidationIssue]:
         """
-        Validate that all citations in content map to references.
-        Returns list of orphaned citation IDs.
+        Validate document structure and integrity.
+        Returns a list of issues.
         """
+        issues = []
+        
+        # 1. Critical: Title Check
+        if not self.title or not self.title.strip():
+            issues.append(ValidationIssue(
+                severity="critical",
+                message="Document title is missing.",
+                location="Root"
+            ))
+            
+        # 2. Critical: Section Check
+        if not self.sections:
+            issues.append(ValidationIssue(
+                severity="critical",
+                message="Document has no sections.",
+                location="Root"
+            ))
+            
+        # 3. Check internal consistency
         ref_ids = {r.id for r in self.references}
-        orphans = []
         
-        def check_block(block: Block):
-            if block.type == "paragraph":
-                for cit in block.data.citations:
-                    if cit not in ref_ids:
-                        orphans.append(cit)
-            elif block.type in ("table", "figure", "quote"):
-                for ref in getattr(block.data, 'source_refs', []):
-                    if ref not in ref_ids:
-                        orphans.append(ref)
-        
-        def check_section(section: Section):
+        for i, section in enumerate(self.sections):
+            loc = f"Section {i+1} ({section.title[:20]}...)"
+            
+            if not section.title.strip():
+                issues.append(ValidationIssue(
+                    severity="critical",
+                    message="Section title is missing.",
+                    location=f"Section {i+1}"
+                ))
+            
+            if not section.content and not section.subsections:
+                issues.append(ValidationIssue(
+                    severity="warning",
+                    message="Section is empty.",
+                    location=loc
+                ))
+            
+            # Check for orphaned citations in this section
+            orphans = []
+            def check_block(block: Block):
+                if block.type == "paragraph":
+                    for cit in block.data.citations:
+                        if cit not in ref_ids:
+                            orphans.append(cit)
+                elif block.type in ("table", "figure", "quote"):
+                    for ref in getattr(block.data, 'source_refs', []):
+                        if ref not in ref_ids:
+                            orphans.append(ref)
+            
             for block in section.content:
                 check_block(block)
-            for sub in section.subsections:
-                check_section(sub)
-        
-        for section in self.sections:
-            check_section(section)
-        
+                
+            if orphans:
+                issues.append(ValidationIssue(
+                    severity="warning", 
+                    message=f"Orphaned citations found: {', '.join(sorted(list(set(orphans))))}",
+                    location=loc
+                ))
+
+        return issues
+
+    def validate_citations(self) -> List[str]:
+        """Legacy helper - use validate_structure instead."""
+        issues = self.validate_structure()
+        orphans = [i.message for i in issues if "Orphaned" in i.message]
         return orphans
-
-
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def create_insufficient_data_block(topic: str = "this section") -> ParagraphBlock:
-    """Create a standard 'insufficient data' paragraph block."""
-    return ParagraphBlock(
-        type="paragraph",
-        data=ParagraphData(
-            text=f"Insufficient source data available for {topic}.",
-            citations=[]
-        )
-    )
-
-
-def parse_document_ast(json_data: dict) -> DocumentAST:
-    """
-    Parse and validate a JSON dict into a DocumentAST.
-    
-    Raises ValidationError if schema is invalid.
-    """
-    return DocumentAST.parse_obj(json_data)
 
 
 def document_to_dict(doc: DocumentAST) -> dict:
     """Convert DocumentAST back to a JSON-serializable dict."""
     return doc.dict()
+
+
+def parse_document_ast(data: dict) -> DocumentAST:
+    """Parse a dictionary into a DocumentAST model."""
+    return DocumentAST(**data)
+
+
+def create_insufficient_data_block(message: str) -> WarningBlock:
+    """Create a warning block for insufficient data."""
+    return WarningBlock(data=WarningData(text=message))

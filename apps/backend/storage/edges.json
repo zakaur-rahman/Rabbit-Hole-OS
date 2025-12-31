@@ -58,17 +58,35 @@
     }
   },
   "main": {
-    "e-node-1767112084103-node-1767112113670": {
-      "id": "e-node-1767112084103-node-1767112113670",
+    "enode-1767112084103-left-note-1767171150532-right": {
+      "id": "enode-1767112084103-left-note-1767171150532-right",
       "source": "node-1767112084103",
-      "target": "node-1767112113670",
+      "target": "note-1767171150532",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "type": "simplebezier",
+      "animated": false,
+      "style": {
+        "stroke": "#9ca3af",
+        "strokeWidth": 2,
+        "strokeDasharray": "none"
+      },
+      "data": null,
+      "whiteboard_id": "main"
+    }
+  },
+  "board-1766514738109": {
+    "e-node-1767115267476-node-1767116134825": {
+      "id": "e-node-1767115267476-node-1767116134825",
+      "source": "node-1767115267476",
+      "target": "node-1767116134825",
       "sourceHandle": "bottom",
       "targetHandle": "top",
       "type": "default",
       "animated": true,
       "style": null,
       "data": null,
-      "whiteboard_id": "main"
+      "whiteboard_id": "board-1766514738109"
     }
   }
 }

@@ -172,8 +172,8 @@
       "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
       "whiteboard_id": "main",
       "style": {
-        "width": 537,
-        "height": 436
+        "width": 587,
+        "height": 442
       },
       "analyzed_by": "ai",
       "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing bubble and the subsequent failure of major financial institutions. This systemic failure was rooted in lax lending standards, the proliferation of complex subprime mortgage-backed securities, and inadequate regulatory oversight, plunging the global economy into the Great Recession.",
@@ -404,29 +404,17 @@
         }
       ],
       "position": {
-        "x": 32.55491760772475,
-        "y": -9.534301150612052
+        "x": 130.41048509755444,
+        "y": -5.493004028649636
       },
       "selectedTopics": [
-        "1",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5",
-        "1.6",
-        "1.7",
-        "2",
-        "2.1",
-        "2.2",
-        "2.3",
-        "2.4",
-        "2.5",
-        "2.6",
         "5",
-        "5.1"
+        "5.1",
+        "5.2",
+        "5.3"
       ],
-      "content": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting global consequences. The crisis was fundamentally caused by the confluence of financial deregulation, particularly the repeal of Glass\u2013Steagall, and the aggressive expansion of subprime lending, which fueled an unsustainable housing bubble in the United States. Financial institutions utilized complex securitization techniques, packaging risky mortgages into instruments like Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), which were then falsely rated as safe by credit rating agencies, distributing systemic risk globally through the shadow banking system.\n\nThe article meticulously tracks the progression of the crisis, starting with early warning signs and culminating in the pivotal events of September 2008, including the government takeover of Fannie Mae and Freddie Mac, and the bankruptcy of Lehman Brothers. The failure of Lehman triggered a global credit freeze, necessitating massive government intervention, such as the Troubled Asset Relief Program (TARP) in the U.S. and coordinated international efforts to stabilize banks and inject liquidity. The immediate aftermath was the Great Recession, characterized by soaring unemployment, massive wealth destruction, and significant political upheaval.\n\nCrucially, the article explores the long-term consequences, focusing heavily on regulatory reform. This includes the passage of the Dodd\u2013Frank Act in the U.S. and the implementation of Basel III internationally, aimed at increasing capital requirements and reducing systemic risk. The analysis sections delve into ongoing debates regarding the primary causes, criticisms of the government response (particularly the lack of criminal prosecutions), and the role of the economics profession in failing to predict or adequately address the crisis. Overall, the article serves as a definitive resource, detailing how a failure in housing finance rapidly metastasized into a global economic catastrophe that fundamentally reshaped financial regulation and public trust."
+      "content": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting global consequences. The crisis was fundamentally caused by the confluence of financial deregulation, particularly the repeal of Glass\u2013Steagall, and the aggressive expansion of subprime lending, which fueled an unsustainable housing bubble in the United States. Financial institutions utilized complex securitization techniques, packaging risky mortgages into instruments like Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), which were then falsely rated as safe by credit rating agencies, distributing systemic risk globally through the shadow banking system.\n\nThe article meticulously tracks the progression of the crisis, starting with early warning signs and culminating in the pivotal events of September 2008, including the government takeover of Fannie Mae and Freddie Mac, and the bankruptcy of Lehman Brothers. The failure of Lehman triggered a global credit freeze, necessitating massive government intervention, such as the Troubled Asset Relief Program (TARP) in the U.S. and coordinated international efforts to stabilize banks and inject liquidity. The immediate aftermath was the Great Recession, characterized by soaring unemployment, massive wealth destruction, and significant political upheaval.\n\nCrucially, the article explores the long-term consequences, focusing heavily on regulatory reform. This includes the passage of the Dodd\u2013Frank Act in the U.S. and the implementation of Basel III internationally, aimed at increasing capital requirements and reducing systemic risk. The analysis sections delve into ongoing debates regarding the primary causes, criticisms of the government response (particularly the lack of criminal prosecutions), and the role of the economics profession in failing to predict or adequately address the crisis. Overall, the article serves as a definitive resource, detailing how a failure in housing finance rapidly metastasized into a global economic catastrophe that fundamentally reshaped financial regulation and public trust.",
+      "color": "indigo-500"
     },
     "outline": [
       {
@@ -655,125 +643,177 @@
       }
     ]
   },
-  "node-1767112113670": {
-    "id": "node-1767112113670",
+  "node-1767116134825": {
+    "id": "node-1767116134825",
     "type": "article",
-    "url": "https://en.wikipedia.org/wiki/Liquidity_crisis",
-    "title": "Liquidity crisis",
-    "content": "A liquidity crisis is fundamentally a funding problem where institutions, despite potentially holding valuable assets, cannot convert those assets into cash quickly enough to meet immediate liabilities. This situation is often triggered by an unexpected shock or a sudden loss of confidence, leading to a rapid withdrawal of funds (a run) and a general hoarding of cash. The defining characteristic is the 'liquidity spiral,' where the inability to borrow forces institutions to sell assets at deeply discounted 'fire-sale' prices. These sales drive down overall asset values, eroding the collateral base of other institutions, which in turn triggers further margin calls and forced selling, intensifying the crisis.\n\nThe article clearly distinguishes liquidity (the ability to meet short-term cash needs) from solvency (the total value of assets exceeding liabilities). While an institution may be solvent, illiquidity can quickly render it insolvent if forced asset sales destroy its capital base. Key causes identified include excessive reliance on short-term wholesale funding, structural imbalances in the financial system (like the shadow banking sector), and contagion effects where the failure of one institution spreads fear throughout the market.\n\nHistorical examples, such as the 2007\u20132008 financial crisis, illustrate how the freezing of the interbank lending market\u2014the primary source of short-term funding\u2014can paralyze the global financial system. The 2020 stock market crash also demonstrated a liquidity crunch, driven by the rapid need for cash as investors sold off assets across the board. Mitigation strategies center on the central bank acting as the lender of last resort, injecting massive amounts of liquidity through tools like the discount window or open market operations to restore confidence and break the destructive liquidity spiral.",
-    "snippet": "A liquidity crisis is fundamentally a funding problem where institutions, despite potentially holding valuable assets, cannot convert those assets into cash quickly enough to meet immediate liabilitie...",
-    "created_at": "2025-12-30T16:28:35.636417Z",
+    "url": "https://en.wikipedia.org/wiki/Business_entity",
+    "title": "Business entity",
+    "content": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. This separation is fundamental, primarily determining the extent of personal liability and the method of taxation. The article details several primary types of entities, ranging from the simplest to the most complex.\n\nThe simplest form is the Sole Proprietorship, where the owner and the business are legally inseparable, meaning the owner assumes full personal liability for all business debts. Partnerships involve two or more individuals agreeing to share profits and losses; liability varies depending on whether it is a general partnership (full liability for all partners) or a limited partnership (where some partners have limited liability but less management control).\n\nCorporations represent the most complex structure, characterized by separate legal personhood. This means the corporation itself is liable for its debts, providing shareholders with limited liability\u2014their personal assets are protected. Corporations are often subject to 'double taxation' (C-Corps), where profits are taxed at the corporate level and then dividends are taxed again when distributed to shareholders. S-Corps offer a way to avoid this by allowing profits and losses to be passed through directly to the owners\u2019 personal income without being subject to corporate tax rates.\n\nThe Limited Liability Company (LLC) is a popular hybrid structure, offering the limited liability protection of a corporation while retaining the flexible, pass-through taxation of a partnership. The article also touches upon Cooperatives, which are owned and controlled by the people who use their services.\n\nLegal status is paramount; the degree of separation dictates the level of protection afforded to the owners. Entities with separate legal personality face higher registration and compliance burdens, including mandatory annual filings, detailed record-keeping, and adherence to corporate governance rules. Ultimately, the selection of a business entity is a strategic decision based on the desired balance between liability protection, tax efficiency, and administrative complexity.",
+    "snippet": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. Thi...",
+    "created_at": "2025-12-30T17:35:36.993012Z",
     "metadata": {
-      "title": "Liquidity crisis",
-      "url": "https://en.wikipedia.org/wiki/Liquidity_crisis",
-      "whiteboard_id": "main",
+      "title": "Business entity",
+      "url": "https://en.wikipedia.org/wiki/Business_entity",
+      "whiteboard_id": "board-1766514738109",
       "analyzed_by": "ai",
-      "snippet": "A liquidity crisis occurs when financial markets or institutions face a sudden, severe shortage of cash or easily marketable assets, making it difficult to meet short-term obligations. This phenomenon is characterized by a rapid 'flight to quality' and a freezing of interbank lending, often requiring central bank intervention to prevent systemic collapse. It is distinct from, but often leads to, a solvency crisis.",
+      "snippet": "A business entity is an organization established to carry on commercial or professional activities, typically structured to be legally and financially distinct from its owners. These structures are crucial as they determine liability, taxation, and regulatory compliance requirements. The choice of entity type, such as a sole proprietorship, partnership, or corporation, significantly impacts the operational framework and risk exposure of the business.",
       "outline": [
         {
           "id": "1",
           "number": "1",
-          "title": "Causes",
-          "children": []
-        },
-        {
-          "id": "2",
-          "number": "2",
-          "title": "Liquidity spiral",
-          "children": []
-        },
-        {
-          "id": "3",
-          "number": "3",
-          "title": "Liquidity vs. solvency",
-          "children": []
-        },
-        {
-          "id": "4",
-          "number": "4",
-          "title": "Examples",
+          "title": "Types of business entities",
           "children": [
             {
-              "id": "4.1",
-              "number": "4.1",
-              "title": "The 2007\u20132008 financial crisis",
+              "id": "1.1",
+              "number": "1.1",
+              "title": "Sole proprietorship",
               "children": []
             },
             {
-              "id": "4.2",
-              "number": "4.2",
-              "title": "The 2020 stock market crash",
+              "id": "1.2",
+              "number": "1.2",
+              "title": "Partnership",
+              "children": []
+            },
+            {
+              "id": "1.3",
+              "number": "1.3",
+              "title": "Corporation",
+              "children": []
+            },
+            {
+              "id": "1.4",
+              "number": "1.4",
+              "title": "Cooperative",
+              "children": []
+            },
+            {
+              "id": "1.5",
+              "number": "1.5",
+              "title": "Limited liability company (LLC)",
+              "children": []
+            },
+            {
+              "id": "1.6",
+              "number": "1.6",
+              "title": "Other types",
               "children": []
             }
           ]
         },
         {
-          "id": "5",
-          "number": "5",
-          "title": "Mitigation",
+          "id": "2",
+          "number": "2",
+          "title": "Legal status",
+          "children": []
+        },
+        {
+          "id": "3",
+          "number": "3",
+          "title": "Taxation",
+          "children": []
+        },
+        {
+          "id": "4",
+          "number": "4",
+          "title": "Registration and compliance",
           "children": []
         }
       ],
       "position": {
-        "x": 218.92988623592305,
-        "y": 630.8784326345695
+        "x": 164.46721967171618,
+        "y": 52.828863654841896
       },
       "style": {
         "width": 320
       },
-      "selectedTopics": [
-        "1",
-        "4",
-        "4.1",
-        "4.2",
-        "3"
-      ],
-      "content": "A liquidity crisis is fundamentally a funding problem where institutions, despite potentially holding valuable assets, cannot convert those assets into cash quickly enough to meet immediate liabilities. This situation is often triggered by an unexpected shock or a sudden loss of confidence, leading to a rapid withdrawal of funds (a run) and a general hoarding of cash. The defining characteristic is the 'liquidity spiral,' where the inability to borrow forces institutions to sell assets at deeply discounted 'fire-sale' prices. These sales drive down overall asset values, eroding the collateral base of other institutions, which in turn triggers further margin calls and forced selling, intensifying the crisis.\n\nThe article clearly distinguishes liquidity (the ability to meet short-term cash needs) from solvency (the total value of assets exceeding liabilities). While an institution may be solvent, illiquidity can quickly render it insolvent if forced asset sales destroy its capital base. Key causes identified include excessive reliance on short-term wholesale funding, structural imbalances in the financial system (like the shadow banking sector), and contagion effects where the failure of one institution spreads fear throughout the market.\n\nHistorical examples, such as the 2007\u20132008 financial crisis, illustrate how the freezing of the interbank lending market\u2014the primary source of short-term funding\u2014can paralyze the global financial system. The 2020 stock market crash also demonstrated a liquidity crunch, driven by the rapid need for cash as investors sold off assets across the board. Mitigation strategies center on the central bank acting as the lender of last resort, injecting massive amounts of liquidity through tools like the discount window or open market operations to restore confidence and break the destructive liquidity spiral."
+      "content": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. This separation is fundamental, primarily determining the extent of personal liability and the method of taxation. The article details several primary types of entities, ranging from the simplest to the most complex.\n\nThe simplest form is the Sole Proprietorship, where the owner and the business are legally inseparable, meaning the owner assumes full personal liability for all business debts. Partnerships involve two or more individuals agreeing to share profits and losses; liability varies depending on whether it is a general partnership (full liability for all partners) or a limited partnership (where some partners have limited liability but less management control).\n\nCorporations represent the most complex structure, characterized by separate legal personhood. This means the corporation itself is liable for its debts, providing shareholders with limited liability\u2014their personal assets are protected. Corporations are often subject to 'double taxation' (C-Corps), where profits are taxed at the corporate level and then dividends are taxed again when distributed to shareholders. S-Corps offer a way to avoid this by allowing profits and losses to be passed through directly to the owners\u2019 personal income without being subject to corporate tax rates.\n\nThe Limited Liability Company (LLC) is a popular hybrid structure, offering the limited liability protection of a corporation while retaining the flexible, pass-through taxation of a partnership. The article also touches upon Cooperatives, which are owned and controlled by the people who use their services.\n\nLegal status is paramount; the degree of separation dictates the level of protection afforded to the owners. Entities with separate legal personality face higher registration and compliance burdens, including mandatory annual filings, detailed record-keeping, and adherence to corporate governance rules. Ultimately, the selection of a business entity is a strategic decision based on the desired balance between liability protection, tax efficiency, and administrative complexity.",
+      "color": "orange-500"
     },
     "outline": [
       {
         "id": "1",
         "number": "1",
-        "title": "Causes",
-        "children": []
-      },
-      {
-        "id": "2",
-        "number": "2",
-        "title": "Liquidity spiral",
-        "children": []
-      },
-      {
-        "id": "3",
-        "number": "3",
-        "title": "Liquidity vs. solvency",
-        "children": []
-      },
-      {
-        "id": "4",
-        "number": "4",
-        "title": "Examples",
+        "title": "Types of business entities",
         "children": [
           {
-            "id": "4.1",
-            "number": "4.1",
-            "title": "The 2007\u20132008 financial crisis",
+            "id": "1.1",
+            "number": "1.1",
+            "title": "Sole proprietorship",
             "children": []
           },
           {
-            "id": "4.2",
-            "number": "4.2",
-            "title": "The 2020 stock market crash",
+            "id": "1.2",
+            "number": "1.2",
+            "title": "Partnership",
+            "children": []
+          },
+          {
+            "id": "1.3",
+            "number": "1.3",
+            "title": "Corporation",
+            "children": []
+          },
+          {
+            "id": "1.4",
+            "number": "1.4",
+            "title": "Cooperative",
+            "children": []
+          },
+          {
+            "id": "1.5",
+            "number": "1.5",
+            "title": "Limited liability company (LLC)",
+            "children": []
+          },
+          {
+            "id": "1.6",
+            "number": "1.6",
+            "title": "Other types",
             "children": []
           }
         ]
       },
       {
-        "id": "5",
-        "number": "5",
-        "title": "Mitigation",
+        "id": "2",
+        "number": "2",
+        "title": "Legal status",
+        "children": []
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Taxation",
+        "children": []
+      },
+      {
+        "id": "4",
+        "number": "4",
+        "title": "Registration and compliance",
         "children": []
       }
     ]
+  },
+  "note-1767171150532": {
+    "id": "note-1767171150532",
+    "type": "note",
+    "url": "",
+    "title": "New Note",
+    "content": "",
+    "snippet": "",
+    "created_at": "2025-12-31T08:52:30.934816Z",
+    "metadata": {
+      "title": "New Note",
+      "content": "",
+      "position": {
+        "x": -350.63097437334216,
+        "y": 56.150189308639966
+      },
+      "whiteboard_id": "main",
+      "style": {
+        "width": 350
+      },
+      "url": ""
+    }
   }
 }

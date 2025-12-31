@@ -50,3 +50,4 @@ desktop.ini
 .eslintcache
 apps/backend/storage/edges.json
 apps/backend/storage/nodes.json
+apps/frontend/lint_output.txt
