@@ -815,5 +815,145 @@
       },
       "url": ""
     }
+  },
+  "node-1767200403051": {
+    "id": "node-1767200403051",
+    "type": "article",
+    "url": "https://nextjs.org/",
+    "title": "Next.js by Vercel - The React Framework",
+    "content": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in recent versions lies in the introduction of the App Router, which fundamentally changes how React applications are structured and rendered. The App Router leverages React Server Components (RSCs) to shift rendering and data fetching logic to the server, drastically reducing client-side JavaScript bundles and improving initial load times. This architecture supports advanced features like nested routing, shared layouts, and data streaming, ensuring that users see content faster.\n\nThe framework offers unparalleled flexibility in rendering strategies, allowing developers to choose the optimal approach for every route. Options include Static Site Generation (SSG) for maximum speed on static content, Server-Side Rendering (SSR) for dynamic, personalized content, and Incremental Static Regeneration (ISR), which allows static pages to be updated in the background without requiring a full site rebuild. This hybrid approach ensures applications remain fast while handling highly dynamic data requirements.\n\nPerformance is central to the Next.js philosophy. The framework includes built-in optimizations such as automatic image optimization via the `next/image` component, font optimization, and automatic code splitting, ensuring applications meet modern Core Web Vitals standards out of the box. This focus on performance translates directly into better SEO and user engagement.\n\nDeveloper experience is equally prioritized, featuring robust TypeScript support, built-in API routes for creating backend endpoints within the same project, and Fast Refresh for instant feedback during development. The ecosystem is robust, with strong community support and deep integration with Vercel, the platform created by the Next.js team, which provides zero-configuration deployment, edge functions, and global scalability. Next.js is trusted by global brands for building complex, scalable digital experiences, solidifying its status as the leading framework for production-grade React development.",
+    "snippet": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in...",
+    "created_at": "2025-12-31T17:00:03.377691Z",
+    "metadata": {
+      "title": "Next.js by Vercel - The React Framework",
+      "url": "https://nextjs.org/",
+      "whiteboard_id": "main",
+      "style": {
+        "width": 320,
+        "height": 103
+      },
+      "analyzed_by": "ai",
+      "content": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in recent versions lies in the introduction of the App Router, which fundamentally changes how React applications are structured and rendered. The App Router leverages React Server Components (RSCs) to shift rendering and data fetching logic to the server, drastically reducing client-side JavaScript bundles and improving initial load times. This architecture supports advanced features like nested routing, shared layouts, and data streaming, ensuring that users see content faster.\n\nThe framework offers unparalleled flexibility in rendering strategies, allowing developers to choose the optimal approach for every route. Options include Static Site Generation (SSG) for maximum speed on static content, Server-Side Rendering (SSR) for dynamic, personalized content, and Incremental Static Regeneration (ISR), which allows static pages to be updated in the background without requiring a full site rebuild. This hybrid approach ensures applications remain fast while handling highly dynamic data requirements.\n\nPerformance is central to the Next.js philosophy. The framework includes built-in optimizations such as automatic image optimization via the `next/image` component, font optimization, and automatic code splitting, ensuring applications meet modern Core Web Vitals standards out of the box. This focus on performance translates directly into better SEO and user engagement.\n\nDeveloper experience is equally prioritized, featuring robust TypeScript support, built-in API routes for creating backend endpoints within the same project, and Fast Refresh for instant feedback during development. The ecosystem is robust, with strong community support and deep integration with Vercel, the platform created by the Next.js team, which provides zero-configuration deployment, edge functions, and global scalability. Next.js is trusted by global brands for building complex, scalable digital experiences, solidifying its status as the leading framework for production-grade React development.",
+      "position": {
+        "x": -59.86578039385995,
+        "y": -133.06903800140694
+      }
+    },
+    "outline": [
+      {
+        "id": "1",
+        "number": "1",
+        "title": "Core Value Proposition: The React Framework for Production",
+        "children": [
+          {
+            "id": "1.1",
+            "number": "1.1",
+            "title": "Focus on Speed, Reliability, and Scalability",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "number": "2",
+        "title": "Modern Architecture: The App Router",
+        "children": [
+          {
+            "id": "2.1",
+            "number": "2.1",
+            "title": "Leveraging React Server Components (RSCs)",
+            "children": []
+          },
+          {
+            "id": "2.2",
+            "number": "2.2",
+            "title": "Nested Routing, Layouts, and Streaming",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Flexible Rendering and Data Strategies",
+        "children": [
+          {
+            "id": "3.1",
+            "number": "3.1",
+            "title": "Static Site Generation (SSG) and Server-Side Rendering (SSR)",
+            "children": []
+          },
+          {
+            "id": "3.2",
+            "number": "3.2",
+            "title": "Incremental Static Regeneration (ISR)",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "number": "4",
+        "title": "Built-in Performance and Developer Experience",
+        "children": [
+          {
+            "id": "4.1",
+            "number": "4.1",
+            "title": "Image, Font, and Code Optimizations",
+            "children": []
+          },
+          {
+            "id": "4.2",
+            "number": "4.2",
+            "title": "TypeScript Support and Fast Refresh",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "number": "5",
+        "title": "Ecosystem, Deployment, and Adoption",
+        "children": [
+          {
+            "id": "5.1",
+            "number": "5.1",
+            "title": "Vercel Integration and Edge Functions",
+            "children": []
+          },
+          {
+            "id": "5.2",
+            "number": "5.2",
+            "title": "Enterprise Trust and Community Support",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "web-1767201259421": {
+    "id": "web-1767201259421",
+    "type": "web",
+    "url": "",
+    "title": "nextjs.org",
+    "content": "",
+    "snippet": "",
+    "created_at": "2025-12-31T17:14:19.741782Z",
+    "metadata": {
+      "url": "https://nextjs.org/docs",
+      "title": "nextjs.org",
+      "favicon": "https://www.google.com/s2/favicons?domain=nextjs.org&sz=32",
+      "whiteboard_id": "main",
+      "position": {
+        "x": -228.5005365495515,
+        "y": -289.66885893313224
+      },
+      "style": {
+        "width": 1162,
+        "height": 931
+      },
+      "content": "",
+      "color": "cyan-500"
+    }
   }
 }
