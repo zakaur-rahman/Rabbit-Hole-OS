@@ -11,7 +11,7 @@
     "dev:electron": "cd apps/desktop && npm run dev",
     "dev:backend": "cd apps/backend && python -m uvicorn app.main:app --reload",
     "build:frontend": "cd apps/frontend && npm run build",
-    "build:backend": "cd apps/backend && pip install pyinstaller && python -m PyInstaller --noconfirm --onefile --windowed --name rabbit-hole-backend run_server.py",
+    "build:backend": "cd apps/backend && pip install pyinstaller && python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec",
     "package": "npm run build:frontend && npm run build:backend && cd apps/desktop && npm run dist"
   },
   "devDependencies": {

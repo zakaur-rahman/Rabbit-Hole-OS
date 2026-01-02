@@ -76,7 +76,6 @@ export default function NewTabPage({ onNavigate }: NewTabPageProps) {
                         { title: 'YouTube', url: 'youtube.com', icon: 'https://www.youtube.com/favicon.ico' },
                         { title: 'GitHub', url: 'github.com', icon: 'https://github.com/favicon.ico' },
                         { title: 'RabbitHole', url: 'localhost:3000', icon: 'https://google.com/favicon.ico' }, // Placeholder
-                        { title: 'Gmail', url: 'mail.google.com', icon: 'https://mail.google.com/favicon.ico' },
                     ].map((shortcut, i) => (
                         <button
                             key={i}
