@@ -22,6 +22,7 @@ export interface Tab {
   url: string;
   displayInput: string;
   title: string;
+  isLoading?: boolean;
 }
 
 export interface BrowserState {
