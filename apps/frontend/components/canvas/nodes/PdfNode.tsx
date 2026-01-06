@@ -14,6 +14,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 export interface PdfNodeData {
     title?: string;
     url?: string;
+    hasInstruction?: boolean;
 }
 
 function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
@@ -86,6 +87,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
             iconColor="text-red-400"
             minWidth={300}
             minHeight={400}
+            hasInstruction={data.hasInstruction}
         >
             <div
                 ref={containerRef}

@@ -2,7 +2,7 @@
 
 import React, { memo, useCallback } from 'react';
 import { Handle, Position, NodeResizer } from 'reactflow';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, MessageSquare } from 'lucide-react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { nodesApi } from '@/lib/api';
@@ -26,6 +26,7 @@ interface BaseNodeProps {
     onTitleChange?: (title: string) => void;
     headerRight?: React.ReactNode;
     onResize?: (event: any, params: { width: number; height: number }) => void;
+    hasInstruction?: boolean;
 }
 
 function BaseNode({
@@ -44,7 +45,8 @@ function BaseNode({
     className = '',
     onTitleChange,
     headerRight,
-    onResize
+    onResize,
+    hasInstruction
 }: BaseNodeProps) {
     const [isHovered, setIsHovered] = React.useState(false);
 
@@ -130,6 +132,12 @@ function BaseNode({
                             </p>
                         )}
                     </div>
+
+                    {hasInstruction && (
+                        <div className="mr-2 p-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center cursor-help" title="Controlled by System Instruction">
+                            <MessageSquare size={12} />
+                        </div>
+                    )}
 
                     {headerRight && (
                         <div className="flex items-center shrink-0">

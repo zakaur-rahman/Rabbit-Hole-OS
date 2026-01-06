@@ -27,7 +27,7 @@ let backendProcess: ChildProcess | null = null;
 
 function startBackend() {
     const storageDir = isDev 
-        ? path.join(__dirname, '..', '..', '..', 'apps', 'backend', 'storage')
+        ? path.join(__dirname, '..', '..', '..', 'backend', 'storage')
         : path.join(app.getPath('userData'), 'storage');
     
     console.log('Using storage directory:', storageDir);

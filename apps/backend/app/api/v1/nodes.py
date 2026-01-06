@@ -229,12 +229,15 @@ async def list_nodes(
     
     # Filter by whiteboard (default to 'main' if not specified in node)
     # We treat nodes without whiteboard_id as 'main'
-    nodes = [n for n in nodes if n.get("metadata", {}).get("whiteboard_id", "main") == whiteboard_id]
+    original_count = len(nodes)
+    filtered = [n for n in nodes if n.get("metadata", {}).get("whiteboard_id", "main") == whiteboard_id]
     
+    print(f"[DEBUG] list_nodes: whiteboard_id={whiteboard_id}, total_nodes={original_count}, returning={len(filtered)}")
+
     if type:
-        nodes = [n for n in nodes if n.get("type") == type]
+        filtered = [n for n in filtered if n.get("type") == type]
     
-    return nodes[skip:skip + limit]
+    return filtered[skip:skip + limit]
 
 @router.get("/{node_id}", response_model=ProcessUrlResponse)
 async def get_node(node_id: str):

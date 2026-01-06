@@ -253,7 +253,7 @@ Return a JSON object with this exact structure:
 {{
   "title": "Clear article title",
   "snippet": "2-3 sentence teaser",
-  "content": "A detailed 400-word analysis/summary",
+  "content": "A detailed 100-word analysis/summary",
   "outline": [
     {{
       "id": "1",
@@ -323,7 +323,7 @@ Please provide your response in the following JSON format ONLY (no other text):
 {{
     "title": "Page title",
     "snippet": "A 2-3 sentence summary of the main content",
-    "content": "A longer summary of the key information on the page (300-500 words)",
+    "content": "A longer summary of the key information on the page (100-200 words)",
     "outline": [
         {{
             "id": "1",
