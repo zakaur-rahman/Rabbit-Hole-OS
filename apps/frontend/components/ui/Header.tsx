@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Search, Bell, Settings, User, Rabbit, LayoutTemplate } from 'lucide-react';
-
+import { CognodeLogo } from '../icons/cognode-logo';
 interface HeaderProps {
     onSearch?: (query: string) => void;
     onToggleSidebar?: () => void;
@@ -24,10 +24,10 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
         >
             {/* Logo & Brand */}
             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                    <Rabbit size={18} className="text-white" />
+                <div className="w-6 p-[2px] h-6 rounded-lg bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
+                    <CognodeLogo />
                 </div>
-                <span className="font-semibold text-white text-lg tracking-tight">RabbitHole OS</span>
+                <span className="font-semibold text-white text-lg tracking-wider">Cognode</span>
             </div>
 
             {/* Search Bar */}
@@ -62,7 +62,7 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
                 <button className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors">
                     <Settings size={18} />
                 </button>
-                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <button className="w-8 h-8 rounded-full bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
                     <User size={16} className="text-white" />
                 </button>
             </div>

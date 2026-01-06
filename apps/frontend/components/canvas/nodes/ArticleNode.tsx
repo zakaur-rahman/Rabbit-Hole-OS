@@ -22,6 +22,7 @@ export interface ArticleNodeData {
     selectedTopics?: string[];
     outlineLoading?: boolean;
     color?: string;
+    hasInstruction?: boolean;
 }
 
 function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPreview?: boolean }>) {
@@ -63,6 +64,7 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
             minWidth={hasOutline ? 440 : 380}
             minHeight={hasOutline ? 400 : 120}
             showResizer={!isPreview}
+            hasInstruction={data.hasInstruction}
         >
             <div className={`flex-1 flex flex-col ${isPreview ? 'p-3' : 'p-5'} overflow-hidden relative`}>
 

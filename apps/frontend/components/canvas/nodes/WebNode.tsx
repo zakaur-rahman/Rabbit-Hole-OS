@@ -10,6 +10,7 @@ export interface WebNodeData {
     title?: string;
     favicon?: string;
     color?: string;
+    hasInstruction?: boolean;
 }
 
 function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
@@ -117,6 +118,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
                 minWidth={400}
                 minHeight={350}
                 showResizer={true}
+                hasInstruction={data.hasInstruction}
             >
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Toolbar */}

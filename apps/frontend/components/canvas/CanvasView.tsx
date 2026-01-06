@@ -34,6 +34,7 @@ import AnnotationNode from './nodes/AnnotationNode';
 import ImageNode from './nodes/ImageNode';
 import CanvasNode from './nodes/CanvasNode';
 import WebNode from './nodes/WebNode';
+import CommentNode from './nodes/CommentNode';
 import dynamic from 'next/dynamic';
 import CanvasImportModal from '../modals/CanvasImportModal';
 import WebUrlModal from '../modals/WebUrlModal';
@@ -52,7 +53,7 @@ import HoverPreview from '../ui/HoverPreview';
 import WhiteboardSelector from './WhiteboardSelector';
 import TemplateModal from '../modals/TemplateModal';
 import ContextMenu from '../ui/ContextMenu';
-import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon, Sparkles, MessageSquare } from 'lucide-react';
 
 // ... other imports
 
@@ -106,13 +107,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
                 }
 
+                // Check for attached instruction
+                const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
+                const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
+
                 return {
                     node_id: node.id,
                     title: node.data.title || 'Untitled',
                     content: content,
                     url: node.data.url || '',
                     selected_topics: selectedTopics,
-                    outline: node.data.outline || []
+                    outline: node.data.outline || [],
+                    system_instruction: comment?.data?.content
                 };
             });
 
@@ -154,13 +160,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
                 }
 
+                // Check for attached instruction
+                const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
+                const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
+
                 return {
                     node_id: node.id,
                     title: node.data.title || 'Untitled',
                     content: content,
                     url: node.data.url || '',
                     selected_topics: selectedTopics,
-                    outline: node.data.outline || []
+                    outline: node.data.outline || [],
+                    system_instruction: comment?.data?.content
                 };
             });
 
@@ -210,6 +221,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         annotation: AnnotationNode,
         canvas: CanvasNode,
         web: WebNode,
+        comment: CommentNode,
     }), []);
 
     // Fetch nodes on mount or whiteboard change
@@ -567,6 +579,48 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         const selectedNodes = nodes.filter(n => n.selected);
 
         switch (action) {
+            case 'add-instruction': {
+                const node = selectedNodes[0];
+                if (!node || selectedNodes.length !== 1) break;
+
+                // Check existing
+                const edges = useGraphStore.getState().edges;
+                const nodesStore = useGraphStore.getState().nodes;
+                const hasComment = edges.some(e => e.target === node.id && nodesStore.find(n => n.id === e.source)?.type === 'comment');
+
+                if (hasComment) {
+                    console.warn("Node already has a comment instruction.");
+                    break;
+                }
+
+                const commentId = `comment-${Date.now()}`;
+                const commentNode = {
+                    id: commentId,
+                    type: 'comment',
+                    position: { x: node.position.x, y: node.position.y - 180 }, // Position above
+                    style: { width: 300 },
+                    data: { content: '', parentId: node.id }
+                };
+
+                addNode(commentNode);
+                nodesApi.create({ ...commentNode, title: 'Instruction', data: { ...commentNode.data, whiteboard_id: activeWhiteboardId } });
+
+                // Add Edge
+                const newEdge = {
+                    id: `e-${commentId}-${node.id}`,
+                    source: commentId,
+                    target: node.id,
+                    type: 'default',
+                    animated: true,
+                    style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
+                };
+                addStoreEdge(newEdge as any);
+
+                // Update parent node to show indicator
+                useGraphStore.getState().updateNode(node.id, { hasInstruction: true });
+                nodesApi.update(node.id, { metadata: { hasInstruction: true } }).catch(() => { });
+                break;
+            }
             case 'zoom':
                 onFitSelection();
                 break;
@@ -642,6 +696,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     }, [nodes, addNode, onFitSelection, activeWhiteboardId]);
 
     const contextActions = useMemo(() => [
+        { label: 'Add context instruction', onClick: () => handleContextMenuAction('add-instruction'), icon: <MessageSquare size={14} /> },
         { label: 'Zoom to selection', onClick: () => handleContextMenuAction('zoom'), icon: <Scan size={14} /> },
         { label: 'Create group', onClick: () => handleContextMenuAction('group'), icon: <BoxSelect size={14} /> },
         { separator: true, label: '', onClick: () => { } },

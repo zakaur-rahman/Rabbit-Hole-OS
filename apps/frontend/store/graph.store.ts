@@ -126,7 +126,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setWhiteboard: async (id: string) => {
-    set({ activeWhiteboardId: id });
+    set({ activeWhiteboardId: id, nodes: [], edges: [] });
     
     // Save whiteboard list if it's new
     const { whiteboards } = get();
