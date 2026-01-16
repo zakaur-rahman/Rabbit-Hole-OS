@@ -327,31 +327,34 @@
       },
       "whiteboard_id": "main",
       "style": {
-        "width": 350
+        "width": 350,
+        "height": 132
       },
-      "hasInstruction": true
+      "hasInstruction": true,
+      "url": ""
     }
   },
-  "instruction-1768581571514": {
-    "id": "instruction-1768581571514",
+  "instruction-1768582185420": {
+    "id": "instruction-1768582185420",
     "type": "comment",
     "url": "",
     "title": "Instruction",
     "content": "",
     "snippet": "",
-    "created_at": "2026-01-16T16:39:31.851577Z",
+    "created_at": "2026-01-16T16:49:45.438283Z",
     "metadata": {
       "content": "",
       "parentId": "note-1768574246676",
       "position": {
-        "x": 285.39640926571997,
-        "y": 49.1799022057445
+        "x": 187.8042384426683,
+        "y": 257.4227791520028
       },
       "whiteboard_id": "main",
       "title": "Instruction",
       "style": {
         "width": 300
-      }
+      },
+      "url": ""
     }
   }
 }
