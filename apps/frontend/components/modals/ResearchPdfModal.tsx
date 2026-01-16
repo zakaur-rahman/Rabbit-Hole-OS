@@ -10,9 +10,10 @@ interface ResearchPdfModalProps {
     isLoading: boolean;
     title?: string;
     onOpenAdvancedEditor?: () => void;
+    error?: string | null;
 }
 
-export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, title, onOpenAdvancedEditor }: ResearchPdfModalProps) {
+export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, title, onOpenAdvancedEditor, error }: ResearchPdfModalProps) {
     if (!isOpen) return null;
 
     return (
@@ -84,8 +85,13 @@ export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, t
                             title="Research PDF"
                         />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-neutral-500">
-                            Failed to generate PDF.
+                        <div className="flex flex-col items-center justify-center h-full text-neutral-500 gap-4 p-8">
+                            <div className="text-red-400 text-lg font-semibold">Failed to generate PDF</div>
+                            {error && (
+                                <div className="bg-red-950/50 border border-red-800/50 rounded-lg p-4 max-w-2xl text-left">
+                                    <p className="text-red-300 text-sm font-mono break-all">{error}</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
