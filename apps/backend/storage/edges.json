@@ -58,26 +58,10 @@
     }
   },
   "main": {
-    "enode-1767206340979-8dpylfyf0-bottom-node-1767112084103-left": {
-      "id": "enode-1767206340979-8dpylfyf0-bottom-node-1767112084103-left",
-      "source": "node-1767206340979-8dpylfyf0",
-      "target": "node-1767112084103",
-      "sourceHandle": "bottom",
-      "targetHandle": "left",
-      "type": "simplebezier",
-      "animated": false,
-      "style": {
-        "stroke": "#9ca3af",
-        "strokeWidth": 2,
-        "strokeDasharray": "none"
-      },
-      "data": null,
-      "whiteboard_id": "main"
-    },
-    "e-comment-1768574312045-node-1767112084103": {
-      "id": "e-comment-1768574312045-node-1767112084103",
-      "source": "comment-1768574312045",
-      "target": "node-1767112084103",
+    "einstruction-1768581571514-note-1768574246676": {
+      "id": "einstruction-1768581571514-note-1768574246676",
+      "source": "instruction-1768581571514",
+      "target": "note-1768574246676",
       "sourceHandle": null,
       "targetHandle": null,
       "type": "default",
