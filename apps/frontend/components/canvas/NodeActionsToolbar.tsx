@@ -8,6 +8,7 @@ interface NodeActionsToolbarProps {
     nodeId: string;
     isVisible: boolean;
     position?: Position;
+    onMouseEnter?: () => void;
 }
 
 const COLORS = [
@@ -47,7 +48,12 @@ const COLORS = [
 // hover:border-red-500/80 hover:border-orange-500/80 hover:border-amber-500/80 hover:border-green-500/80 hover:border-emerald-500/80 hover:border-teal-500/80 hover:border-cyan-500/80 hover:border-blue-500/80 hover:border-indigo-500/80 hover:border-violet-500/80 hover:border-purple-500/80 hover:border-fuchsia-500/80 hover:border-pink-500/80 hover:border-rose-500/80
 // hover:border-red-500/90 hover:border-orange-500/90 hover:border-amber-500/90 hover:border-green-500/90 hover:border-emerald-500/90 hover:border-teal-500/90 hover:border-cyan-500/90 hover:border-blue-500/90 hover:border-indigo-500/90 hover:border-violet-500/90 hover:border-purple-500/90 hover:border-fuchsia-500/90 hover:border-pink-500/90 hover:border-rose-500/90
 
-export function NodeActionsToolbar({ nodeId, isVisible, position = Position.Top }: NodeActionsToolbarProps) {
+export function NodeActionsToolbar({
+    nodeId,
+    isVisible,
+    position = Position.Top,
+    onMouseEnter
+}: NodeActionsToolbarProps) {
     const { removeNode, nodes, updateNode } = useGraphStore();
     const [showColors, setShowColors] = useState(false);
 
@@ -64,7 +70,12 @@ export function NodeActionsToolbar({ nodeId, isVisible, position = Position.Top 
     };
 
     return (
-        <NodeToolbar isVisible={isVisible} position={position} className="flex flex-col items-center gap-2">
+        <NodeToolbar
+            isVisible={isVisible}
+            position={position}
+            className="flex flex-col items-center gap-2"
+            onMouseEnter={onMouseEnter}
+        >
             {showColors && (
                 <div className="grid grid-cols-7 gap-1 p-2 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl mb-2">
                     {COLORS.map((color) => (
