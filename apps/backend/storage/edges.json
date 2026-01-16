@@ -73,6 +73,22 @@
       },
       "data": null,
       "whiteboard_id": "main"
+    },
+    "e-comment-1768574312045-node-1767112084103": {
+      "id": "e-comment-1768574312045-node-1767112084103",
+      "source": "comment-1768574312045",
+      "target": "node-1767112084103",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "type": "default",
+      "animated": true,
+      "style": {
+        "stroke": "#f59e0b",
+        "strokeWidth": 2,
+        "strokeDasharray": "5,5"
+      },
+      "data": null,
+      "whiteboard_id": "main"
     }
   },
   "board-1766514738109": {

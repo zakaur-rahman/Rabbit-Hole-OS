@@ -49,6 +49,21 @@ function BaseNode({
     hasInstruction
 }: BaseNodeProps) {
     const [isHovered, setIsHovered] = React.useState(false);
+    const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
 
     // Subscribe to node data for color updates
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
@@ -67,7 +82,6 @@ function BaseNode({
 
     return (
         <>
-            <NodeActionsToolbar nodeId={id} isVisible={!!selected} />
             {showResizer && (
                 <NodeResizer
                     minWidth={minWidth}
@@ -80,8 +94,8 @@ function BaseNode({
                 />
             )}
             <div
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={`
                     group relative flex flex-col h-full w-full
                     bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
@@ -99,6 +113,7 @@ function BaseNode({
                     WebkitFontSmoothing: 'subpixel-antialiased',
                 }}
             >
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 {/* Accent line at the top */}
                 <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
