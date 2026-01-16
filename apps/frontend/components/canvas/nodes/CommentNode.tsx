@@ -1,9 +1,8 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { NodeProps } from 'reactflow';
 import { MessageSquare, AlertCircle } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 import BaseNode from './BaseNode';
-import TiptapEditor from '../TiptapEditor';
 
 export interface CommentNodeData {
     title?: string;
@@ -18,6 +17,7 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
     const [content, setContent] = useState(data.content || '');
     const [title, setTitle] = useState(data.title || 'Instruction');
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Debounced sync
     useEffect(() => {
@@ -30,6 +30,13 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
         }, 1000);
         return () => clearTimeout(timer);
     }, [content, title, id, updateNodeAndPersist, data]);
+
+    useEffect(() => {
+        if (isEditing && textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(textareaRef.current.value.length, textareaRef.current.value.length);
+        }
+    }, [isEditing]);
 
     const onNodeClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -55,22 +62,21 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
                 onDoubleClick={() => setIsEditing(true)}
             >
                 {isEditing ? (
-                    <TiptapEditor
-                        content={content}
-                        onChange={setContent}
+                    <textarea
+                        ref={textareaRef}
+                        className="w-full h-full p-4 bg-transparent text-amber-100/90 text-[13px] leading-relaxed resize-none focus:outline-none placeholder:text-amber-500/30"
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
                         onBlur={() => setIsEditing(false)}
-                        autoFocus
+                        placeholder="Type system instructions..."
+                        spellCheck={false}
                     />
                 ) : (
-                    <div className="p-4 prose prose-sm prose-invert max-w-none text-amber-100/90 leading-relaxed flex-1 h-auto whitespace-normal break-words">
+                    <div className="p-4 text-amber-100/90 leading-relaxed flex-1 h-auto whitespace-pre-wrap break-words text-[13px]">
                         {content ? (
-                            <div
-                                dangerouslySetInnerHTML={{ __html: content }}
-                                className="h-full"
-                                style={{ fontSize: '13px', lineHeight: '1.6' }}
-                            />
+                            content
                         ) : (
-                            <p className="text-[13px] text-amber-500/50 font-medium italic">
+                            <p className="text-amber-500/50 font-medium italic">
                                 Double click to add system instructions...
                             </p>
                         )}
