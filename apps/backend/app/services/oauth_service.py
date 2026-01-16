@@ -131,6 +131,7 @@ async def exchange_google_code(
     session = Session(
         user_id=user.id,
         refresh_token_hash=refresh_token_hash,
+        created_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(session)

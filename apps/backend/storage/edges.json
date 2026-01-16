@@ -57,24 +57,7 @@
       "whiteboard_id": "board-1766500366804"
     }
   },
-  "main": {
-    "einstruction-1768582185420-note-1768574246676": {
-      "id": "einstruction-1768582185420-note-1768574246676",
-      "source": "instruction-1768582185420",
-      "target": "note-1768574246676",
-      "sourceHandle": null,
-      "targetHandle": null,
-      "type": "default",
-      "animated": true,
-      "style": {
-        "stroke": "#f59e0b",
-        "strokeWidth": 2,
-        "strokeDasharray": "5,5"
-      },
-      "data": null,
-      "whiteboard_id": "main"
-    }
-  },
+  "main": {},
   "board-1766514738109": {
     "e-node-1767115267476-node-1767116134825": {
       "id": "e-node-1767115267476-node-1767116134825",
