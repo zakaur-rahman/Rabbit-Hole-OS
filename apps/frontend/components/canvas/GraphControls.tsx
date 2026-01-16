@@ -25,14 +25,14 @@ export default function GraphControls({ onSynthesis, onASTEditor, onAddNote, onA
             {/* AI Synthesis */}
             <div className="flex flex-col gap-2">
                 <button
-                    onClick={onSynthesis}
+                    onClick={() => onSynthesis?.()}
                     className="w-10 h-10 rounded-xl bg-green-500 hover:bg-green-400 text-neutral-900 flex items-center justify-center shadow-lg shadow-black/20 transition-all hover:scale-110 active:scale-95"
                     title="Quick AI Synthesis (PDF)"
                 >
                     <Sparkles size={18} fill="currentColor" className="text-neutral-900" />
                 </button>
                 <button
-                    onClick={onASTEditor}
+                    onClick={() => onASTEditor?.()}
                     className="w-10 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white flex items-center justify-center shadow-lg shadow-black/20 transition-all hover:scale-110 active:scale-95"
                     title="Advanced Document Editor (AST)"
                 >

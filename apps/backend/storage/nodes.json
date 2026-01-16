@@ -404,8 +404,8 @@
         }
       ],
       "position": {
-        "x": 130.41048509755444,
-        "y": -5.493004028649636
+        "x": 48.93751954273466,
+        "y": 248.86162014249544
       },
       "selectedTopics": [
         "5",
@@ -794,182 +794,21 @@
       }
     ]
   },
-  "note-1767171150532": {
-    "id": "note-1767171150532",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T08:52:30.934816Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": -350.63097437334216,
-        "y": 56.150189308639966
-      },
-      "whiteboard_id": "main",
-      "style": {
-        "width": 350
-      },
-      "url": ""
-    }
-  },
-  "node-1767200403051": {
-    "id": "node-1767200403051",
-    "type": "article",
-    "url": "https://nextjs.org/",
-    "title": "Next.js by Vercel - The React Framework",
-    "content": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in recent versions lies in the introduction of the App Router, which fundamentally changes how React applications are structured and rendered. The App Router leverages React Server Components (RSCs) to shift rendering and data fetching logic to the server, drastically reducing client-side JavaScript bundles and improving initial load times. This architecture supports advanced features like nested routing, shared layouts, and data streaming, ensuring that users see content faster.\n\nThe framework offers unparalleled flexibility in rendering strategies, allowing developers to choose the optimal approach for every route. Options include Static Site Generation (SSG) for maximum speed on static content, Server-Side Rendering (SSR) for dynamic, personalized content, and Incremental Static Regeneration (ISR), which allows static pages to be updated in the background without requiring a full site rebuild. This hybrid approach ensures applications remain fast while handling highly dynamic data requirements.\n\nPerformance is central to the Next.js philosophy. The framework includes built-in optimizations such as automatic image optimization via the `next/image` component, font optimization, and automatic code splitting, ensuring applications meet modern Core Web Vitals standards out of the box. This focus on performance translates directly into better SEO and user engagement.\n\nDeveloper experience is equally prioritized, featuring robust TypeScript support, built-in API routes for creating backend endpoints within the same project, and Fast Refresh for instant feedback during development. The ecosystem is robust, with strong community support and deep integration with Vercel, the platform created by the Next.js team, which provides zero-configuration deployment, edge functions, and global scalability. Next.js is trusted by global brands for building complex, scalable digital experiences, solidifying its status as the leading framework for production-grade React development.",
-    "snippet": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in...",
-    "created_at": "2025-12-31T17:00:03.377691Z",
-    "metadata": {
-      "title": "Next.js by Vercel - The React Framework",
-      "url": "https://nextjs.org/",
-      "whiteboard_id": "main",
-      "style": {
-        "width": 320,
-        "height": 103
-      },
-      "analyzed_by": "ai",
-      "content": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in recent versions lies in the introduction of the App Router, which fundamentally changes how React applications are structured and rendered. The App Router leverages React Server Components (RSCs) to shift rendering and data fetching logic to the server, drastically reducing client-side JavaScript bundles and improving initial load times. This architecture supports advanced features like nested routing, shared layouts, and data streaming, ensuring that users see content faster.\n\nThe framework offers unparalleled flexibility in rendering strategies, allowing developers to choose the optimal approach for every route. Options include Static Site Generation (SSG) for maximum speed on static content, Server-Side Rendering (SSR) for dynamic, personalized content, and Incremental Static Regeneration (ISR), which allows static pages to be updated in the background without requiring a full site rebuild. This hybrid approach ensures applications remain fast while handling highly dynamic data requirements.\n\nPerformance is central to the Next.js philosophy. The framework includes built-in optimizations such as automatic image optimization via the `next/image` component, font optimization, and automatic code splitting, ensuring applications meet modern Core Web Vitals standards out of the box. This focus on performance translates directly into better SEO and user engagement.\n\nDeveloper experience is equally prioritized, featuring robust TypeScript support, built-in API routes for creating backend endpoints within the same project, and Fast Refresh for instant feedback during development. The ecosystem is robust, with strong community support and deep integration with Vercel, the platform created by the Next.js team, which provides zero-configuration deployment, edge functions, and global scalability. Next.js is trusted by global brands for building complex, scalable digital experiences, solidifying its status as the leading framework for production-grade React development.",
-      "position": {
-        "x": -59.86578039385995,
-        "y": -133.06903800140694
-      }
-    },
-    "outline": [
-      {
-        "id": "1",
-        "number": "1",
-        "title": "Core Value Proposition: The React Framework for Production",
-        "children": [
-          {
-            "id": "1.1",
-            "number": "1.1",
-            "title": "Focus on Speed, Reliability, and Scalability",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "2",
-        "number": "2",
-        "title": "Modern Architecture: The App Router",
-        "children": [
-          {
-            "id": "2.1",
-            "number": "2.1",
-            "title": "Leveraging React Server Components (RSCs)",
-            "children": []
-          },
-          {
-            "id": "2.2",
-            "number": "2.2",
-            "title": "Nested Routing, Layouts, and Streaming",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "3",
-        "number": "3",
-        "title": "Flexible Rendering and Data Strategies",
-        "children": [
-          {
-            "id": "3.1",
-            "number": "3.1",
-            "title": "Static Site Generation (SSG) and Server-Side Rendering (SSR)",
-            "children": []
-          },
-          {
-            "id": "3.2",
-            "number": "3.2",
-            "title": "Incremental Static Regeneration (ISR)",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "4",
-        "number": "4",
-        "title": "Built-in Performance and Developer Experience",
-        "children": [
-          {
-            "id": "4.1",
-            "number": "4.1",
-            "title": "Image, Font, and Code Optimizations",
-            "children": []
-          },
-          {
-            "id": "4.2",
-            "number": "4.2",
-            "title": "TypeScript Support and Fast Refresh",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "5",
-        "number": "5",
-        "title": "Ecosystem, Deployment, and Adoption",
-        "children": [
-          {
-            "id": "5.1",
-            "number": "5.1",
-            "title": "Vercel Integration and Edge Functions",
-            "children": []
-          },
-          {
-            "id": "5.2",
-            "number": "5.2",
-            "title": "Enterprise Trust and Community Support",
-            "children": []
-          }
-        ]
-      }
-    ]
-  },
-  "web-1767201259421": {
-    "id": "web-1767201259421",
-    "type": "web",
-    "url": "",
-    "title": "nextjs.org",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T17:14:19.741782Z",
-    "metadata": {
-      "url": "https://nextjs.org/docs",
-      "title": "nextjs.org",
-      "favicon": "https://www.google.com/s2/favicons?domain=nextjs.org&sz=32",
-      "whiteboard_id": "main",
-      "position": {
-        "x": -139.78856558517964,
-        "y": 254.31997195905748
-      },
-      "style": {
-        "width": 1162,
-        "height": 931
-      },
-      "content": "",
-      "color": "cyan-500"
-    }
-  },
   "node-1767206340979-8dpylfyf0": {
     "id": "node-1767206340979-8dpylfyf0",
     "type": "article",
     "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
     "title": "2008 financial crisis",
     "content": "The 2008 financial crisis represents a critical inflection point in modern economic history, rooted primarily in the deregulation and excessive risk-taking within the U.S. financial sector, particularly concerning the housing market. The crisis was fundamentally caused by the proliferation of subprime mortgages, loans issued to borrowers with poor credit histories, which fueled an unsustainable housing bubble. These risky loans were packaged into complex financial products, such as Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), and sold globally, often mislabeled with high credit ratings by agencies that failed to accurately assess the underlying risk. When housing prices peaked around 2006 and began to fall, mass defaults occurred, rendering these structured products worthless and exposing the interconnectedness of the global financial system.\n\nThe crisis accelerated dramatically in September 2008 with the government takeover of Fannie Mae and Freddie Mac, followed by the catastrophic failure of Lehman Brothers, which was allowed to file for bankruptcy. This event shattered confidence in the interbank lending market, freezing credit globally and necessitating unprecedented government intervention, including the bailout of AIG and the passage of the Troubled Asset Relief Program (TARP) in the U.S. The shock quickly spread internationally, leading to the Great Recession\u2014a period characterized by high unemployment, sharp declines in global trade, and subsequent sovereign debt crises, particularly in Europe.\n\nRegulatory responses included the Dodd\u2013Frank Wall Street Reform and Consumer Protection Act in the U.S., aimed at increasing transparency, reducing systemic risk by imposing stricter capital requirements, and regulating derivatives. Central banks implemented unconventional monetary policies, such as quantitative easing, to stabilize markets and stimulate growth. The crisis exposed deep flaws in risk management, regulatory oversight, and the moral hazard created by institutions deemed \u201ctoo big to fail,\u201d leading to ongoing debates about the appropriate balance between financial innovation and stability.",
-    "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing market and the subsequent failure of complex financial instruments tied to subprime mortgages. This systemic shock led to the bankruptcy of major institutions like Lehman Brothers and necessitated massive government bailouts, plunging the world into the Great Recession and fundamentally altering global financial regulation.",
+    "snippet": "The 2008 financial crisis represents a critical inflection point in modern economic history, rooted primarily in the deregulation and excessive risk-taking within the U.S. financial sector, particular...",
     "created_at": "2025-12-31T18:39:01.287733Z",
     "metadata": {
       "title": "2008 financial crisis",
       "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
       "whiteboard_id": "main",
       "style": {
-        "width": 320
+        "width": 320,
+        "height": 357
       },
       "analyzed_by": "ai",
       "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing market and the subsequent failure of complex financial instruments tied to subprime mortgages. This systemic shock led to the bankruptcy of major institutions like Lehman Brothers and necessitated massive government bailouts, plunging the world into the Great Recession and fundamentally altering global financial regulation.",
@@ -1137,21 +976,17 @@
         }
       ],
       "position": {
-        "x": -49.60816042634747,
-        "y": 160.58512281728122
+        "x": -269.25353625520245,
+        "y": -302.8953954447847
       },
       "selectedTopics": [
         "2",
         "2.1",
         "2.2",
         "2.3",
-        "1",
-        "1.2",
-        "1.4",
-        "1.7",
-        "1.8",
         "1.1"
-      ]
+      ],
+      "content": "The 2008 financial crisis represents a critical inflection point in modern economic history, rooted primarily in the deregulation and excessive risk-taking within the U.S. financial sector, particularly concerning the housing market. The crisis was fundamentally caused by the proliferation of subprime mortgages, loans issued to borrowers with poor credit histories, which fueled an unsustainable housing bubble. These risky loans were packaged into complex financial products, such as Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), and sold globally, often mislabeled with high credit ratings by agencies that failed to accurately assess the underlying risk. When housing prices peaked around 2006 and began to fall, mass defaults occurred, rendering these structured products worthless and exposing the interconnectedness of the global financial system.\n\nThe crisis accelerated dramatically in September 2008 with the government takeover of Fannie Mae and Freddie Mac, followed by the catastrophic failure of Lehman Brothers, which was allowed to file for bankruptcy. This event shattered confidence in the interbank lending market, freezing credit globally and necessitating unprecedented government intervention, including the bailout of AIG and the passage of the Troubled Asset Relief Program (TARP) in the U.S. The shock quickly spread internationally, leading to the Great Recession\u2014a period characterized by high unemployment, sharp declines in global trade, and subsequent sovereign debt crises, particularly in Europe.\n\nRegulatory responses included the Dodd\u2013Frank Wall Street Reform and Consumer Protection Act in the U.S., aimed at increasing transparency, reducing systemic risk by imposing stricter capital requirements, and regulating derivatives. Central banks implemented unconventional monetary policies, such as quantitative easing, to stabilize markets and stimulate growth. The crisis exposed deep flaws in risk management, regulatory oversight, and the moral hazard created by institutions deemed \u201ctoo big to fail,\u201d leading to ongoing debates about the appropriate balance between financial innovation and stability."
     },
     "outline": [
       {
@@ -1316,70 +1151,5 @@
         ]
       }
     ]
-  },
-  "note-1767206820469": {
-    "id": "note-1767206820469",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T18:47:00.490076Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 677.7858307569852,
-        "y": 519.4120070241595
-      },
-      "whiteboard_id": "main",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1767207119631": {
-    "id": "note-1767207119631",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T18:51:59.954186Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 683.6251013935832,
-        "y": -5.548724470884181
-      },
-      "whiteboard_id": "main",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "web-1767207182483": {
-    "id": "web-1767207182483",
-    "type": "web",
-    "url": "",
-    "title": "en.wikipedia.org",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T18:53:02.498168Z",
-    "metadata": {
-      "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
-      "title": "en.wikipedia.org",
-      "favicon": "https://www.google.com/s2/favicons?domain=en.wikipedia.org&sz=32",
-      "whiteboard_id": "main",
-      "position": {
-        "x": -165.73001866099526,
-        "y": 800.4059597454102
-      },
-      "style": {
-        "width": 842,
-        "height": 622
-      }
-    }
   }
 }

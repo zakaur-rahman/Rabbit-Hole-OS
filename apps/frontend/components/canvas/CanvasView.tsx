@@ -138,12 +138,10 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         return await synthesisApi.generatePdfFromAST(ast);
     }, []);
 
-    const handleSynthesis = useCallback(async (useDummyData: boolean = false) => {
+    const handleSynthesis = useCallback(async (useDummyDataArg: any = false) => {
+        const useDummyData = useDummyDataArg === true;
         const currentNodes = useGraphStore.getState().nodes;
-        if (currentNodes.length === 0) {
-            // alert("No nodes on canvas to synthesize!"); // Use toast ideally
-            return;
-        }
+        if (currentNodes.length === 0) return;
 
         setShowPdfModal(true);
         setIsSynthesizing(true);
