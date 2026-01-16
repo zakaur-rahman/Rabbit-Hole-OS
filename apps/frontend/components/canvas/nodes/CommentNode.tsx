@@ -72,7 +72,7 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
                         spellCheck={false}
                     />
                 ) : (
-                    <div className="p-4 text-amber-100/90 leading-relaxed flex-1 h-auto whitespace-pre-wrap break-words text-[13px]">
+                    <div className="p-4 text-amber-100/90 leading-relaxed flex-1 h-auto whitespace-pre-wrap wrap-break-word text-[13px]">
                         {content ? (
                             content
                         ) : (

@@ -309,52 +309,5 @@
         "children": []
       }
     ]
-  },
-  "note-1768574246676": {
-    "id": "note-1768574246676",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2026-01-16T14:37:27.002361Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 263.04484676571997,
-        "y": -171.8200977942555
-      },
-      "whiteboard_id": "main",
-      "style": {
-        "width": 350,
-        "height": 132
-      },
-      "hasInstruction": true,
-      "url": ""
-    }
-  },
-  "instruction-1768582185420": {
-    "id": "instruction-1768582185420",
-    "type": "comment",
-    "url": "",
-    "title": "Instruction",
-    "content": "",
-    "snippet": "",
-    "created_at": "2026-01-16T16:49:45.438283Z",
-    "metadata": {
-      "content": "",
-      "parentId": "note-1768574246676",
-      "position": {
-        "x": 187.8042384426683,
-        "y": 257.4227791520028
-      },
-      "whiteboard_id": "main",
-      "title": "Instruction",
-      "style": {
-        "width": 300
-      },
-      "url": ""
-    }
   }
 }
