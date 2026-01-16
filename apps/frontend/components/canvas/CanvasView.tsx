@@ -585,14 +585,20 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 const node = selectedNodes[0];
                 if (!node || selectedNodes.length !== 1) break;
 
-                // Check existing
-                const edges = useGraphStore.getState().edges;
-                const nodesStore = useGraphStore.getState().nodes;
-                const hasComment = edges.some(e => e.target === node.id && nodesStore.find(n => n.id === e.source)?.type === 'comment');
+                // Check existing instruction
+                const store = useGraphStore.getState();
+                const existingEdge = store.edges.find(e =>
+                    e.target === node.id &&
+                    store.nodes.find(n => n.id === e.source)?.type === 'comment'
+                );
 
-                if (hasComment) {
-                    console.warn("Node already has a comment instruction.");
-                    break;
+                if (existingEdge) {
+                    const confirmReplacement = window.confirm("This node already has a system instruction. Do you want to replace it?");
+                    if (!confirmReplacement) break;
+
+                    // Delete the old comment node and its edge
+                    const oldCommentId = existingEdge.source;
+                    store.removeNode(oldCommentId);
                 }
 
                 const commentId = `comment-${Date.now()}`;
@@ -605,7 +611,11 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 };
 
                 addNode(commentNode);
-                nodesApi.create({ ...commentNode, title: 'Instruction', data: { ...commentNode.data, whiteboard_id: activeWhiteboardId } });
+                nodesApi.create({
+                    ...commentNode,
+                    title: 'Instruction',
+                    data: { ...commentNode.data, whiteboard_id: activeWhiteboardId }
+                });
 
                 // Add Edge
                 const newEdge = {
@@ -619,7 +629,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 addStoreEdge(newEdge as any);
 
                 // Update parent node to show indicator
-                useGraphStore.getState().updateNode(node.id, { hasInstruction: true });
+                store.updateNode(node.id, { hasInstruction: true });
                 nodesApi.update(node.id, { metadata: { hasInstruction: true } }).catch(() => { });
                 break;
             }
@@ -729,12 +739,61 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setHoverPosition(null);
     }, []);
 
+    const isValidConnection = useCallback((connection: Connection) => {
+        const { nodes, edges } = useGraphStore.getState();
+        const sourceNode = nodes.find(n => n.id === connection.source);
+        const targetNode = nodes.find(n => n.id === connection.target);
+
+        // 1. Prevent any node from connecting INTO a comment node
+        if (targetNode?.type === 'comment') {
+            return false;
+        }
+
+        // 2. Strict rules for comment node as source
+        if (sourceNode?.type === 'comment') {
+            // A comment node can only have ONE outgoing connection
+            const hasExistingSourceConnection = edges.some(e => e.source === connection.source);
+            if (hasExistingSourceConnection) return false;
+
+            // A content node can only have ONE incoming instruction
+            const hasExistingTargetInstruction = edges.some(e =>
+                e.target === connection.target &&
+                nodes.find(n => n.id === e.source)?.type === 'comment'
+            );
+            if (hasExistingTargetInstruction) return false;
+
+            // Prevent self-connection (comment to comment is already handled by rule 1)
+            if (connection.source === connection.target) return false;
+        }
+
+        return true;
+    }, []);
+
     const onConnect = useCallback((params: Connection) => {
         didConnectRef.current = true;
-        // Generate a unique ID that includes handle information to allow multiple edges
+        const { nodes, addEdge: addStoreEdge, updateNodeAndPersist } = useGraphStore.getState();
+        const sourceNode = nodes.find(n => n.id === params.source);
+
+        let edgeParams = { ...params };
+
+        if (sourceNode?.type === 'comment') {
+            // Apply special styling for instruction lines
+            edgeParams = {
+                ...params,
+                style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
+                animated: true,
+            } as any;
+
+            // Sync metadata
+            if (params.target) {
+                updateNodeAndPersist(params.target, { hasInstruction: true });
+                updateNodeAndPersist(params.source!, { data: { ...sourceNode.data, parentId: params.target } });
+            }
+        }
+
         const edgeId = `e${params.source}-${params.sourceHandle || ''}-${params.target}-${params.targetHandle || ''}`;
-        addStoreEdge({ ...params, id: edgeId } as FlowEdge);
-    }, [addStoreEdge]);
+        addStoreEdge({ ...edgeParams, id: edgeId } as FlowEdge);
+    }, []);
 
     const onReconnect = useCallback((oldEdge: FlowEdge, newConnection: Connection) => {
         if (!newConnection.source || !newConnection.target) return;
@@ -854,6 +913,29 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     data: { url: '' },
                 };
                 break;
+            case 'instruction':
+                const store = useGraphStore.getState();
+                const existingEdge = store.edges.find(e =>
+                    e.target === sourceNodeId &&
+                    store.nodes.find(n => n.id === e.source)?.type === 'comment'
+                );
+
+                if (existingEdge) {
+                    const confirmReplacement = window.confirm("This node already has a system instruction. Do you want to replace it?");
+                    if (!confirmReplacement) return;
+
+                    // Delete the old comment node and its edge
+                    store.removeNode(existingEdge.source);
+                }
+
+                newNode = {
+                    id: nodeId,
+                    type: 'comment',
+                    position: flowPos,
+                    style: { width: 300 },
+                    data: { content: '', parentId: sourceNodeId }
+                };
+                break;
             case 'article':
                 const url = prompt("Enter Web Page URL:");
                 if (url) {
@@ -900,13 +982,31 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 else if (sourceHandleId === 'bottom') targetHandleId = 'top';
 
                 const edgeId = `e${sourceNodeId}-${sourceHandleId || ''}-${nodeId}-${targetHandleId}`;
-                addStoreEdge({
-                    id: edgeId,
-                    source: sourceNodeId,
-                    sourceHandle: sourceHandleId,
-                    target: nodeId,
-                    targetHandle: targetHandleId
-                } as FlowEdge);
+
+                if (action === 'instruction') {
+                    // Instruction edge: Comment -> Content
+                    const instEdgeId = `e${nodeId}-${sourceNodeId}`;
+                    addStoreEdge({
+                        id: instEdgeId,
+                        source: nodeId,
+                        target: sourceNodeId,
+                        type: 'default',
+                        animated: true,
+                        style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
+                    } as any);
+
+                    // Update target node metadata
+                    useGraphStore.getState().updateNode(sourceNodeId, { hasInstruction: true });
+                    nodesApi.update(sourceNodeId, { metadata: { hasInstruction: true } }).catch(() => { });
+                } else {
+                    addStoreEdge({
+                        id: edgeId,
+                        source: sourceNodeId,
+                        sourceHandle: sourceHandleId,
+                        target: nodeId,
+                        targetHandle: targetHandleId
+                    } as FlowEdge);
+                }
             }
 
             // Sync to backend (only for non-article or wait for article?)
@@ -1209,6 +1309,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                isValidConnection={isValidConnection}
                 onReconnect={onReconnect}
                 edgesUpdatable={!readOnly}
                 onReconnectStart={onReconnectStart}
@@ -1250,7 +1351,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
                 {!isEmpty && (
                     <MiniMap
-                        className="!bg-neutral-900 !border-neutral-800"
+                        className="bg-neutral-900! border-neutral-800!"
                         maskColor="rgba(0,0,0,0.8)"
                         nodeColor={(node) => {
                             switch (node.type) {
@@ -1368,6 +1469,13 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         >
                             <FileIcon size={14} />
                             Add PDF
+                        </button>
+                        <button
+                            className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800 flex items-center gap-2"
+                            onClick={() => handleConnectionDropAction('instruction')}
+                        >
+                            <MessageSquare size={14} />
+                            Add context instruction
                         </button>
                     </div>
                 </div>
