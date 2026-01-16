@@ -83,6 +83,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [isSynthesizing, setIsSynthesizing] = useState(false);
+    const [synthesisError, setSynthesisError] = useState<string | null>(null);
 
     const [showASTEditor, setShowASTEditor] = useState(false);
     const [initialAST, setInitialAST] = useState<any>(null);
@@ -147,6 +148,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setShowPdfModal(true);
         setIsSynthesizing(true);
         setPdfUrl(null);
+        setSynthesisError(null);
 
         try {
             // Build context items with full structure for LaTeX endpoint
@@ -185,7 +187,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             const url = URL.createObjectURL(blob);
             setPdfUrl(url);
         } catch (error) {
-            console.error("Synthesis failed:", error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("Synthesis failed:", errorMessage);
+            setSynthesisError(errorMessage);
         } finally {
             setIsSynthesizing(false);
         }
