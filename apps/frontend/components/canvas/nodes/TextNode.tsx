@@ -1,12 +1,28 @@
 'use client';
 
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
 function TextNode({ id, data, selected }: NodeProps) {
     const [text, setText] = useState(data.text || '');
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
     // Subscribe to color
@@ -27,7 +43,6 @@ function TextNode({ id, data, selected }: NodeProps) {
 
     return (
         <>
-            <NodeActionsToolbar nodeId={id} isVisible={!!selected} />
             <NodeResizer
                 minWidth={100}
                 minHeight={40}
@@ -36,6 +51,8 @@ function TextNode({ id, data, selected }: NodeProps) {
                 handleClassName={`h-3 w-3 bg-neutral-900 border-2 border-${accentColor} rounded`}
             />
             <div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={`
                     group relative h-full w-full p-2
                     bg-neutral-900/40 backdrop-blur-md border rounded-xl
@@ -46,6 +63,7 @@ function TextNode({ id, data, selected }: NodeProps) {
                     }
                 `}
             >
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 <textarea
                     className={`w-full h-full bg-transparent border-none outline-none resize-none text-xl font-medium text-${nodeData?.color?.replace('500', '400') || 'neutral-400'} focus:text-white placeholder-neutral-700 overflow-hidden nodrag`}
                     placeholder="Type something..."

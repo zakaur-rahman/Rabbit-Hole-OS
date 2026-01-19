@@ -3,6 +3,14 @@ import path from 'path';
 import fs from 'fs';
 import url from 'url';
 import { spawn, ChildProcess } from 'child_process';
+import { openAuthBrowserAndWait, stopOAuthServer } from './auth';
+
+// Prevent multiple instances (Windows/Linux)
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+}
 
 // Robust production detection: check if app is inside an asar archive
 const appPath = app.getAppPath();
@@ -16,10 +24,19 @@ console.log('Is Packaged App:', isPackagedApp, 'Is Dev:', isDev);
 process.on('unhandledRejection', (reason, promise) => {
     const errorString = String(reason);
     // Ignore ERR_ABORTED errors from GUEST_VIEW_MANAGER_CALL (common in webviews during redirects/cancellations)
-    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && errorString.includes('ERR_ABORTED')) {
+    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && (errorString.includes('ERR_ABORTED') || errorString.includes('(-3)'))) {
         return;
     }
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Also catch uncaughtException for the same pattern
+process.on('uncaughtException', (error) => {
+    const errorString = String(error);
+    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && (errorString.includes('ERR_ABORTED') || errorString.includes('(-3)'))) {
+        return;
+    }
+    console.error('Uncaught Exception:', error);
 });
 
 let mainWindow: BrowserWindow | null = null;
@@ -27,7 +44,7 @@ let backendProcess: ChildProcess | null = null;
 
 function startBackend() {
     const storageDir = isDev 
-        ? path.join(__dirname, '..', '..', '..', 'apps', 'backend', 'storage')
+        ? path.join(__dirname, '..', '..', '..', 'backend', 'storage')
         : path.join(app.getPath('userData'), 'storage');
     
     console.log('Using storage directory:', storageDir);
@@ -149,6 +166,8 @@ app.on('window-all-closed', () => {
   if (backendProcess) {
     backendProcess.kill();
   }
+  // Stop OAuth callback server
+  stopOAuthServer();
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -159,6 +178,14 @@ app.on('ready', () => {
     createWindow();
 });
 
+// Handle second instance (focus window)
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
+
 app.on('activate', () => {
   if (mainWindow === null) {
     createWindow();
@@ -167,6 +194,30 @@ app.on('activate', () => {
 
 // IPC Handlers
 ipcMain.handle('app:version', () => app.getVersion());
+
+// Auth IPC Handlers - Using loopback redirect (Google recommended for desktop apps)
+ipcMain.handle('auth:start-login', async (event, authUrl: string, port: number = 53682) => {
+  try {
+    // Open browser and wait for callback on loopback server
+    // Returns callback directly (code, state) or error
+    const callback = await openAuthBrowserAndWait(authUrl, port, mainWindow);
+    return {
+      code: callback.code,
+      state: callback.state,
+    };
+  } catch (error) {
+    console.error('Auth login error:', error);
+    // Return error in callback format instead of throwing
+    return {
+      error: error instanceof Error ? error.message : 'Authentication failed',
+    };
+  }
+});
+
+ipcMain.handle('auth:handle-callback', (event, data: { code: string; state: string; codeVerifier: string }) => {
+  // This IPC handler is for the renderer to send the code to backend
+  return data;
+});
 
 // Example: Persist node creation from Renderer
 ipcMain.on('node:create', (event, data) => {

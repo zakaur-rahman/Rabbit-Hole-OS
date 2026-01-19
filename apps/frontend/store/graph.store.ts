@@ -23,6 +23,7 @@ export interface Tab {
   displayInput: string;
   title: string;
   isLoading?: boolean;
+  lastNodeId?: string;
 }
 
 export interface BrowserState {
@@ -126,7 +127,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setWhiteboard: async (id: string) => {
-    set({ activeWhiteboardId: id });
+    set({ activeWhiteboardId: id, nodes: [], edges: [] });
     
     // Save whiteboard list if it's new
     const { whiteboards } = get();
@@ -160,7 +161,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         // Deduplicate
         const uniqueNodes = Array.from(new Map(flowNodes.map(node => [node.id, node])).values());
         
-        set({ nodes: uniqueNodes, edges: apiEdges || [] });
+        // Sanitize parentIds - remove if parent doesn't exist
+        const nodeIds = new Set(uniqueNodes.map(n => n.id));
+        const sanitizedNodes = uniqueNodes.map(n => ({
+            ...n,
+            parentId: n.parentId && nodeIds.has(n.parentId) ? n.parentId : undefined
+        }));
+
+        set({ nodes: sanitizedNodes, edges: apiEdges || [] });
     } catch(e) {
         console.error("Failed to set whiteboard", e);
     }
@@ -192,7 +200,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
         const uniqueNodes = Array.from(new Map(flowNodes.map(node => [node.id, node])).values());
 
-        set({ nodes: uniqueNodes, edges: apiEdges || [] });
+        // Sanitize parentIds
+        const nodeIds = new Set(uniqueNodes.map(n => n.id));
+        const sanitizedNodes = uniqueNodes.map(n => ({
+            ...n,
+            parentId: n.parentId && nodeIds.has(n.parentId) ? n.parentId : undefined
+        }));
+
+        set({ nodes: sanitizedNodes, edges: apiEdges || [] });
       } catch (e) {
           console.error("[Store] Failed to fetchNodes", e);
       }
@@ -269,7 +284,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     
     // Optimistic update
     set((state) => ({
-      nodes: state.nodes.filter(n => n.id !== id),
+      nodes: state.nodes
+        .filter(n => n.id !== id)
+        .map(n => n.parentId === id ? { ...n, parentId: undefined } : n),
       edges: state.edges.filter(e => e.source !== id && e.target !== id),
       selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
     }));
@@ -398,8 +415,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         }
     });
 
+    const nextNodes = applyNodeChanges(changes, get().nodes);
+    
+    // Cleanup parentIds for removed nodes
+    const removedIds = new Set(changes.filter(c => c.type === 'remove').map(c => (c as any).id));
+    const finalNodes = removedIds.size > 0 
+        ? nextNodes.map(n => n.parentId && removedIds.has(n.parentId) ? { ...n, parentId: undefined } : n)
+        : nextNodes;
+
     set({
-      nodes: applyNodeChanges(changes, get().nodes),
+      nodes: finalNodes,
     });
   },
   

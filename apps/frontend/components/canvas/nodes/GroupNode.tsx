@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { NodeProps, NodeResizer, Position, Handle } from 'reactflow';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import { useGraphStore } from '@/store/graph.store';
@@ -8,6 +8,22 @@ function GroupNode({ id, data, selected }: NodeProps) {
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
     const accentColor = nodeData?.color || 'green-500';
     const [label, setLabel] = useState(data.label || '');
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
     // Debounced label sync
@@ -24,9 +40,9 @@ function GroupNode({ id, data, selected }: NodeProps) {
 
     return (
         <>
-            <NodeActionsToolbar nodeId={id} isVisible={!!selected} />
-
             <div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={`
             relative w-full h-full min-w-[200px] min-h-[200px]
             rounded-xl border-[2px] transition-all duration-200
@@ -37,6 +53,7 @@ function GroupNode({ id, data, selected }: NodeProps) {
             bg-transparent
           `}
             >
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 <NodeResizer
                     isVisible={true}
                     minWidth={100}

@@ -2,7 +2,7 @@
 
 import React, { memo, useCallback } from 'react';
 import { Handle, Position, NodeResizer } from 'reactflow';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, MessageSquare } from 'lucide-react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { nodesApi } from '@/lib/api';
@@ -26,6 +26,7 @@ interface BaseNodeProps {
     onTitleChange?: (title: string) => void;
     headerRight?: React.ReactNode;
     onResize?: (event: any, params: { width: number; height: number }) => void;
+    hasInstruction?: boolean;
 }
 
 function BaseNode({
@@ -44,9 +45,25 @@ function BaseNode({
     className = '',
     onTitleChange,
     headerRight,
-    onResize
+    onResize,
+    hasInstruction
 }: BaseNodeProps) {
     const [isHovered, setIsHovered] = React.useState(false);
+    const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
 
     // Subscribe to node data for color updates
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
@@ -65,7 +82,6 @@ function BaseNode({
 
     return (
         <>
-            <NodeActionsToolbar nodeId={id} isVisible={!!selected} />
             {showResizer && (
                 <NodeResizer
                     minWidth={minWidth}
@@ -78,8 +94,8 @@ function BaseNode({
                 />
             )}
             <div
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={`
                     group relative flex flex-col h-full w-full
                     bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
@@ -97,6 +113,7 @@ function BaseNode({
                     WebkitFontSmoothing: 'subpixel-antialiased',
                 }}
             >
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 {/* Accent line at the top */}
                 <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
@@ -130,6 +147,12 @@ function BaseNode({
                             </p>
                         )}
                     </div>
+
+                    {hasInstruction && (
+                        <div className="mr-2 p-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center cursor-help" title="Controlled by System Instruction">
+                            <MessageSquare size={12} />
+                        </div>
+                    )}
 
                     {headerRight && (
                         <div className="flex items-center shrink-0">
