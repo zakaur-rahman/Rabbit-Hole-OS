@@ -16,16 +16,19 @@ async def get_ai_client():
     openai_key = os.environ.get("OPENAI_API_KEY")
     
     if gemini_key:
-        print("--- AI Service: Found GEMINI_API_KEY (Priority)")
+        print("--- AI Service: Using GEMINI (Priority)")
         return ("gemini", gemini_key, "https://generativelanguage.googleapis.com/v1beta")
     elif hf_token:
-        print("--- AI Service: Found HF_TOKEN")
+        print("--- AI Service: Using HUGGINGFACE")
         return ("huggingface", hf_token, None)
     elif chutes_key:
+        print("--- AI Service: Using CHUTES.AI")
         return ("chutes", chutes_key, CHUTES_API_BASE)
     elif openai_key:
+        print("--- AI Service: Using OPENAI")
         return ("openai", openai_key, "https://api.openai.com/v1")
     else:
+        print("--- AI Service: NO API KEYS FOUND - Using MOCK mode")
         return ("mock", None, None)
 
 async def generate_synthesis(query: str, node_contents: List[dict]) -> str:
@@ -72,19 +75,16 @@ async def generate_document_ast(query: str, context: str, source_map: dict) -> d
         for ref_id, data in source_map.items()
     ], indent=2)
     
-    if provider != "gemini":
-        # Mock AST for non-Gemini providers
-        return _generate_mock_ast(query, source_map)
-    
-    try:
-        from google import genai
-        from google.genai import types
-        import asyncio
-        from datetime import datetime
-        
-        client = genai.Client(api_key=api_key)
-        
-        prompt = f'''You are an AI document synthesis engine. Generate a structured JSON AST for a research document.
+    if provider == "gemini":
+        try:
+            from google import genai
+            from google.genai import types
+            import asyncio
+            from datetime import datetime
+            
+            client = genai.Client(api_key=api_key)
+            
+            prompt = f'''You are an AI document synthesis engine. Generate a structured JSON AST for a research document.
 
 TOPIC: {query}
 
@@ -138,31 +138,170 @@ RULES:
 5. Preserve factual accuracy over completeness.
 '''
 
-        def call():
-            return client.models.generate_content(
-                model="gemini-2.5-flash-preview-09-2025",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.1,
-                    max_output_tokens=8000,
-                    response_mime_type="application/json"
+            # Log the final prompt for debugging
+            print("\n" + "="*80)
+            print("[generate_document_ast] FINAL PROMPT:")
+            print("="*80)
+            print(prompt)
+            print("="*80 + "\n")
+
+            def call():
+                return client.models.generate_content(
+                    model="gemini-2.5-flash-preview-09-2025",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,
+                        max_output_tokens=8000,
+                        response_mime_type="application/json"
+                    )
                 )
+            
+            response = await asyncio.to_thread(call)
+            if response and response.text:
+                return json.loads(response.text.strip())
+        except Exception as e:
+            print(f"Error generating Gemini document AST: {e}")
+            return _generate_mock_ast(query, source_map)
+    elif provider in ("chutes", "openai"):
+        return await generate_llm_document_ast(query, context, source_map, api_key, base_url, provider)
+    else:
+        # Mock AST for other providers
+        return _generate_mock_ast(query, source_map)
+    
+    
+async def generate_llm_document_ast(
+    query: str, 
+    context: str, 
+    source_map: dict,
+    api_key: str, 
+    base_url: str,
+    provider: str
+) -> dict:
+    """Generate structured JSON AST using generic LLM."""
+    try:
+        import httpx
+        from datetime import datetime
+        
+        references_json = json.dumps([
+            {"id": ref_id, "title": data.get("title", "Source"), "url": data.get("url", "")}
+            for ref_id, data in source_map.items()
+        ], indent=2)
+        
+        prompt = f'''You are an AI document synthesis engine. Generate a structured JSON AST for a research document.
+
+TOPIC: {query}
+
+CONTEXT:
+{context[:15000]}
+
+AVAILABLE REFERENCES:
+{references_json}
+
+OUTPUT FORMAT (STRICT JSON):
+{{
+  "document": {{
+    "title": "string",
+    "subtitle": "string or null",
+    "authors": ["AI Research Synthesis Engine"],
+    "date": "{datetime.now().strftime('%B %d, %Y')}",
+    "abstract": "150-word summary",
+    "sections": [
+      {{
+        "id": "sec-1",
+        "title": "Section Title",
+        "level": 1,
+        "content": [
+          {{
+            "type": "paragraph",
+            "data": {{
+              "text": "Text with citations [1] inline.",
+              "citations": ["1"]
+            }}
+          }}
+        ],
+        "subsections": []
+      }}
+    ],
+    "references": {references_json}
+  }}
+}}
+
+BLOCK TYPES ALLOWED:
+- paragraph: {{"type": "paragraph", "data": {{"text": "...", "citations": ["ref_id"]}}}}
+- list: {{"type": "list", "data": {{"ordered": true/false, "items": ["..."]}}}}
+- table: {{"type": "table", "data": {{"caption": "...", "columns": [...], "rows": [[...]], "source_refs": ["ref_id"]}}}}
+- quote: {{"type": "quote", "data": {{"text": "...", "source_refs": ["ref_id"]}}}}
+- warning: {{"type": "warning", "data": {{"text": "..."}}}}
+
+RULES:
+1. Return ONLY valid JSON. No markdown, no explanations.
+2. Every citation must reference an ID from the AVAILABLE REFERENCES.
+3. If data is insufficient, add: {{"type": "warning", "data": {{"text": "Insufficient source data."}}}}
+4. Do NOT fabricate facts or references.
+5. Preserve factual accuracy over completeness.
+'''
+
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_llm_document_ast] FINAL PROMPT (query: {query}):")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
+
+        model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": "You are a research storage engine. Output valid JSON AST only."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": 4000,
+                    "temperature": 0.3
+                },
+                timeout=120.0
             )
-        
-        response = await asyncio.to_thread(call)
-        
-        if response and response.text:
-            text = response.text.strip()
-            # Parse and extract document
-            parsed = json.loads(text)
-            if "document" in parsed:
-                return parsed["document"]
-            return parsed
-    
+            
+            if response.status_code == 200:
+                data = response.json()
+                content = data["choices"][0]["message"]["content"].strip()
+                
+                # Strip markdown code blocks
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.strip().startswith("json"):
+                        # Correcting potential double split or prefix
+                        content = content.strip()[4:] if content.strip().lower().startswith("json") else content
+                elif "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+                
+                # Basic JSON cleanup
+                try:
+                    ast_data = json.loads(content)
+                    # If it returned {"document": {...}}, return just the inner part if expected
+                    # The get_research_ast expects the direct AST or something it can parse
+                    if "document" in ast_data:
+                        return ast_data["document"]
+                    return ast_data
+                except json.JSONDecodeError:
+                    print(f"Error decoding JSON: {content[:200]}...")
+                    return _generate_mock_ast(query, source_map)
+            else:
+                print(f"AST generation error: {response.status_code} - {response.text}")
+                return _generate_mock_ast(query, source_map)
+                
     except Exception as e:
-        print(f"Error generating document AST: {e}")
-    
-    return _generate_mock_ast(query, source_map)
+        print(f"Error generating LLM document AST: {e}")
+        return _generate_mock_ast(query, source_map)
 
 
 def _generate_mock_ast(query: str, source_map: dict) -> dict:
@@ -226,23 +365,17 @@ async def summarize_topic_chunk(chunk_content: str, chunk_heading: str, source_r
     
     Returns: {summary: str, citations: [str], data_available: bool}
     """
-    provider, api_key, _ = await get_ai_client()
+    provider, api_key, base_url = await get_ai_client()
     
-    if provider != "gemini":
-        return {
-            "summary": chunk_content[:500],
-            "citations": [source_ref],
-            "data_available": True
-        }
-    
-    try:
-        from google import genai
-        from google.genai import types
-        import asyncio
-        
-        client = genai.Client(api_key=api_key)
-        
-        prompt = f"""Summarize this topic chunk for a research report.
+    if provider == "gemini":
+        try:
+            from google import genai
+            from google.genai import types
+            import asyncio
+            
+            client = genai.Client(api_key=api_key)
+            
+            prompt = f"""Summarize this topic chunk for a research report.
 
 Topic: {chunk_heading}
 Source Reference: {source_ref}
@@ -266,22 +399,31 @@ Output format:
 IMPORTANT: Do NOT infer or fabricate information. If data is not present, say "Data not available".
 """
 
-        def call():
-            return client.models.generate_content(
-                model="gemini-2.5-flash-preview-09-2025",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.1,
-                    max_output_tokens=1000,
-                    response_mime_type="application/json"
+            # Log the final prompt for debugging
+            print("\n" + "="*80)
+            print(f"[summarize_topic_chunk] FINAL PROMPT (topic: {chunk_heading}):")
+            print("="*80)
+            print(prompt)
+            print("="*80 + "\n")
+
+            def call():
+                return client.models.generate_content(
+                    model="gemini-2.5-flash-preview-09-2025",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,
+                        max_output_tokens=1000,
+                        response_mime_type="application/json"
+                    )
                 )
-            )
-        
-        response = await asyncio.to_thread(call)
-        if response and response.text:
-            return json.loads(response.text.strip())
-    except Exception as e:
-        print(f"Pass 1 error: {e}")
+            
+            response = await asyncio.to_thread(call)
+            if response and response.text:
+                return json.loads(response.text.strip())
+        except Exception as e:
+            print(f"Pass 1 error (Gemini): {e}")
+    elif provider in ("chutes", "openai"):
+        return await generate_llm_summarize_topic_chunk(chunk_content, chunk_heading, source_ref, api_key, base_url, provider)
     
     return {"summary": chunk_content[:500], "citations": [source_ref], "data_available": True}
 
@@ -292,7 +434,7 @@ async def merge_topic_sections(topic_heading: str, summaries: List[dict]) -> dic
     
     Returns: {heading: str, body: str, figures: [], citations: []}
     """
-    provider, api_key, _ = await get_ai_client()
+    provider, api_key, base_url = await get_ai_client()
     
     # Combine summaries
     combined = "\n\n".join([
@@ -303,22 +445,15 @@ async def merge_topic_sections(topic_heading: str, summaries: List[dict]) -> dic
     for s in summaries:
         all_citations.extend(s.get("citations", []))
     
-    if provider != "gemini":
-        return {
-            "heading": topic_heading,
-            "body": combined,
-            "figures": [],
-            "citations": list(set(all_citations))
-        }
-    
-    try:
-        from google import genai
-        from google.genai import types
-        import asyncio
-        
-        client = genai.Client(api_key=api_key)
-        
-        prompt = f"""Merge these summaries into a unified section for a research report.
+    if provider == "gemini":
+        try:
+            from google import genai
+            from google.genai import types
+            import asyncio
+            
+            client = genai.Client(api_key=api_key)
+            
+            prompt = f"""Merge these summaries into a unified section for a research report.
 
 Topic: {topic_heading}
 
@@ -342,22 +477,31 @@ Output format:
 IMPORTANT: Do NOT fabricate data. Use "Data not available" if information is missing.
 """
 
-        def call():
-            return client.models.generate_content(
-                model="gemini-2.5-flash-preview-09-2025",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.2,
-                    max_output_tokens=2000,
-                    response_mime_type="application/json"
+            # Log the final prompt for debugging
+            print("\n" + "="*80)
+            print(f"[merge_topic_sections] FINAL PROMPT (topic: {topic_heading}):")
+            print("="*80)
+            print(prompt)
+            print("="*80 + "\n")
+
+            def call():
+                return client.models.generate_content(
+                    model="gemini-2.5-flash-preview-09-2025",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.2,
+                        max_output_tokens=2000,
+                        response_mime_type="application/json"
+                    )
                 )
-            )
-        
-        response = await asyncio.to_thread(call)
-        if response and response.text:
-            return json.loads(response.text.strip())
-    except Exception as e:
-        print(f"Pass 2 error: {e}")
+            
+            response = await asyncio.to_thread(call)
+            if response and response.text:
+                return json.loads(response.text.strip())
+        except Exception as e:
+            print(f"Pass 2 error (Gemini): {e}")
+    elif provider in ("chutes", "openai"):
+        return await generate_llm_merge_topic_sections(topic_heading, summaries, api_key, base_url, provider)
     
     return {
         "heading": topic_heading,
@@ -373,7 +517,7 @@ async def assemble_research_document(query: str, sections: List[dict], source_ma
     
     Returns full report structure for PDF generation.
     """
-    provider, api_key, _ = await get_ai_client()
+    provider, api_key, base_url = await get_ai_client()
     
     # Build sections context
     sections_text = "\n\n".join([
@@ -386,24 +530,15 @@ async def assemble_research_document(query: str, sections: List[dict], source_ma
     for ref_num, ref_data in source_map.items():
         references.append(f"[{ref_num}] {ref_data.get('title', 'Source')} - {ref_data.get('url', '')}")
     
-    if provider != "gemini":
-        return {
-            "title": f"Research Report: {query}",
-            "abstract": "This report synthesizes information from multiple sources.",
-            "introduction": f"This document examines {query} based on curated sources.",
-            "sections": sections,
-            "conclusion": "This report synthesizes the available information on the topic.",
-            "references": references
-        }
-    
-    try:
-        from google import genai
-        from google.genai import types
-        import asyncio
-        
-        client = genai.Client(api_key=api_key)
-        
-        prompt = f"""Assemble a final research document from these sections.
+    if provider == "gemini":
+        try:
+            from google import genai
+            from google.genai import types
+            import asyncio
+            
+            client = genai.Client(api_key=api_key)
+            
+            prompt = f"""Assemble a final research document from these sections.
 
 Query: {query}
 
@@ -433,22 +568,31 @@ Output format:
 IMPORTANT: Preserve all citations. Do NOT add new claims.
 """
 
-        def call():
-            return client.models.generate_content(
-                model="gemini-2.5-flash-preview-09-2025",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.2,
-                    max_output_tokens=4000,
-                    response_mime_type="application/json"
+            # Log the final prompt for debugging
+            print("\n" + "="*80)
+            print(f"[assemble_research_document] FINAL PROMPT (query: {query}):")
+            print("="*80)
+            print(prompt)
+            print("="*80 + "\n")
+
+            def call():
+                return client.models.generate_content(
+                    model="gemini-2.5-flash-preview-09-2025",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.2,
+                        max_output_tokens=4000,
+                        response_mime_type="application/json"
+                    )
                 )
-            )
-        
-        response = await asyncio.to_thread(call)
-        if response and response.text:
-            return json.loads(response.text.strip())
-    except Exception as e:
-        print(f"Pass 3 error: {e}")
+            
+            response = await asyncio.to_thread(call)
+            if response and response.text:
+                return json.loads(response.text.strip())
+        except Exception as e:
+            print(f"Pass 3 error (Gemini): {e}")
+    elif provider in ("chutes", "openai"):
+        return await generate_llm_assemble_research_document(query, sections, source_map, api_key, base_url, provider)
     
     return {
         "title": f"Research Report: {query}",
@@ -517,6 +661,13 @@ IMPORTANT: Only include figures if the context contains explicit numerical data 
 
 Do not include any conversational text outside the JSON.
 """
+
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_gemini_report] FINAL PROMPT (query: {query}):")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
 
         def call_gemini():
             return client.models.generate_content(
@@ -592,6 +743,13 @@ Requirements:
 Do not include any conversational text outside the JSON.
 """
 
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_llm_report] FINAL PROMPT (query: {query}):")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
+
         model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
 
         async with httpx.AsyncClient() as client:
@@ -663,6 +821,13 @@ Provide a clear, well-structured synthesis that:
 4. Notes any conflicting information
 
 Synthesis:"""
+
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_llm_synthesis] FINAL PROMPT (query: {query}):")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
 
         # Determine model based on provider
         model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-3.5-turbo"
@@ -767,6 +932,13 @@ Content B: {target_content[:500]}
 
 Relationship label (2-4 words):"""
 
+            # Log the final prompt for debugging
+            print("\n" + "="*80)
+            print("[generate_edge_label] FINAL PROMPT:")
+            print("="*80)
+            print(prompt)
+            print("="*80 + "\n")
+
             model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-3.5-turbo"
 
             async with httpx.AsyncClient() as client:
@@ -792,6 +964,165 @@ Relationship label (2-4 words):"""
             print(f"Error generating edge label: {e}")
     
     return "relates to"
+
+async def generate_llm_summarize_topic_chunk(chunk_content: str, chunk_heading: str, source_ref: str, api_key: str, base_url: str, provider: str) -> dict:
+    """Pass 1 using generic LLM."""
+    try:
+        import httpx
+        prompt = f"""Summarize this topic chunk for a research report.
+
+Topic: {chunk_heading}
+Source Reference: {source_ref}
+
+Content:
+{chunk_content[:3000]}
+
+Requirements:
+1. Return ONLY valid JSON.
+2. Summarize key facts and insights.
+3. Mark citations with {source_ref} inline.
+4. If data is missing, set data_available to false.
+
+Output format:
+{{
+    "summary": "Clear factual summary with inline citations like {source_ref}",
+    "citations": ["{source_ref}"],
+    "data_available": true
+}}
+"""
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_llm_summarize_topic_chunk] FINAL PROMPT:")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
+
+        model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": "Output valid JSON only."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.1
+                },
+                timeout=60.0
+            )
+            if response.status_code == 200:
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.strip().startswith("json"): content = content.replace("json", "", 1)
+                return json.loads(content.strip())
+    except Exception as e:
+        print(f"Pass 1 error (LLM): {e}")
+    return {"summary": chunk_content[:500], "citations": [source_ref], "data_available": True}
+
+async def generate_llm_merge_topic_sections(topic_heading: str, summaries: List[dict], api_key: str, base_url: str, provider: str) -> dict:
+    """Pass 2 using generic LLM."""
+    try:
+        import httpx
+        combined = "\n\n".join([f"Summary {i+1}: {s.get('summary', '')}" for i, s in enumerate(summaries)])
+        all_citations = []
+        for s in summaries: all_citations.extend(s.get("citations", []))
+        
+        prompt = f"""Merge these summaries into a unified section for a research report.
+
+Topic: {topic_heading}
+Summaries:
+{combined}
+
+Output format:
+{{
+    "heading": "{topic_heading}",
+    "body": "Merged analysis with preserved citations.",
+    "figures": [],
+    "citations": {json.dumps(list(set(all_citations)))}
+}}
+"""
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_llm_merge_topic_sections] FINAL PROMPT:")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
+
+        model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [{"role": "system", "content": "Output valid JSON only."}, {"role": "user", "content": prompt}],
+                    "temperature": 0.2
+                },
+                timeout=60.0
+            )
+            if response.status_code == 200:
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.strip().startswith("json"): content = content.replace("json", "", 1)
+                return json.loads(content.strip())
+    except Exception as e:
+        print(f"Pass 2 error (LLM): {e}")
+    return {"heading": topic_heading, "body": combined, "figures": [], "citations": []}
+
+async def generate_llm_assemble_research_document(query: str, sections: List[dict], source_map: dict, api_key: str, base_url: str, provider: str) -> dict:
+    """Pass 3 using generic LLM."""
+    try:
+        import httpx
+        sections_text = "\n\n".join([f"## {s.get('heading', 'Section')}\n{s.get('body', '')}" for s in sections])
+        references = [f"[{k}] {v.get('title')} - {v.get('url')}" for k, v in source_map.items()]
+        
+        prompt = f"""Assemble a final research document from these sections.
+Query: {query}
+Sections:
+{sections_text}
+
+Output format:
+{{
+    "title": "Academic Title",
+    "abstract": "Summary",
+    "introduction": "Intro",
+    "sections": {json.dumps(sections)},
+    "conclusion": "Final",
+    "references": {json.dumps(references)}
+}}
+"""
+        # Log the final prompt for debugging
+        print("\n" + "="*80)
+        print(f"[generate_llm_assemble_research_document] FINAL PROMPT:")
+        print("="*80)
+        print(prompt)
+        print("="*80 + "\n")
+
+        model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [{"role": "system", "content": "Output valid JSON only."}, {"role": "user", "content": prompt}],
+                    "temperature": 0.2
+                },
+                timeout=120.0
+            )
+            if response.status_code == 200:
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.strip().startswith("json"): content = content.replace("json", "", 1)
+                return json.loads(content.strip())
+    except Exception as e:
+        print(f"Pass 3 error (LLM): {e}")
+    return {"title": query, "abstract": "", "introduction": "", "sections": sections, "conclusion": "", "references": []}
 
 async def generate_embedding(text: str) -> List[float]:
     """Generate embeddings - currently uses mock, would need embedding model for real."""

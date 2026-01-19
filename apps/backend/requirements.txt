@@ -16,3 +16,6 @@ huggingface_hub
 google-genai
 reportlab
 matplotlib
+redis>=5.0.0
+pyjwt>=2.8.0
+cryptography

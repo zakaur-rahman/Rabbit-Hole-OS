@@ -149,7 +149,12 @@ Ensure the 'outline' captures the full hierarchy of the article."""
             return analyze_url_mock(url)
             
     except Exception as e:
-        print(f"Error in analyze_url_ollama: {e}")
+        # Check for common connection/timeout errors to avoid log spam
+        error_msg = str(e)
+        if "connection" in error_msg.lower() or "failed" in error_msg.lower() or "timeout" in error_msg.lower():
+            print(f"--- AI Service: Ollama connection failed (AI Offline). Using mock fallback.")
+        else:
+            print(f"Error in analyze_url_ollama: {e}")
         return analyze_url_mock(url)
 
 
@@ -245,7 +250,7 @@ async def analyze_url_gemini(url: str, api_key: str) -> dict:
         
         # Initialize the client
         client = genai.Client(api_key=api_key)
-        model_id = "gemini-2.5-flash-preview-09-2025"
+        model_id = "gemini-2.5-flash-lite-preview-09-2025"
         
         # Using the robust prompt with explicit JSON schema instruction
         prompt = f"""You are a curator. Analyze the webpage at {url}.
@@ -253,7 +258,7 @@ Return a JSON object with this exact structure:
 {{
   "title": "Clear article title",
   "snippet": "2-3 sentence teaser",
-  "content": "A detailed 400-word analysis/summary",
+  "content": "A detailed 100-word analysis/summary",
   "outline": [
     {{
       "id": "1",
@@ -323,7 +328,7 @@ Please provide your response in the following JSON format ONLY (no other text):
 {{
     "title": "Page title",
     "snippet": "A 2-3 sentence summary of the main content",
-    "content": "A longer summary of the key information on the page (300-500 words)",
+    "content": "A longer summary of the key information on the page (100-200 words)",
     "outline": [
         {{
             "id": "1",
@@ -408,12 +413,12 @@ def analyze_url_mock(url: str) -> dict:
     
     return {
         "title": title or "Web Page",
-        "snippet": f"Content from {parsed.netloc}. Set GEMINI_API_KEY, CHUTES_API_KEY, or OPENAI_API_KEY for AI-powered analysis.",
-        "content": f"Unable to analyze content without AI. Please configure an API key in your .env file.",
+        "snippet": f"[AI OFFLINE] Summary for {parsed.netloc}. Please check your connection or AI API keys.",
+        "content": f"Unable to analyze content because the AI service is currently offline or unreachable. URL visited: {url}",
         "outline": [
             {"id": "1", "number": "1", "title": "Overview", "children": []},
-            {"id": "2", "number": "2", "title": "Main Content", "children": []},
-            {"id": "3", "number": "3", "title": "Details", "children": []},
+            {"id": "2", "number": "2", "title": "Discovery", "children": []},
+            {"id": "3", "number": "3", "title": "Context", "children": []},
         ]
     }
 
@@ -447,7 +452,7 @@ Article: {title}
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
                 headers={"Content-Type": "application/json"},
                 json={
                     "contents": [{

@@ -1,271 +1,61 @@
 {
-  "note-1766499337408": {
-    "id": "note-1766499337408",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:15:37.424605Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 150.6255247614373,
-        "y": 207.21513298536735
-      },
-      "whiteboard_id": "board-1766493934571"
-    }
-  },
-  "note-1766499348667": {
-    "id": "note-1766499348667",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:15:48.679349Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 293.7625052366517,
-        "y": 170.80664341646548
-      },
-      "whiteboard_id": "board-1766493934571",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1766500378108": {
-    "id": "note-1766500378108",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:32:58.445141Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 116.96673072440875,
-        "y": 292.7100029763915
-      },
-      "whiteboard_id": "board-1766500366804"
-    }
-  },
-  "note-1766500388986": {
-    "id": "note-1766500388986",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:33:09.001262Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 581.2285643745676,
-        "y": 432.2696500001016
-      },
-      "whiteboard_id": "board-1766500366804",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1766508477978": {
-    "id": "note-1766508477978",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:47:57.985379Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 164.4798672951722,
-        "y": -16.808563439211866
-      },
-      "whiteboard_id": "board-1766333112453",
-      "style": {
-        "width": 419,
-        "height": 178
-      },
-      "url": "",
-      "color": "violet-500"
-    }
-  },
-  "note-1766508482934": {
-    "id": "note-1766508482934",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:48:02.943805Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 414.92687740881024,
-        "y": 249.90443387314366
-      },
-      "whiteboard_id": "board-1766333112453",
-      "url": ""
-    }
-  },
-  "note-1766508488756": {
-    "id": "note-1766508488756",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:48:08.764751Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 213.92080991076682,
-        "y": 486.2522275246892
-      },
-      "whiteboard_id": "board-1766333112453",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1766508545875": {
-    "id": "note-1766508545875",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:49:06.201391Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": -227.8507670080098,
-        "y": 305.12588098799074
-      },
-      "whiteboard_id": "board-1766333112453"
-    }
-  },
-  "node-1767112084103": {
-    "id": "node-1767112084103",
+  "node-1768851357801-ipawur5ng": {
+    "id": "node-1768851357801-ipawur5ng",
     "type": "article",
-    "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
-    "title": "2008 financial crisis",
-    "content": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting global consequences. The crisis was fundamentally caused by the confluence of financial deregulation, particularly the repeal of Glass\u2013Steagall, and the aggressive expansion of subprime lending, which fueled an unsustainable housing bubble in the United States. Financial institutions utilized complex securitization techniques, packaging risky mortgages into instruments like Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), which were then falsely rated as safe by credit rating agencies, distributing systemic risk globally through the shadow banking system.\n\nThe article meticulously tracks the progression of the crisis, starting with early warning signs and culminating in the pivotal events of September 2008, including the government takeover of Fannie Mae and Freddie Mac, and the bankruptcy of Lehman Brothers. The failure of Lehman triggered a global credit freeze, necessitating massive government intervention, such as the Troubled Asset Relief Program (TARP) in the U.S. and coordinated international efforts to stabilize banks and inject liquidity. The immediate aftermath was the Great Recession, characterized by soaring unemployment, massive wealth destruction, and significant political upheaval.\n\nCrucially, the article explores the long-term consequences, focusing heavily on regulatory reform. This includes the passage of the Dodd\u2013Frank Act in the U.S. and the implementation of Basel III internationally, aimed at increasing capital requirements and reducing systemic risk. The analysis sections delve into ongoing debates regarding the primary causes, criticisms of the government response (particularly the lack of criminal prosecutions), and the role of the economics profession in failing to predict or adequately address the crisis. Overall, the article serves as a definitive resource, detailing how a failure in housing finance rapidly metastasized into a global economic catastrophe that fundamentally reshaped financial regulation and public trust.",
-    "snippet": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting glo...",
-    "created_at": "2025-12-30T16:28:04.112152Z",
+    "url": "https://en.wikipedia.org/wiki/India",
+    "title": "India",
+    "content": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense linguistic, cultural, and geographical diversity. Its history spans five millennia, marked by the rise and fall of various empires and significant contributions to world civilization, including the Indus Valley Civilization. Modern India emerged from British colonial rule in 1947, establishing itself as a secular, socialist republic. The economy is one of the fastest-growing major economies globally, driven by services, industry, and agriculture, though it continues to grapple with significant developmental challenges and inequality.",
+    "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
+    "created_at": "2026-01-19T19:35:58.110994Z",
     "metadata": {
-      "title": "2008 financial crisis",
-      "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
+      "title": "India",
+      "url": "https://en.wikipedia.org/wiki/India",
       "whiteboard_id": "main",
       "style": {
-        "width": 587,
-        "height": 442
+        "width": 320
       },
       "analyzed_by": "ai",
-      "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing bubble and the subsequent failure of major financial institutions. This systemic failure was rooted in lax lending standards, the proliferation of complex subprime mortgage-backed securities, and inadequate regulatory oversight, plunging the global economy into the Great Recession.",
+      "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
       "outline": [
         {
           "id": "1",
           "number": "1",
-          "title": "Background",
-          "children": [
-            {
-              "id": "1.1",
-              "number": "1.1",
-              "title": "Financial deregulation",
-              "children": []
-            },
-            {
-              "id": "1.2",
-              "number": "1.2",
-              "title": "Housing bubble",
-              "children": []
-            },
-            {
-              "id": "1.3",
-              "number": "1.3",
-              "title": "Subprime lending",
-              "children": []
-            },
-            {
-              "id": "1.4",
-              "number": "1.4",
-              "title": "Securitization and derivatives",
-              "children": []
-            },
-            {
-              "id": "1.5",
-              "number": "1.5",
-              "title": "Credit rating agencies",
-              "children": []
-            },
-            {
-              "id": "1.6",
-              "number": "1.6",
-              "title": "Shadow banking system",
-              "children": []
-            },
-            {
-              "id": "1.7",
-              "number": "1.7",
-              "title": "Too big to fail",
-              "children": []
-            }
-          ]
+          "title": "Etymology",
+          "children": []
         },
         {
           "id": "2",
           "number": "2",
-          "title": "Crisis",
+          "title": "History",
           "children": [
             {
               "id": "2.1",
               "number": "2.1",
-              "title": "Early warning signs",
+              "title": "Prehistoric and ancient",
               "children": []
             },
             {
               "id": "2.2",
               "number": "2.2",
-              "title": "Bear Stearns and IndyMac",
+              "title": "Medieval",
               "children": []
             },
             {
               "id": "2.3",
               "number": "2.3",
-              "title": "Fannie Mae and Freddie Mac",
+              "title": "Early modern",
               "children": []
             },
             {
               "id": "2.4",
               "number": "2.4",
-              "title": "Lehman Brothers and AIG",
+              "title": "British Raj",
               "children": []
             },
             {
               "id": "2.5",
               "number": "2.5",
-              "title": "Global contagion",
-              "children": []
-            },
-            {
-              "id": "2.6",
-              "number": "2.6",
-              "title": "Credit freeze",
+              "title": "Independence",
               "children": []
             }
           ]
@@ -273,100 +63,43 @@
         {
           "id": "3",
           "number": "3",
-          "title": "Response",
+          "title": "Geography",
           "children": [
             {
               "id": "3.1",
               "number": "3.1",
-              "title": "United States",
-              "children": [
-                {
-                  "id": "3.1.1",
-                  "number": "3.1.1",
-                  "title": "TARP",
-                  "children": []
-                },
-                {
-                  "id": "3.1.2",
-                  "number": "3.1.2",
-                  "title": "Quantitative easing",
-                  "children": []
-                }
-              ]
+              "title": "Climate",
+              "children": []
             },
             {
               "id": "3.2",
               "number": "3.2",
-              "title": "International",
-              "children": [
-                {
-                  "id": "3.2.1",
-                  "number": "3.2.1",
-                  "title": "Europe",
-                  "children": []
-                },
-                {
-                  "id": "3.2.2",
-                  "number": "3.2.2",
-                  "title": "Asia",
-                  "children": []
-                }
-              ]
+              "title": "Biodiversity",
+              "children": []
             }
           ]
         },
         {
           "id": "4",
           "number": "4",
-          "title": "Aftermath and consequences",
+          "title": "Government and politics",
           "children": [
             {
               "id": "4.1",
               "number": "4.1",
-              "title": "Great Recession",
+              "title": "Political system",
               "children": []
             },
             {
               "id": "4.2",
               "number": "4.2",
-              "title": "Income inequality",
+              "title": "Foreign relations",
               "children": []
             },
             {
               "id": "4.3",
               "number": "4.3",
-              "title": "Political consequences",
-              "children": []
-            },
-            {
-              "id": "4.4",
-              "number": "4.4",
-              "title": "Regulatory reform",
-              "children": [
-                {
-                  "id": "4.4.1",
-                  "number": "4.4.1",
-                  "title": "Dodd\u2013Frank Act",
-                  "children": []
-                },
-                {
-                  "id": "4.4.2",
-                  "number": "4.4.2",
-                  "title": "Basel III",
-                  "children": []
-                }
-              ]
-            },
-            {
-              "id": "4.5",
-              "number": "4.5",
-              "title": "Criminal investigations",
-              "children": []
-            },
-            {
-              "id": "4.6",
-              "number": "4.6",
-              "title": "Subsequent crises",
+              "title": "Military",
               "children": []
             }
           ]
@@ -374,24 +107,18 @@
         {
           "id": "5",
           "number": "5",
-          "title": "Analysis and commentary",
+          "title": "Economy",
           "children": [
             {
               "id": "5.1",
               "number": "5.1",
-              "title": "Causes",
+              "title": "Sectors",
               "children": []
             },
             {
               "id": "5.2",
               "number": "5.2",
-              "title": "Criticisms of the response",
-              "children": []
-            },
-            {
-              "id": "5.3",
-              "number": "5.3",
-              "title": "Role of economics profession",
+              "title": "Science and technology",
               "children": []
             }
           ]
@@ -399,112 +126,99 @@
         {
           "id": "6",
           "number": "6",
-          "title": "In popular culture",
-          "children": []
+          "title": "Demographics",
+          "children": [
+            {
+              "id": "6.1",
+              "number": "6.1",
+              "title": "Languages",
+              "children": []
+            },
+            {
+              "id": "6.2",
+              "number": "6.2",
+              "title": "Religion",
+              "children": []
+            },
+            {
+              "id": "6.3",
+              "number": "6.3",
+              "title": "Urbanisation",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "number": "7",
+          "title": "Culture",
+          "children": [
+            {
+              "id": "7.1",
+              "number": "7.1",
+              "title": "Arts",
+              "children": []
+            },
+            {
+              "id": "7.2",
+              "number": "7.2",
+              "title": "Cuisine",
+              "children": []
+            },
+            {
+              "id": "7.3",
+              "number": "7.3",
+              "title": "Sports",
+              "children": []
+            }
+          ]
         }
       ],
       "position": {
-        "x": 130.41048509755444,
-        "y": -5.493004028649636
-      },
-      "selectedTopics": [
-        "5",
-        "5.1",
-        "5.2",
-        "5.3"
-      ],
-      "content": "The Wikipedia article on the 2008 financial crisis provides a comprehensive historical and economic analysis of the event, detailing its complex origins, immediate catastrophic events, and lasting global consequences. The crisis was fundamentally caused by the confluence of financial deregulation, particularly the repeal of Glass\u2013Steagall, and the aggressive expansion of subprime lending, which fueled an unsustainable housing bubble in the United States. Financial institutions utilized complex securitization techniques, packaging risky mortgages into instruments like Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), which were then falsely rated as safe by credit rating agencies, distributing systemic risk globally through the shadow banking system.\n\nThe article meticulously tracks the progression of the crisis, starting with early warning signs and culminating in the pivotal events of September 2008, including the government takeover of Fannie Mae and Freddie Mac, and the bankruptcy of Lehman Brothers. The failure of Lehman triggered a global credit freeze, necessitating massive government intervention, such as the Troubled Asset Relief Program (TARP) in the U.S. and coordinated international efforts to stabilize banks and inject liquidity. The immediate aftermath was the Great Recession, characterized by soaring unemployment, massive wealth destruction, and significant political upheaval.\n\nCrucially, the article explores the long-term consequences, focusing heavily on regulatory reform. This includes the passage of the Dodd\u2013Frank Act in the U.S. and the implementation of Basel III internationally, aimed at increasing capital requirements and reducing systemic risk. The analysis sections delve into ongoing debates regarding the primary causes, criticisms of the government response (particularly the lack of criminal prosecutions), and the role of the economics profession in failing to predict or adequately address the crisis. Overall, the article serves as a definitive resource, detailing how a failure in housing finance rapidly metastasized into a global economic catastrophe that fundamentally reshaped financial regulation and public trust.",
-      "color": "indigo-500"
+        "x": 43.10701409809144,
+        "y": 79.85040082640734
+      }
     },
     "outline": [
       {
         "id": "1",
         "number": "1",
-        "title": "Background",
-        "children": [
-          {
-            "id": "1.1",
-            "number": "1.1",
-            "title": "Financial deregulation",
-            "children": []
-          },
-          {
-            "id": "1.2",
-            "number": "1.2",
-            "title": "Housing bubble",
-            "children": []
-          },
-          {
-            "id": "1.3",
-            "number": "1.3",
-            "title": "Subprime lending",
-            "children": []
-          },
-          {
-            "id": "1.4",
-            "number": "1.4",
-            "title": "Securitization and derivatives",
-            "children": []
-          },
-          {
-            "id": "1.5",
-            "number": "1.5",
-            "title": "Credit rating agencies",
-            "children": []
-          },
-          {
-            "id": "1.6",
-            "number": "1.6",
-            "title": "Shadow banking system",
-            "children": []
-          },
-          {
-            "id": "1.7",
-            "number": "1.7",
-            "title": "Too big to fail",
-            "children": []
-          }
-        ]
+        "title": "Etymology",
+        "children": []
       },
       {
         "id": "2",
         "number": "2",
-        "title": "Crisis",
+        "title": "History",
         "children": [
           {
             "id": "2.1",
             "number": "2.1",
-            "title": "Early warning signs",
+            "title": "Prehistoric and ancient",
             "children": []
           },
           {
             "id": "2.2",
             "number": "2.2",
-            "title": "Bear Stearns and IndyMac",
+            "title": "Medieval",
             "children": []
           },
           {
             "id": "2.3",
             "number": "2.3",
-            "title": "Fannie Mae and Freddie Mac",
+            "title": "Early modern",
             "children": []
           },
           {
             "id": "2.4",
             "number": "2.4",
-            "title": "Lehman Brothers and AIG",
+            "title": "British Raj",
             "children": []
           },
           {
             "id": "2.5",
             "number": "2.5",
-            "title": "Global contagion",
-            "children": []
-          },
-          {
-            "id": "2.6",
-            "number": "2.6",
-            "title": "Credit freeze",
+            "title": "Independence",
             "children": []
           }
         ]
@@ -512,100 +226,43 @@
       {
         "id": "3",
         "number": "3",
-        "title": "Response",
+        "title": "Geography",
         "children": [
           {
             "id": "3.1",
             "number": "3.1",
-            "title": "United States",
-            "children": [
-              {
-                "id": "3.1.1",
-                "number": "3.1.1",
-                "title": "TARP",
-                "children": []
-              },
-              {
-                "id": "3.1.2",
-                "number": "3.1.2",
-                "title": "Quantitative easing",
-                "children": []
-              }
-            ]
+            "title": "Climate",
+            "children": []
           },
           {
             "id": "3.2",
             "number": "3.2",
-            "title": "International",
-            "children": [
-              {
-                "id": "3.2.1",
-                "number": "3.2.1",
-                "title": "Europe",
-                "children": []
-              },
-              {
-                "id": "3.2.2",
-                "number": "3.2.2",
-                "title": "Asia",
-                "children": []
-              }
-            ]
+            "title": "Biodiversity",
+            "children": []
           }
         ]
       },
       {
         "id": "4",
         "number": "4",
-        "title": "Aftermath and consequences",
+        "title": "Government and politics",
         "children": [
           {
             "id": "4.1",
             "number": "4.1",
-            "title": "Great Recession",
+            "title": "Political system",
             "children": []
           },
           {
             "id": "4.2",
             "number": "4.2",
-            "title": "Income inequality",
+            "title": "Foreign relations",
             "children": []
           },
           {
             "id": "4.3",
             "number": "4.3",
-            "title": "Political consequences",
-            "children": []
-          },
-          {
-            "id": "4.4",
-            "number": "4.4",
-            "title": "Regulatory reform",
-            "children": [
-              {
-                "id": "4.4.1",
-                "number": "4.4.1",
-                "title": "Dodd\u2013Frank Act",
-                "children": []
-              },
-              {
-                "id": "4.4.2",
-                "number": "4.4.2",
-                "title": "Basel III",
-                "children": []
-              }
-            ]
-          },
-          {
-            "id": "4.5",
-            "number": "4.5",
-            "title": "Criminal investigations",
-            "children": []
-          },
-          {
-            "id": "4.6",
-            "number": "4.6",
-            "title": "Subsequent crises",
+            "title": "Military",
             "children": []
           }
         ]
@@ -613,24 +270,18 @@
       {
         "id": "5",
         "number": "5",
-        "title": "Analysis and commentary",
+        "title": "Economy",
         "children": [
           {
             "id": "5.1",
             "number": "5.1",
-            "title": "Causes",
+            "title": "Sectors",
             "children": []
           },
           {
             "id": "5.2",
             "number": "5.2",
-            "title": "Criticisms of the response",
-            "children": []
-          },
-          {
-            "id": "5.3",
-            "number": "5.3",
-            "title": "Role of economics profession",
+            "title": "Science and technology",
             "children": []
           }
         ]
@@ -638,65 +289,94 @@
       {
         "id": "6",
         "number": "6",
-        "title": "In popular culture",
-        "children": []
+        "title": "Demographics",
+        "children": [
+          {
+            "id": "6.1",
+            "number": "6.1",
+            "title": "Languages",
+            "children": []
+          },
+          {
+            "id": "6.2",
+            "number": "6.2",
+            "title": "Religion",
+            "children": []
+          },
+          {
+            "id": "6.3",
+            "number": "6.3",
+            "title": "Urbanisation",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "number": "7",
+        "title": "Culture",
+        "children": [
+          {
+            "id": "7.1",
+            "number": "7.1",
+            "title": "Arts",
+            "children": []
+          },
+          {
+            "id": "7.2",
+            "number": "7.2",
+            "title": "Cuisine",
+            "children": []
+          },
+          {
+            "id": "7.3",
+            "number": "7.3",
+            "title": "Sports",
+            "children": []
+          }
+        ]
       }
     ]
   },
-  "node-1767116134825": {
-    "id": "node-1767116134825",
+  "node-1768851372669-vtaks563d": {
+    "id": "node-1768851372669-vtaks563d",
     "type": "article",
-    "url": "https://en.wikipedia.org/wiki/Business_entity",
-    "title": "Business entity",
-    "content": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. This separation is fundamental, primarily determining the extent of personal liability and the method of taxation. The article details several primary types of entities, ranging from the simplest to the most complex.\n\nThe simplest form is the Sole Proprietorship, where the owner and the business are legally inseparable, meaning the owner assumes full personal liability for all business debts. Partnerships involve two or more individuals agreeing to share profits and losses; liability varies depending on whether it is a general partnership (full liability for all partners) or a limited partnership (where some partners have limited liability but less management control).\n\nCorporations represent the most complex structure, characterized by separate legal personhood. This means the corporation itself is liable for its debts, providing shareholders with limited liability\u2014their personal assets are protected. Corporations are often subject to 'double taxation' (C-Corps), where profits are taxed at the corporate level and then dividends are taxed again when distributed to shareholders. S-Corps offer a way to avoid this by allowing profits and losses to be passed through directly to the owners\u2019 personal income without being subject to corporate tax rates.\n\nThe Limited Liability Company (LLC) is a popular hybrid structure, offering the limited liability protection of a corporation while retaining the flexible, pass-through taxation of a partnership. The article also touches upon Cooperatives, which are owned and controlled by the people who use their services.\n\nLegal status is paramount; the degree of separation dictates the level of protection afforded to the owners. Entities with separate legal personality face higher registration and compliance burdens, including mandatory annual filings, detailed record-keeping, and adherence to corporate governance rules. Ultimately, the selection of a business entity is a strategic decision based on the desired balance between liability protection, tax efficiency, and administrative complexity.",
-    "snippet": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. Thi...",
-    "created_at": "2025-12-30T17:35:36.993012Z",
+    "url": "https://en.wikipedia.org/wiki/Indian_subcontinent",
+    "title": "Indian subcontinent",
+    "content": "The Indian subcontinent is a massive geographical region in South Asia, defined primarily by the Indian Plate. It encompasses the countries of India, Pakistan, Bangladesh, Nepal, Bhutan, Sri Lanka, and the Maldives. Geographically, it is demarcated by the Himalayas in the north and the Indian Ocean surrounding the peninsula. The region is characterized by immense cultural, linguistic, and religious diversity, having been the birthplace of major world religions like Hinduism, Buddhism, Jainism, and Sikhism. Its history is marked by ancient civilizations, powerful empires, and colonial rule, leading to the modern political map of independent nations.",
+    "snippet": "The Indian subcontinent, also known as South Asia, is a peninsular region in Southern Asia, generally considered to project southwards from the main body of the Eurasian continent, lying south of the Himalayas. It is bordered by the mountains to the north and the Indian Ocean to the south, east, and west.",
+    "created_at": "2026-01-19T19:36:12.671993Z",
     "metadata": {
-      "title": "Business entity",
-      "url": "https://en.wikipedia.org/wiki/Business_entity",
-      "whiteboard_id": "board-1766514738109",
+      "title": "Indian subcontinent",
+      "url": "https://en.wikipedia.org/wiki/Indian_subcontinent",
+      "whiteboard_id": "main",
+      "style": {
+        "width": 320
+      },
       "analyzed_by": "ai",
-      "snippet": "A business entity is an organization established to carry on commercial or professional activities, typically structured to be legally and financially distinct from its owners. These structures are crucial as they determine liability, taxation, and regulatory compliance requirements. The choice of entity type, such as a sole proprietorship, partnership, or corporation, significantly impacts the operational framework and risk exposure of the business.",
+      "snippet": "The Indian subcontinent, also known as South Asia, is a peninsular region in Southern Asia, generally considered to project southwards from the main body of the Eurasian continent, lying south of the Himalayas. It is bordered by the mountains to the north and the Indian Ocean to the south, east, and west.",
       "outline": [
         {
           "id": "1",
           "number": "1",
-          "title": "Types of business entities",
+          "title": "Definition and scope",
           "children": [
             {
               "id": "1.1",
               "number": "1.1",
-              "title": "Sole proprietorship",
+              "title": "Geographical definition",
               "children": []
             },
             {
               "id": "1.2",
               "number": "1.2",
-              "title": "Partnership",
+              "title": "Geological definition",
               "children": []
             },
             {
               "id": "1.3",
               "number": "1.3",
-              "title": "Corporation",
-              "children": []
-            },
-            {
-              "id": "1.4",
-              "number": "1.4",
-              "title": "Cooperative",
-              "children": []
-            },
-            {
-              "id": "1.5",
-              "number": "1.5",
-              "title": "Limited liability company (LLC)",
-              "children": []
-            },
-            {
-              "id": "1.6",
-              "number": "1.6",
-              "title": "Other types",
+              "title": "Cultural definition",
               "children": []
             }
           ]
@@ -704,352 +384,24 @@
         {
           "id": "2",
           "number": "2",
-          "title": "Legal status",
-          "children": []
-        },
-        {
-          "id": "3",
-          "number": "3",
-          "title": "Taxation",
-          "children": []
-        },
-        {
-          "id": "4",
-          "number": "4",
-          "title": "Registration and compliance",
-          "children": []
-        }
-      ],
-      "position": {
-        "x": 164.46721967171618,
-        "y": 52.828863654841896
-      },
-      "style": {
-        "width": 320
-      },
-      "content": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. This separation is fundamental, primarily determining the extent of personal liability and the method of taxation. The article details several primary types of entities, ranging from the simplest to the most complex.\n\nThe simplest form is the Sole Proprietorship, where the owner and the business are legally inseparable, meaning the owner assumes full personal liability for all business debts. Partnerships involve two or more individuals agreeing to share profits and losses; liability varies depending on whether it is a general partnership (full liability for all partners) or a limited partnership (where some partners have limited liability but less management control).\n\nCorporations represent the most complex structure, characterized by separate legal personhood. This means the corporation itself is liable for its debts, providing shareholders with limited liability\u2014their personal assets are protected. Corporations are often subject to 'double taxation' (C-Corps), where profits are taxed at the corporate level and then dividends are taxed again when distributed to shareholders. S-Corps offer a way to avoid this by allowing profits and losses to be passed through directly to the owners\u2019 personal income without being subject to corporate tax rates.\n\nThe Limited Liability Company (LLC) is a popular hybrid structure, offering the limited liability protection of a corporation while retaining the flexible, pass-through taxation of a partnership. The article also touches upon Cooperatives, which are owned and controlled by the people who use their services.\n\nLegal status is paramount; the degree of separation dictates the level of protection afforded to the owners. Entities with separate legal personality face higher registration and compliance burdens, including mandatory annual filings, detailed record-keeping, and adherence to corporate governance rules. Ultimately, the selection of a business entity is a strategic decision based on the desired balance between liability protection, tax efficiency, and administrative complexity.",
-      "color": "orange-500"
-    },
-    "outline": [
-      {
-        "id": "1",
-        "number": "1",
-        "title": "Types of business entities",
-        "children": [
-          {
-            "id": "1.1",
-            "number": "1.1",
-            "title": "Sole proprietorship",
-            "children": []
-          },
-          {
-            "id": "1.2",
-            "number": "1.2",
-            "title": "Partnership",
-            "children": []
-          },
-          {
-            "id": "1.3",
-            "number": "1.3",
-            "title": "Corporation",
-            "children": []
-          },
-          {
-            "id": "1.4",
-            "number": "1.4",
-            "title": "Cooperative",
-            "children": []
-          },
-          {
-            "id": "1.5",
-            "number": "1.5",
-            "title": "Limited liability company (LLC)",
-            "children": []
-          },
-          {
-            "id": "1.6",
-            "number": "1.6",
-            "title": "Other types",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "2",
-        "number": "2",
-        "title": "Legal status",
-        "children": []
-      },
-      {
-        "id": "3",
-        "number": "3",
-        "title": "Taxation",
-        "children": []
-      },
-      {
-        "id": "4",
-        "number": "4",
-        "title": "Registration and compliance",
-        "children": []
-      }
-    ]
-  },
-  "note-1767171150532": {
-    "id": "note-1767171150532",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T08:52:30.934816Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": -350.63097437334216,
-        "y": 56.150189308639966
-      },
-      "whiteboard_id": "main",
-      "style": {
-        "width": 350
-      },
-      "url": ""
-    }
-  },
-  "node-1767200403051": {
-    "id": "node-1767200403051",
-    "type": "article",
-    "url": "https://nextjs.org/",
-    "title": "Next.js by Vercel - The React Framework",
-    "content": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in recent versions lies in the introduction of the App Router, which fundamentally changes how React applications are structured and rendered. The App Router leverages React Server Components (RSCs) to shift rendering and data fetching logic to the server, drastically reducing client-side JavaScript bundles and improving initial load times. This architecture supports advanced features like nested routing, shared layouts, and data streaming, ensuring that users see content faster.\n\nThe framework offers unparalleled flexibility in rendering strategies, allowing developers to choose the optimal approach for every route. Options include Static Site Generation (SSG) for maximum speed on static content, Server-Side Rendering (SSR) for dynamic, personalized content, and Incremental Static Regeneration (ISR), which allows static pages to be updated in the background without requiring a full site rebuild. This hybrid approach ensures applications remain fast while handling highly dynamic data requirements.\n\nPerformance is central to the Next.js philosophy. The framework includes built-in optimizations such as automatic image optimization via the `next/image` component, font optimization, and automatic code splitting, ensuring applications meet modern Core Web Vitals standards out of the box. This focus on performance translates directly into better SEO and user engagement.\n\nDeveloper experience is equally prioritized, featuring robust TypeScript support, built-in API routes for creating backend endpoints within the same project, and Fast Refresh for instant feedback during development. The ecosystem is robust, with strong community support and deep integration with Vercel, the platform created by the Next.js team, which provides zero-configuration deployment, edge functions, and global scalability. Next.js is trusted by global brands for building complex, scalable digital experiences, solidifying its status as the leading framework for production-grade React development.",
-    "snippet": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in...",
-    "created_at": "2025-12-31T17:00:03.377691Z",
-    "metadata": {
-      "title": "Next.js by Vercel - The React Framework",
-      "url": "https://nextjs.org/",
-      "whiteboard_id": "main",
-      "style": {
-        "width": 320,
-        "height": 103
-      },
-      "analyzed_by": "ai",
-      "content": "Next.js positions itself as the definitive solution for building modern, high-performance React applications, focusing intensely on speed, reliability, and developer experience. Its core innovation in recent versions lies in the introduction of the App Router, which fundamentally changes how React applications are structured and rendered. The App Router leverages React Server Components (RSCs) to shift rendering and data fetching logic to the server, drastically reducing client-side JavaScript bundles and improving initial load times. This architecture supports advanced features like nested routing, shared layouts, and data streaming, ensuring that users see content faster.\n\nThe framework offers unparalleled flexibility in rendering strategies, allowing developers to choose the optimal approach for every route. Options include Static Site Generation (SSG) for maximum speed on static content, Server-Side Rendering (SSR) for dynamic, personalized content, and Incremental Static Regeneration (ISR), which allows static pages to be updated in the background without requiring a full site rebuild. This hybrid approach ensures applications remain fast while handling highly dynamic data requirements.\n\nPerformance is central to the Next.js philosophy. The framework includes built-in optimizations such as automatic image optimization via the `next/image` component, font optimization, and automatic code splitting, ensuring applications meet modern Core Web Vitals standards out of the box. This focus on performance translates directly into better SEO and user engagement.\n\nDeveloper experience is equally prioritized, featuring robust TypeScript support, built-in API routes for creating backend endpoints within the same project, and Fast Refresh for instant feedback during development. The ecosystem is robust, with strong community support and deep integration with Vercel, the platform created by the Next.js team, which provides zero-configuration deployment, edge functions, and global scalability. Next.js is trusted by global brands for building complex, scalable digital experiences, solidifying its status as the leading framework for production-grade React development.",
-      "position": {
-        "x": -59.86578039385995,
-        "y": -133.06903800140694
-      }
-    },
-    "outline": [
-      {
-        "id": "1",
-        "number": "1",
-        "title": "Core Value Proposition: The React Framework for Production",
-        "children": [
-          {
-            "id": "1.1",
-            "number": "1.1",
-            "title": "Focus on Speed, Reliability, and Scalability",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "2",
-        "number": "2",
-        "title": "Modern Architecture: The App Router",
-        "children": [
-          {
-            "id": "2.1",
-            "number": "2.1",
-            "title": "Leveraging React Server Components (RSCs)",
-            "children": []
-          },
-          {
-            "id": "2.2",
-            "number": "2.2",
-            "title": "Nested Routing, Layouts, and Streaming",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "3",
-        "number": "3",
-        "title": "Flexible Rendering and Data Strategies",
-        "children": [
-          {
-            "id": "3.1",
-            "number": "3.1",
-            "title": "Static Site Generation (SSG) and Server-Side Rendering (SSR)",
-            "children": []
-          },
-          {
-            "id": "3.2",
-            "number": "3.2",
-            "title": "Incremental Static Regeneration (ISR)",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "4",
-        "number": "4",
-        "title": "Built-in Performance and Developer Experience",
-        "children": [
-          {
-            "id": "4.1",
-            "number": "4.1",
-            "title": "Image, Font, and Code Optimizations",
-            "children": []
-          },
-          {
-            "id": "4.2",
-            "number": "4.2",
-            "title": "TypeScript Support and Fast Refresh",
-            "children": []
-          }
-        ]
-      },
-      {
-        "id": "5",
-        "number": "5",
-        "title": "Ecosystem, Deployment, and Adoption",
-        "children": [
-          {
-            "id": "5.1",
-            "number": "5.1",
-            "title": "Vercel Integration and Edge Functions",
-            "children": []
-          },
-          {
-            "id": "5.2",
-            "number": "5.2",
-            "title": "Enterprise Trust and Community Support",
-            "children": []
-          }
-        ]
-      }
-    ]
-  },
-  "web-1767201259421": {
-    "id": "web-1767201259421",
-    "type": "web",
-    "url": "",
-    "title": "nextjs.org",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T17:14:19.741782Z",
-    "metadata": {
-      "url": "https://nextjs.org/docs",
-      "title": "nextjs.org",
-      "favicon": "https://www.google.com/s2/favicons?domain=nextjs.org&sz=32",
-      "whiteboard_id": "main",
-      "position": {
-        "x": -139.78856558517964,
-        "y": 254.31997195905748
-      },
-      "style": {
-        "width": 1162,
-        "height": 931
-      },
-      "content": "",
-      "color": "cyan-500"
-    }
-  },
-  "node-1767206340979-8dpylfyf0": {
-    "id": "node-1767206340979-8dpylfyf0",
-    "type": "article",
-    "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
-    "title": "2008 financial crisis",
-    "content": "The 2008 financial crisis represents a critical inflection point in modern economic history, rooted primarily in the deregulation and excessive risk-taking within the U.S. financial sector, particularly concerning the housing market. The crisis was fundamentally caused by the proliferation of subprime mortgages, loans issued to borrowers with poor credit histories, which fueled an unsustainable housing bubble. These risky loans were packaged into complex financial products, such as Mortgage-Backed Securities (MBS) and Collateralized Debt Obligations (CDOs), and sold globally, often mislabeled with high credit ratings by agencies that failed to accurately assess the underlying risk. When housing prices peaked around 2006 and began to fall, mass defaults occurred, rendering these structured products worthless and exposing the interconnectedness of the global financial system.\n\nThe crisis accelerated dramatically in September 2008 with the government takeover of Fannie Mae and Freddie Mac, followed by the catastrophic failure of Lehman Brothers, which was allowed to file for bankruptcy. This event shattered confidence in the interbank lending market, freezing credit globally and necessitating unprecedented government intervention, including the bailout of AIG and the passage of the Troubled Asset Relief Program (TARP) in the U.S. The shock quickly spread internationally, leading to the Great Recession\u2014a period characterized by high unemployment, sharp declines in global trade, and subsequent sovereign debt crises, particularly in Europe.\n\nRegulatory responses included the Dodd\u2013Frank Wall Street Reform and Consumer Protection Act in the U.S., aimed at increasing transparency, reducing systemic risk by imposing stricter capital requirements, and regulating derivatives. Central banks implemented unconventional monetary policies, such as quantitative easing, to stabilize markets and stimulate growth. The crisis exposed deep flaws in risk management, regulatory oversight, and the moral hazard created by institutions deemed \u201ctoo big to fail,\u201d leading to ongoing debates about the appropriate balance between financial innovation and stability.",
-    "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing market and the subsequent failure of complex financial instruments tied to subprime mortgages. This systemic shock led to the bankruptcy of major institutions like Lehman Brothers and necessitated massive government bailouts, plunging the world into the Great Recession and fundamentally altering global financial regulation.",
-    "created_at": "2025-12-31T18:39:01.287733Z",
-    "metadata": {
-      "title": "2008 financial crisis",
-      "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
-      "whiteboard_id": "main",
-      "style": {
-        "width": 320
-      },
-      "analyzed_by": "ai",
-      "snippet": "The 2008 financial crisis, often considered the most severe economic downturn since the Great Depression, was triggered by the collapse of the U.S. housing market and the subsequent failure of complex financial instruments tied to subprime mortgages. This systemic shock led to the bankruptcy of major institutions like Lehman Brothers and necessitated massive government bailouts, plunging the world into the Great Recession and fundamentally altering global financial regulation.",
-      "outline": [
-        {
-          "id": "1",
-          "number": "1",
-          "title": "Causes",
-          "children": [
-            {
-              "id": "1.1",
-              "number": "1.1",
-              "title": "Housing bubble",
-              "children": []
-            },
-            {
-              "id": "1.2",
-              "number": "1.2",
-              "title": "Subprime lending",
-              "children": []
-            },
-            {
-              "id": "1.3",
-              "number": "1.3",
-              "title": "Securitization",
-              "children": []
-            },
-            {
-              "id": "1.4",
-              "number": "1.4",
-              "title": "Deregulation",
-              "children": []
-            },
-            {
-              "id": "1.5",
-              "number": "1.5",
-              "title": "Monetary policy",
-              "children": []
-            },
-            {
-              "id": "1.6",
-              "number": "1.6",
-              "title": "Credit rating agencies",
-              "children": []
-            },
-            {
-              "id": "1.7",
-              "number": "1.7",
-              "title": "Accounting standards",
-              "children": []
-            },
-            {
-              "id": "1.8",
-              "number": "1.8",
-              "title": "Systemic risk",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "2",
-          "number": "2",
-          "title": "Timeline",
+          "title": "Geography",
           "children": [
             {
               "id": "2.1",
               "number": "2.1",
-              "title": "Early warning signs (2007)",
+              "title": "Topography",
               "children": []
             },
             {
               "id": "2.2",
               "number": "2.2",
-              "title": "Crisis intensifies (2008)",
+              "title": "Climate",
               "children": []
             },
             {
               "id": "2.3",
               "number": "2.3",
-              "title": "Global spread (2008\u20132009)",
+              "title": "Ecology",
               "children": []
             }
           ]
@@ -1057,36 +409,12 @@
         {
           "id": "3",
           "number": "3",
-          "title": "Impact",
+          "title": "Geology",
           "children": [
             {
               "id": "3.1",
               "number": "3.1",
-              "title": "Great Recession",
-              "children": []
-            },
-            {
-              "id": "3.2",
-              "number": "3.2",
-              "title": "Global impact",
-              "children": []
-            },
-            {
-              "id": "3.3",
-              "number": "3.3",
-              "title": "Political impact",
-              "children": []
-            },
-            {
-              "id": "3.4",
-              "number": "3.4",
-              "title": "Social impact",
-              "children": []
-            },
-            {
-              "id": "3.5",
-              "number": "3.5",
-              "title": "Environmental impact",
+              "title": "Indian Plate",
               "children": []
             }
           ]
@@ -1094,18 +422,42 @@
         {
           "id": "4",
           "number": "4",
-          "title": "Responses",
+          "title": "History",
           "children": [
             {
               "id": "4.1",
               "number": "4.1",
-              "title": "United States",
+              "title": "Prehistory",
               "children": []
             },
             {
               "id": "4.2",
               "number": "4.2",
-              "title": "International",
+              "title": "Ancient history",
+              "children": []
+            },
+            {
+              "id": "4.3",
+              "number": "4.3",
+              "title": "Medieval history",
+              "children": []
+            },
+            {
+              "id": "4.4",
+              "number": "4.4",
+              "title": "Early modern period",
+              "children": []
+            },
+            {
+              "id": "4.5",
+              "number": "4.5",
+              "title": "Colonial period",
+              "children": []
+            },
+            {
+              "id": "4.6",
+              "number": "4.6",
+              "title": "Post-colonial era",
               "children": []
             }
           ]
@@ -1113,98 +465,75 @@
         {
           "id": "5",
           "number": "5",
-          "title": "Aftermath and legacy",
+          "title": "Demographics",
           "children": [
             {
               "id": "5.1",
               "number": "5.1",
-              "title": "Regulatory reform",
+              "title": "Population",
               "children": []
             },
             {
               "id": "5.2",
               "number": "5.2",
-              "title": "Economic recovery",
+              "title": "Languages",
               "children": []
             },
             {
               "id": "5.3",
               "number": "5.3",
-              "title": "Ongoing debate",
+              "title": "Religion",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "number": "6",
+          "title": "Politics and economy",
+          "children": [
+            {
+              "id": "6.1",
+              "number": "6.1",
+              "title": "Political entities",
+              "children": []
+            },
+            {
+              "id": "6.2",
+              "number": "6.2",
+              "title": "Economy",
               "children": []
             }
           ]
         }
       ],
       "position": {
-        "x": -49.60816042634747,
-        "y": 160.58512281728122
-      },
-      "selectedTopics": [
-        "2",
-        "2.1",
-        "2.2",
-        "2.3",
-        "1",
-        "1.2",
-        "1.4",
-        "1.7",
-        "1.8",
-        "1.1"
-      ]
+        "x": 276.6896360815633,
+        "y": 623.9628307775986
+      }
     },
     "outline": [
       {
         "id": "1",
         "number": "1",
-        "title": "Causes",
+        "title": "Definition and scope",
         "children": [
           {
             "id": "1.1",
             "number": "1.1",
-            "title": "Housing bubble",
+            "title": "Geographical definition",
             "children": []
           },
           {
             "id": "1.2",
             "number": "1.2",
-            "title": "Subprime lending",
+            "title": "Geological definition",
             "children": []
           },
           {
             "id": "1.3",
             "number": "1.3",
-            "title": "Securitization",
-            "children": []
-          },
-          {
-            "id": "1.4",
-            "number": "1.4",
-            "title": "Deregulation",
-            "children": []
-          },
-          {
-            "id": "1.5",
-            "number": "1.5",
-            "title": "Monetary policy",
-            "children": []
-          },
-          {
-            "id": "1.6",
-            "number": "1.6",
-            "title": "Credit rating agencies",
-            "children": []
-          },
-          {
-            "id": "1.7",
-            "number": "1.7",
-            "title": "Accounting standards",
-            "children": []
-          },
-          {
-            "id": "1.8",
-            "number": "1.8",
-            "title": "Systemic risk",
+            "title": "Cultural definition",
             "children": []
           }
         ]
@@ -1212,24 +541,24 @@
       {
         "id": "2",
         "number": "2",
-        "title": "Timeline",
+        "title": "Geography",
         "children": [
           {
             "id": "2.1",
             "number": "2.1",
-            "title": "Early warning signs (2007)",
+            "title": "Topography",
             "children": []
           },
           {
             "id": "2.2",
             "number": "2.2",
-            "title": "Crisis intensifies (2008)",
+            "title": "Climate",
             "children": []
           },
           {
             "id": "2.3",
             "number": "2.3",
-            "title": "Global spread (2008\u20132009)",
+            "title": "Ecology",
             "children": []
           }
         ]
@@ -1237,36 +566,12 @@
       {
         "id": "3",
         "number": "3",
-        "title": "Impact",
+        "title": "Geology",
         "children": [
           {
             "id": "3.1",
             "number": "3.1",
-            "title": "Great Recession",
-            "children": []
-          },
-          {
-            "id": "3.2",
-            "number": "3.2",
-            "title": "Global impact",
-            "children": []
-          },
-          {
-            "id": "3.3",
-            "number": "3.3",
-            "title": "Political impact",
-            "children": []
-          },
-          {
-            "id": "3.4",
-            "number": "3.4",
-            "title": "Social impact",
-            "children": []
-          },
-          {
-            "id": "3.5",
-            "number": "3.5",
-            "title": "Environmental impact",
+            "title": "Indian Plate",
             "children": []
           }
         ]
@@ -1274,18 +579,42 @@
       {
         "id": "4",
         "number": "4",
-        "title": "Responses",
+        "title": "History",
         "children": [
           {
             "id": "4.1",
             "number": "4.1",
-            "title": "United States",
+            "title": "Prehistory",
             "children": []
           },
           {
             "id": "4.2",
             "number": "4.2",
-            "title": "International",
+            "title": "Ancient history",
+            "children": []
+          },
+          {
+            "id": "4.3",
+            "number": "4.3",
+            "title": "Medieval history",
+            "children": []
+          },
+          {
+            "id": "4.4",
+            "number": "4.4",
+            "title": "Early modern period",
+            "children": []
+          },
+          {
+            "id": "4.5",
+            "number": "4.5",
+            "title": "Colonial period",
+            "children": []
+          },
+          {
+            "id": "4.6",
+            "number": "4.6",
+            "title": "Post-colonial era",
             "children": []
           }
         ]
@@ -1293,92 +622,67 @@
       {
         "id": "5",
         "number": "5",
-        "title": "Aftermath and legacy",
+        "title": "Demographics",
         "children": [
           {
             "id": "5.1",
             "number": "5.1",
-            "title": "Regulatory reform",
+            "title": "Population",
             "children": []
           },
           {
             "id": "5.2",
             "number": "5.2",
-            "title": "Economic recovery",
+            "title": "Languages",
             "children": []
           },
           {
             "id": "5.3",
             "number": "5.3",
-            "title": "Ongoing debate",
+            "title": "Religion",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "number": "6",
+        "title": "Politics and economy",
+        "children": [
+          {
+            "id": "6.1",
+            "number": "6.1",
+            "title": "Political entities",
+            "children": []
+          },
+          {
+            "id": "6.2",
+            "number": "6.2",
+            "title": "Economy",
             "children": []
           }
         ]
       }
     ]
   },
-  "note-1767206820469": {
-    "id": "note-1767206820469",
+  "note-1768851397577": {
+    "id": "note-1768851397577",
     "type": "note",
     "url": "",
     "title": "New Note",
     "content": "",
     "snippet": "",
-    "created_at": "2025-12-31T18:47:00.490076Z",
+    "created_at": "2026-01-19T19:36:37.898777Z",
     "metadata": {
       "title": "New Note",
       "content": "",
       "position": {
-        "x": 677.7858307569852,
-        "y": 519.4120070241595
+        "x": 603.3094132095691,
+        "y": 330.79324335323787
       },
       "whiteboard_id": "main",
       "style": {
         "width": 350
-      }
-    }
-  },
-  "note-1767207119631": {
-    "id": "note-1767207119631",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T18:51:59.954186Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 683.6251013935832,
-        "y": -5.548724470884181
-      },
-      "whiteboard_id": "main",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "web-1767207182483": {
-    "id": "web-1767207182483",
-    "type": "web",
-    "url": "",
-    "title": "en.wikipedia.org",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-31T18:53:02.498168Z",
-    "metadata": {
-      "url": "https://en.wikipedia.org/wiki/2008_financial_crisis",
-      "title": "en.wikipedia.org",
-      "favicon": "https://www.google.com/s2/favicons?domain=en.wikipedia.org&sz=32",
-      "whiteboard_id": "main",
-      "position": {
-        "x": -165.73001866099526,
-        "y": 800.4059597454102
-      },
-      "style": {
-        "width": 842,
-        "height": 622
       }
     }
   }

@@ -34,6 +34,7 @@ import AnnotationNode from './nodes/AnnotationNode';
 import ImageNode from './nodes/ImageNode';
 import CanvasNode from './nodes/CanvasNode';
 import WebNode from './nodes/WebNode';
+import CommentNode from './nodes/CommentNode';
 import dynamic from 'next/dynamic';
 import CanvasImportModal from '../modals/CanvasImportModal';
 import WebUrlModal from '../modals/WebUrlModal';
@@ -52,7 +53,29 @@ import HoverPreview from '../ui/HoverPreview';
 import WhiteboardSelector from './WhiteboardSelector';
 import TemplateModal from '../modals/TemplateModal';
 import ContextMenu from '../ui/ContextMenu';
-import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon, Sparkles, MessageSquare } from 'lucide-react';
+
+// Register all custom node types outside component for performance
+const nodeTypes = {
+    article: ArticleNode,
+    video: VideoNode,
+    synthesis: SynthesisNode,
+    product: ProductNode,
+    code: CodeNode,
+    academic: AcademicNode,
+    ghost: GhostNode,
+    note: NoteNode,
+    image: ImageNode,
+    pdf: PdfNode,
+    group: GroupNode,
+    text: TextNode,
+    annotation: AnnotationNode,
+    canvas: CanvasNode,
+    web: WebNode,
+    comment: CommentNode,
+};
+
+const edgeTypes = {};
 
 // ... other imports
 
@@ -82,6 +105,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [isSynthesizing, setIsSynthesizing] = useState(false);
+    const [synthesisError, setSynthesisError] = useState<string | null>(null);
 
     const [showASTEditor, setShowASTEditor] = useState(false);
     const [initialAST, setInitialAST] = useState<any>(null);
@@ -106,13 +130,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
                 }
 
+                // Check for attached instruction
+                const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
+                const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
+
                 return {
                     node_id: node.id,
                     title: node.data.title || 'Untitled',
                     content: content,
                     url: node.data.url || '',
                     selected_topics: selectedTopics,
-                    outline: node.data.outline || []
+                    outline: node.data.outline || [],
+                    system_instruction: comment?.data?.content
                 };
             });
 
@@ -131,16 +160,15 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         return await synthesisApi.generatePdfFromAST(ast);
     }, []);
 
-    const handleSynthesis = useCallback(async (useDummyData: boolean = false) => {
+    const handleSynthesis = useCallback(async (useDummyDataArg: any = false) => {
+        const useDummyData = useDummyDataArg === true;
         const currentNodes = useGraphStore.getState().nodes;
-        if (currentNodes.length === 0) {
-            // alert("No nodes on canvas to synthesize!"); // Use toast ideally
-            return;
-        }
+        if (currentNodes.length === 0) return;
 
         setShowPdfModal(true);
         setIsSynthesizing(true);
         setPdfUrl(null);
+        setSynthesisError(null);
 
         try {
             // Build context items with full structure for LaTeX endpoint
@@ -154,13 +182,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
                 }
 
+                // Check for attached instruction
+                const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
+                const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
+
                 return {
                     node_id: node.id,
                     title: node.data.title || 'Untitled',
                     content: content,
                     url: node.data.url || '',
                     selected_topics: selectedTopics,
-                    outline: node.data.outline || []
+                    outline: node.data.outline || [],
+                    system_instruction: comment?.data?.content
                 };
             });
 
@@ -174,7 +207,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             const url = URL.createObjectURL(blob);
             setPdfUrl(url);
         } catch (error) {
-            console.error("Synthesis failed:", error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("Synthesis failed:", errorMessage);
+            setSynthesisError(errorMessage);
         } finally {
             setIsSynthesizing(false);
         }
@@ -193,24 +228,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         onPaneClickProp?.();
     }, [selectNode, onPaneClickProp]);
 
-    // Register all custom node types
-    const nodeTypes = useMemo(() => ({
-        article: ArticleNode,
-        video: VideoNode,
-        synthesis: SynthesisNode,
-        product: ProductNode,
-        code: CodeNode,
-        academic: AcademicNode,
-        ghost: GhostNode,
-        note: NoteNode,
-        image: ImageNode,
-        pdf: PdfNode,
-        group: GroupNode,
-        text: TextNode,
-        annotation: AnnotationNode,
-        canvas: CanvasNode,
-        web: WebNode,
-    }), []);
 
     // Fetch nodes on mount or whiteboard change
     React.useEffect(() => {
@@ -567,6 +584,59 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         const selectedNodes = nodes.filter(n => n.selected);
 
         switch (action) {
+            case 'add-instruction': {
+                const node = selectedNodes[0];
+                if (!node || selectedNodes.length !== 1) break;
+
+                // Check existing instruction
+                const store = useGraphStore.getState();
+                const existingEdge = store.edges.find(e =>
+                    e.target === node.id &&
+                    store.nodes.find(n => n.id === e.source)?.type === 'comment'
+                );
+
+                if (existingEdge) {
+                    const confirmReplacement = window.confirm("This node already has a system instruction. Do you want to replace it?");
+                    if (!confirmReplacement) break;
+
+                    // Delete the old comment node and its edge
+                    const oldCommentId = existingEdge.source;
+                    store.removeNode(oldCommentId);
+                }
+
+                const commentId = `comment-${Date.now()}`;
+                const commentNode = {
+                    id: commentId,
+                    type: 'comment',
+                    position: { x: node.position.x, y: node.position.y - 180 }, // Position above
+                    style: { width: 300 },
+                    data: { content: '', parentId: node.id },
+                    parentId: node.id
+                };
+
+                addNode(commentNode);
+                nodesApi.create({
+                    ...commentNode,
+                    title: 'Instruction',
+                    data: { ...commentNode.data, whiteboard_id: activeWhiteboardId }
+                });
+
+                // Add Edge
+                const newEdge = {
+                    id: `e-${commentId}-${node.id}`,
+                    source: commentId,
+                    target: node.id,
+                    type: 'default',
+                    animated: true,
+                    style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
+                };
+                addStoreEdge(newEdge as any);
+
+                // Update parent node to show indicator
+                store.updateNode(node.id, { hasInstruction: true });
+                nodesApi.update(node.id, { metadata: { hasInstruction: true } }).catch(() => { });
+                break;
+            }
             case 'zoom':
                 onFitSelection();
                 break;
@@ -642,6 +712,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     }, [nodes, addNode, onFitSelection, activeWhiteboardId]);
 
     const contextActions = useMemo(() => [
+        { label: 'Add context instruction', onClick: () => handleContextMenuAction('add-instruction'), icon: <MessageSquare size={14} /> },
         { label: 'Zoom to selection', onClick: () => handleContextMenuAction('zoom'), icon: <Scan size={14} /> },
         { label: 'Create group', onClick: () => handleContextMenuAction('group'), icon: <BoxSelect size={14} /> },
         { separator: true, label: '', onClick: () => { } },
@@ -672,12 +743,64 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setHoverPosition(null);
     }, []);
 
+    const isValidConnection = useCallback((connection: Connection) => {
+        const { nodes, edges } = useGraphStore.getState();
+        const sourceNode = nodes.find(n => n.id === connection.source);
+        const targetNode = nodes.find(n => n.id === connection.target);
+
+        // 1. Prevent any node from connecting INTO a comment node
+        if (targetNode?.type === 'comment') {
+            return false;
+        }
+
+        // 2. Strict rules for comment node as source
+        if (sourceNode?.type === 'comment') {
+            // A comment node can only have ONE outgoing connection
+            const hasExistingSourceConnection = edges.some(e => e.source === connection.source);
+            if (hasExistingSourceConnection) return false;
+
+            // A content node can only have ONE incoming instruction
+            const hasExistingTargetInstruction = edges.some(e =>
+                e.target === connection.target &&
+                nodes.find(n => n.id === e.source)?.type === 'comment'
+            );
+            if (hasExistingTargetInstruction) return false;
+
+            // Prevent self-connection (comment to comment is already handled by rule 1)
+            if (connection.source === connection.target) return false;
+        }
+
+        return true;
+    }, []);
+
     const onConnect = useCallback((params: Connection) => {
         didConnectRef.current = true;
-        // Generate a unique ID that includes handle information to allow multiple edges
+        const { nodes, addEdge: addStoreEdge, updateNodeAndPersist } = useGraphStore.getState();
+        const sourceNode = nodes.find(n => n.id === params.source);
+
+        let edgeParams = { ...params };
+
+        if (sourceNode?.type === 'comment') {
+            // Apply special styling for instruction lines
+            edgeParams = {
+                ...params,
+                style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
+                animated: true,
+            } as any;
+
+            // Sync metadata
+            if (params.target) {
+                updateNodeAndPersist(params.target, { hasInstruction: true });
+                updateNodeAndPersist(params.source!, {
+                    parentId: params.target,
+                    data: { ...sourceNode.data, parentId: params.target }
+                });
+            }
+        }
+
         const edgeId = `e${params.source}-${params.sourceHandle || ''}-${params.target}-${params.targetHandle || ''}`;
-        addStoreEdge({ ...params, id: edgeId } as FlowEdge);
-    }, [addStoreEdge]);
+        addStoreEdge({ ...edgeParams, id: edgeId } as FlowEdge);
+    }, []);
 
     const onReconnect = useCallback((oldEdge: FlowEdge, newConnection: Connection) => {
         if (!newConnection.source || !newConnection.target) return;
@@ -797,6 +920,29 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     data: { url: '' },
                 };
                 break;
+            case 'instruction':
+                const store = useGraphStore.getState();
+                const existingEdge = store.edges.find(e =>
+                    e.target === sourceNodeId &&
+                    store.nodes.find(n => n.id === e.source)?.type === 'comment'
+                );
+
+                if (existingEdge) {
+                    const confirmReplacement = window.confirm("This node already has a system instruction. Do you want to replace it?");
+                    if (!confirmReplacement) return;
+
+                    // Delete the old comment node and its edge
+                    store.removeNode(existingEdge.source);
+                }
+
+                newNode = {
+                    id: nodeId,
+                    type: 'comment',
+                    position: flowPos,
+                    style: { width: 300 },
+                    data: { content: '', parentId: sourceNodeId }
+                };
+                break;
             case 'article':
                 const url = prompt("Enter Web Page URL:");
                 if (url) {
@@ -843,13 +989,31 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 else if (sourceHandleId === 'bottom') targetHandleId = 'top';
 
                 const edgeId = `e${sourceNodeId}-${sourceHandleId || ''}-${nodeId}-${targetHandleId}`;
-                addStoreEdge({
-                    id: edgeId,
-                    source: sourceNodeId,
-                    sourceHandle: sourceHandleId,
-                    target: nodeId,
-                    targetHandle: targetHandleId
-                } as FlowEdge);
+
+                if (action === 'instruction') {
+                    // Instruction edge: Comment -> Content
+                    const instEdgeId = `e${nodeId}-${sourceNodeId}`;
+                    addStoreEdge({
+                        id: instEdgeId,
+                        source: nodeId,
+                        target: sourceNodeId,
+                        type: 'default',
+                        animated: true,
+                        style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
+                    } as any);
+
+                    // Update target node metadata
+                    useGraphStore.getState().updateNode(sourceNodeId, { hasInstruction: true });
+                    nodesApi.update(sourceNodeId, { metadata: { hasInstruction: true } }).catch(() => { });
+                } else {
+                    addStoreEdge({
+                        id: edgeId,
+                        source: sourceNodeId,
+                        sourceHandle: sourceHandleId,
+                        target: nodeId,
+                        targetHandle: targetHandleId
+                    } as FlowEdge);
+                }
             }
 
             // Sync to backend (only for non-article or wait for article?)
@@ -1152,6 +1316,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                isValidConnection={isValidConnection}
                 onReconnect={onReconnect}
                 edgesUpdatable={!readOnly}
                 onReconnectStart={onReconnectStart}
@@ -1167,6 +1332,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onNodeMouseLeave={onNodeMouseLeave}
                 onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 defaultEdgeOptions={defaultEdgeOptions}
                 selectionMode={SelectionMode.Partial}
                 selectionOnDrag
@@ -1193,7 +1359,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
                 {!isEmpty && (
                     <MiniMap
-                        className="!bg-neutral-900 !border-neutral-800"
+                        className="bg-neutral-900! border-neutral-800!"
                         maskColor="rgba(0,0,0,0.8)"
                         nodeColor={(node) => {
                             switch (node.type) {
@@ -1311,6 +1477,13 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         >
                             <FileIcon size={14} />
                             Add PDF
+                        </button>
+                        <button
+                            className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800 flex items-center gap-2"
+                            onClick={() => handleConnectionDropAction('instruction')}
+                        >
+                            <MessageSquare size={14} />
+                            Add context instruction
                         </button>
                     </div>
                 </div>

@@ -4,41 +4,9 @@ import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { ArrowLeft, ArrowRight, RotateCw, Globe, Plus, BookmarkPlus, Share2, RefreshCw, X, Loader2 } from 'lucide-react';
 import { useGraphStore, Tab } from '@/store/graph.store';
 import NewTabPage from './NewTabPage';
+import { resolveUrl, extractSearchQuery, normalizeUrl, detectNodeType } from '@/lib/browser-utils';
 
-// URL pattern detectors for smart node typing
-const detectNodeType = (url: string): string => {
-    const lowerUrl = url.toLowerCase();
-
-    // Shopping sites
-    if (lowerUrl.includes('amazon.') || lowerUrl.includes('ebay.') ||
-        lowerUrl.includes('shop') || lowerUrl.includes('product') ||
-        lowerUrl.includes('buy') || lowerUrl.includes('store')) {
-        return 'product';
-    }
-
-    // Video sites
-    if (lowerUrl.includes('youtube.') || lowerUrl.includes('vimeo.') ||
-        lowerUrl.includes('video') || lowerUrl.includes('watch')) {
-        return 'video';
-    }
-
-    // Developer/Code sites
-    if (lowerUrl.includes('stackoverflow.') || lowerUrl.includes('github.') ||
-        lowerUrl.includes('gitlab.') || lowerUrl.includes('docs.') ||
-        lowerUrl.includes('developer.') || lowerUrl.includes('api.')) {
-        return 'code';
-    }
-
-    // Academic sites
-    if (lowerUrl.includes('scholar.') || lowerUrl.includes('arxiv.') ||
-        lowerUrl.includes('journal') || lowerUrl.includes('research') ||
-        lowerUrl.includes('academic') || lowerUrl.includes('.edu')) {
-        return 'academic';
-    }
-
-    // Default to article
-    return 'article';
-};
+// URL pattern detectors for smart node typing moved to browser-utils.ts
 
 // --- Browser Tab Component ---
 interface BrowserTabProps {
@@ -46,16 +14,16 @@ interface BrowserTabProps {
     isActive: boolean;
     onUpdate: (id: string, updates: Partial<Tab>) => void;
     onMount: (id: string, ref: any) => void;
+    onNewTab: (url: string, parentId?: string) => void;
     activeWhiteboardId: string;
 }
 
-const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId }: BrowserTabProps) => {
+const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhiteboardId }: BrowserTabProps) => {
     const webviewRef = useRef<any>(null);
     const [isMounted, setIsMounted] = useState(false);
 
     // Auto-add helper refs
     const processedUrlsRef = useRef<Set<string>>(new Set());
-    const lastNodeIdRef = useRef<string | null>(null);
     const currentTitleRef = useRef(tab.title);
 
     useEffect(() => {
@@ -69,45 +37,20 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
         currentTitleRef.current = tab.title;
     }, [tab.title]);
 
-    // Function to extract search query
-    const extractSearchQuery = (url: string): string | null => {
-        try {
-            const parsed = new URL(url);
-            if ((parsed.hostname.includes('google.') || parsed.hostname.includes('bing.')) && parsed.pathname.includes('/search')) {
-                return parsed.searchParams.get('q');
-            }
-        } catch { }
-        return null;
-    };
-
-    // Helper to normalize URLs
-    const normalizeUrl = (u: string) => {
-        try {
-            const parsed = new URL(u);
-            if (parsed.pathname === '/' || parsed.pathname === '') {
-                return parsed.hostname;
-            }
-            return parsed.hostname + parsed.pathname.replace(/\/$/, '');
-        } catch {
-            return u;
-        }
-    };
+    // detectNodeType remains local or moved? For now let's leave it as it depends on detectNodeType
+    // Actually normalizeUrl and extractSearchQuery were defined inside BrowserTab or BrowserView. 
+    // Let's remove them from there.
 
     // Auto add node logic
     const autoAddNodeToGraph = useCallback((url: string, title: string) => {
         const urlKey = normalizeUrl(url);
         const { nodes, addNode, addEdge } = useGraphStore.getState();
 
-        if (processedUrlsRef.current.has(urlKey)) {
-            const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
-            if (existingNode) lastNodeIdRef.current = existingNode.id;
-            return;
-        }
-
+        // If URL already exists in graph, just update the tab's trace pointer and return
         const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
         if (existingNode) {
+            onUpdate(tab.id, { lastNodeId: existingNode.id });
             processedUrlsRef.current.add(urlKey);
-            lastNodeIdRef.current = existingNode.id;
             return;
         }
 
@@ -115,21 +58,28 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
 
         const nodeType = detectNodeType(url);
         const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const baseX = 100 + (nodes.length % 4) * 280;
-        const baseY = 100 + Math.floor(nodes.length / 4) * 220;
+
+        // Smart Positioning: Place relative to parent if it exists
+        let position = { x: 100 + (nodes.length % 4) * 280, y: 100 + Math.floor(nodes.length / 4) * 220 };
+        const parentNode = tab.lastNodeId ? nodes.find(n => n.id === tab.lastNodeId) : null;
+
+        if (parentNode) {
+            position = {
+                x: parentNode.position.x + (Math.random() * 40 - 20), // Slight jitter
+                y: parentNode.position.y + 200
+            };
+        }
 
         let nodeData: any = {
             title: title || new URL(url).hostname,
             url: url,
             whiteboard_id: activeWhiteboardId
         };
-        // ... (simplified node type logic same as before) 
-        // Keeping it simple for brevity, logic remains same
 
         addNode({
             id: nodeId,
             type: nodeType,
-            position: { x: baseX, y: baseY }, // Ideally smart positioning
+            position,
             style: { width: 320 },
             data: nodeData,
         });
@@ -145,18 +95,21 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
             }).catch(console.error);
         });
 
-        if (lastNodeIdRef.current && lastNodeIdRef.current !== nodeId) {
+        // Link to parent if trace exists
+        if (tab.lastNodeId && tab.lastNodeId !== nodeId) {
             addEdge({
-                id: `e-${lastNodeIdRef.current}-${nodeId}`,
-                source: lastNodeIdRef.current,
+                id: `e-${tab.lastNodeId}-${nodeId}`,
+                source: tab.lastNodeId,
                 sourceHandle: 'bottom',
                 target: nodeId,
                 targetHandle: 'top',
                 animated: true,
             });
         }
-        lastNodeIdRef.current = nodeId;
-    }, [activeWhiteboardId]);
+
+        // Update tab's trace pointer
+        onUpdate(tab.id, { lastNodeId: nodeId });
+    }, [activeWhiteboardId, tab.id, tab.lastNodeId, onUpdate]);
 
     // Webview Event Listeners
     useEffect(() => {
@@ -166,7 +119,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
         const handleDidStartLoading = () => onUpdate(tab.id, { isLoading: true });
         const handleDidStopLoading = () => onUpdate(tab.id, { isLoading: false });
 
-        const handleDidNavigate = (e: any) => {
+        const handleNavigation = (e: any) => {
             const url = e.url;
             let displayInput = url;
             const searchQuery = extractSearchQuery(url);
@@ -181,6 +134,12 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
                     setTimeout(() => {
                         autoAddNodeToGraph(url, currentTitleRef.current || url);
                     }, 500);
+                } else {
+                    // For search pages, we don't create a node, but we MIGHT want to clear the lastNodeId
+                    // if we want to start a new chain? OR we keep it so the next result links to the previous context?
+                    // User said: "Tab A: India (root node) -> Open Delhi (child)"
+                    // If I search for "Delhi" in Tab A, it assumes I'm still in "India" context?
+                    // Let's NOT update lastNodeId for search pages, so the link jumps over the search step.
                 }
             }
         };
@@ -190,10 +149,9 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
 
             // Sync title to graph node
             const { nodes, updateNode } = useGraphStore.getState();
-            const targetNode = nodes.find(n => normalizeUrl(n.data.url || '') === normalizeUrl(tab.url));
+            const targetNode = nodes.find(n => normalizeUrl(n.data?.url || '') === normalizeUrl(tab.url || ''));
             if (targetNode) {
                 updateNode(targetNode.id, { title: e.title });
-                // Backend persist skipped for brevity but should be here
             }
         };
 
@@ -207,20 +165,34 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
             `);
         };
 
+        const handleNewWindow = (e: any) => {
+            // Prevent default popup behavior if possible, or just manage our internal tab
+            // Electron's allowpopups="true" might open a window. We want to intercept.
+            // But with webview, usually we need to listen and maybe prevent default if we want to handle it ourselves.
+            // For now, let's just create our internal tab.
+            if (e.url) {
+                onNewTab(e.url, tab.lastNodeId);
+            }
+        };
+
         webview.addEventListener('did-start-loading', handleDidStartLoading);
         webview.addEventListener('did-stop-loading', handleDidStopLoading);
-        webview.addEventListener('did-navigate', handleDidNavigate);
+        webview.addEventListener('did-navigate', handleNavigation);
+        webview.addEventListener('did-navigate-in-page', handleNavigation);
+        webview.addEventListener('new-window', handleNewWindow);
         webview.addEventListener('page-title-updated', handleTitleUpdate);
         webview.addEventListener('dom-ready', handleDomReady);
 
         return () => {
             webview.removeEventListener('did-start-loading', handleDidStartLoading);
             webview.removeEventListener('did-stop-loading', handleDidStopLoading);
-            webview.removeEventListener('did-navigate', handleDidNavigate);
+            webview.removeEventListener('did-navigate', handleNavigation);
+            webview.removeEventListener('did-navigate-in-page', handleNavigation);
+            webview.removeEventListener('new-window', handleNewWindow);
             webview.removeEventListener('page-title-updated', handleTitleUpdate);
             webview.removeEventListener('dom-ready', handleDomReady);
         };
-    }, [tab.id, onUpdate, autoAddNodeToGraph, tab.url]);
+    }, [tab.id, onUpdate, autoAddNodeToGraph, tab.url, onNewTab, tab.lastNodeId]);
 
     // Ref forwarding on mount
     useEffect(() => {
@@ -234,7 +206,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, activeWhiteboardId 
     if (!tab.url) {
         return (
             <div className="w-full h-full" style={{ display: isActive ? 'block' : 'none' }}>
-                <NewTabPage onNavigate={(url) => onUpdate(tab.id, { url, displayInput: url })} />
+                <NewTabPage onNavigate={(input) => onUpdate(tab.id, { url: resolveUrl(input), displayInput: input })} />
             </div>
         );
     }
@@ -277,7 +249,12 @@ export default function BrowserView() {
         if (s) {
             setTabs(s.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
             setActiveTabId(s.activeTabId || '1');
+        } else {
+            // Reset if no state exists for this whiteboard
+            setTabs([{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
+            setActiveTabId('1');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeWhiteboardId]);
 
     // Sync to store when local state changes
@@ -294,11 +271,18 @@ export default function BrowserView() {
     const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
 
     // Tab Management
-    const addTab = () => {
+    const addTab = useCallback((initialUrl: string = '', parentId?: string) => {
         const newId = Date.now().toString();
-        setTabs(prev => [...prev, { id: newId, url: '', displayInput: '', title: 'New Tab' }]);
+        const newTab: Tab = {
+            id: newId,
+            url: initialUrl,
+            displayInput: initialUrl,
+            title: 'New Tab',
+            lastNodeId: parentId // START TRACE FROM PARENT
+        };
+        setTabs(prev => [...prev, newTab]);
         setActiveTabId(newId);
-    };
+    }, []);
 
     const closeTab = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -335,17 +319,8 @@ export default function BrowserView() {
         const input = overrideUrl || activeTab.displayInput.trim();
         if (!input) return;
 
-        let target: string;
-        if (input.startsWith('http://') || input.startsWith('https://') || /^[\w-]+\.[a-z]{2,}/i.test(input) || input.startsWith('localhost')) {
-            target = input.startsWith('http') ? input : 'https://' + input;
-        } else {
-            target = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
-        }
-
+        const target = resolveUrl(input);
         updateTab(activeTabId, { url: target });
-        // The BrowserTab will see the prop change and the webview will navigate via src prop?
-        // Actually webviews are finicky. Changing src works if it was different.
-        // It's safer to use webview.loadURL() if mounted, but changing src prop is React way.
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -391,7 +366,7 @@ export default function BrowserView() {
                 ))}
 
                 <button
-                    onClick={addTab}
+                    onClick={() => addTab()}
                     className="p-1.5 rounded-lg hover:bg-neutral-800 text-neutral-500 hover:text-white transition-colors"
                 >
                     <Plus size={14} />
@@ -460,6 +435,7 @@ export default function BrowserView() {
                         isActive={tab.id === activeTabId}
                         onUpdate={updateTab}
                         onMount={handleMount}
+                        onNewTab={addTab}
                         activeWhiteboardId={activeWhiteboardId}
                     />
                 ))}

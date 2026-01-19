@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, Bell, Settings, User, Rabbit, LayoutTemplate } from 'lucide-react';
-
+import { CognodeLogo } from '../icons/cognode-logo';
+import UserMenu from './UserMenu';
+import SettingsModal from '../modals/SettingsModal';
 interface HeaderProps {
     onSearch?: (query: string) => void;
     onToggleSidebar?: () => void;
@@ -10,6 +13,42 @@ interface HeaderProps {
 
 export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
     const [searchQuery, setSearchQuery] = React.useState('');
+    const [showSettingsModal, setShowSettingsModal] = React.useState(false);
+    const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        // Check if user is authenticated by checking for token
+        const checkAuth = () => {
+            if (typeof window !== 'undefined') {
+                const token = sessionStorage.getItem('auth_token');
+                setIsAuthenticated(!!token);
+            }
+        };
+
+        // Check on mount
+        checkAuth();
+
+        // Listen for storage changes (when login completes)
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'auth_token') {
+                checkAuth();
+            }
+        };
+
+        // Listen for custom auth events (for same-tab updates)
+        const handleAuthChange = () => {
+            checkAuth();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('auth-state-changed', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('auth-state-changed', handleAuthChange);
+        };
+    }, []);
 
     const handleSearch = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && onSearch) {
@@ -17,17 +56,28 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
         }
     };
 
+    const handleUserClick = () => {
+        if (isAuthenticated) {
+            // TODO: Show user menu/dropdown
+            console.log('User menu');
+        } else {
+            // Navigate to sign-in page
+            router.push('/sign-in');
+        }
+    };
+
     return (
+        <>
         <header
             className="h-14 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between px-4 shrink-0 pr-[140px]"
             style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
         >
             {/* Logo & Brand */}
             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                    <Rabbit size={18} className="text-white" />
+                <div className="w-6 p-[2px] h-6 rounded-lg bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
+                    <CognodeLogo />
                 </div>
-                <span className="font-semibold text-white text-lg tracking-tight">RabbitHole OS</span>
+                <span className="font-semibold text-white text-lg tracking-wider">Cognode</span>
             </div>
 
             {/* Search Bar */}
@@ -59,14 +109,27 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
                 <button className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors">
                     <Bell size={18} />
                 </button>
-                <button className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors">
+                <button 
+                    onClick={() => setShowSettingsModal(true)}
+                    className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors"
+                >
                     <Settings size={18} />
                 </button>
-                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                    <User size={16} className="text-white" />
-                </button>
+                {!isAuthenticated && (
+                    <button 
+                        onClick={handleUserClick}
+                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                    >
+                        <User size={16} />
+                        <span>Sign In</span>
+                    </button>
+                )}
             </div>
         </header>
+
+        {/* Settings Modal */}
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+    </>
     );
 }
 

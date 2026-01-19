@@ -33,6 +33,7 @@ class Chunk:
     source_url: str
     source_title: str
     hierarchy_number: str = ""  # e.g., "1.2.3"
+    system_instruction: str = ""
     
     def estimate_tokens(self) -> int:
         """Estimate token count for this chunk."""
@@ -49,6 +50,7 @@ class NodeContext:
     content: str
     selected_topics: List[str] = field(default_factory=list)
     outline: List[Dict[str, Any]] = field(default_factory=list)
+    system_instruction: str = ""
 
 
 def segment_nodes(nodes: List[NodeContext]) -> List[Chunk]:
@@ -71,7 +73,8 @@ def segment_nodes(nodes: List[NodeContext]) -> List[Chunk]:
                 content=node.content[:TOKEN_LIMITS["topic_chunk"] * CHARS_PER_TOKEN],
                 source_url=node.url,
                 source_title=node.title,
-                hierarchy_number="0"
+                hierarchy_number="0",
+                system_instruction=node.system_instruction
             ))
         else:
             # Extract chunks for selected topics
@@ -82,7 +85,8 @@ def segment_nodes(nodes: List[NodeContext]) -> List[Chunk]:
                 node.title,
                 node.outline,
                 selected_set,
-                node.content
+                node.content,
+                system_instruction=node.system_instruction
             )
             chunks.extend(node_chunks)
     
@@ -96,7 +100,8 @@ def _extract_topic_chunks(
     outline: List[Dict[str, Any]],
     selected_ids: set,
     full_content: str,
-    parent_number: str = ""
+    parent_number: str = "",
+    system_instruction: str = ""
 ) -> List[Chunk]:
     """
     Recursively extract chunks from outline for selected topics.
@@ -125,7 +130,8 @@ def _extract_topic_chunks(
                 content=topic_content,
                 source_url=url,
                 source_title=title,
-                hierarchy_number=hierarchy
+                hierarchy_number=hierarchy,
+                system_instruction=system_instruction
             )
             
             # Enforce token budget per chunk
@@ -137,7 +143,7 @@ def _extract_topic_chunks(
         # Recurse into children
         if children:
             child_chunks = _extract_topic_chunks(
-                node_id, url, title, children, selected_ids, full_content, hierarchy
+                node_id, url, title, children, selected_ids, full_content, hierarchy, system_instruction
             )
             chunks.extend(child_chunks)
     
@@ -255,7 +261,16 @@ def prepare_synthesis_context(chunks: List[Chunk]) -> str:
     for chunk in chunks:
         ref_id = url_to_ref.get(chunk.source_url, "0")
         source_ref = f"[{ref_id}]"
-        part = f"""
+        if chunk.system_instruction:
+            part = f"""
+{source_ref} Source: {chunk.source_title} ({chunk.source_url})
+Topic: {chunk.heading}
+---
+{chunk.content}
+[INSTRUCTION: {chunk.system_instruction}]
+"""
+        else:
+            part = f"""
 {source_ref} Source: {chunk.source_title} ({chunk.source_url})
 Topic: {chunk.heading}
 ---

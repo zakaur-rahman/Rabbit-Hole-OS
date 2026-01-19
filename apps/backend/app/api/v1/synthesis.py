@@ -157,6 +157,7 @@ class ResearchContextItem(BaseModel):
     title: str
     content: str  # Selected topics only or full content
     url: str
+    system_instruction: Optional[str] = None
 
 class ResearchPDFRequest(BaseModel):
     query: str
@@ -175,7 +176,8 @@ async def generate_research_pdf(request: ResearchPDFRequest):
         # 1. Prepare context for LLM
         context_str = ""
         for i, item in enumerate(request.context_items):
-            context_str += f"Source {i+1} - {item.title} ({item.url}):\n{item.content}\n\n"
+            instr = f"\n[INSTRUCTION: {item.system_instruction}]" if item.system_instruction else ""
+            context_str += f"Source {i+1} - {item.title} ({item.url}):\n{item.content}{instr}\n\n"
         
         # 2. Get structured report from AI
         report_data = await generate_research_report(request.query, context_str)
@@ -287,6 +289,7 @@ class ChunkedContextItem(BaseModel):
     url: str
     selected_topics: List[str] = []
     outline: List[dict] = []
+    system_instruction: Optional[str] = None
 
 class ChunkedPDFRequest(BaseModel):
     query: str
@@ -314,7 +317,8 @@ async def generate_chunked_research_pdf(request: ChunkedPDFRequest):
                 title=item.title,
                 content=item.content,
                 selected_topics=item.selected_topics,
-                outline=item.outline
+                outline=item.outline,
+                system_instruction=item.system_instruction or ""
             )
             for item in request.context_items
         ]
@@ -467,7 +471,8 @@ async def generate_latex_research_pdf(request: LaTeXPDFRequest):
                 title=item.title,
                 content=item.content,
                 selected_topics=item.selected_topics,
-                outline=item.outline
+                outline=item.outline,
+                system_instruction=item.system_instruction or ""
             )
             for item in request.context_items
         ]
@@ -629,7 +634,8 @@ async def generate_ast_pdf(request: ASTPDFRequest):
                 title=item.title,
                 content=item.content,
                 selected_topics=item.selected_topics,
-                outline=item.outline
+                outline=item.outline,
+                system_instruction=item.system_instruction or ""
             )
             for item in request.context_items
         ]

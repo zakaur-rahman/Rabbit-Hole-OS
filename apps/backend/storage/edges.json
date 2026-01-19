@@ -1,132 +1,32 @@
 {
-  "board-1766493934571": {
-    "edge-1766499795210": {
-      "id": "edge-1766499795210",
-      "source": "note-1766499337408",
-      "target": "note-1766499348667",
-      "sourceHandle": "bottom",
-      "targetHandle": "top",
-      "type": "default",
-      "animated": false,
-      "style": null,
-      "data": null,
-      "whiteboard_id": "board-1766493934571"
-    }
-  },
-  "board-1766333112453": {
-    "enote-1766508477978-bottom-note-1766508482934-top": {
-      "id": "enote-1766508477978-bottom-note-1766508482934-top",
-      "source": "note-1766508477978",
-      "target": "note-1766508482934",
-      "sourceHandle": "bottom",
-      "targetHandle": "top",
-      "type": "default",
-      "animated": false,
-      "style": null,
-      "data": null,
-      "whiteboard_id": "board-1766333112453"
-    },
-    "enote-1766508482934-bottom-note-1766508488756-top": {
-      "id": "enote-1766508482934-bottom-note-1766508488756-top",
-      "source": "note-1766508482934",
-      "target": "note-1766508488756",
-      "sourceHandle": "bottom",
-      "targetHandle": "top",
-      "type": "default",
-      "animated": false,
-      "style": null,
-      "data": null,
-      "whiteboard_id": "board-1766333112453"
-    }
-  },
-  "board-1766500366804": {
-    "enote-1766500378108-right-note-1766500388986-left": {
-      "id": "enote-1766500378108-right-note-1766500388986-left",
-      "source": "note-1766500378108",
-      "target": "note-1766500388986",
-      "sourceHandle": "right",
-      "targetHandle": "left",
-      "type": "simplebezier",
-      "animated": false,
-      "style": {
-        "stroke": "#9ca3af",
-        "strokeWidth": 2,
-        "strokeDasharray": "none"
-      },
-      "data": null,
-      "whiteboard_id": "board-1766500366804"
-    }
-  },
   "main": {
-    "enode-1767112084103-left-note-1767171150532-right": {
-      "id": "enode-1767112084103-left-note-1767171150532-right",
-      "source": "node-1767112084103",
-      "target": "note-1767171150532",
-      "sourceHandle": "left",
-      "targetHandle": "right",
-      "type": "simplebezier",
-      "animated": false,
-      "style": {
-        "stroke": "#9ca3af",
-        "strokeWidth": 2,
-        "strokeDasharray": "none"
-      },
-      "data": null,
-      "whiteboard_id": "main"
-    },
-    "enode-1767206340979-8dpylfyf0-right-note-1767206820469-left": {
-      "id": "enode-1767206340979-8dpylfyf0-right-note-1767206820469-left",
-      "source": "node-1767206340979-8dpylfyf0",
-      "target": "note-1767206820469",
-      "sourceHandle": "right",
-      "targetHandle": "left",
-      "type": "default",
-      "animated": false,
-      "style": null,
-      "data": null,
-      "whiteboard_id": "main"
-    },
-    "enode-1767206340979-8dpylfyf0-right-note-1767207119631-left": {
-      "id": "enode-1767206340979-8dpylfyf0-right-note-1767207119631-left",
-      "source": "node-1767206340979-8dpylfyf0",
-      "target": "note-1767207119631",
-      "sourceHandle": "right",
-      "targetHandle": "left",
-      "type": "default",
-      "animated": false,
-      "style": null,
-      "data": null,
-      "whiteboard_id": "main"
-    },
-    "eweb-1767207182483-top-node-1767206340979-8dpylfyf0-bottom": {
-      "id": "eweb-1767207182483-top-node-1767206340979-8dpylfyf0-bottom",
-      "source": "web-1767207182483",
-      "target": "node-1767206340979-8dpylfyf0",
-      "sourceHandle": "top",
-      "targetHandle": "bottom",
-      "type": "simplebezier",
-      "animated": false,
-      "style": {
-        "stroke": "#9ca3af",
-        "strokeWidth": 2,
-        "strokeDasharray": "none"
-      },
-      "data": null,
-      "whiteboard_id": "main"
-    }
-  },
-  "board-1766514738109": {
-    "e-node-1767115267476-node-1767116134825": {
-      "id": "e-node-1767115267476-node-1767116134825",
-      "source": "node-1767115267476",
-      "target": "node-1767116134825",
+    "e-node-1768851357801-ipawur5ng-node-1768851372669-vtaks563d": {
+      "id": "e-node-1768851357801-ipawur5ng-node-1768851372669-vtaks563d",
+      "source": "node-1768851357801-ipawur5ng",
+      "target": "node-1768851372669-vtaks563d",
       "sourceHandle": "bottom",
       "targetHandle": "top",
       "type": "default",
       "animated": true,
       "style": null,
       "data": null,
-      "whiteboard_id": "board-1766514738109"
+      "whiteboard_id": "main"
+    },
+    "enode-1768851357801-ipawur5ng-right-note-1768851397577-left": {
+      "id": "enode-1768851357801-ipawur5ng-right-note-1768851397577-left",
+      "source": "node-1768851357801-ipawur5ng",
+      "target": "note-1768851397577",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "type": "simplebezier",
+      "animated": false,
+      "style": {
+        "stroke": "#9ca3af",
+        "strokeWidth": 2,
+        "strokeDasharray": "none"
+      },
+      "data": null,
+      "whiteboard_id": "main"
     }
   }
 }
