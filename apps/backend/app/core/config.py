@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "RabbitHole OS"
     # DATABASE_URL - MUST use postgresql+asyncpg:// for async operations
     # If .env has postgresql://, it will be converted to postgresql+asyncpg:// in database.py
-    DATABASE_URL: str = "postgresql+asyncpg://neondb_owner:npg_lSBda1CeV4Kg@ep-frosty-lab-a459nw67-pooler.us-east-1.aws.neon.tech/neondb?ssl=require"
+    DATABASE_URL: str = ""
     
     # AI API Keys
     CHUTES_API_KEY: Optional[str] = None
@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     
     # Redis Configuration (Upstash Redis)
     # Default values from Upstash dashboard (override in .env file if needed)
-    UPSTASH_REDIS_REST_URL: str = "https://free-ewe-10710.upstash.io"
-    UPSTASH_REDIS_REST_TOKEN: str = "ASnWAAIncDIxNThkMTIxNjZiMzM0MjU40D11Mz1jNWFhMTRhNWIxZXAYMTA3MTA"
+    UPSTASH_REDIS_REST_URL: str = ""
+    UPSTASH_REDIS_REST_TOKEN: str = ""
     
     # Legacy Redis config (deprecated, use UPSTASH_REDIS_* instead)
     REDIS_URL: Optional[str] = None
