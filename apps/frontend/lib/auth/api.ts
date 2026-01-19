@@ -13,7 +13,17 @@ export interface User {
 export interface Session {
   id: string;
   device_id: string | null;
+  device_name: string | null;
+  platform: string | null;
+  app_version: string | null;
+  user_agent: string | null;
+  ip_address: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  timezone: string | null;
   created_at: string;
+  last_active_at: string;
   expires_at: string;
   revoked_at: string | null;
   is_current: boolean;

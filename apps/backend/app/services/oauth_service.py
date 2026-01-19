@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 from app.models.session import Session
+from app.services.geo_service import get_location_from_ip
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta
@@ -18,7 +19,13 @@ async def exchange_google_code(
     code: str,
     code_verifier: str,
     redirect_uri: str,
-    db: AsyncSession
+    db: AsyncSession,
+    device_id: Optional[str] = None,
+    device_name: Optional[str] = None,
+    platform: Optional[str] = None,
+    app_version: Optional[str] = None,
+    user_agent: Optional[str] = None,
+    ip_address: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Exchange Google OAuth authorization code for tokens
@@ -127,10 +134,23 @@ async def exchange_google_code(
     refresh_token = create_refresh_token({"sub": str(user.id), "session_id": None})
     refresh_token_hash = hash_refresh_token(refresh_token)
     
+    # Resolve location from IP
+    location = await get_location_from_ip(ip_address) if ip_address else {}
+
     # Create session
     session = Session(
         user_id=user.id,
         refresh_token_hash=refresh_token_hash,
+        device_id=device_id,
+        device_name=device_name,
+        platform=platform,
+        app_version=app_version,
+        user_agent=user_agent,
+        ip_address=ip_address,
+        country=location.get("country"),
+        region=location.get("region"),
+        city=location.get("city"),
+        timezone=location.get("timezone"),
         created_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS),
     )

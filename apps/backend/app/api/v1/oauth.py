@@ -1,7 +1,7 @@
 """
 OAuth 2.0 API endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List
@@ -12,7 +12,7 @@ from app.core.redis_client import get_redis, RedisKeys
 from app.services.oauth_service import exchange_google_code
 from app.models.user import User
 from app.models.session import Session
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update, func
 from datetime import datetime, timedelta
 from upstash_redis.asyncio import Redis
 
@@ -25,6 +25,11 @@ class OAuthExchangeRequest(BaseModel):
     code_verifier: str
     state: Optional[str] = None
     redirect_uri: Optional[str] = None  # The redirect URI used in the OAuth request
+    device_id: Optional[str] = None
+    device_name: Optional[str] = None
+    platform: Optional[str] = None
+    app_version: Optional[str] = None
+    user_agent: Optional[str] = None
 
 
 class RefreshTokenRequest(BaseModel):
@@ -53,7 +58,17 @@ class UserResponse(BaseModel):
 class SessionResponse(BaseModel):
     id: str
     device_id: Optional[str]
+    device_name: Optional[str]
+    platform: Optional[str] = None
+    app_version: Optional[str] = None
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+    country: Optional[str] = None
+    region: Optional[str] = None
+    city: Optional[str] = None
+    timezone: Optional[str] = None
     created_at: Optional[datetime] = None
+    last_active_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
     revoked_at: Optional[datetime] = None
     is_current: bool = False
@@ -102,12 +117,31 @@ async def get_current_user(
             detail="User not found",
         )
     
+    # Update last_active_at for the current session
+    session_id = payload.get("session_id")
+    if session_id:
+        try:
+            # Update last_active_at using a background-style approach to not block the user too much
+            # but still await it to ensure it happens. In a real prod environment, 
+            # we might throttle this to once every minute per session.
+            await db.execute(
+                update(Session)
+                .where(Session.id == uuid_lib.UUID(session_id))
+                .values(last_active_at=func.now())
+            )
+            await db.commit()
+        except Exception as e:
+            # We don't want session timestamp failure to block the whole app request
+            print(f"Failed to update session activity: {e}")
+            await db.rollback()
+
     return user
 
 
 @router.post("/oauth/google/exchange", response_model=TokenResponse)
 async def exchange_code(
     request: OAuthExchangeRequest,
+    req: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -118,14 +152,27 @@ async def exchange_code(
         # The redirect URI must match what was used in the OAuth request (http://127.0.0.1:PORT/oauth/callback)
         redirect_uri = request.redirect_uri or "http://127.0.0.1:53682/oauth/callback"
         
-        result = await exchange_google_code(
+        # Capture client IP (handle proxies)
+        forwarded = req.headers.get("X-Forwarded-For")
+        if forwarded:
+            ip_address = forwarded.split(",")[0].strip()
+        else:
+            ip_address = req.client.host if req.client else None
+
+        token_response = await exchange_google_code(
             code=request.code,
             code_verifier=request.code_verifier,
-            redirect_uri=redirect_uri,
+            redirect_uri=request.redirect_uri,
             db=db,
+            device_id=request.device_id,
+            device_name=request.device_name,
+            platform=request.platform,
+            app_version=request.app_version,
+            user_agent=request.user_agent or req.headers.get("User-Agent"),
+            ip_address=ip_address
         )
         
-        return TokenResponse(**result)
+        return TokenResponse(**token_response)
     except ValueError as e:
         # ValueError includes validation errors and clear error messages
         raise HTTPException(
@@ -300,6 +347,15 @@ async def list_sessions(
         SessionResponse(
             id=str(session.id),
             device_id=session.device_id,
+            device_name=session.device_name,
+            platform=session.platform,
+            app_version=session.app_version,
+            user_agent=session.user_agent,
+            ip_address=session.ip_address,
+            country=session.country,
+            region=session.region,
+            city=session.city,
+            timezone=session.timezone,
             created_at=session.created_at or (session.expires_at - timedelta(days=30)),
             expires_at=session.expires_at,
             revoked_at=session.revoked_at,

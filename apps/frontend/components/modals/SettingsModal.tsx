@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, User, Shield, Settings as SettingsIcon, ChevronRight, Mail, Calendar, AlertCircle, 
-  Trash2, Monitor, Smartphone, Tablet, CheckCircle2, Infinity, ArrowRight, 
-  Box, Cloud, Wrench, FileText, Layers, Globe, ChevronsRight, ExternalLink, 
-  RotateCcw, Keyboard, Code, Download, LogOut
+import {
+  X, User, Shield, Settings as SettingsIcon, ChevronRight, Mail, Calendar, AlertCircle,
+  Trash2, Monitor, Smartphone, Tablet, CheckCircle2, Infinity, ArrowRight,
+  Box, Cloud, Wrench, FileText, Layers, Globe, ChevronsRight, ExternalLink,
+  RotateCcw, Keyboard, Code, Download, LogOut, MapPin, Apple, Laptop
 } from 'lucide-react';
 import { getCurrentUser, getSessions, revokeSession, revokeAllSessions, User as UserType, Session } from '@/lib/auth/api';
 import { logout } from '@/lib/auth/logout';
@@ -135,7 +135,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         const token = sessionStorage.getItem('auth_token');
         const authenticated = !!token;
         setIsAuthenticated(authenticated);
-        
+
         if (authenticated) {
           // Only load user if we don't have cached data
           if (!user) {
@@ -158,7 +158,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         const token = sessionStorage.getItem('auth_token');
         const authenticated = !!token;
         setIsAuthenticated(authenticated);
-        
+
         if (authenticated) {
           // Refresh user data when auth state changes (e.g., after login)
           loadUser();
@@ -216,16 +216,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } catch (err) {
       console.error('Failed to load sessions:', err);
       let errorMessage = 'Failed to load sessions';
-      
+
       if (err instanceof Error) {
         errorMessage = err.message;
         if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
           errorMessage = 'Cannot connect to backend server. Please ensure the backend is running.';
         }
       }
-      
+
       setSessionsError(errorMessage);
-      
+
       if (err instanceof Error && (errorMessage.includes('401') || errorMessage.includes('Not authenticated') || errorMessage.includes('Invalid or expired token'))) {
         await logout();
         onClose();
@@ -241,7 +241,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setRevokingSessionId(sessionId);
       await revokeSession(sessionId);
       await loadSessions();
-      
+
       const currentSession = sessions.find(s => s.is_current && s.id === sessionId);
       if (currentSession) {
         await logout();
@@ -270,17 +270,20 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   };
 
-  const getDeviceIcon = (deviceId: string | null) => {
-    if (!deviceId) return <Monitor size={18} className="text-neutral-400" />;
-    
-    const lower = deviceId.toLowerCase();
-    if (lower.includes('mobile') || lower.includes('iphone') || lower.includes('android')) {
-      return <Smartphone size={18} className="text-neutral-400" />;
+  const getDeviceIcon = (session: Session) => {
+    const platform = session.platform?.toLowerCase() || '';
+    const deviceId = session.device_id?.toLowerCase() || '';
+
+    if (platform.includes('mac') || platform.includes('apple')) return <Apple size={20} className="text-neutral-300" />;
+    if (platform.includes('win')) return <Laptop size={20} className="text-neutral-300" />;
+
+    if (deviceId.includes('mobile') || deviceId.includes('iphone') || deviceId.includes('android')) {
+      return <Smartphone size={20} className="text-neutral-300" />;
     }
-    if (lower.includes('tablet') || lower.includes('ipad')) {
-      return <Tablet size={18} className="text-neutral-400" />;
+    if (deviceId.includes('tablet') || deviceId.includes('ipad')) {
+      return <Tablet size={20} className="text-neutral-300" />;
     }
-    return <Monitor size={18} className="text-neutral-400" />;
+    return <Monitor size={20} className="text-neutral-300" />;
   };
 
   const formatDate = (dateString: string) => {
@@ -295,11 +298,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
   };
 
@@ -313,7 +316,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (diffDays === 0) return 'Expires today';
     if (diffDays === 1) return 'Expires tomorrow';
     if (diffDays < 7) return `Expires in ${diffDays} days`;
-    
+
     return `Expires ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   };
 
@@ -443,17 +446,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           <button
                             key={item.id}
                             onClick={() => setSelectedItem(item.id)}
-                            className={`w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 group ${
-                              isSelected
-                                ? 'bg-green-500/10 text-green-400'
-                                : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-                            }`}
+                            className={`w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 group ${isSelected
+                              ? 'bg-green-500/10 text-green-400'
+                              : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
+                              }`}
                           >
                             <Icon
                               size={18}
-                              className={`flex-shrink-0 ${
-                                isSelected ? 'text-green-400' : 'text-neutral-400 group-hover:text-neutral-300'
-                              }`}
+                              className={`flex-shrink-0 ${isSelected ? 'text-green-400' : 'text-neutral-400 group-hover:text-neutral-300'
+                                }`}
                             />
                             <span className="text-sm font-medium flex-1">{item.title}</span>
                           </button>
@@ -523,14 +524,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                             <button
                               onClick={() => setSyncLayouts(!syncLayouts)}
-                              className={`relative w-11 h-6 rounded-full transition-colors ${
-                                syncLayouts ? 'bg-green-500' : 'bg-neutral-700'
-                              }`}
+                              className={`relative w-11 h-6 rounded-full transition-colors ${syncLayouts ? 'bg-green-500' : 'bg-neutral-700'
+                                }`}
                             >
                               <span
-                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                  syncLayouts ? 'translate-x-5' : 'translate-x-0'
-                                }`}
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${syncLayouts ? 'translate-x-5' : 'translate-x-0'
+                                  }`}
                               />
                             </button>
                           </div>
@@ -727,60 +726,91 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           {sessions.map((session) => (
                             <div
                               key={session.id}
-                              className={`bg-neutral-800 border rounded-lg p-6 ${
-                                session.is_current
-                                  ? 'border-green-500/30 bg-green-500/5'
-                                  : 'border-neutral-700'
-                              }`}
+                              className={`bg-neutral-800/50 border rounded-xl p-5 hover:bg-neutral-800 transition-all duration-200 ${session.is_current
+                                ? 'border-green-500/30 bg-green-500/5 shadow-[0_0_20px_-12px_rgba(34,197,94,0.3)]'
+                                : 'border-neutral-700/50'
+                                }`}
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4 flex-1">
-                                  <div className="w-12 h-12 rounded-lg bg-neutral-700 flex items-center justify-center">
-                                    {getDeviceIcon(session.device_id)}
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-start gap-4 flex-1">
+                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${session.is_current ? 'bg-green-500/10' : 'bg-neutral-700/50'
+                                    }`}>
+                                    {getDeviceIcon(session)}
                                   </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h3 className="text-sm font-medium text-white">
-                                        {session.device_id || 'Unknown Device'}
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                                      <h3 className="text-sm font-semibold text-white truncate">
+                                        {session.device_name || session.device_id || 'Unknown Device'}
                                       </h3>
                                       {session.is_current && (
-                                        <span className="px-2 py-0.5 text-xs font-medium text-green-400 bg-green-500/10 rounded">
-                                          Current Session
+                                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-400 bg-green-500/10 rounded-full border border-green-500/20">
+                                          Current
+                                        </span>
+                                      )}
+                                      {session.app_version && (
+                                        <span className="text-[10px] text-neutral-500 bg-neutral-900 px-1.5 py-0.5 rounded">
+                                          v{session.app_version}
                                         </span>
                                       )}
                                     </div>
-                                    <div className="flex items-center gap-4 text-xs text-neutral-400">
-                                      <span>Created {formatDate(session.created_at)}</span>
-                                      <span>•</span>
-                                      <span>{formatExpiry(session.expires_at)}</span>
+
+                                    <div className="flex flex-col gap-1.5">
+                                      <div className="flex items-center gap-3 text-xs">
+                                        {(session.city || session.country) ? (
+                                          <div className="flex items-center gap-1 text-neutral-300">
+                                            <MapPin size={12} className="text-neutral-500" />
+                                            <span>
+                                              {session.city ? `${session.city}, ` : ''}{session.country || 'Unknown Location'}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <div className="flex items-center gap-1 text-neutral-400 italic">
+                                            <Globe size={12} className="text-neutral-500" />
+                                            <span>Location not available</span>
+                                          </div>
+                                        )}
+                                        {session.ip_address && (
+                                          <span className="text-neutral-600 font-mono text-[10px]">
+                                            {session.ip_address}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <div className="flex items-center gap-4 text-[11px] text-neutral-500">
+                                        <span>
+                                          {session.is_current ? 'Active now' : `Last active ${formatDate(session.last_active_at)}`}
+                                        </span>
+                                        <span className="w-1 h-1 rounded-full bg-neutral-700" />
+                                        <span className={new Date(session.expires_at) < new Date() ? 'text-red-400' : ''}>
+                                          {formatExpiry(session.expires_at)}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                                {!session.is_current && (
-                                  <button
-                                    onClick={() => handleRevokeSession(session.id)}
-                                    disabled={revokingSessionId === session.id}
-                                    className="px-4 py-2 text-sm text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                  >
-                                    {revokingSessionId === session.id ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                                        <span>Revoking...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Trash2 size={16} />
-                                        <span>Revoke</span>
-                                      </>
-                                    )}
-                                  </button>
-                                )}
-                                {session.is_current && (
-                                  <div className="px-4 py-2 text-sm text-green-400 flex items-center gap-2">
-                                    <CheckCircle2 size={16} />
-                                    <span>Active</span>
-                                  </div>
-                                )}
+
+                                <div className="flex items-center self-center">
+                                  {!session.is_current ? (
+                                    <button
+                                      onClick={() => handleRevokeSession(session.id)}
+                                      disabled={revokingSessionId === session.id}
+                                      className="p-2.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 group relative"
+                                      title="Revoke session"
+                                    >
+                                      {revokingSessionId === session.id ? (
+                                        <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                      ) : (
+                                        <Trash2 size={18} className="group-hover:scale-110 transition-transform" />
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <div className="px-3 py-1.5 text-xs font-medium text-green-400 flex items-center gap-2 bg-green-500/5 rounded-lg border border-green-500/10">
+                                      <CheckCircle2 size={14} />
+                                      <span>Active Now</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ))}

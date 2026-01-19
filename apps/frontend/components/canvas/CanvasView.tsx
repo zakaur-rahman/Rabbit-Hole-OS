@@ -55,6 +55,28 @@ import TemplateModal from '../modals/TemplateModal';
 import ContextMenu from '../ui/ContextMenu';
 import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, Undo, File as FileIcon, Image as ImageIcon, Sparkles, MessageSquare } from 'lucide-react';
 
+// Register all custom node types outside component for performance
+const nodeTypes = {
+    article: ArticleNode,
+    video: VideoNode,
+    synthesis: SynthesisNode,
+    product: ProductNode,
+    code: CodeNode,
+    academic: AcademicNode,
+    ghost: GhostNode,
+    note: NoteNode,
+    image: ImageNode,
+    pdf: PdfNode,
+    group: GroupNode,
+    text: TextNode,
+    annotation: AnnotationNode,
+    canvas: CanvasNode,
+    web: WebNode,
+    comment: CommentNode,
+};
+
+const edgeTypes = {};
+
 // ... other imports
 
 interface CanvasViewProps {
@@ -206,25 +228,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         onPaneClickProp?.();
     }, [selectNode, onPaneClickProp]);
 
-    // Register all custom node types
-    const nodeTypes = useMemo(() => ({
-        article: ArticleNode,
-        video: VideoNode,
-        synthesis: SynthesisNode,
-        product: ProductNode,
-        code: CodeNode,
-        academic: AcademicNode,
-        ghost: GhostNode,
-        note: NoteNode,
-        image: ImageNode,
-        pdf: PdfNode,
-        group: GroupNode,
-        text: TextNode,
-        annotation: AnnotationNode,
-        canvas: CanvasNode,
-        web: WebNode,
-        comment: CommentNode,
-    }), []);
 
     // Fetch nodes on mount or whiteboard change
     React.useEffect(() => {
@@ -607,7 +610,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     type: 'comment',
                     position: { x: node.position.x, y: node.position.y - 180 }, // Position above
                     style: { width: 300 },
-                    data: { content: '', parentId: node.id }
+                    data: { content: '', parentId: node.id },
+                    parentId: node.id
                 };
 
                 addNode(commentNode);
@@ -787,7 +791,10 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             // Sync metadata
             if (params.target) {
                 updateNodeAndPersist(params.target, { hasInstruction: true });
-                updateNodeAndPersist(params.source!, { data: { ...sourceNode.data, parentId: params.target } });
+                updateNodeAndPersist(params.source!, {
+                    parentId: params.target,
+                    data: { ...sourceNode.data, parentId: params.target }
+                });
             }
         }
 
@@ -1325,6 +1332,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onNodeMouseLeave={onNodeMouseLeave}
                 onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 defaultEdgeOptions={defaultEdgeOptions}
                 selectionMode={SelectionMode.Partial}
                 selectionOnDrag
