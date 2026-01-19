@@ -6,6 +6,7 @@ import { buildGoogleOAuthURL, generateState, storePKCEVerifier } from '@/lib/aut
 import { AUTH_CONFIG, getRedirectUri, isElectron, getOAuthPort } from '@/lib/auth/config';
 import { CognodeLogo } from '@/components/icons/cognode-logo';
 import { X } from 'lucide-react';
+import { getDeviceInfo } from '@/lib/auth/device';
 
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function SignInPage() {
 
       const state = generateState();
       const redirectUri = getRedirectUri(); // Uses loopback redirect: http://127.0.0.1:53682/oauth/callback
-      
+
       const { url, codeVerifier } = await buildGoogleOAuthURL({
         clientId: AUTH_CONFIG.GOOGLE_CLIENT_ID,
         redirectUri,
@@ -54,11 +55,11 @@ export default function SignInPage() {
       }
 
       const port = getOAuthPort();
-      
+
       // Start login - opens browser and waits for callback via loopback server
       // Returns callback directly (handled by Electron main process)
       const callback = await electronAuth.startLogin(url, port);
-        
+
       if (callback.error) {
         throw new Error(callback.error);
       }
@@ -66,20 +67,20 @@ export default function SignInPage() {
       if (!callback.code || !callback.state) {
         throw new Error('Invalid callback data received');
       }
-      
+
       // First, check if backend is accessible (before attempting token exchange)
       const healthUrl = `${AUTH_CONFIG.API_BASE_URL}/health`;
       try {
         // Use a timeout promise for compatibility
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 5000)
         );
-        
+
         const healthResponse = await Promise.race([
           fetch(healthUrl, { method: 'GET' }),
           timeoutPromise
         ]) as Response;
-        
+
         if (!healthResponse.ok) {
           throw new Error(`Backend health check failed: HTTP ${healthResponse.status}`);
         }
@@ -87,19 +88,19 @@ export default function SignInPage() {
         console.log('Backend health check passed:', healthData);
       } catch (healthError) {
         console.error('Backend health check failed:', healthError);
-        const errorMessage = healthError instanceof Error 
-          ? healthError.message 
+        const errorMessage = healthError instanceof Error
+          ? healthError.message
           : 'Unknown error';
         throw new Error(
           `Cannot connect to backend server at ${AUTH_CONFIG.API_BASE_URL}. ${errorMessage}. ` +
           `Please ensure the backend is running: cd apps/backend && python -m uvicorn app.main:app --reload`
         );
       }
-      
+
       // Exchange code with backend
       const exchangeUrl = `${AUTH_CONFIG.API_BASE_URL}/api/v1/oauth/google/exchange`;
       console.log('Exchanging code with backend:', exchangeUrl);
-      
+
       let response: Response;
       try {
         response = await fetch(exchangeUrl, {
@@ -112,6 +113,7 @@ export default function SignInPage() {
             code_verifier: codeVerifier,
             state: callback.state,
             redirect_uri: redirectUri,
+            ...getDeviceInfo()
           }),
         });
       } catch (fetchError) {
@@ -136,7 +138,7 @@ export default function SignInPage() {
       }
 
       const data = await response.json();
-      
+
       // Store tokens securely
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('auth_token', data.access_token);

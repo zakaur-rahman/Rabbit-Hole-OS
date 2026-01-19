@@ -24,10 +24,19 @@ console.log('Is Packaged App:', isPackagedApp, 'Is Dev:', isDev);
 process.on('unhandledRejection', (reason, promise) => {
     const errorString = String(reason);
     // Ignore ERR_ABORTED errors from GUEST_VIEW_MANAGER_CALL (common in webviews during redirects/cancellations)
-    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && errorString.includes('ERR_ABORTED')) {
+    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && (errorString.includes('ERR_ABORTED') || errorString.includes('(-3)'))) {
         return;
     }
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Also catch uncaughtException for the same pattern
+process.on('uncaughtException', (error) => {
+    const errorString = String(error);
+    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && (errorString.includes('ERR_ABORTED') || errorString.includes('(-3)'))) {
+        return;
+    }
+    console.error('Uncaught Exception:', error);
 });
 
 let mainWindow: BrowserWindow | null = null;

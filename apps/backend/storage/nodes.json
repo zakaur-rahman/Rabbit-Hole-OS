@@ -1,218 +1,382 @@
 {
-  "note-1766499337408": {
-    "id": "note-1766499337408",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:15:37.424605Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 150.6255247614373,
-        "y": 207.21513298536735
-      },
-      "whiteboard_id": "board-1766493934571"
-    }
-  },
-  "note-1766499348667": {
-    "id": "note-1766499348667",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:15:48.679349Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 293.7625052366517,
-        "y": 170.80664341646548
-      },
-      "whiteboard_id": "board-1766493934571",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1766500378108": {
-    "id": "note-1766500378108",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:32:58.445141Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 116.96673072440875,
-        "y": 292.7100029763915
-      },
-      "whiteboard_id": "board-1766500366804"
-    }
-  },
-  "note-1766500388986": {
-    "id": "note-1766500388986",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T14:33:09.001262Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 581.2285643745676,
-        "y": 432.2696500001016
-      },
-      "whiteboard_id": "board-1766500366804",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1766508477978": {
-    "id": "note-1766508477978",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:47:57.985379Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 164.4798672951722,
-        "y": -16.808563439211866
-      },
-      "whiteboard_id": "board-1766333112453",
-      "style": {
-        "width": 419,
-        "height": 178
-      },
-      "url": "",
-      "color": "violet-500"
-    }
-  },
-  "note-1766508482934": {
-    "id": "note-1766508482934",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:48:02.943805Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 414.92687740881024,
-        "y": 249.90443387314366
-      },
-      "whiteboard_id": "board-1766333112453",
-      "url": ""
-    }
-  },
-  "note-1766508488756": {
-    "id": "note-1766508488756",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:48:08.764751Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 213.92080991076682,
-        "y": 486.2522275246892
-      },
-      "whiteboard_id": "board-1766333112453",
-      "style": {
-        "width": 350
-      }
-    }
-  },
-  "note-1766508545875": {
-    "id": "note-1766508545875",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2025-12-23T16:49:06.201391Z",
-    "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": -227.8507670080098,
-        "y": 305.12588098799074
-      },
-      "whiteboard_id": "board-1766333112453"
-    }
-  },
-  "node-1767116134825": {
-    "id": "node-1767116134825",
+  "node-1768851357801-ipawur5ng": {
+    "id": "node-1768851357801-ipawur5ng",
     "type": "article",
-    "url": "https://en.wikipedia.org/wiki/Business_entity",
-    "title": "Business entity",
-    "content": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. This separation is fundamental, primarily determining the extent of personal liability and the method of taxation. The article details several primary types of entities, ranging from the simplest to the most complex.\n\nThe simplest form is the Sole Proprietorship, where the owner and the business are legally inseparable, meaning the owner assumes full personal liability for all business debts. Partnerships involve two or more individuals agreeing to share profits and losses; liability varies depending on whether it is a general partnership (full liability for all partners) or a limited partnership (where some partners have limited liability but less management control).\n\nCorporations represent the most complex structure, characterized by separate legal personhood. This means the corporation itself is liable for its debts, providing shareholders with limited liability\u2014their personal assets are protected. Corporations are often subject to 'double taxation' (C-Corps), where profits are taxed at the corporate level and then dividends are taxed again when distributed to shareholders. S-Corps offer a way to avoid this by allowing profits and losses to be passed through directly to the owners\u2019 personal income without being subject to corporate tax rates.\n\nThe Limited Liability Company (LLC) is a popular hybrid structure, offering the limited liability protection of a corporation while retaining the flexible, pass-through taxation of a partnership. The article also touches upon Cooperatives, which are owned and controlled by the people who use their services.\n\nLegal status is paramount; the degree of separation dictates the level of protection afforded to the owners. Entities with separate legal personality face higher registration and compliance burdens, including mandatory annual filings, detailed record-keeping, and adherence to corporate governance rules. Ultimately, the selection of a business entity is a strategic decision based on the desired balance between liability protection, tax efficiency, and administrative complexity.",
-    "snippet": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. Thi...",
-    "created_at": "2025-12-30T17:35:36.993012Z",
+    "url": "https://en.wikipedia.org/wiki/India",
+    "title": "India",
+    "content": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense linguistic, cultural, and geographical diversity. Its history spans five millennia, marked by the rise and fall of various empires and significant contributions to world civilization, including the Indus Valley Civilization. Modern India emerged from British colonial rule in 1947, establishing itself as a secular, socialist republic. The economy is one of the fastest-growing major economies globally, driven by services, industry, and agriculture, though it continues to grapple with significant developmental challenges and inequality.",
+    "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
+    "created_at": "2026-01-19T19:35:58.110994Z",
     "metadata": {
-      "title": "Business entity",
-      "url": "https://en.wikipedia.org/wiki/Business_entity",
-      "whiteboard_id": "board-1766514738109",
+      "title": "India",
+      "url": "https://en.wikipedia.org/wiki/India",
+      "whiteboard_id": "main",
+      "style": {
+        "width": 320
+      },
       "analyzed_by": "ai",
-      "snippet": "A business entity is an organization established to carry on commercial or professional activities, typically structured to be legally and financially distinct from its owners. These structures are crucial as they determine liability, taxation, and regulatory compliance requirements. The choice of entity type, such as a sole proprietorship, partnership, or corporation, significantly impacts the operational framework and risk exposure of the business.",
+      "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
       "outline": [
         {
           "id": "1",
           "number": "1",
-          "title": "Types of business entities",
+          "title": "Etymology",
+          "children": []
+        },
+        {
+          "id": "2",
+          "number": "2",
+          "title": "History",
+          "children": [
+            {
+              "id": "2.1",
+              "number": "2.1",
+              "title": "Prehistoric and ancient",
+              "children": []
+            },
+            {
+              "id": "2.2",
+              "number": "2.2",
+              "title": "Medieval",
+              "children": []
+            },
+            {
+              "id": "2.3",
+              "number": "2.3",
+              "title": "Early modern",
+              "children": []
+            },
+            {
+              "id": "2.4",
+              "number": "2.4",
+              "title": "British Raj",
+              "children": []
+            },
+            {
+              "id": "2.5",
+              "number": "2.5",
+              "title": "Independence",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "number": "3",
+          "title": "Geography",
+          "children": [
+            {
+              "id": "3.1",
+              "number": "3.1",
+              "title": "Climate",
+              "children": []
+            },
+            {
+              "id": "3.2",
+              "number": "3.2",
+              "title": "Biodiversity",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "number": "4",
+          "title": "Government and politics",
+          "children": [
+            {
+              "id": "4.1",
+              "number": "4.1",
+              "title": "Political system",
+              "children": []
+            },
+            {
+              "id": "4.2",
+              "number": "4.2",
+              "title": "Foreign relations",
+              "children": []
+            },
+            {
+              "id": "4.3",
+              "number": "4.3",
+              "title": "Military",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "number": "5",
+          "title": "Economy",
+          "children": [
+            {
+              "id": "5.1",
+              "number": "5.1",
+              "title": "Sectors",
+              "children": []
+            },
+            {
+              "id": "5.2",
+              "number": "5.2",
+              "title": "Science and technology",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "number": "6",
+          "title": "Demographics",
+          "children": [
+            {
+              "id": "6.1",
+              "number": "6.1",
+              "title": "Languages",
+              "children": []
+            },
+            {
+              "id": "6.2",
+              "number": "6.2",
+              "title": "Religion",
+              "children": []
+            },
+            {
+              "id": "6.3",
+              "number": "6.3",
+              "title": "Urbanisation",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "number": "7",
+          "title": "Culture",
+          "children": [
+            {
+              "id": "7.1",
+              "number": "7.1",
+              "title": "Arts",
+              "children": []
+            },
+            {
+              "id": "7.2",
+              "number": "7.2",
+              "title": "Cuisine",
+              "children": []
+            },
+            {
+              "id": "7.3",
+              "number": "7.3",
+              "title": "Sports",
+              "children": []
+            }
+          ]
+        }
+      ],
+      "position": {
+        "x": 43.10701409809144,
+        "y": 79.85040082640734
+      }
+    },
+    "outline": [
+      {
+        "id": "1",
+        "number": "1",
+        "title": "Etymology",
+        "children": []
+      },
+      {
+        "id": "2",
+        "number": "2",
+        "title": "History",
+        "children": [
+          {
+            "id": "2.1",
+            "number": "2.1",
+            "title": "Prehistoric and ancient",
+            "children": []
+          },
+          {
+            "id": "2.2",
+            "number": "2.2",
+            "title": "Medieval",
+            "children": []
+          },
+          {
+            "id": "2.3",
+            "number": "2.3",
+            "title": "Early modern",
+            "children": []
+          },
+          {
+            "id": "2.4",
+            "number": "2.4",
+            "title": "British Raj",
+            "children": []
+          },
+          {
+            "id": "2.5",
+            "number": "2.5",
+            "title": "Independence",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Geography",
+        "children": [
+          {
+            "id": "3.1",
+            "number": "3.1",
+            "title": "Climate",
+            "children": []
+          },
+          {
+            "id": "3.2",
+            "number": "3.2",
+            "title": "Biodiversity",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "number": "4",
+        "title": "Government and politics",
+        "children": [
+          {
+            "id": "4.1",
+            "number": "4.1",
+            "title": "Political system",
+            "children": []
+          },
+          {
+            "id": "4.2",
+            "number": "4.2",
+            "title": "Foreign relations",
+            "children": []
+          },
+          {
+            "id": "4.3",
+            "number": "4.3",
+            "title": "Military",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "number": "5",
+        "title": "Economy",
+        "children": [
+          {
+            "id": "5.1",
+            "number": "5.1",
+            "title": "Sectors",
+            "children": []
+          },
+          {
+            "id": "5.2",
+            "number": "5.2",
+            "title": "Science and technology",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "number": "6",
+        "title": "Demographics",
+        "children": [
+          {
+            "id": "6.1",
+            "number": "6.1",
+            "title": "Languages",
+            "children": []
+          },
+          {
+            "id": "6.2",
+            "number": "6.2",
+            "title": "Religion",
+            "children": []
+          },
+          {
+            "id": "6.3",
+            "number": "6.3",
+            "title": "Urbanisation",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "number": "7",
+        "title": "Culture",
+        "children": [
+          {
+            "id": "7.1",
+            "number": "7.1",
+            "title": "Arts",
+            "children": []
+          },
+          {
+            "id": "7.2",
+            "number": "7.2",
+            "title": "Cuisine",
+            "children": []
+          },
+          {
+            "id": "7.3",
+            "number": "7.3",
+            "title": "Sports",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "node-1768851372669-vtaks563d": {
+    "id": "node-1768851372669-vtaks563d",
+    "type": "article",
+    "url": "https://en.wikipedia.org/wiki/Indian_subcontinent",
+    "title": "Indian subcontinent",
+    "content": "The Indian subcontinent is a massive geographical region in South Asia, defined primarily by the Indian Plate. It encompasses the countries of India, Pakistan, Bangladesh, Nepal, Bhutan, Sri Lanka, and the Maldives. Geographically, it is demarcated by the Himalayas in the north and the Indian Ocean surrounding the peninsula. The region is characterized by immense cultural, linguistic, and religious diversity, having been the birthplace of major world religions like Hinduism, Buddhism, Jainism, and Sikhism. Its history is marked by ancient civilizations, powerful empires, and colonial rule, leading to the modern political map of independent nations.",
+    "snippet": "The Indian subcontinent, also known as South Asia, is a peninsular region in Southern Asia, generally considered to project southwards from the main body of the Eurasian continent, lying south of the Himalayas. It is bordered by the mountains to the north and the Indian Ocean to the south, east, and west.",
+    "created_at": "2026-01-19T19:36:12.671993Z",
+    "metadata": {
+      "title": "Indian subcontinent",
+      "url": "https://en.wikipedia.org/wiki/Indian_subcontinent",
+      "whiteboard_id": "main",
+      "style": {
+        "width": 320
+      },
+      "analyzed_by": "ai",
+      "snippet": "The Indian subcontinent, also known as South Asia, is a peninsular region in Southern Asia, generally considered to project southwards from the main body of the Eurasian continent, lying south of the Himalayas. It is bordered by the mountains to the north and the Indian Ocean to the south, east, and west.",
+      "outline": [
+        {
+          "id": "1",
+          "number": "1",
+          "title": "Definition and scope",
           "children": [
             {
               "id": "1.1",
               "number": "1.1",
-              "title": "Sole proprietorship",
+              "title": "Geographical definition",
               "children": []
             },
             {
               "id": "1.2",
               "number": "1.2",
-              "title": "Partnership",
+              "title": "Geological definition",
               "children": []
             },
             {
               "id": "1.3",
               "number": "1.3",
-              "title": "Corporation",
-              "children": []
-            },
-            {
-              "id": "1.4",
-              "number": "1.4",
-              "title": "Cooperative",
-              "children": []
-            },
-            {
-              "id": "1.5",
-              "number": "1.5",
-              "title": "Limited liability company (LLC)",
-              "children": []
-            },
-            {
-              "id": "1.6",
-              "number": "1.6",
-              "title": "Other types",
+              "title": "Cultural definition",
               "children": []
             }
           ]
@@ -220,72 +384,156 @@
         {
           "id": "2",
           "number": "2",
-          "title": "Legal status",
-          "children": []
+          "title": "Geography",
+          "children": [
+            {
+              "id": "2.1",
+              "number": "2.1",
+              "title": "Topography",
+              "children": []
+            },
+            {
+              "id": "2.2",
+              "number": "2.2",
+              "title": "Climate",
+              "children": []
+            },
+            {
+              "id": "2.3",
+              "number": "2.3",
+              "title": "Ecology",
+              "children": []
+            }
+          ]
         },
         {
           "id": "3",
           "number": "3",
-          "title": "Taxation",
-          "children": []
+          "title": "Geology",
+          "children": [
+            {
+              "id": "3.1",
+              "number": "3.1",
+              "title": "Indian Plate",
+              "children": []
+            }
+          ]
         },
         {
           "id": "4",
           "number": "4",
-          "title": "Registration and compliance",
-          "children": []
+          "title": "History",
+          "children": [
+            {
+              "id": "4.1",
+              "number": "4.1",
+              "title": "Prehistory",
+              "children": []
+            },
+            {
+              "id": "4.2",
+              "number": "4.2",
+              "title": "Ancient history",
+              "children": []
+            },
+            {
+              "id": "4.3",
+              "number": "4.3",
+              "title": "Medieval history",
+              "children": []
+            },
+            {
+              "id": "4.4",
+              "number": "4.4",
+              "title": "Early modern period",
+              "children": []
+            },
+            {
+              "id": "4.5",
+              "number": "4.5",
+              "title": "Colonial period",
+              "children": []
+            },
+            {
+              "id": "4.6",
+              "number": "4.6",
+              "title": "Post-colonial era",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "number": "5",
+          "title": "Demographics",
+          "children": [
+            {
+              "id": "5.1",
+              "number": "5.1",
+              "title": "Population",
+              "children": []
+            },
+            {
+              "id": "5.2",
+              "number": "5.2",
+              "title": "Languages",
+              "children": []
+            },
+            {
+              "id": "5.3",
+              "number": "5.3",
+              "title": "Religion",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "number": "6",
+          "title": "Politics and economy",
+          "children": [
+            {
+              "id": "6.1",
+              "number": "6.1",
+              "title": "Political entities",
+              "children": []
+            },
+            {
+              "id": "6.2",
+              "number": "6.2",
+              "title": "Economy",
+              "children": []
+            }
+          ]
         }
       ],
       "position": {
-        "x": 164.46721967171618,
-        "y": 52.828863654841896
-      },
-      "style": {
-        "width": 320
-      },
-      "content": "The concept of a business entity defines an organizational structure created to conduct business, trade, or professional activities, existing separately from the individuals who own or operate it. This separation is fundamental, primarily determining the extent of personal liability and the method of taxation. The article details several primary types of entities, ranging from the simplest to the most complex.\n\nThe simplest form is the Sole Proprietorship, where the owner and the business are legally inseparable, meaning the owner assumes full personal liability for all business debts. Partnerships involve two or more individuals agreeing to share profits and losses; liability varies depending on whether it is a general partnership (full liability for all partners) or a limited partnership (where some partners have limited liability but less management control).\n\nCorporations represent the most complex structure, characterized by separate legal personhood. This means the corporation itself is liable for its debts, providing shareholders with limited liability\u2014their personal assets are protected. Corporations are often subject to 'double taxation' (C-Corps), where profits are taxed at the corporate level and then dividends are taxed again when distributed to shareholders. S-Corps offer a way to avoid this by allowing profits and losses to be passed through directly to the owners\u2019 personal income without being subject to corporate tax rates.\n\nThe Limited Liability Company (LLC) is a popular hybrid structure, offering the limited liability protection of a corporation while retaining the flexible, pass-through taxation of a partnership. The article also touches upon Cooperatives, which are owned and controlled by the people who use their services.\n\nLegal status is paramount; the degree of separation dictates the level of protection afforded to the owners. Entities with separate legal personality face higher registration and compliance burdens, including mandatory annual filings, detailed record-keeping, and adherence to corporate governance rules. Ultimately, the selection of a business entity is a strategic decision based on the desired balance between liability protection, tax efficiency, and administrative complexity.",
-      "color": "orange-500"
+        "x": 276.6896360815633,
+        "y": 623.9628307775986
+      }
     },
     "outline": [
       {
         "id": "1",
         "number": "1",
-        "title": "Types of business entities",
+        "title": "Definition and scope",
         "children": [
           {
             "id": "1.1",
             "number": "1.1",
-            "title": "Sole proprietorship",
+            "title": "Geographical definition",
             "children": []
           },
           {
             "id": "1.2",
             "number": "1.2",
-            "title": "Partnership",
+            "title": "Geological definition",
             "children": []
           },
           {
             "id": "1.3",
             "number": "1.3",
-            "title": "Corporation",
-            "children": []
-          },
-          {
-            "id": "1.4",
-            "number": "1.4",
-            "title": "Cooperative",
-            "children": []
-          },
-          {
-            "id": "1.5",
-            "number": "1.5",
-            "title": "Limited liability company (LLC)",
-            "children": []
-          },
-          {
-            "id": "1.6",
-            "number": "1.6",
-            "title": "Other types",
+            "title": "Cultural definition",
             "children": []
           }
         ]
@@ -293,21 +541,149 @@
       {
         "id": "2",
         "number": "2",
-        "title": "Legal status",
-        "children": []
+        "title": "Geography",
+        "children": [
+          {
+            "id": "2.1",
+            "number": "2.1",
+            "title": "Topography",
+            "children": []
+          },
+          {
+            "id": "2.2",
+            "number": "2.2",
+            "title": "Climate",
+            "children": []
+          },
+          {
+            "id": "2.3",
+            "number": "2.3",
+            "title": "Ecology",
+            "children": []
+          }
+        ]
       },
       {
         "id": "3",
         "number": "3",
-        "title": "Taxation",
-        "children": []
+        "title": "Geology",
+        "children": [
+          {
+            "id": "3.1",
+            "number": "3.1",
+            "title": "Indian Plate",
+            "children": []
+          }
+        ]
       },
       {
         "id": "4",
         "number": "4",
-        "title": "Registration and compliance",
-        "children": []
+        "title": "History",
+        "children": [
+          {
+            "id": "4.1",
+            "number": "4.1",
+            "title": "Prehistory",
+            "children": []
+          },
+          {
+            "id": "4.2",
+            "number": "4.2",
+            "title": "Ancient history",
+            "children": []
+          },
+          {
+            "id": "4.3",
+            "number": "4.3",
+            "title": "Medieval history",
+            "children": []
+          },
+          {
+            "id": "4.4",
+            "number": "4.4",
+            "title": "Early modern period",
+            "children": []
+          },
+          {
+            "id": "4.5",
+            "number": "4.5",
+            "title": "Colonial period",
+            "children": []
+          },
+          {
+            "id": "4.6",
+            "number": "4.6",
+            "title": "Post-colonial era",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "number": "5",
+        "title": "Demographics",
+        "children": [
+          {
+            "id": "5.1",
+            "number": "5.1",
+            "title": "Population",
+            "children": []
+          },
+          {
+            "id": "5.2",
+            "number": "5.2",
+            "title": "Languages",
+            "children": []
+          },
+          {
+            "id": "5.3",
+            "number": "5.3",
+            "title": "Religion",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "number": "6",
+        "title": "Politics and economy",
+        "children": [
+          {
+            "id": "6.1",
+            "number": "6.1",
+            "title": "Political entities",
+            "children": []
+          },
+          {
+            "id": "6.2",
+            "number": "6.2",
+            "title": "Economy",
+            "children": []
+          }
+        ]
       }
     ]
+  },
+  "note-1768851397577": {
+    "id": "note-1768851397577",
+    "type": "note",
+    "url": "",
+    "title": "New Note",
+    "content": "",
+    "snippet": "",
+    "created_at": "2026-01-19T19:36:37.898777Z",
+    "metadata": {
+      "title": "New Note",
+      "content": "",
+      "position": {
+        "x": 603.3094132095691,
+        "y": 330.79324335323787
+      },
+      "whiteboard_id": "main",
+      "style": {
+        "width": 350
+      }
+    }
   }
 }

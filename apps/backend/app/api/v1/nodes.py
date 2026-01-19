@@ -233,6 +233,8 @@ async def list_nodes(
     filtered = [n for n in nodes if n.get("metadata", {}).get("whiteboard_id", "main") == whiteboard_id]
     
     print(f"[DEBUG] list_nodes: whiteboard_id={whiteboard_id}, total_nodes={original_count}, returning={len(filtered)}")
+    print(f"[DEBUG] All nodes: {[(n['id'], n.get('metadata', {}).get('whiteboard_id'), n.get('title')) for n in nodes]}")
+    print(f"[DEBUG] Filtered nodes: {[n['id'] for n in filtered]}")
 
     if type:
         filtered = [n for n in filtered if n.get("type") == type]
