@@ -1,12 +1,12 @@
 {
-  "node-1768851357801-ipawur5ng": {
-    "id": "node-1768851357801-ipawur5ng",
+  "node-1768932960978-g4mw6hgo7": {
+    "id": "node-1768932960978-g4mw6hgo7",
     "type": "article",
     "url": "https://en.wikipedia.org/wiki/India",
     "title": "India",
-    "content": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense linguistic, cultural, and geographical diversity. Its history spans five millennia, marked by the rise and fall of various empires and significant contributions to world civilization, including the Indus Valley Civilization. Modern India emerged from British colonial rule in 1947, establishing itself as a secular, socialist republic. The economy is one of the fastest-growing major economies globally, driven by services, industry, and agriculture, though it continues to grapple with significant developmental challenges and inequality.",
+    "content": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense geographical and climatic diversity, ranging from the Himalayan peaks in the north to tropical coastlines. The nation has a rich, complex history spanning millennia, marked by the rise and fall of various empires and significant cultural contributions. Modern India emerged from British colonial rule in 1947 and has since developed into a major global economic and political power, known for its diverse linguistic landscape, vibrant cultural traditions, and significant advancements in science and technology. Its economy is one of the fastest-growing in the world.",
     "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
-    "created_at": "2026-01-19T19:35:58.110994Z",
+    "created_at": "2026-01-20T18:16:00.985919Z",
     "metadata": {
       "title": "India",
       "url": "https://en.wikipedia.org/wiki/India",
@@ -31,19 +31,19 @@
             {
               "id": "2.1",
               "number": "2.1",
-              "title": "Prehistoric and ancient",
+              "title": "Prehistory and ancient history",
               "children": []
             },
             {
               "id": "2.2",
               "number": "2.2",
-              "title": "Medieval",
+              "title": "Medieval history",
               "children": []
             },
             {
               "id": "2.3",
               "number": "2.3",
-              "title": "Early modern",
+              "title": "Early modern period",
               "children": []
             },
             {
@@ -55,7 +55,7 @@
             {
               "id": "2.5",
               "number": "2.5",
-              "title": "Independence",
+              "title": "Independence and partition",
               "children": []
             }
           ]
@@ -175,8 +175,8 @@
         }
       ],
       "position": {
-        "x": 43.10701409809144,
-        "y": 79.85040082640734
+        "x": 100,
+        "y": 100
       }
     },
     "outline": [
@@ -194,19 +194,19 @@
           {
             "id": "2.1",
             "number": "2.1",
-            "title": "Prehistoric and ancient",
+            "title": "Prehistory and ancient history",
             "children": []
           },
           {
             "id": "2.2",
             "number": "2.2",
-            "title": "Medieval",
+            "title": "Medieval history",
             "children": []
           },
           {
             "id": "2.3",
             "number": "2.3",
-            "title": "Early modern",
+            "title": "Early modern period",
             "children": []
           },
           {
@@ -218,7 +218,7 @@
           {
             "id": "2.5",
             "number": "2.5",
-            "title": "Independence",
+            "title": "Independence and partition",
             "children": []
           }
         ]
@@ -338,48 +338,29 @@
       }
     ]
   },
-  "node-1768851372669-vtaks563d": {
-    "id": "node-1768851372669-vtaks563d",
+  "node-1768935155755-cc6t9189s": {
+    "id": "node-1768935155755-cc6t9189s",
     "type": "article",
-    "url": "https://en.wikipedia.org/wiki/Indian_subcontinent",
-    "title": "Indian subcontinent",
-    "content": "The Indian subcontinent is a massive geographical region in South Asia, defined primarily by the Indian Plate. It encompasses the countries of India, Pakistan, Bangladesh, Nepal, Bhutan, Sri Lanka, and the Maldives. Geographically, it is demarcated by the Himalayas in the north and the Indian Ocean surrounding the peninsula. The region is characterized by immense cultural, linguistic, and religious diversity, having been the birthplace of major world religions like Hinduism, Buddhism, Jainism, and Sikhism. Its history is marked by ancient civilizations, powerful empires, and colonial rule, leading to the modern political map of independent nations.",
-    "snippet": "The Indian subcontinent, also known as South Asia, is a peninsular region in Southern Asia, generally considered to project southwards from the main body of the Eurasian continent, lying south of the Himalayas. It is bordered by the mountains to the north and the Indian Ocean to the south, east, and west.",
-    "created_at": "2026-01-19T19:36:12.671993Z",
+    "url": "https://en.wikipedia.org/wiki/South_Asia",
+    "title": "South Asia",
+    "content": "South Asia is a geographically and culturally diverse region in the southern part of Asia, encompassing a significant portion of the Indian subcontinent. It is characterized by high population density and rapid economic growth in several nations, though it also faces considerable challenges related to poverty and development. The region's history is marked by ancient civilizations, colonial rule, and the subsequent partition of British India, which heavily influenced the modern political map. Key features include the Himalayas in the north, the Indo-Gangetic Plain, and extensive coastlines, supporting diverse climates and ecosystems. Major religions originating here include Hinduism, Buddhism, Jainism, and Sikhism.",
+    "snippet": "South Asia is a region in the southern region of the Asian continent. It generally includes the countries of India, Pakistan, Bangladesh, Sri Lanka, Nepal, Bhutan, and the Maldives. The region is home to nearly two billion people, making it the most populous region in the world.",
+    "created_at": "2026-01-20T18:52:36.067418Z",
     "metadata": {
-      "title": "Indian subcontinent",
-      "url": "https://en.wikipedia.org/wiki/Indian_subcontinent",
+      "title": "South Asia",
+      "url": "https://en.wikipedia.org/wiki/South_Asia",
       "whiteboard_id": "main",
       "style": {
         "width": 320
       },
       "analyzed_by": "ai",
-      "snippet": "The Indian subcontinent, also known as South Asia, is a peninsular region in Southern Asia, generally considered to project southwards from the main body of the Eurasian continent, lying south of the Himalayas. It is bordered by the mountains to the north and the Indian Ocean to the south, east, and west.",
+      "snippet": "South Asia is a region in the southern region of the Asian continent. It generally includes the countries of India, Pakistan, Bangladesh, Sri Lanka, Nepal, Bhutan, and the Maldives. The region is home to nearly two billion people, making it the most populous region in the world.",
       "outline": [
         {
           "id": "1",
           "number": "1",
-          "title": "Definition and scope",
-          "children": [
-            {
-              "id": "1.1",
-              "number": "1.1",
-              "title": "Geographical definition",
-              "children": []
-            },
-            {
-              "id": "1.2",
-              "number": "1.2",
-              "title": "Geological definition",
-              "children": []
-            },
-            {
-              "id": "1.3",
-              "number": "1.3",
-              "title": "Cultural definition",
-              "children": []
-            }
-          ]
+          "title": "Etymology",
+          "children": []
         },
         {
           "id": "2",
@@ -389,19 +370,13 @@
             {
               "id": "2.1",
               "number": "2.1",
-              "title": "Topography",
+              "title": "Climate",
               "children": []
             },
             {
               "id": "2.2",
               "number": "2.2",
-              "title": "Climate",
-              "children": []
-            },
-            {
-              "id": "2.3",
-              "number": "2.3",
-              "title": "Ecology",
+              "title": "Biodiversity",
               "children": []
             }
           ]
@@ -409,12 +384,18 @@
         {
           "id": "3",
           "number": "3",
-          "title": "Geology",
+          "title": "Demographics",
           "children": [
             {
               "id": "3.1",
               "number": "3.1",
-              "title": "Indian Plate",
+              "title": "Languages",
+              "children": []
+            },
+            {
+              "id": "3.2",
+              "number": "3.2",
+              "title": "Religion",
               "children": []
             }
           ]
@@ -427,37 +408,25 @@
             {
               "id": "4.1",
               "number": "4.1",
-              "title": "Prehistory",
+              "title": "Prehistory and ancient history",
               "children": []
             },
             {
               "id": "4.2",
               "number": "4.2",
-              "title": "Ancient history",
+              "title": "Medieval history",
               "children": []
             },
             {
               "id": "4.3",
               "number": "4.3",
-              "title": "Medieval history",
+              "title": "Colonial era",
               "children": []
             },
             {
               "id": "4.4",
               "number": "4.4",
-              "title": "Early modern period",
-              "children": []
-            },
-            {
-              "id": "4.5",
-              "number": "4.5",
-              "title": "Colonial period",
-              "children": []
-            },
-            {
-              "id": "4.6",
-              "number": "4.6",
-              "title": "Post-colonial era",
+              "title": "Post-independence",
               "children": []
             }
           ]
@@ -465,24 +434,12 @@
         {
           "id": "5",
           "number": "5",
-          "title": "Demographics",
+          "title": "Politics and government",
           "children": [
             {
               "id": "5.1",
               "number": "5.1",
-              "title": "Population",
-              "children": []
-            },
-            {
-              "id": "5.2",
-              "number": "5.2",
-              "title": "Languages",
-              "children": []
-            },
-            {
-              "id": "5.3",
-              "number": "5.3",
-              "title": "Religion",
+              "title": "International relations",
               "children": []
             }
           ]
@@ -490,53 +447,59 @@
         {
           "id": "6",
           "number": "6",
-          "title": "Politics and economy",
+          "title": "Economy",
           "children": [
             {
               "id": "6.1",
               "number": "6.1",
-              "title": "Political entities",
+              "title": "Poverty and development",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "number": "7",
+          "title": "Culture",
+          "children": [
+            {
+              "id": "7.1",
+              "number": "7.1",
+              "title": "Cuisine",
               "children": []
             },
             {
-              "id": "6.2",
-              "number": "6.2",
-              "title": "Economy",
+              "id": "7.2",
+              "number": "7.2",
+              "title": "Music and dance",
+              "children": []
+            },
+            {
+              "id": "7.3",
+              "number": "7.3",
+              "title": "Cinema",
               "children": []
             }
           ]
         }
       ],
       "position": {
-        "x": 276.6896360815633,
-        "y": 623.9628307775986
-      }
+        "x": 521.4557663376493,
+        "y": 397.552768454016
+      },
+      "selectedTopics": [
+        "2",
+        "2.1",
+        "2.2"
+      ],
+      "color": "orange-500"
     },
     "outline": [
       {
         "id": "1",
         "number": "1",
-        "title": "Definition and scope",
-        "children": [
-          {
-            "id": "1.1",
-            "number": "1.1",
-            "title": "Geographical definition",
-            "children": []
-          },
-          {
-            "id": "1.2",
-            "number": "1.2",
-            "title": "Geological definition",
-            "children": []
-          },
-          {
-            "id": "1.3",
-            "number": "1.3",
-            "title": "Cultural definition",
-            "children": []
-          }
-        ]
+        "title": "Etymology",
+        "children": []
       },
       {
         "id": "2",
@@ -546,19 +509,13 @@
           {
             "id": "2.1",
             "number": "2.1",
-            "title": "Topography",
+            "title": "Climate",
             "children": []
           },
           {
             "id": "2.2",
             "number": "2.2",
-            "title": "Climate",
-            "children": []
-          },
-          {
-            "id": "2.3",
-            "number": "2.3",
-            "title": "Ecology",
+            "title": "Biodiversity",
             "children": []
           }
         ]
@@ -566,12 +523,18 @@
       {
         "id": "3",
         "number": "3",
-        "title": "Geology",
+        "title": "Demographics",
         "children": [
           {
             "id": "3.1",
             "number": "3.1",
-            "title": "Indian Plate",
+            "title": "Languages",
+            "children": []
+          },
+          {
+            "id": "3.2",
+            "number": "3.2",
+            "title": "Religion",
             "children": []
           }
         ]
@@ -584,37 +547,25 @@
           {
             "id": "4.1",
             "number": "4.1",
-            "title": "Prehistory",
+            "title": "Prehistory and ancient history",
             "children": []
           },
           {
             "id": "4.2",
             "number": "4.2",
-            "title": "Ancient history",
+            "title": "Medieval history",
             "children": []
           },
           {
             "id": "4.3",
             "number": "4.3",
-            "title": "Medieval history",
+            "title": "Colonial era",
             "children": []
           },
           {
             "id": "4.4",
             "number": "4.4",
-            "title": "Early modern period",
-            "children": []
-          },
-          {
-            "id": "4.5",
-            "number": "4.5",
-            "title": "Colonial period",
-            "children": []
-          },
-          {
-            "id": "4.6",
-            "number": "4.6",
-            "title": "Post-colonial era",
+            "title": "Post-independence",
             "children": []
           }
         ]
@@ -622,24 +573,12 @@
       {
         "id": "5",
         "number": "5",
-        "title": "Demographics",
+        "title": "Politics and government",
         "children": [
           {
             "id": "5.1",
             "number": "5.1",
-            "title": "Population",
-            "children": []
-          },
-          {
-            "id": "5.2",
-            "number": "5.2",
-            "title": "Languages",
-            "children": []
-          },
-          {
-            "id": "5.3",
-            "number": "5.3",
-            "title": "Religion",
+            "title": "International relations",
             "children": []
           }
         ]
@@ -647,43 +586,320 @@
       {
         "id": "6",
         "number": "6",
-        "title": "Politics and economy",
+        "title": "Economy",
         "children": [
           {
             "id": "6.1",
             "number": "6.1",
-            "title": "Political entities",
+            "title": "Poverty and development",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "number": "7",
+        "title": "Culture",
+        "children": [
+          {
+            "id": "7.1",
+            "number": "7.1",
+            "title": "Cuisine",
             "children": []
           },
           {
-            "id": "6.2",
-            "number": "6.2",
-            "title": "Economy",
+            "id": "7.2",
+            "number": "7.2",
+            "title": "Music and dance",
+            "children": []
+          },
+          {
+            "id": "7.3",
+            "number": "7.3",
+            "title": "Cinema",
             "children": []
           }
         ]
       }
     ]
   },
-  "note-1768851397577": {
-    "id": "note-1768851397577",
-    "type": "note",
-    "url": "",
-    "title": "New Note",
-    "content": "",
-    "snippet": "",
-    "created_at": "2026-01-19T19:36:37.898777Z",
+  "node-1768935227297-wac1le3q0": {
+    "id": "node-1768935227297-wac1le3q0",
+    "type": "article",
+    "url": "https://en.wikipedia.org/wiki/Indian_Ocean",
+    "title": "Indian Ocean",
+    "content": "The Indian Ocean is the third largest ocean, covering about 20% of the Earth's water surface, and is bordered by Asia, Africa, and Australia. Its unique geography, including the relatively shallow northern regions and the deep Java Trench, influences its complex circulation patterns, which are heavily affected by monsoons. The ocean basin is geologically active, featuring the Carlsberg Ridge and the Ninety East Ridge. Economically, it is vital for shipping routes connecting Europe, the Middle East, Africa, and Asia, carrying significant volumes of oil and trade goods. Biologically, it hosts diverse marine life, though it faces challenges from pollution and overfishing, particularly in its coastal zones.",
+    "snippet": "The Indian Ocean is the third largest of the world's five oceans, covering approximately 70.56 million square kilometers (27.24 million square miles). It is bounded by Asia to the north, Africa to the west, and Australia to the east, and is connected to the Southern Ocean in the south. The ocean is strategically important due to its role in global trade and its diverse marine ecosystems.",
+    "created_at": "2026-01-20T18:53:47.602197Z",
     "metadata": {
-      "title": "New Note",
-      "content": "",
-      "position": {
-        "x": 603.3094132095691,
-        "y": 330.79324335323787
-      },
+      "title": "Indian Ocean",
+      "url": "https://en.wikipedia.org/wiki/Indian_Ocean",
       "whiteboard_id": "main",
       "style": {
-        "width": 350
+        "width": 320
+      },
+      "analyzed_by": "ai",
+      "snippet": "The Indian Ocean is the third largest of the world's five oceans, covering approximately 70.56 million square kilometers (27.24 million square miles). It is bounded by Asia to the north, Africa to the west, and Australia to the east, and is connected to the Southern Ocean in the south. The ocean is strategically important due to its role in global trade and its diverse marine ecosystems.",
+      "outline": [
+        {
+          "id": "1",
+          "number": "1",
+          "title": "Geography",
+          "children": [
+            {
+              "id": "1.1",
+              "number": "1.1",
+              "title": "Extent and boundaries",
+              "children": []
+            },
+            {
+              "id": "1.2",
+              "number": "1.2",
+              "title": "Bathymetry",
+              "children": []
+            },
+            {
+              "id": "1.3",
+              "number": "1.3",
+              "title": "Islands",
+              "children": []
+            },
+            {
+              "id": "1.4",
+              "number": "1.4",
+              "title": "Geology",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "number": "2",
+          "title": "Oceanography",
+          "children": [
+            {
+              "id": "2.1",
+              "number": "2.1",
+              "title": "Circulation",
+              "children": []
+            },
+            {
+              "id": "2.2",
+              "number": "2.2",
+              "title": "Water properties",
+              "children": []
+            },
+            {
+              "id": "2.3",
+              "number": "2.3",
+              "title": "Sea level",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "number": "3",
+          "title": "Ecology",
+          "children": [
+            {
+              "id": "3.1",
+              "number": "3.1",
+              "title": "Marine life",
+              "children": []
+            },
+            {
+              "id": "3.2",
+              "number": "3.2",
+              "title": "Conservation",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "number": "4",
+          "title": "Economy and trade",
+          "children": [
+            {
+              "id": "4.1",
+              "number": "4.1",
+              "title": "Shipping routes",
+              "children": []
+            },
+            {
+              "id": "4.2",
+              "number": "4.2",
+              "title": "Fisheries",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "number": "5",
+          "title": "History",
+          "children": [
+            {
+              "id": "5.1",
+              "number": "5.1",
+              "title": "Ancient history",
+              "children": []
+            },
+            {
+              "id": "5.2",
+              "number": "5.2",
+              "title": "Modern history",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "number": "6",
+          "title": "Geopolitics",
+          "children": [
+            {
+              "id": "6.1",
+              "number": "6.1",
+              "title": "Military presence",
+              "children": []
+            }
+          ]
+        }
+      ],
+      "position": {
+        "x": 481.808972018596,
+        "y": 1052.982128459636
       }
-    }
+    },
+    "outline": [
+      {
+        "id": "1",
+        "number": "1",
+        "title": "Geography",
+        "children": [
+          {
+            "id": "1.1",
+            "number": "1.1",
+            "title": "Extent and boundaries",
+            "children": []
+          },
+          {
+            "id": "1.2",
+            "number": "1.2",
+            "title": "Bathymetry",
+            "children": []
+          },
+          {
+            "id": "1.3",
+            "number": "1.3",
+            "title": "Islands",
+            "children": []
+          },
+          {
+            "id": "1.4",
+            "number": "1.4",
+            "title": "Geology",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "number": "2",
+        "title": "Oceanography",
+        "children": [
+          {
+            "id": "2.1",
+            "number": "2.1",
+            "title": "Circulation",
+            "children": []
+          },
+          {
+            "id": "2.2",
+            "number": "2.2",
+            "title": "Water properties",
+            "children": []
+          },
+          {
+            "id": "2.3",
+            "number": "2.3",
+            "title": "Sea level",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Ecology",
+        "children": [
+          {
+            "id": "3.1",
+            "number": "3.1",
+            "title": "Marine life",
+            "children": []
+          },
+          {
+            "id": "3.2",
+            "number": "3.2",
+            "title": "Conservation",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "number": "4",
+        "title": "Economy and trade",
+        "children": [
+          {
+            "id": "4.1",
+            "number": "4.1",
+            "title": "Shipping routes",
+            "children": []
+          },
+          {
+            "id": "4.2",
+            "number": "4.2",
+            "title": "Fisheries",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "number": "5",
+        "title": "History",
+        "children": [
+          {
+            "id": "5.1",
+            "number": "5.1",
+            "title": "Ancient history",
+            "children": []
+          },
+          {
+            "id": "5.2",
+            "number": "5.2",
+            "title": "Modern history",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "number": "6",
+        "title": "Geopolitics",
+        "children": [
+          {
+            "id": "6.1",
+            "number": "6.1",
+            "title": "Military presence",
+            "children": []
+          }
+        ]
+      }
+    ]
   }
 }
