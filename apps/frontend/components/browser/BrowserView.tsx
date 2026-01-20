@@ -25,6 +25,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
     // Auto-add helper refs
     const processedUrlsRef = useRef<Set<string>>(new Set());
     const currentTitleRef = useRef(tab.title);
+    const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         setIsMounted(true);
@@ -131,9 +132,12 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             if (url.startsWith('http')) {
                 const isSearchPage = url.includes('google.com/search') || url.includes('bing.com/search');
                 if (!isSearchPage) {
-                    setTimeout(() => {
+                    // clear any pending node creation from rapid redirects
+                    if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
+
+                    navigationTimeoutRef.current = setTimeout(() => {
                         autoAddNodeToGraph(url, currentTitleRef.current || url);
-                    }, 500);
+                    }, 800); // Increased delay to 800ms to catch final redirect
                 } else {
                     // For search pages, we don't create a node, but we MIGHT want to clear the lastNodeId
                     // if we want to start a new chain? OR we keep it so the next result links to the previous context?
@@ -231,7 +235,7 @@ BrowserTab.displayName = 'BrowserTab';
 
 // --- Main BrowserView Component ---
 export default function BrowserView() {
-    const { activeWhiteboardId, browserStates, updateBrowserState, addNode } = useGraphStore();
+    const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodes } = useGraphStore();
 
     // Load state from store or defaults
     const state = browserStates[activeWhiteboardId] || {
@@ -268,7 +272,42 @@ export default function BrowserView() {
         });
     }, [tabs, activeTabId, activeWhiteboardId, updateBrowserState]);
 
+
     const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+
+    // --- Graph -> Browser Sync ---
+    // When a node is selected in the graph, switch to its tab or open it
+    useEffect(() => {
+        if (!selectedNodeId) return;
+
+        const node = nodes.find(n => n.id === selectedNodeId);
+        if (!node || !node.data?.url) return;
+
+        // Check if this URL is already open in a tab
+        // We use loose matching on the URL to catch slightly different query params if needed, 
+        // but exact match is safer for now. normalizeUrl might be needed?
+        const existingTab = tabs.find(t => {
+            // Check exact, or if both are normalized equal
+            return t.url === node.data.url || resolveUrl(t.url) === resolveUrl(node.data.url);
+        });
+
+        if (existingTab) {
+            if (activeTabId !== existingTab.id) {
+                setActiveTabId(existingTab.id);
+            }
+        } else {
+            // Open new tab
+            addTab(node.data.url, node.id); // Set lastNodeId to this node so we continue trace? 
+            // Actually if we open a node, that node IS the context. So yes.
+        }
+
+    }, [selectedNodeId, nodes]); // Be careful with 'nodes' dependency if it updates too often. 
+    // Ideally we'd just want to look up 'selectedNodeId' when it changes. 
+    // But 'nodes' is needed to get the node data. 
+    // Note: useGraphStore hooks might re-render if ANY state changes? 
+    // Zustand attempts to optimize selector usage, but here we destructure everything.
+    // It might be better to split this effect or use `useGraphStore(s => s.nodes)` etc.
+    // Given the current structure, let's keep it simple. Optimization later.
 
     // Tab Management
     const addTab = useCallback((initialUrl: string = '', parentId?: string) => {
