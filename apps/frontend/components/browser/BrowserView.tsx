@@ -278,13 +278,13 @@ export default function BrowserView() {
 
 
     // Tab Management
-    const addTab = useCallback((initialUrl: string = '', parentId?: string) => {
+    const addTab = useCallback((initialUrl: string = '', parentId?: string, title?: string) => {
         const newId = Date.now().toString();
         const newTab: Tab = {
             id: newId,
             url: initialUrl,
             displayInput: initialUrl,
-            title: 'New Tab',
+            title: title || 'New Tab',
             lastNodeId: parentId // START TRACE FROM PARENT
         };
         setTabs(prev => [...prev, newTab]);
@@ -325,7 +325,7 @@ export default function BrowserView() {
             }
         } else {
             // Open new tab
-            addTab(node.data.url, node.id);
+            addTab(node.data.url, node.id, node.data.title);
         }
 
     }, [selectedNodeId, addTab]); // ONLY run when selection changes. NOT when nodes change.
