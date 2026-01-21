@@ -5,14 +5,15 @@
     "url": "https://en.wikipedia.org/wiki/India",
     "title": "India",
     "content": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense geographical and climatic diversity, ranging from the Himalayan peaks in the north to tropical coastlines. The nation has a rich, complex history spanning millennia, marked by the rise and fall of various empires and significant cultural contributions. Modern India emerged from British colonial rule in 1947 and has since developed into a major global economic and political power, known for its diverse linguistic landscape, vibrant cultural traditions, and significant advancements in science and technology. Its economy is one of the fastest-growing in the world.",
-    "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
+    "snippet": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense geographical and climatic diversity, ranging from the Himalayan peaks in the north to tropical coa...",
     "created_at": "2026-01-20T18:16:00.985919Z",
     "metadata": {
       "title": "India",
       "url": "https://en.wikipedia.org/wiki/India",
       "whiteboard_id": "main",
       "style": {
-        "width": 320
+        "width": 320,
+        "height": 437
       },
       "analyzed_by": "ai",
       "snippet": "India, officially the Republic of India, is a country in South Asia. It is the seventh-largest country by area, the second-most populous country, and the most populous democracy in the world. India shares land borders with Pakistan to the west; China, Nepal, and Bhutan to the north; and Bangladesh and Myanmar to the east.",
@@ -175,9 +176,10 @@
         }
       ],
       "position": {
-        "x": 100,
-        "y": 100
-      }
+        "x": 173.95923740363878,
+        "y": -109.88432236167736
+      },
+      "content": "India is a federal union comprising 28 states and 8 union territories. It is characterized by immense geographical and climatic diversity, ranging from the Himalayan peaks in the north to tropical coastlines. The nation has a rich, complex history spanning millennia, marked by the rise and fall of various empires and significant cultural contributions. Modern India emerged from British colonial rule in 1947 and has since developed into a major global economic and political power, known for its diverse linguistic landscape, vibrant cultural traditions, and significant advancements in science and technology. Its economy is one of the fastest-growing in the world."
     },
     "outline": [
       {
@@ -344,7 +346,7 @@
     "url": "https://en.wikipedia.org/wiki/South_Asia",
     "title": "South Asia",
     "content": "South Asia is a geographically and culturally diverse region in the southern part of Asia, encompassing a significant portion of the Indian subcontinent. It is characterized by high population density and rapid economic growth in several nations, though it also faces considerable challenges related to poverty and development. The region's history is marked by ancient civilizations, colonial rule, and the subsequent partition of British India, which heavily influenced the modern political map. Key features include the Himalayas in the north, the Indo-Gangetic Plain, and extensive coastlines, supporting diverse climates and ecosystems. Major religions originating here include Hinduism, Buddhism, Jainism, and Sikhism.",
-    "snippet": "South Asia is a region in the southern region of the Asian continent. It generally includes the countries of India, Pakistan, Bangladesh, Sri Lanka, Nepal, Bhutan, and the Maldives. The region is home to nearly two billion people, making it the most populous region in the world.",
+    "snippet": "South Asia is a geographically and culturally diverse region in the southern part of Asia, encompassing a significant portion of the Indian subcontinent. It is characterized by high population density...",
     "created_at": "2026-01-20T18:52:36.067418Z",
     "metadata": {
       "title": "South Asia",
@@ -492,7 +494,8 @@
         "2.1",
         "2.2"
       ],
-      "color": "orange-500"
+      "color": "orange-500",
+      "content": "South Asia is a geographically and culturally diverse region in the southern part of Asia, encompassing a significant portion of the Indian subcontinent. It is characterized by high population density and rapid economic growth in several nations, though it also faces considerable challenges related to poverty and development. The region's history is marked by ancient civilizations, colonial rule, and the subsequent partition of British India, which heavily influenced the modern political map. Key features include the Himalayas in the north, the Indo-Gangetic Plain, and extensive coastlines, supporting diverse climates and ecosystems. Major religions originating here include Hinduism, Buddhism, Jainism, and Sikhism."
     },
     "outline": [
       {
@@ -629,7 +632,7 @@
     "url": "https://en.wikipedia.org/wiki/Indian_Ocean",
     "title": "Indian Ocean",
     "content": "The Indian Ocean is the third largest ocean, covering about 20% of the Earth's water surface, and is bordered by Asia, Africa, and Australia. Its unique geography, including the relatively shallow northern regions and the deep Java Trench, influences its complex circulation patterns, which are heavily affected by monsoons. The ocean basin is geologically active, featuring the Carlsberg Ridge and the Ninety East Ridge. Economically, it is vital for shipping routes connecting Europe, the Middle East, Africa, and Asia, carrying significant volumes of oil and trade goods. Biologically, it hosts diverse marine life, though it faces challenges from pollution and overfishing, particularly in its coastal zones.",
-    "snippet": "The Indian Ocean is the third largest of the world's five oceans, covering approximately 70.56 million square kilometers (27.24 million square miles). It is bounded by Asia to the north, Africa to the west, and Australia to the east, and is connected to the Southern Ocean in the south. The ocean is strategically important due to its role in global trade and its diverse marine ecosystems.",
+    "snippet": "The Indian Ocean is the third largest ocean, covering about 20% of the Earth's water surface, and is bordered by Asia, Africa, and Australia. Its unique geography, including the relatively shallow nor...",
     "created_at": "2026-01-20T18:53:47.602197Z",
     "metadata": {
       "title": "Indian Ocean",
@@ -771,7 +774,8 @@
       "position": {
         "x": 481.808972018596,
         "y": 1052.982128459636
-      }
+      },
+      "content": "The Indian Ocean is the third largest ocean, covering about 20% of the Earth's water surface, and is bordered by Asia, Africa, and Australia. Its unique geography, including the relatively shallow northern regions and the deep Java Trench, influences its complex circulation patterns, which are heavily affected by monsoons. The ocean basin is geologically active, featuring the Carlsberg Ridge and the Ninety East Ridge. Economically, it is vital for shipping routes connecting Europe, the Middle East, Africa, and Asia, carrying significant volumes of oil and trade goods. Biologically, it hosts diverse marine life, though it faces challenges from pollution and overfishing, particularly in its coastal zones."
     },
     "outline": [
       {
@@ -896,6 +900,600 @@
             "id": "6.1",
             "number": "6.1",
             "title": "Military presence",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "node-1768936808009-anpvvu2k1": {
+    "id": "node-1768936808009-anpvvu2k1",
+    "type": "article",
+    "url": "https://en.wikipedia.org/wiki/Delhi",
+    "title": "Delhi",
+    "content": "Delhi is a city of immense historical and cultural significance, serving as the capital of numerous empires throughout history, including the Delhi Sultanate and the Mughal Empire. Its geography is dominated by the Yamuna River, which flows through the city, dividing it into East and West Delhi. The modern city is a complex blend of ancient monuments, bustling markets, and modern infrastructure, reflecting centuries of layered history. It functions as the political, administrative, and cultural hub of India, hosting major governmental institutions and numerous educational and cultural centers. The National Capital Region (NCR) surrounding Delhi is one of the most populous metropolitan areas globally.",
+    "snippet": "Delhi, officially the National Capital Territory of Delhi (NCT), is a city and union territory of India that contains New Delhi, the capital of India. It is situated in Northern India and is the largest city in India by area and the second-largest city by population. Delhi is a vast metropolis that encompasses Old Delhi and New Delhi, serving as the seat of all three branches of the Government of India.",
+    "created_at": "2026-01-20T19:20:08.322206Z",
+    "metadata": {
+      "title": "Delhi",
+      "url": "https://en.wikipedia.org/wiki/Delhi",
+      "whiteboard_id": "main",
+      "style": {
+        "width": 320
+      },
+      "analyzed_by": "ai",
+      "snippet": "Delhi, officially the National Capital Territory of Delhi (NCT), is a city and union territory of India that contains New Delhi, the capital of India. It is situated in Northern India and is the largest city in India by area and the second-largest city by population. Delhi is a vast metropolis that encompasses Old Delhi and New Delhi, serving as the seat of all three branches of the Government of India.",
+      "outline": [
+        {
+          "id": "1",
+          "number": "1",
+          "title": "Etymology",
+          "children": []
+        },
+        {
+          "id": "2",
+          "number": "2",
+          "title": "History",
+          "children": [
+            {
+              "id": "2.1",
+              "number": "2.1",
+              "title": "Early history",
+              "children": []
+            },
+            {
+              "id": "2.2",
+              "number": "2.2",
+              "title": "Medieval history",
+              "children": []
+            },
+            {
+              "id": "2.3",
+              "number": "2.3",
+              "title": "British Raj",
+              "children": []
+            },
+            {
+              "id": "2.4",
+              "number": "2.4",
+              "title": "Post-independence",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "number": "3",
+          "title": "Geography",
+          "children": [
+            {
+              "id": "3.1",
+              "number": "3.1",
+              "title": "Climate",
+              "children": []
+            },
+            {
+              "id": "3.2",
+              "number": "3.2",
+              "title": "Topography",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "number": "4",
+          "title": "Government and politics",
+          "children": [
+            {
+              "id": "4.1",
+              "number": "4.1",
+              "title": "National Capital Territory",
+              "children": []
+            },
+            {
+              "id": "4.2",
+              "number": "4.2",
+              "title": "Union territory status",
+              "children": []
+            },
+            {
+              "id": "4.3",
+              "number": "4.3",
+              "title": "National Capital Region",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "number": "5",
+          "title": "Economy",
+          "children": [
+            {
+              "id": "5.1",
+              "number": "5.1",
+              "title": "National Capital Region",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "number": "6",
+          "title": "Demographics",
+          "children": [
+            {
+              "id": "6.1",
+              "number": "6.1",
+              "title": "Religion",
+              "children": []
+            },
+            {
+              "id": "6.2",
+              "number": "6.2",
+              "title": "Languages",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "number": "7",
+          "title": "Infrastructure",
+          "children": [
+            {
+              "id": "7.1",
+              "number": "7.1",
+              "title": "Transport",
+              "children": [
+                {
+                  "id": "7.1.1",
+                  "number": "7.1.1",
+                  "title": "Air",
+                  "children": []
+                },
+                {
+                  "id": "7.1.2",
+                  "number": "7.1.2",
+                  "title": "Rail",
+                  "children": []
+                },
+                {
+                  "id": "7.1.3",
+                  "number": "7.1.3",
+                  "title": "Road",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "7.2",
+              "number": "7.2",
+              "title": "Water supply and sanitation",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "8",
+          "number": "8",
+          "title": "Culture",
+          "children": [
+            {
+              "id": "8.1",
+              "number": "8.1",
+              "title": "Arts and theatre",
+              "children": []
+            },
+            {
+              "id": "8.2",
+              "number": "8.2",
+              "title": "Cuisine",
+              "children": []
+            },
+            {
+              "id": "8.3",
+              "number": "8.3",
+              "title": "Education",
+              "children": []
+            },
+            {
+              "id": "8.4",
+              "number": "8.4",
+              "title": "Media",
+              "children": []
+            },
+            {
+              "id": "8.5",
+              "number": "8.5",
+              "title": "Sports",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "9",
+          "number": "9",
+          "title": "Tourism",
+          "children": [
+            {
+              "id": "9.1",
+              "number": "9.1",
+              "title": "Monuments and museums",
+              "children": []
+            },
+            {
+              "id": "9.2",
+              "number": "9.2",
+              "title": "Parks and gardens",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "10",
+          "number": "10",
+          "title": "Notable people",
+          "children": []
+        }
+      ],
+      "position": {
+        "x": 940,
+        "y": 100
+      }
+    },
+    "outline": [
+      {
+        "id": "1",
+        "number": "1",
+        "title": "Etymology",
+        "children": []
+      },
+      {
+        "id": "2",
+        "number": "2",
+        "title": "History",
+        "children": [
+          {
+            "id": "2.1",
+            "number": "2.1",
+            "title": "Early history",
+            "children": []
+          },
+          {
+            "id": "2.2",
+            "number": "2.2",
+            "title": "Medieval history",
+            "children": []
+          },
+          {
+            "id": "2.3",
+            "number": "2.3",
+            "title": "British Raj",
+            "children": []
+          },
+          {
+            "id": "2.4",
+            "number": "2.4",
+            "title": "Post-independence",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Geography",
+        "children": [
+          {
+            "id": "3.1",
+            "number": "3.1",
+            "title": "Climate",
+            "children": []
+          },
+          {
+            "id": "3.2",
+            "number": "3.2",
+            "title": "Topography",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "number": "4",
+        "title": "Government and politics",
+        "children": [
+          {
+            "id": "4.1",
+            "number": "4.1",
+            "title": "National Capital Territory",
+            "children": []
+          },
+          {
+            "id": "4.2",
+            "number": "4.2",
+            "title": "Union territory status",
+            "children": []
+          },
+          {
+            "id": "4.3",
+            "number": "4.3",
+            "title": "National Capital Region",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "number": "5",
+        "title": "Economy",
+        "children": [
+          {
+            "id": "5.1",
+            "number": "5.1",
+            "title": "National Capital Region",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "number": "6",
+        "title": "Demographics",
+        "children": [
+          {
+            "id": "6.1",
+            "number": "6.1",
+            "title": "Religion",
+            "children": []
+          },
+          {
+            "id": "6.2",
+            "number": "6.2",
+            "title": "Languages",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "number": "7",
+        "title": "Infrastructure",
+        "children": [
+          {
+            "id": "7.1",
+            "number": "7.1",
+            "title": "Transport",
+            "children": [
+              {
+                "id": "7.1.1",
+                "number": "7.1.1",
+                "title": "Air",
+                "children": []
+              },
+              {
+                "id": "7.1.2",
+                "number": "7.1.2",
+                "title": "Rail",
+                "children": []
+              },
+              {
+                "id": "7.1.3",
+                "number": "7.1.3",
+                "title": "Road",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "7.2",
+            "number": "7.2",
+            "title": "Water supply and sanitation",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "8",
+        "number": "8",
+        "title": "Culture",
+        "children": [
+          {
+            "id": "8.1",
+            "number": "8.1",
+            "title": "Arts and theatre",
+            "children": []
+          },
+          {
+            "id": "8.2",
+            "number": "8.2",
+            "title": "Cuisine",
+            "children": []
+          },
+          {
+            "id": "8.3",
+            "number": "8.3",
+            "title": "Education",
+            "children": []
+          },
+          {
+            "id": "8.4",
+            "number": "8.4",
+            "title": "Media",
+            "children": []
+          },
+          {
+            "id": "8.5",
+            "number": "8.5",
+            "title": "Sports",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "9",
+        "number": "9",
+        "title": "Tourism",
+        "children": [
+          {
+            "id": "9.1",
+            "number": "9.1",
+            "title": "Monuments and museums",
+            "children": []
+          },
+          {
+            "id": "9.2",
+            "number": "9.2",
+            "title": "Parks and gardens",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "10",
+        "number": "10",
+        "title": "Notable people",
+        "children": []
+      }
+    ]
+  },
+  "node-1768936822802-uhcf48hhj": {
+    "id": "node-1768936822802-uhcf48hhj",
+    "type": "article",
+    "url": "https://en.wikipedia.org/wiki/Bank_(geography)",
+    "title": "Bank (geography)",
+    "content": "A bank in geography refers to the sloping ground bordering a river, lake, or sea, often formed by the deposition of alluvium carried by flowing water. River banks are essential components of the fluvial system, influencing channel shape, flow velocity, and flood risk. They can be erosional (cut banks) or depositional (point bars). The stability of these banks is determined by factors like soil type, vegetation cover, and flow energy. Coastal banks, such as sandbanks or mudflats, are similarly formed by wave and tidal action, shaping shorelines and providing critical intertidal habitats. Understanding bank structure is vital for hydrology and coastal management.",
+    "snippet": "In geography, a bank is a landform created by the deposition of sediment carried by a river or stream. These features are typically elongated and parallel to the direction of the current, often forming on the inside bends of meandering rivers. Banks play a crucial role in river morphology and sediment transport dynamics.",
+    "created_at": "2026-01-20T19:20:22.806602Z",
+    "metadata": {
+      "title": "Bank (geography)",
+      "url": "https://en.wikipedia.org/wiki/Bank_(geography)",
+      "whiteboard_id": "main",
+      "style": {
+        "width": 320
+      },
+      "analyzed_by": "ai",
+      "snippet": "In geography, a bank is a landform created by the deposition of sediment carried by a river or stream. These features are typically elongated and parallel to the direction of the current, often forming on the inside bends of meandering rivers. Banks play a crucial role in river morphology and sediment transport dynamics.",
+      "outline": [
+        {
+          "id": "1",
+          "number": "1",
+          "title": "Definition and formation",
+          "children": [
+            {
+              "id": "1.1",
+              "number": "1.1",
+              "title": "River banks",
+              "children": []
+            },
+            {
+              "id": "1.2",
+              "number": "1.2",
+              "title": "Coastal banks",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "number": "2",
+          "title": "Types of river banks",
+          "children": [
+            {
+              "id": "2.1",
+              "number": "2.1",
+              "title": "Cut bank",
+              "children": []
+            },
+            {
+              "id": "2.2",
+              "number": "2.2",
+              "title": "Point bar",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "number": "3",
+          "title": "Bank stability and erosion",
+          "children": [
+            {
+              "id": "3.1",
+              "number": "3.1",
+              "title": "Factors affecting stability",
+              "children": []
+            },
+            {
+              "id": "3.2",
+              "number": "3.2",
+              "title": "Mitigation measures",
+              "children": []
+            }
+          ]
+        }
+      ],
+      "position": {
+        "x": 1077.5710106820977,
+        "y": 867.687119530632
+      }
+    },
+    "outline": [
+      {
+        "id": "1",
+        "number": "1",
+        "title": "Definition and formation",
+        "children": [
+          {
+            "id": "1.1",
+            "number": "1.1",
+            "title": "River banks",
+            "children": []
+          },
+          {
+            "id": "1.2",
+            "number": "1.2",
+            "title": "Coastal banks",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "number": "2",
+        "title": "Types of river banks",
+        "children": [
+          {
+            "id": "2.1",
+            "number": "2.1",
+            "title": "Cut bank",
+            "children": []
+          },
+          {
+            "id": "2.2",
+            "number": "2.2",
+            "title": "Point bar",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "number": "3",
+        "title": "Bank stability and erosion",
+        "children": [
+          {
+            "id": "3.1",
+            "number": "3.1",
+            "title": "Factors affecting stability",
+            "children": []
+          },
+          {
+            "id": "3.2",
+            "number": "3.2",
+            "title": "Mitigation measures",
             "children": []
           }
         ]

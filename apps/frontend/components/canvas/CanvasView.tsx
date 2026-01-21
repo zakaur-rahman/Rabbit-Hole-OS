@@ -1121,6 +1121,47 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
     const onNodeClick = useCallback((_: React.MouseEvent, node: any) => {
         selectNode(node.id);
+
+        // Force Browser Sync if node has URL
+        if (node.data?.url) {
+            const { activeWhiteboardId, updateBrowserState, browserStates } = useGraphStore.getState();
+            const currentState = browserStates[activeWhiteboardId];
+
+            // If browser is already there, do nothing (prevent reload)
+            // But if we want to switch tab?
+            // BrowserView handles activeTabId switch on selectNodeId change.
+            // But if selectedNodeId didn't change?
+            // We can force update activeTabId if we know it.
+            // But BrowserView logic is inside BrowserView.
+
+            // Simplest hack: Toggle selection if same? No.
+            // Just update browser state with 'forceSync' timestamp?
+            // Or sets url directly?
+            // updateBrowserState(activeWhiteboardId, { url: node.data.url }); 
+            // This updates the 'url' field of browserState, which BrowserView syncs to.
+            // Let's check BrowserView effect:
+            /* 
+            useEffect(() => {
+               const s = browserStates[activeWhiteboardId];
+               if (s) { ... setTabs ... }
+            }, [activeWhiteboardId]); 
+            */
+            // It DOES NOT listen to browserStates deep changes.
+            // So updating store won't help BrowserView unless we mount/unmount.
+
+            // BUT, we can use a custom event or just accept that "Clicking already selected node" 
+            // requires the user to use the browser tabs?
+            // The user request is "Graph Pointer (intent) -> Browser Tab Trace".
+            // If I click, I express intent.
+
+            // Let's use the 'selectedNodeId' change.
+            // If I click same node, I can null it then set it back?
+            if (node.id === useGraphStore.getState().selectedNodeId) {
+                // Force re-selection effect
+                selectNode(null);
+                setTimeout(() => selectNode(node.id), 10);
+            }
+        }
     }, [selectNode]);
 
 
