@@ -51,6 +51,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
         if (existingNode) {
             onUpdate(tab.id, { lastNodeId: existingNode.id });
+            useGraphStore.getState().selectNode(existingNode.id); // Sync Graph Pointer
             processedUrlsRef.current.add(urlKey);
             return;
         }
@@ -84,6 +85,9 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             style: { width: 320 },
             data: nodeData,
         });
+
+        // Sync Graph Pointer
+        useGraphStore.getState().selectNode(nodeId);
 
         import('@/lib/api').then(({ nodesApi }) => {
             nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
@@ -273,42 +277,6 @@ export default function BrowserView() {
     }, [tabs, activeTabId, activeWhiteboardId, updateBrowserState]);
 
 
-    const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
-
-    // --- Graph -> Browser Sync ---
-    // When a node is selected in the graph, switch to its tab or open it
-    useEffect(() => {
-        if (!selectedNodeId) return;
-
-        const node = nodes.find(n => n.id === selectedNodeId);
-        if (!node || !node.data?.url) return;
-
-        // Check if this URL is already open in a tab
-        // We use loose matching on the URL to catch slightly different query params if needed, 
-        // but exact match is safer for now. normalizeUrl might be needed?
-        const existingTab = tabs.find(t => {
-            // Check exact, or if both are normalized equal
-            return t.url === node.data.url || resolveUrl(t.url) === resolveUrl(node.data.url);
-        });
-
-        if (existingTab) {
-            if (activeTabId !== existingTab.id) {
-                setActiveTabId(existingTab.id);
-            }
-        } else {
-            // Open new tab
-            addTab(node.data.url, node.id); // Set lastNodeId to this node so we continue trace? 
-            // Actually if we open a node, that node IS the context. So yes.
-        }
-
-    }, [selectedNodeId, nodes]); // Be careful with 'nodes' dependency if it updates too often. 
-    // Ideally we'd just want to look up 'selectedNodeId' when it changes. 
-    // But 'nodes' is needed to get the node data. 
-    // Note: useGraphStore hooks might re-render if ANY state changes? 
-    // Zustand attempts to optimize selector usage, but here we destructure everything.
-    // It might be better to split this effect or use `useGraphStore(s => s.nodes)` etc.
-    // Given the current structure, let's keep it simple. Optimization later.
-
     // Tab Management
     const addTab = useCallback((initialUrl: string = '', parentId?: string) => {
         const newId = Date.now().toString();
@@ -322,6 +290,64 @@ export default function BrowserView() {
         setTabs(prev => [...prev, newTab]);
         setActiveTabId(newId);
     }, []);
+
+    const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+
+    // --- Graph -> Browser Sync ---
+    // When a node is selected in the graph, switch to its tab or open it
+    useEffect(() => {
+        if (!selectedNodeId) return;
+
+        // Use getState() to avoid 'nodes' dependency causing loops/re-renders
+        const { nodes } = useGraphStore.getState();
+        const node = nodes.find(n => n.id === selectedNodeId);
+        if (!node || !node.data?.url) return;
+
+        // Check if this URL is already open in a tab
+        // We use loose matching on the URL to catch slightly different query params if needed, 
+        // but exact match is safer for now. normalizeUrl might be needed?
+        // Note: 'tabs' is from closure, which might be stale if effect doesn't re-run. 
+        // But since selectedNodeId changed, component likely re-rendered? 
+        // No, if only store updated, component might not re-render if we didn't pick 'selectedNodeId'. 
+        // But we DID pick selectedNodeId. So component re-renders. 'tabs' is fresh.
+        const existingTab = tabs.find(t => {
+            if (!t.url || !node.data.url) return false;
+            // Loose matching: ignore trailing slashes and hash
+            const cleanT = t.url.split('#')[0].replace(/\/$/, '');
+            const cleanN = node.data.url.split('#')[0].replace(/\/$/, '');
+
+            return cleanT === cleanN || resolveUrl(t.url) === resolveUrl(node.data.url);
+        });
+
+        if (existingTab) {
+            if (activeTabId !== existingTab.id) {
+                setActiveTabId(existingTab.id);
+            }
+        } else {
+            // Open new tab
+            addTab(node.data.url, node.id);
+        }
+
+    }, [selectedNodeId, addTab]); // ONLY run when selection changes. NOT when nodes change.
+
+    // --- Browser -> Graph Sync ---
+    // When active tab changes, select the corresponding node in the graph
+    useEffect(() => {
+        if (!activeTab || !activeTab.url) return;
+
+        const { nodes, selectNode, selectedNodeId } = useGraphStore.getState();
+        const urlKey = normalizeUrl(activeTab.url);
+
+        const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
+
+        // Only update if different to avoid loops/jitters
+        if (existingNode && existingNode.id !== selectedNodeId) {
+            selectNode(existingNode.id);
+        }
+    }, [activeTabId, activeTab?.url]); // Run when active tab or its URL changes
+
+    // Tab Management
+
 
     const closeTab = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -365,6 +391,79 @@ export default function BrowserView() {
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') navigate();
     };
+
+    const handleManualSync = useCallback(() => {
+        const tab = tabs.find(t => t.id === activeTabId);
+        if (!tab || !tab.url) return;
+
+        const url = tab.url;
+        const title = tab.title || (url.startsWith('http') ? new URL(url).hostname : 'New Node');
+        const urlKey = normalizeUrl(url);
+
+        const { nodes, addNode, addEdge, selectNode, updateNode } = useGraphStore.getState();
+
+        // 1. Check existing
+        const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
+        if (existingNode) {
+            updateTab(tab.id, { lastNodeId: existingNode.id });
+            selectNode(existingNode.id);
+            return;
+        }
+
+        // 2. Create new
+        const nodeType = detectNodeType(url);
+        const nodeId = `node-${Date.now()}`;
+
+        let position = { x: 100 + (nodes.length % 4) * 280, y: 100 + Math.floor(nodes.length / 4) * 220 };
+        const parentNode = tab.lastNodeId ? nodes.find(n => n.id === tab.lastNodeId) : null;
+        if (parentNode) {
+            position = { x: parentNode.position.x + 40, y: parentNode.position.y + 200 };
+        }
+
+        const nodeData = {
+            title,
+            url,
+            whiteboard_id: activeWhiteboardId
+        };
+
+        addNode({
+            id: nodeId,
+            type: nodeType,
+            position,
+            style: { width: 320 },
+            data: nodeData,
+        });
+
+        selectNode(nodeId);
+
+        // 3. Process URL
+        import('@/lib/api').then(({ nodesApi }) => {
+            nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
+                updateNode(nodeId, {
+                    title: result.title,
+                    snippet: result.snippet,
+                    favicon: result.metadata?.favicon,
+                    outline: result.outline
+                });
+            });
+        });
+
+        // 4. Link
+        if (tab.lastNodeId && tab.lastNodeId !== nodeId) {
+            addEdge({
+                id: `e-${tab.lastNodeId}-${nodeId}`,
+                source: tab.lastNodeId,
+                sourceHandle: 'bottom',
+                target: nodeId,
+                targetHandle: 'top',
+                animated: true,
+            });
+        }
+
+        // 5. Update trace
+        updateTab(tab.id, { lastNodeId: nodeId });
+
+    }, [tabs, activeTabId, activeWhiteboardId, updateTab]);
 
     const activeWebview = webviewRefs.current[activeTabId];
 
@@ -455,7 +554,7 @@ export default function BrowserView() {
                 {/* Actions */}
                 <div className="flex items-center gap-1">
                     <button
-                        onClick={() => { /* Re-implement manual sync if needed, mostly auto now */ }}
+                        onClick={handleManualSync}
                         disabled={!activeTab.url}
                         className={`h-8 px-3 flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 rounded-lg text-sm font-medium transition-all shadow-lg shadow-purple-500/20 ${!activeTab.url ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                     >

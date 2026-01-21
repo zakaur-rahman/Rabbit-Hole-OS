@@ -23,6 +23,18 @@
       "style": null,
       "data": null,
       "whiteboard_id": "main"
+    },
+    "e-node-1768936808009-anpvvu2k1-node-1768936822802-uhcf48hhj": {
+      "id": "e-node-1768936808009-anpvvu2k1-node-1768936822802-uhcf48hhj",
+      "source": "node-1768936808009-anpvvu2k1",
+      "target": "node-1768936822802-uhcf48hhj",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "type": "default",
+      "animated": true,
+      "style": null,
+      "data": null,
+      "whiteboard_id": "main"
     }
   }
 }
