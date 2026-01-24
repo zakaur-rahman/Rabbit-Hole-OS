@@ -90,6 +90,7 @@ async def get_current_user(
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    print(f"DEBUG: Token verified for user: {payload.get('sub')}")
     
     user_id = payload.get("sub")
     if not user_id:

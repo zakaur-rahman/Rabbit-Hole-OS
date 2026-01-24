@@ -8,12 +8,20 @@ async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
   
+  // Get token from sessionStorage (matches auth/api.ts logic)
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+  
+  const headers = new Headers(options.headers);
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -289,6 +297,23 @@ export const edgesApi = {
 
   delete: (edgeId: string, whiteboardId: string): Promise<void> =>
     apiFetch(`/edges/${edgeId}?whiteboard_id=${whiteboardId}`, { method: 'DELETE' }),
+};
+
+// Whiteboards API
+export interface ApiWhiteboard {
+  id: string;
+  name: string;
+}
+
+export const whiteboardsApi = {
+  list: (): Promise<ApiWhiteboard[]> =>
+    apiFetch('/whiteboards/'),
+  
+  create: (whiteboard: ApiWhiteboard): Promise<ApiWhiteboard> =>
+    apiFetch('/whiteboards/', {
+      method: 'POST',
+      body: JSON.stringify(whiteboard),
+    }),
 };
 
 // Files API

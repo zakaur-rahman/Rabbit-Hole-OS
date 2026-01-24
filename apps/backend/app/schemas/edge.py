@@ -5,6 +5,7 @@ class EdgeBase(BaseModel):
     id: str
     source: str
     target: str
+    label: Optional[str] = None
     sourceHandle: Optional[str] = None
     targetHandle: Optional[str] = None
     type: Optional[str] = "default"

@@ -250,27 +250,44 @@ export default function BrowserView() {
     const [tabs, setTabs] = useState<Tab[]>(state.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
     const [activeTabId, setActiveTabId] = useState(state.activeTabId || '1');
     const webviewRefs = useRef<{ [key: string]: any }>({});
+    const isRemoteUpdate = useRef(false);
 
     // Sync from store when whiteboard changes
     useEffect(() => {
         const s = browserStates[activeWhiteboardId];
         if (s) {
-            setTabs(s.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
-            setActiveTabId(s.activeTabId || '1');
+            const tabsMismatch = JSON.stringify(s.tabs) !== JSON.stringify(tabs);
+            const activeTabMismatch = s.activeTabId !== activeTabId;
+
+            if (tabsMismatch || activeTabMismatch) {
+                isRemoteUpdate.current = true;
+                if (tabsMismatch) setTabs(s.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
+                if (activeTabMismatch) setActiveTabId(s.activeTabId || '1');
+            }
         } else {
-            // Reset if no state exists for this whiteboard
-            setTabs([{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
-            setActiveTabId('1');
+            // Reset only if switching to a new board that has no state yet
+            // Check if we are already in default state to avoid loops
+            const isDefault = tabs.length === 1 && tabs[0].url === '' && activeTabId === '1';
+            if (!isDefault) {
+                isRemoteUpdate.current = true;
+                setTabs([{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
+                setActiveTabId('1');
+            }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeWhiteboardId]);
+    }, [activeWhiteboardId, browserStates]);
 
     // Sync to store when local state changes
     useEffect(() => {
+        if (isRemoteUpdate.current) {
+            isRemoteUpdate.current = false;
+            return;
+        }
+
+        // Debounce or just check validity?
+        // We'll trust the lock for now.
         updateBrowserState(activeWhiteboardId, {
             tabs,
             activeTabId,
-            // Backward compat
             url: tabs.find(t => t.id === activeTabId)?.url || '',
             displayInput: tabs.find(t => t.id === activeTabId)?.displayInput || ''
         });

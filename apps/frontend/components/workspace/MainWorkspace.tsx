@@ -31,6 +31,42 @@ export default function MainWorkspace() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    // Refresh nodes on auth change
+    const { fetchNodes, fetchWhiteboards, clearGraph, activeWhiteboardId, initialize } = useGraphStore();
+    useEffect(() => {
+        const handleAuthChange = () => {
+            if (typeof window !== 'undefined' && sessionStorage.getItem('auth_token')) {
+                console.log('[MainWorkspace] Auth changed (Login), refreshing data...');
+                fetchWhiteboards();
+                fetchNodes();
+            } else {
+                console.log('[MainWorkspace] Auth changed (Logout), clearing graph...');
+                clearGraph();
+            }
+        };
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === 'auth_token') {
+                handleAuthChange();
+            }
+        };
+
+        window.addEventListener('auth-state-changed', handleAuthChange);
+        window.addEventListener('storage', handleStorage);
+
+        // Initial setup
+        initialize();
+        if (typeof window !== 'undefined' && sessionStorage.getItem('auth_token')) {
+            fetchWhiteboards();
+            fetchNodes();
+        }
+
+        return () => {
+            window.removeEventListener('auth-state-changed', handleAuthChange);
+            window.removeEventListener('storage', handleStorage);
+        };
+    }, [fetchNodes, fetchWhiteboards, clearGraph, initialize, activeWhiteboardId]);
+
     // NOTE: Removed useEffect that auto-synced selectedNodeId to openNodeIds
     // to allow double-click opening only.
 

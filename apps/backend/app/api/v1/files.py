@@ -1,5 +1,7 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from fastapi.responses import FileResponse
+from app.api.v1.oauth import get_current_user
+from app.models.user import User
 import shutil
 import os
 import uuid
@@ -11,7 +13,7 @@ UPLOAD_DIR = "static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     try:
         # Generate unique filename
         file_extension = os.path.splitext(file.filename)[1]
@@ -30,7 +32,7 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/list")
-async def list_files():
+async def list_files(current_user: User = Depends(get_current_user)):
     files = []
     if os.path.exists(UPLOAD_DIR):
         for filename in os.listdir(UPLOAD_DIR):

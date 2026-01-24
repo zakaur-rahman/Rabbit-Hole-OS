@@ -4,7 +4,7 @@ Run this script to create all required tables in the database.
 """
 import asyncio
 from app.core.database import get_engine, Base
-from app.models import User, Session  # Import models to register them with Base
+from app.models import User, Session, Node, Edge, Whiteboard  # Import models to register them with Base
 
 
 async def init_db():

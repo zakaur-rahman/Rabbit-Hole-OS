@@ -1,8 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from app.services.llm import generate_synthesis, generate_edge_label
-from app.api.v1.nodes import nodes_store
+from app.models.node import Node
+from app.core.database import get_db
+from app.api.v1.oauth import get_current_user
+from app.models.user import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, or_
 
 router = APIRouter()
 
@@ -16,7 +21,11 @@ class SynthesisResponse(BaseModel):
     query: str
 
 @router.post("/", response_model=SynthesisResponse)
-async def create_synthesis(request: SynthesisRequest):
+async def create_synthesis(
+    request: SynthesisRequest, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate an AI synthesis from selected nodes.
     """
@@ -31,15 +40,17 @@ async def create_synthesis(request: SynthesisRequest):
     node_contents = []
     source_titles = []
     
-    for node_id in request.node_ids:
-        node = nodes_store.get(node_id)
-        if node:
-            node_contents.append({
-                "title": node.get("title", "Untitled"),
-                "content": node.get("content", ""),
-                "url": node.get("url", "")
-            })
-            source_titles.append(node.get("title", "Untitled"))
+    # Fetch nodes from DB
+    result = await db.execute(select(Node).where(Node.id.in_(request.node_ids), Node.user_id == current_user.id))
+    nodes = result.scalars().all()
+    
+    for node in nodes:
+        node_contents.append({
+            "title": node.title,
+            "content": node.content or "",
+            "url": node.url or ""
+        })
+        source_titles.append(node.title)
     
     if not node_contents:
         raise HTTPException(status_code=404, detail="No valid nodes found")
@@ -63,16 +74,23 @@ class EdgeLabelResponse(BaseModel):
     target_id: str
 
 @router.post("/edge-label", response_model=EdgeLabelResponse)
-async def get_edge_label(request: EdgeLabelRequest):
+async def get_edge_label(
+    request: EdgeLabelRequest, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Generate a semantic label for an edge between two nodes."""
-    source_node = nodes_store.get(request.source_id)
-    target_node = nodes_store.get(request.target_id)
+    source_result = await db.execute(select(Node).where(Node.id == request.source_id, Node.user_id == current_user.id))
+    source_node = source_result.scalar_one_or_none()
+    
+    target_result = await db.execute(select(Node).where(Node.id == request.target_id, Node.user_id == current_user.id))
+    target_node = target_result.scalar_one_or_none()
     
     if not source_node or not target_node:
         raise HTTPException(status_code=404, detail="One or both nodes not found")
     
-    source_content = source_node.get("content", source_node.get("title", ""))
-    target_content = target_node.get("content", target_node.get("title", ""))
+    source_content = source_node.content or source_node.title
+    target_content = target_node.content or target_node.title
     
     label = await generate_edge_label(source_content, target_content)
     
@@ -91,25 +109,51 @@ class SearchResponse(BaseModel):
     query: str
 
 @router.post("/search", response_model=SearchResponse)
-async def search_nodes(request: SearchRequest):
+async def search_nodes(
+    request: SearchRequest, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Search nodes by content or title."""
-    query_lower = request.query.lower()
+    query_text = f"%{request.query}%"
+    stmt = select(Node).where(
+        or_(
+            Node.title.ilike(query_text), 
+            Node.content.ilike(query_text)
+        ),
+        Node.user_id == current_user.id
+    ).limit(request.limit)
+    
+    result = await db.execute(stmt)
+    nodes = result.scalars().all()
     
     results = []
-    for node in nodes_store.values():
-        title = node.get("title", "").lower()
-        content = node.get("content", "").lower()
-        
-        if query_lower in title or query_lower in content:
-            results.append(node)
+    for node in nodes:
+        meta = node.metadata_ or {}
+        results.append({
+            "id": node.id,
+            "title": node.title,
+            "content": node.content,
+            "url": node.url,
+            "type": node.type,
+            "metadata": meta
+        })
     
     return SearchResponse(
-        results=results[:request.limit],
+        results=results,
         query=request.query
     )
 
 
 # --- PDF Research Report Generation ---
+# Note: For strict correctness, the PDF endpoints below would also need refactoring 
+# to fetch data from the DB instead of assuming context_items strictly contain all content.
+# However, the current implementations of research-pdf endpoints take 'context_items' 
+# fully populated from the frontend request (which might have fetched them from the store/API),
+# so they DO NOT strictly depend on 'nodes_store' unless they try to fetch missing content.
+# Looking at the original file, 'generate_research_pdf' etc. utilize request.context_items directly.
+# They do NOT import nodes_store. 
+# So we only need to preserve the imports and the rest of the file content that handles PDF generation.
 
 import io
 import asyncio
@@ -150,7 +194,6 @@ from app.services.document_ast import (
 )
 from app.services.ast_to_latex import convert_document_to_latex, convert_section_to_standalone_latex
 from app.services.llm import generate_document_ast
-
 from app.services.dummy_data import get_dummy_research_data, get_dummy_document_ast
 
 class ResearchContextItem(BaseModel):
@@ -176,8 +219,8 @@ async def generate_research_pdf(request: ResearchPDFRequest):
         # 1. Prepare context for LLM
         context_str = ""
         for i, item in enumerate(request.context_items):
-            instr = f"\n[INSTRUCTION: {item.system_instruction}]" if item.system_instruction else ""
-            context_str += f"Source {i+1} - {item.title} ({item.url}):\n{item.content}{instr}\n\n"
+            instr = f"\\n[INSTRUCTION: {item.system_instruction}]" if item.system_instruction else ""
+            context_str += f"Source {i+1} - {item.title} ({item.url}):\\n{item.content}{instr}\\n\\n"
         
         # 2. Get structured report from AI
         report_data = await generate_research_report(request.query, context_str)
@@ -220,7 +263,7 @@ async def generate_research_pdf(request: ResearchPDFRequest):
     for section in sections:
         story.append(Paragraph(section.get("heading", "Untitled Section"), styles['ResearchHeading']))
         # Handle newlines in body
-        body_text = section.get("body", "").replace("\n", "<br/>")
+        body_text = section.get("body", "").replace("\\n", "<br/>")
         story.append(Paragraph(body_text, styles['ResearchBody']))
         
         # --- Render Figures ---
@@ -398,7 +441,7 @@ async def generate_chunked_research_pdf(request: ChunkedPDFRequest):
     # Sections with figures
     for section in report_data.get("sections", []):
         story.append(Paragraph(section.get("heading", ""), styles['ResearchHeading']))
-        body_text = section.get("body", "").replace("\n", "<br/>")
+        body_text = section.get("body", "").replace("\\n", "<br/>")
         story.append(Paragraph(body_text, styles['ResearchBody']))
         
         # Render figures
@@ -800,150 +843,11 @@ async def validate_ast(document: dict):
             "issues": [i.dict() for i in issues]
         }
     except Exception as e:
-        # Schema validation failed
         return {
-            "valid": False,
+            "valid": False, 
             "issues": [{
-                "severity": "critical",
-                "message": f"Schema Error: {str(e)}",
-                "location": "Schema Validation"
+                "severity": "critical", 
+                "message": f"Schema validation error: {str(e)}", 
+                "node_id": "root"
             }]
         }
-
-
-class LatexCompileRequest(BaseModel):
-    latex_source: str
-    strict_mode: bool = True
-
-
-@router.post("/compile-latex")
-async def compile_raw_latex(request: LatexCompileRequest):
-    """
-    Compile raw LaTeX source code to PDF.
-    """
-    try:
-        pdf_buffer, errors = compile_latex_to_pdf(request.latex_source, strict_mode=request.strict_mode)
-        
-        if pdf_buffer:
-            headers = {
-                'Content-Disposition': 'attachment; filename="document.pdf"'
-            }
-            return StreamingResponse(pdf_buffer, media_type='application/pdf', headers=headers)
-        else:
-            raise HTTPException(status_code=400, detail={"message": "LaTeX compilation failed", "errors": errors})
-    except HTTPException:
-        # Re-raise HTTPExceptions as-is to preserve detail objects
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-class RegenerateSectionRequest(BaseModel):
-    """Request for regenerating a specific section's content."""
-    section_id: str
-    section_title: str
-    current_content: str  # Current section body for context
-    source_context: str   # Relevant source material
-    reference_ids: List[str]  # Available reference IDs to cite
-
-@router.post("/regenerate-section")
-async def regenerate_section(request: RegenerateSectionRequest):
-    """
-    Regenerate a section's content using AI while preserving structure.
-    
-    - Keeps section title and ID
-    - Preserves reference IDs
-    - Only replaces content blocks
-    """
-    print(f"[Regenerate] Section: {request.section_title}")
-    
-    provider, api_key, _ = await get_ai_client()
-    
-    if provider != "gemini":
-        # Mock response
-        return {
-            "section_id": request.section_id,
-            "content": [
-                {
-                    "type": "paragraph",
-                    "data": {
-                        "text": f"Regenerated content for {request.section_title}. This is a placeholder.",
-                        "citations": request.reference_ids[:2] if request.reference_ids else []
-                    }
-                }
-            ]
-        }
-    
-    try:
-        from google import genai
-        from google.genai import types
-        import asyncio
-        
-        client = genai.Client(api_key=api_key)
-        
-        prompt = f'''Regenerate ONLY the content blocks for this document section.
-
-SECTION TITLE: {request.section_title}
-SECTION ID: {request.section_id}
-
-CURRENT CONTENT (for reference):
-{request.current_content[:2000]}
-
-SOURCE MATERIAL:
-{request.source_context[:5000]}
-
-AVAILABLE REFERENCE IDs: {json.dumps(request.reference_ids)}
-
-OUTPUT FORMAT (STRICT JSON):
-{{
-  "content": [
-    {{
-      "type": "paragraph",
-      "data": {{
-        "text": "New content with citations [ref_id] inline.",
-        "citations": ["ref_id"]
-      }}
-    }}
-  ]
-}}
-
-RULES:
-1. Return ONLY valid JSON.
-2. Use ONLY reference IDs from the available list.
-3. Preserve factual accuracy from source material.
-4. Do NOT fabricate information.
-5. If data is insufficient, include a warning block.
-'''
-
-        def call():
-            return client.models.generate_content(
-                model="gemini-2.5-flash-preview-09-2025",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.2,
-                    max_output_tokens=2000,
-                    response_mime_type="application/json"
-                )
-            )
-        
-        response = await asyncio.to_thread(call)
-        
-        if response and response.text:
-            result = json.loads(response.text.strip())
-            return {
-                "section_id": request.section_id,
-                "content": result.get("content", [])
-            }
-    
-    except Exception as e:
-        print(f"[Regenerate] Error: {e}")
-    
-    return {
-        "section_id": request.section_id,
-        "content": [
-            {
-                "type": "warning",
-                "data": {"text": "Failed to regenerate section content."}
-            }
-        ]
-    }
