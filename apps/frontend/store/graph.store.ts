@@ -10,7 +10,7 @@ import {
     applyEdgeChanges,
     MarkerType, // Import MarkerType
 } from 'reactflow';
-import { nodesApi, edgesApi } from '@/lib/api';
+import { nodesApi, edgesApi, whiteboardsApi } from '@/lib/api';
 
 export interface Whiteboard {
   id: string;
@@ -63,6 +63,7 @@ export interface GraphState {
   clearGraph: () => void;
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => void;
   updateNodeAndPersist: (id: string, updates: Partial<any>) => Promise<void>;
+  fetchWhiteboards: () => Promise<void>;
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({
@@ -80,20 +81,27 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       }
   },
 
-  updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => set((s) => ({
-      browserStates: {
-          ...s.browserStates,
-          [whiteboardId]: {
-              ...(s.browserStates[whiteboardId] || { 
-                  url: '', 
-                  displayInput: '',
-                  tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
-                  activeTabId: '1'
-              }),
-              ...state
+  updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => {
+      set((s) => ({
+          browserStates: {
+              ...s.browserStates,
+              [whiteboardId]: {
+                  ...(s.browserStates[whiteboardId] || { 
+                      url: '', 
+                      displayInput: '',
+                      tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
+                      activeTabId: '1'
+                  }),
+                  ...state
+              }
           }
+      }));
+      
+      const { browserStates } = get();
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('browser_states', JSON.stringify(browserStates));
       }
-  })),
+  },
 
   initialize: () => {
     if (typeof window !== 'undefined') {
@@ -105,6 +113,31 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 console.error("Failed to parse whiteboards from localStorage", e);
             }
         }
+        
+        // Initial fetch from API if possible
+        if (sessionStorage.getItem('auth_token')) {
+            get().fetchWhiteboards();
+        }
+    }
+  },
+
+  fetchWhiteboards: async () => {
+    try {
+        const apiWbs = await whiteboardsApi.list();
+        if (apiWbs && apiWbs.length > 0) {
+            set({ whiteboards: apiWbs });
+            localStorage.setItem('whiteboards', JSON.stringify(apiWbs));
+        } else {
+            // New user or empty backend, ensure 'main' exists
+            const defaultWb = { id: 'main', name: 'Main Brain' };
+            await whiteboardsApi.create(defaultWb);
+            set({ whiteboards: [defaultWb] });
+            localStorage.setItem('whiteboards', JSON.stringify([defaultWb]));
+        }
+        // Force refresh nodes for active whiteboard
+        get().fetchNodes();
+    } catch (e) {
+        console.error("Failed to fetch whiteboards", e);
     }
   },
 
@@ -131,8 +164,18 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     
     // Save whiteboard list if it's new
     const { whiteboards } = get();
+    const exists = whiteboards.some(wb => wb.id === id);
     if (typeof window !== 'undefined') {
         localStorage.setItem('whiteboards', JSON.stringify(whiteboards));
+    }
+
+    if (!exists) {
+        // Persist new whiteboard to backend
+        try {
+            await whiteboardsApi.create({ id, name: `Board ${id}` });
+        } catch (e) {
+            console.error("Failed to persist whiteboard", e);
+        }
     }
     
     console.log(`[Store] Fetching data for whiteboard: ${id}`);

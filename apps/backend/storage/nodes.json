@@ -1500,5 +1500,26 @@
         ]
       }
     ]
+  },
+  "note-1769100473672": {
+    "id": "note-1769100473672",
+    "type": "note",
+    "url": "",
+    "title": "New Note",
+    "content": "",
+    "snippet": "",
+    "created_at": "2026-01-22T16:47:54.000472Z",
+    "metadata": {
+      "title": "New Note",
+      "content": "",
+      "position": {
+        "x": 47.22438721798903,
+        "y": 568.9333206809343
+      },
+      "whiteboard_id": "main",
+      "style": {
+        "width": 350
+      }
+    }
   }
 }
