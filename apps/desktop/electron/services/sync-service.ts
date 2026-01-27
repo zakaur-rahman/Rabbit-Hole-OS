@@ -245,6 +245,14 @@ export class SyncService {
                 if (match && match[1]) {
                   console.log(`[Sync] Attempting recovery for missing node: ${match[1]}`);
                   this.storage.forceSyncNode(match[1]);
+                  
+                  // Re-queue this edge to try again later (after the node is synced)
+                  // We do this by logging a new update for it, which gives it a higher change ID
+                  this.storage.logChange(entity_type, entity_id, 'update');
+                  
+                  // Mark the CURRENT failure as "done" (synced) or just return to avoid throwing
+                  // We'll effectively skip this specific change ID since we made a new one
+                  return; 
                 }
               }
             } catch (e) {

@@ -387,6 +387,19 @@ export class LocalStorageService {
     return this.getWhiteboard(id)!;
   }
 
+  deleteWhiteboard(id: string): void {
+    if (id === 'main') return; // Protect main whiteboard
+    
+    const stmt = this.db.prepare(`
+      UPDATE whiteboards 
+      SET is_deleted = 1, updated_at = ?, local_version = local_version + 1
+      WHERE id = ?
+    `);
+    
+    stmt.run(Date.now(), id);
+    this.logChange('whiteboard', id, 'delete');
+  }
+
   getWhiteboard(id: string, includeDeleted = false): WhiteboardRow | undefined {
     const query = includeDeleted 
       ? 'SELECT * FROM whiteboards WHERE id = ?' 
@@ -402,7 +415,7 @@ export class LocalStorageService {
 
   // ==================== CHANGE LOG ====================
   
-  private logChange(entityType: string, entityId: string, operation: string): void {
+  logChange(entityType: string, entityId: string, operation: string): void {
     const stmt = this.db.prepare(`
       INSERT INTO change_log (entity_type, entity_id, operation, timestamp)
       VALUES (?, ?, ?, ?)
@@ -448,8 +461,29 @@ export class LocalStorageService {
     // Reset synced_at
     this.db.prepare('UPDATE nodes SET synced_at = NULL WHERE id = ?').run(id);
     
-    // Log as a new create operation to ensure sync service picks it up
     this.logChange('node', id, 'create');
+  }
+
+  forceSyncWhiteboard(id: string): void {
+    const nodes = this.listNodes(id);
+    const edges = this.listEdges(id);
+
+    const syncTx = this.db.transaction(() => {
+        // Sync Whiteboard
+        this.logChange('whiteboard', id, 'update');
+        
+        // Sync Nodes
+        for (const node of nodes) {
+            this.logChange('node', node.id, 'update');
+        }
+
+        // Sync Edges
+        for (const edge of edges) {
+            this.logChange('edge', edge.id, 'update');
+        }
+    });
+
+    syncTx();
   }
 
   markSyncFailed(changeId: number, error: string): void {

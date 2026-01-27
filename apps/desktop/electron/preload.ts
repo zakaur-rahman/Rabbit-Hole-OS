@@ -57,6 +57,10 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.invoke('storage:whiteboards:create', whiteboard),
       update: (id: string, updates: any) => 
         ipcRenderer.invoke('storage:whiteboards:update', id, updates),
+      delete: (id: string) => 
+        ipcRenderer.invoke('storage:whiteboards:delete', id),
+      sync: (id: string) => 
+        ipcRenderer.invoke('storage:whiteboards:sync', id),
     },
     // Tabs
     tabs: {

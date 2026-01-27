@@ -116,6 +116,24 @@ export function registerStorageHandlers(storageService: LocalStorageService) {
     }
   });
 
+  ipcMain.handle('storage:whiteboards:delete', async (_, id: string) => {
+    try {
+      return storageService.deleteWhiteboard(id);
+    } catch (error: any) {
+      console.error('[IPC] storage:whiteboards:delete error:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('storage:whiteboards:sync', async (_, id: string) => {
+      try {
+          return storageService.forceSyncWhiteboard(id);
+      } catch (error: any) {
+          console.error('[IPC] storage:whiteboards:sync error:', error);
+          throw error;
+      }
+  });
+
   // ==================== TABS ====================
   
   ipcMain.handle('storage:tabs:save', async (_, whiteboardId: string, tabs: any[]) => {

@@ -16,6 +16,8 @@ import { nodesApi, edgesApi, whiteboardsApi } from '@/lib/api';
 export interface Whiteboard {
   id: string;
   name: string;
+  synced_at?: number | null;
+  updated_at?: number;
 }
 
 export interface Tab {
@@ -71,6 +73,8 @@ export interface GraphState {
   authModalState: { isOpen: boolean; message: string };
   setAuthModal: (isOpen: boolean, message?: string) => void;
   fetchWhiteboards: () => Promise<void>;
+  openWhiteboardIds: string[];
+  closeWhiteboard: (id: string) => void;
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({
@@ -90,6 +94,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
   authModalState: { isOpen: false, message: '' },
   setAuthModal: (isOpen: boolean, message = '') => set({ authModalState: { isOpen, message } }),
+  openWhiteboardIds: ['main'],
+
+  closeWhiteboard: (id: string) => {
+      if (id === 'main') return; // Cannot close main tab for now (optional design choice)
+      const { activeWhiteboardId, openWhiteboardIds } = get();
+      
+      const newOpenIds = openWhiteboardIds.filter(wbId => wbId !== id);
+      set({ openWhiteboardIds: newOpenIds });
+
+      // If we closed the active whiteboard, switch to another one
+      if (activeWhiteboardId === id) {
+          // Switch to main or the previous one in list
+          get().setWhiteboard('main');
+      }
+  },
 
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => {
       set((s) => ({
@@ -233,6 +252,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         
         set(state => ({
             whiteboards: [...state.whiteboards, newWb],
+            openWhiteboardIds: [...state.openWhiteboardIds, id],
         }));
 
         await get().setWhiteboard(id);
@@ -244,6 +264,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setWhiteboard: async (id: string) => {
+    // Ensure it's in open tabs
+    const { openWhiteboardIds } = get();
+    if (!openWhiteboardIds.includes(id)) {
+        set({ openWhiteboardIds: [...openWhiteboardIds, id] });
+    }
+
     set({ activeWhiteboardId: id, nodes: [], edges: [] });
     
     // Save whiteboard list if it's new
@@ -599,15 +625,30 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
-  removeWhiteboard: (id: string) => {
-      const { activeWhiteboardId, whiteboards } = get();
+  removeWhiteboard: async (id: string) => {
+      const { activeWhiteboardId, whiteboards, openWhiteboardIds } = get();
       if (id === 'main') return; // Cannot delete main
 
       const newWhiteboards = whiteboards.filter(wb => wb.id !== id);
-      set({ whiteboards: newWhiteboards });
+      const newOpenIds = openWhiteboardIds.filter(wbId => wbId !== id);
+      
+      set({ 
+          whiteboards: newWhiteboards,
+          openWhiteboardIds: newOpenIds
+      });
 
       if (activeWhiteboardId === id) {
-          get().setWhiteboard('main');
+          await get().setWhiteboard('main');
+      }
+
+      // Persistence
+      try {
+          if (isElectron()) {
+              await storage.whiteboards.delete(id);
+          }
+          await whiteboardsApi.delete(id);
+      } catch (e) {
+          console.error("Failed to persist whiteboard deletion", e);
       }
   },
 
