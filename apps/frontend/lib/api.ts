@@ -320,6 +320,11 @@ export const whiteboardsApi = {
       method: 'PUT',
       body: JSON.stringify(whiteboard),
     }),
+
+  delete: (id: string): Promise<void> =>
+    apiFetch(`/whiteboards/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Files API

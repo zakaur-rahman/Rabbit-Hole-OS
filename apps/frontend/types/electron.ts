@@ -29,6 +29,8 @@ export interface ElectronAPI {
       list: (userId?: string) => Promise<any[]>;
       create: (whiteboard: any) => Promise<any>;
       update: (id: string, updates: any) => Promise<any>;
+      delete: (id: string) => Promise<void>;
+      sync: (id: string) => Promise<void>;
     };
     tabs: {
       save: (whiteboardId: string, tabs: any[]) => Promise<void>;

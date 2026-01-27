@@ -74,3 +74,20 @@ async def update_whiteboard(
     await db.commit()
     await db.refresh(existing)
     return existing
+
+@router.delete("/{whiteboard_id}")
+async def delete_whiteboard(
+    whiteboard_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a whiteboard and all its nodes and edges (cascade handled by DB or manually)."""
+    result = await db.execute(select(Whiteboard).where(Whiteboard.id == whiteboard_id, Whiteboard.user_id == current_user.id))
+    existing = result.scalar_one_or_none()
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Whiteboard not found")
+        
+    await db.delete(existing)
+    await db.commit()
+    return {"status": "success"}

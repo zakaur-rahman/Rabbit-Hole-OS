@@ -5,7 +5,7 @@ import { useGraphStore } from '@/store/graph.store';
 import { Plus, LayoutTemplate, X } from 'lucide-react';
 
 export default function WhiteboardSelector() {
-    const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, removeWhiteboard, initialize, createWhiteboard } = useGraphStore();
+    const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, closeWhiteboard, openWhiteboardIds, initialize, createWhiteboard } = useGraphStore();
     const [editingId, setEditingId] = React.useState<string | null>(null);
     const [tempName, setTempName] = React.useState('');
     const [mounted, setMounted] = React.useState(false);
@@ -37,9 +37,9 @@ export default function WhiteboardSelector() {
         setEditingId(null);
     };
 
-    const handleDelete = (e: React.MouseEvent, id: string) => {
+    const handleClose = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        removeWhiteboard(id);
+        closeWhiteboard(id);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
@@ -58,11 +58,14 @@ export default function WhiteboardSelector() {
         );
     }
 
+    // Filter whiteboards to show only open ones
+    const openWhiteboards = whiteboards.filter(wb => openWhiteboardIds?.includes(wb.id));
+
     return (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px]">
             {/* Scrollable list of whiteboards */}
             <div className="flex items-center gap-1 overflow-x-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                {whiteboards.map(wb => (
+                {openWhiteboards.map(wb => (
                     editingId === wb.id ? (
                         <input
                             key={wb.id}
@@ -88,9 +91,9 @@ export default function WhiteboardSelector() {
                             </button>
                             {wb.id !== 'main' && (
                                 <button
-                                    onClick={(e) => handleDelete(e, wb.id)}
+                                    onClick={(e) => handleClose(e, wb.id)}
                                     className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-neutral-400 hover:text-red-400 hover:bg-neutral-700/50 opacity-0 group-hover:opacity-100 transition-all scale-90"
-                                    title="Delete Canvas"
+                                    title="Close Tab"
                                 >
                                     <X size={10} />
                                 </button>

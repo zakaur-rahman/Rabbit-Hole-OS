@@ -34,6 +34,8 @@ export const localStorage = {
       window.electron.storage.whiteboards.create(whiteboard),
     update: (id: string, updates: any) => 
       window.electron.storage.whiteboards.update(id, updates),
+    delete: (id: string) => 
+      window.electron.storage.whiteboards.delete(id),
   },
   tabs: {
     save: (whiteboardId: string, tabs: any[]) => 
