@@ -85,7 +85,7 @@ interface CanvasViewProps {
 }
 
 function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasViewProps) {
-    const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId, whiteboards } = useGraphStore();
+    const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId, whiteboards, setAuthModal } = useGraphStore();
     const { synthesisApi } = require('@/lib/api');
     const [showSynthesis, setShowSynthesis] = useState(false);
 
@@ -111,6 +111,12 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const [initialAST, setInitialAST] = useState<any>(null);
 
     const handleOpenASTEditor = useCallback(async () => {
+        // Auth Gate
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+            setAuthModal(true, "Research synthesis and AI document structuring require a premium account.");
+            return;
+        }
+
         const currentNodes = useGraphStore.getState().nodes;
         if (currentNodes.length === 0) {
             return;
@@ -162,6 +168,13 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
     const handleSynthesis = useCallback(async (useDummyDataArg: any = false) => {
         const useDummyData = useDummyDataArg === true;
+
+        // Auth Gate
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+            setAuthModal(true, "Advanced research synthesis and report generation require an account.");
+            return;
+        }
+
         const currentNodes = useGraphStore.getState().nodes;
         if (currentNodes.length === 0) return;
 
@@ -428,7 +441,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     data: { title: 'New Note', content: '' },
                 };
                 addNode(newNode);
-                nodesApi.create({ ...newNode, type: 'note', title: 'New Note', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
             case 'add-image': {
@@ -441,7 +453,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     data: { url: '' },
                 };
                 addNode(newNode);
-                nodesApi.create({ ...newNode, type: 'image', title: 'Image', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
             case 'add-pdf': {
@@ -454,7 +465,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     data: { url: '' },
                 };
                 addNode(newNode);
-                nodesApi.create({ ...newNode, type: 'pdf', title: 'PDF', data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
             case 'add-web': {
@@ -811,11 +821,14 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         const newEdge = {
             ...oldEdge,
             ...newConnection,
-            id: `e${newConnection.source}-${newConnection.target}` // Kept as simple ID to avoid breaking existing edges if necessary, but actually we should use the same logic as onConnect. Wait, the user didn't complain about this, but it's better for consistency. 
-            // Actually, if I change the ID logic now, it might cause issues with existing edges in the DB. 
-            // Let's just ensure handles are preserved. They are.
+            id: `e${newConnection.source}-${newConnection.sourceHandle || ''}-${newConnection.target}-${newConnection.targetHandle || ''}`
         } as FlowEdge;
         addEdge(newEdge);
+
+        // Remove old edge if ID changed
+        if (newEdge.id !== oldEdge.id) {
+            useGraphStore.getState().removeEdge(oldEdge.id);
+        }
     }, []);
 
     // Track connection/reconnection state
@@ -831,8 +844,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const onReconnectStart = useCallback((event: React.MouseEvent, edge: FlowEdge) => {
         reconnectingEdgeRef.current = edge;
         didConnectRef.current = false;
-        // Remove edge immediately so it's not visible while dragging/connecting
-        useGraphStore.getState().removeEdge(edge.id);
+        // DO NOT remove edge immediately. React Flow's reconnection handles the visual dragging.
+        // We only remove the old edge in onReconnect if the connection is successful.
     }, []);
 
     // Connection drop menu state
@@ -880,7 +893,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     }, []);
 
     // Handle connection drop menu action
-    const handleConnectionDropAction = useCallback((action: string) => {
+    const handleConnectionDropAction = useCallback(async (action: string) => {
         const { x, y, sourceNodeId, sourceHandleId } = connectionDropMenu;
         const flowPos = screenToFlowPosition({ x, y });
         let newNode: any = null;
@@ -967,7 +980,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         if (newNode) {
             // If article, we let processUrl handle persistence to avoid duplicates
             const shouldPersist = newNode.type !== 'article';
-            addNode(newNode, shouldPersist);
+            await addNode(newNode, shouldPersist);
 
             // If reconnecting, update the existing edge
             if (reconnectingEdgeRef.current) {
@@ -978,15 +991,15 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     target: newNode.id,
                     targetHandle: null
                 };
-                addEdge(updatedEdge);
+                await addEdge(updatedEdge);
             }
             // If new connection, create edge from source
             else if (sourceNodeId) {
-                let targetHandleId = 'top';
-                if (sourceHandleId === 'right') targetHandleId = 'left';
-                else if (sourceHandleId === 'left') targetHandleId = 'right';
-                else if (sourceHandleId === 'top') targetHandleId = 'bottom';
-                else if (sourceHandleId === 'bottom') targetHandleId = 'top';
+                let targetHandleId = 'top-target';
+                if (sourceHandleId?.includes('right')) targetHandleId = 'left-target';
+                else if (sourceHandleId?.includes('left')) targetHandleId = 'right-target';
+                else if (sourceHandleId?.includes('top')) targetHandleId = 'bottom-target';
+                else if (sourceHandleId?.includes('bottom')) targetHandleId = 'top-target';
 
                 const edgeId = `e${sourceNodeId}-${sourceHandleId || ''}-${nodeId}-${targetHandleId}`;
 
@@ -1006,7 +1019,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     useGraphStore.getState().updateNode(sourceNodeId, { hasInstruction: true });
                     nodesApi.update(sourceNodeId, { metadata: { hasInstruction: true } }).catch(() => { });
                 } else {
-                    addStoreEdge({
+                    await addStoreEdge({
                         id: edgeId,
                         source: sourceNodeId,
                         sourceHandle: sourceHandleId,
@@ -1018,20 +1031,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
             // Sync to backend (only for non-article or wait for article?)
             // For notes, we sync now. For articles, processUrl handles it.
-            if (action !== 'article') {
-                nodesApi.create({
-                    id: newNode.id,
-                    type: newNode.type,
-                    title: newNode.data.title || 'Untitled',
-                    data: {
-                        ...newNode.data,
-                        position: newNode.position,
-                        whiteboard_id: activeWhiteboardId,
-                    },
-                }).catch(console.error);
-            }
         }
-
         reconnectingEdgeRef.current = null;
         setConnectionDropMenu({ visible: false, x: 0, y: 0, sourceNodeId: null, sourceHandleId: null });
     }, [connectionDropMenu, screenToFlowPosition, addNode, addStoreEdge, activeWhiteboardId]);

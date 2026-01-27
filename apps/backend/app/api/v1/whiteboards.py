@@ -17,6 +17,9 @@ class WhiteboardBase(BaseModel):
 class WhiteboardSchema(WhiteboardBase):
     pass
 
+class WhiteboardUpdate(BaseModel):
+    name: Optional[str] = None
+
 @router.get("/", response_model=List[WhiteboardSchema])
 async def list_whiteboards(
     db: AsyncSession = Depends(get_db),
@@ -50,3 +53,24 @@ async def create_whiteboard(
     await db.commit()
     await db.refresh(new_wb)
     return new_wb
+
+@router.put("/{whiteboard_id}", response_model=WhiteboardSchema)
+async def update_whiteboard(
+    whiteboard_id: str,
+    whiteboard: WhiteboardUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update whiteboard metadata."""
+    result = await db.execute(select(Whiteboard).where(Whiteboard.id == whiteboard_id, Whiteboard.user_id == current_user.id))
+    existing = result.scalar_one_or_none()
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Whiteboard not found")
+        
+    if whiteboard.name is not None:
+        existing.name = whiteboard.name
+        
+    await db.commit()
+    await db.refresh(existing)
+    return existing

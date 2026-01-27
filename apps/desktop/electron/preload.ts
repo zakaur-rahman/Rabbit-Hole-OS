@@ -24,4 +24,64 @@ contextBridge.exposeInMainWorld('electron', {
       return () => ipcRenderer.removeListener('auth:callback', subscription);
     },
   },
+  storage: {
+    // Nodes
+    nodes: {
+      list: (whiteboardId: string, userId?: string) => 
+        ipcRenderer.invoke('storage:nodes:list', whiteboardId, userId),
+      get: (id: string) => 
+        ipcRenderer.invoke('storage:nodes:get', id),
+      create: (node: any) => 
+        ipcRenderer.invoke('storage:nodes:create', node),
+      update: (id: string, updates: any) => 
+        ipcRenderer.invoke('storage:nodes:update', id, updates),
+      delete: (id: string) => 
+        ipcRenderer.invoke('storage:nodes:delete', id),
+    },
+    // Edges
+    edges: {
+      list: (whiteboardId: string, userId?: string) => 
+        ipcRenderer.invoke('storage:edges:list', whiteboardId, userId),
+      create: (edge: any) => 
+        ipcRenderer.invoke('storage:edges:create', edge),
+      update: (id: string, updates: any) => 
+        ipcRenderer.invoke('storage:edges:update', id, updates),
+      delete: (id: string) => 
+        ipcRenderer.invoke('storage:edges:delete', id),
+    },
+    // Whiteboards
+    whiteboards: {
+      list: (userId?: string) => 
+        ipcRenderer.invoke('storage:whiteboards:list', userId),
+      create: (whiteboard: any) => 
+        ipcRenderer.invoke('storage:whiteboards:create', whiteboard),
+      update: (id: string, updates: any) => 
+        ipcRenderer.invoke('storage:whiteboards:update', id, updates),
+    },
+    // Tabs
+    tabs: {
+      save: (whiteboardId: string, tabs: any[]) => 
+        ipcRenderer.invoke('storage:tabs:save', whiteboardId, tabs),
+      load: (whiteboardId: string) => 
+        ipcRenderer.invoke('storage:tabs:load', whiteboardId),
+    },
+    // UI State
+    ui: {
+      save: (state: any) => 
+        ipcRenderer.invoke('storage:ui:save', state),
+      load: (whiteboardId: string) => 
+        ipcRenderer.invoke('storage:ui:load', whiteboardId),
+    },
+    // Sync
+    sync: {
+      getChanges: () => 
+        ipcRenderer.invoke('storage:sync:getChanges'),
+      markSynced: (entityType: string, entityId: string) => 
+        ipcRenderer.invoke('storage:sync:markSynced', entityType, entityId),
+      markFailed: (changeId: number, error: string) => 
+        ipcRenderer.invoke('storage:sync:markFailed', changeId, error),
+      setToken: (token: string | null) => 
+        ipcRenderer.invoke('storage:sync:setToken', token),
+    },
+  },
 });

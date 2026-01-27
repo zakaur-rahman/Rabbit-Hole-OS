@@ -3,17 +3,8 @@
  */
 import { getPKCEVerifier } from './pkce';
 
-declare global {
-  interface Window {
-    electron?: {
-      auth?: {
-        startLogin: (authUrl: string, state: string) => Promise<void>;
-        handleCallback: (data: { code: string; state: string; codeVerifier: string }) => Promise<void>;
-        onCallback: (callback: (data: { code?: string; state?: string; error?: string }) => void) => () => void;
-      };
-    };
-  }
-}
+// Types are now handled in apps/frontend/types/electron.ts
+
 
 /**
  * Handles OAuth callback in Electron
@@ -49,7 +40,7 @@ async function exchangeCodeWithBackend(
   codeVerifier: string,
   state: string
 ): Promise<void> {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
   
   // Desktop-only: Use loopback redirect (Google recommended)
   const redirectUri = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI_DESKTOP || 'http://127.0.0.1:53682/oauth/callback';
@@ -79,6 +70,8 @@ async function exchangeCodeWithBackend(
   if (typeof window !== 'undefined') {
     sessionStorage.setItem('auth_token', data.access_token);
     sessionStorage.setItem('refresh_token', data.refresh_token);
+    // Notify app of auth change
+    window.dispatchEvent(new Event('auth-state-changed'));
   }
 }
 

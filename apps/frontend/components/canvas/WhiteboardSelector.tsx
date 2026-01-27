@@ -5,7 +5,7 @@ import { useGraphStore } from '@/store/graph.store';
 import { Plus, LayoutTemplate, X } from 'lucide-react';
 
 export default function WhiteboardSelector() {
-    const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, removeWhiteboard, initialize } = useGraphStore();
+    const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, removeWhiteboard, initialize, createWhiteboard } = useGraphStore();
     const [editingId, setEditingId] = React.useState<string | null>(null);
     const [tempName, setTempName] = React.useState('');
     const [mounted, setMounted] = React.useState(false);
@@ -16,15 +16,7 @@ export default function WhiteboardSelector() {
     }, [initialize]);
 
     const handleCreate = () => {
-        // For now just add a local mock whiteboard
-        // In real app we'd need a backend endpoint for creating whiteboards
-        const newId = `board-${Date.now()}`;
-        useGraphStore.setState(state => ({
-            whiteboards: [...state.whiteboards, { id: newId, name: 'New Canvas' }],
-            activeWhiteboardId: newId
-        }));
-        // Then set it (triggers fetchNodes -> empty)
-        setWhiteboard(newId);
+        createWhiteboard('New Canvas');
     };
 
     const startEditing = (id: string, name: string) => {
