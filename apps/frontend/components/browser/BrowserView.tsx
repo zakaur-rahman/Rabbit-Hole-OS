@@ -44,6 +44,11 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
     // Auto add node logic
     const autoAddNodeToGraph = useCallback((url: string, title: string) => {
+        const { isAutoSyncEnabled } = useGraphStore.getState().browserStates[activeWhiteboardId] || { isAutoSyncEnabled: false };
+
+        // Block if auto-sync is off
+        if (!isAutoSyncEnabled) return;
+
         const urlKey = normalizeUrl(url);
         const { nodes, addNode, addEdge } = useGraphStore.getState();
 
@@ -89,6 +94,12 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         // Sync Graph Pointer
         useGraphStore.getState().selectNode(nodeId);
 
+        // Check auth before processing AI metadata
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+            console.log('[Browser] AI processing skipped - User not signed in');
+            return;
+        }
+
         import('@/lib/api').then(({ nodesApi }) => {
             nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
                 useGraphStore.getState().updateNode(nodeId, {
@@ -131,31 +142,32 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             if (searchQuery) displayInput = searchQuery;
             else displayInput = url.replace(/^https?:\/\//, '');
 
-            onUpdate(tab.id, { url, displayInput });
+            onUpdate(tab.id, {
+                url,
+                displayInput,
+                canGoBack: webview.canGoBack(),
+                canGoForward: webview.canGoForward()
+            });
 
             if (url.startsWith('http')) {
                 const isSearchPage = url.includes('google.com/search') || url.includes('bing.com/search');
                 if (!isSearchPage) {
-                    // clear any pending node creation from rapid redirects
                     if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
 
                     navigationTimeoutRef.current = setTimeout(() => {
                         autoAddNodeToGraph(url, currentTitleRef.current || url);
-                    }, 800); // Increased delay to 800ms to catch final redirect
-                } else {
-                    // For search pages, we don't create a node, but we MIGHT want to clear the lastNodeId
-                    // if we want to start a new chain? OR we keep it so the next result links to the previous context?
-                    // User said: "Tab A: India (root node) -> Open Delhi (child)"
-                    // If I search for "Delhi" in Tab A, it assumes I'm still in "India" context?
-                    // Let's NOT update lastNodeId for search pages, so the link jumps over the search step.
+                    }, 800);
                 }
             }
         };
 
         const handleTitleUpdate = (e: any) => {
-            onUpdate(tab.id, { title: e.title });
+            onUpdate(tab.id, {
+                title: e.title,
+                canGoBack: webview.canGoBack(),
+                canGoForward: webview.canGoForward()
+            });
 
-            // Sync title to graph node
             const { nodes, updateNode } = useGraphStore.getState();
             const targetNode = nodes.find(n => normalizeUrl(n.data?.url || '') === normalizeUrl(tab.url || ''));
             if (targetNode) {
@@ -164,13 +176,17 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         };
 
         const handleDomReady = () => {
-            // Inject scrollbar CSS
             webview.insertCSS(`
                 ::-webkit-scrollbar { width: 8px; height: 8px; }
                 ::-webkit-scrollbar-track { background: #171717; }
                 ::-webkit-scrollbar-thumb { background: #404040; border-radius: 4px; }
                 ::-webkit-scrollbar-thumb:hover { background: #525252; }
             `);
+            // Sync initial nav state
+            onUpdate(tab.id, {
+                canGoBack: webview.canGoBack(),
+                canGoForward: webview.canGoForward()
+            });
         };
 
         const handleNewWindow = (e: any) => {
@@ -239,14 +255,23 @@ BrowserTab.displayName = 'BrowserTab';
 
 // --- Main BrowserView Component ---
 export default function BrowserView() {
-    const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodes } = useGraphStore();
+    const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodes, setAuthModal } = useGraphStore();
+
+    // Track which whiteboards have their tabs mounted in the DOM
+    const [mountedWhiteboardIds, setMountedWhiteboardIds] = useState<string[]>([activeWhiteboardId]);
+
+    useEffect(() => {
+        if (!mountedWhiteboardIds.includes(activeWhiteboardId)) {
+            setMountedWhiteboardIds(prev => [...prev, activeWhiteboardId]);
+        }
+    }, [activeWhiteboardId, mountedWhiteboardIds]);
 
     // Load state from store or defaults
     const state = browserStates[activeWhiteboardId] || {
-        url: '', displayInput: '', tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }], activeTabId: '1'
+        url: '', displayInput: '', tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }], activeTabId: '1', isAutoSyncEnabled: false
     };
 
-    // We use local state for immediate UI updates, sync DB in background
+    // We use local state for immediate UI updates, sync store in background
     const [tabs, setTabs] = useState<Tab[]>(state.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
     const [activeTabId, setActiveTabId] = useState(state.activeTabId || '1');
     const webviewRefs = useRef<{ [key: string]: any }>({});
@@ -276,15 +301,13 @@ export default function BrowserView() {
         }
     }, [activeWhiteboardId, browserStates]);
 
-    // Sync to store when local state changes
+    // Sync current active whiteboard tabs back to store when local state changes
     useEffect(() => {
         if (isRemoteUpdate.current) {
             isRemoteUpdate.current = false;
             return;
         }
 
-        // Debounce or just check validity?
-        // We'll trust the lock for now.
         updateBrowserState(activeWhiteboardId, {
             tabs,
             activeTabId,
@@ -392,14 +415,20 @@ export default function BrowserView() {
         setTabs(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     }, []);
 
-    const handleMount = useCallback((id: string, ref: any) => {
-        webviewRefs.current[id] = ref;
+    const handleMount = useCallback((id: string, ref: any, whiteboardId: string) => {
+        webviewRefs.current[`${whiteboardId}-${id}`] = ref;
     }, []);
 
     // Navigation
     const navigate = (overrideUrl?: string) => {
         const input = overrideUrl || activeTab.displayInput.trim();
         if (!input) return;
+
+        // Auth Gate for search/navigation
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+            setAuthModal(true, "Browsing and AI features require an account to save your progress and access real-time analysis.");
+            return;
+        }
 
         const target = resolveUrl(input);
         updateTab(activeTabId, { url: target });
@@ -409,9 +438,27 @@ export default function BrowserView() {
         if (e.key === 'Enter') navigate();
     };
 
+    const handleToggleAutoSync = () => {
+        // Auth Gate
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+            setAuthModal(true, "Auto-sync requires an account to save your browsing path and sync it across devices.");
+            return;
+        }
+
+        updateBrowserState(activeWhiteboardId, {
+            isAutoSyncEnabled: !state.isAutoSyncEnabled
+        });
+    };
+
     const handleManualSync = useCallback(() => {
         const tab = tabs.find(t => t.id === activeTabId);
         if (!tab || !tab.url) return;
+
+        // Auth Gate
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+            setAuthModal(true, "Syncing and processing web content requires an active account.");
+            return;
+        }
 
         const url = tab.url;
         const title = tab.title || (url.startsWith('http') ? new URL(url).hostname : 'New Node');
@@ -482,7 +529,8 @@ export default function BrowserView() {
 
     }, [tabs, activeTabId, activeWhiteboardId, updateTab]);
 
-    const activeWebview = webviewRefs.current[activeTabId];
+    const activeTabWebviewKey = `${activeWhiteboardId}-${activeTabId}`;
+    const activeWebview = webviewRefs.current[activeTabWebviewKey];
 
     return (
         <div className="flex flex-col h-full bg-neutral-950">
@@ -534,14 +582,14 @@ export default function BrowserView() {
                     <button
                         className="w-8 h-8 flex items-center justify-center hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         onClick={() => activeWebview?.goBack()}
-                        disabled={!activeTab.url || !activeWebview?.canGoBack?.()}
+                        disabled={!activeTab.url || !activeTab.canGoBack}
                     >
                         <ArrowLeft size={16} />
                     </button>
                     <button
                         className="w-8 h-8 flex items-center justify-center hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         onClick={() => activeWebview?.goForward()}
-                        disabled={!activeTab.url || !activeWebview?.canGoForward?.()}
+                        disabled={!activeTab.url || !activeTab.canGoForward}
                     >
                         <ArrowRight size={16} />
                     </button>
@@ -569,31 +617,42 @@ export default function BrowserView() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={handleManualSync}
-                        disabled={!activeTab.url}
-                        className={`h-8 px-3 flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 rounded-lg text-sm font-medium transition-all shadow-lg shadow-purple-500/20 ${!activeTab.url ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
-                    >
-                        <RefreshCw size={14} />
-                        <span className="hidden sm:inline">Sync</span>
-                    </button>
+                <div className="flex items-center gap-2 pr-1">
+                    <div className="flex items-center gap-2 bg-neutral-800/50 px-2 py-1 rounded-lg border border-neutral-700">
+                        <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Auto-Sync</span>
+                        <button
+                            onClick={handleToggleAutoSync}
+                            className={`w-9 h-5 rounded-full transition-colors relative flex items-center ${state.isAutoSyncEnabled ? 'bg-purple-500' : 'bg-neutral-700'}`}
+                        >
+                            <div className={`absolute w-3.5 h-3.5 bg-white rounded-full transition-all ${state.isAutoSyncEnabled ? 'left-5' : 'left-0.5'}`} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Content Area */}
             <div className="flex-1 relative bg-white overflow-hidden">
-                {tabs.map(tab => (
-                    <BrowserTab
-                        key={tab.id}
-                        tab={tab}
-                        isActive={tab.id === activeTabId}
-                        onUpdate={updateTab}
-                        onMount={handleMount}
-                        onNewTab={addTab}
-                        activeWhiteboardId={activeWhiteboardId}
-                    />
-                ))}
+                {mountedWhiteboardIds.map(wbId => {
+                    const wbState = browserStates[wbId] || (wbId === activeWhiteboardId ? state : null);
+                    if (!wbState) return null;
+
+                    return (wbState.tabs || []).map(tab => (
+                        <BrowserTab
+                            key={`${wbId}-${tab.id}`}
+                            tab={tab}
+                            isActive={wbId === activeWhiteboardId && tab.id === (wbId === activeWhiteboardId ? activeTabId : wbState.activeTabId)}
+                            onUpdate={wbId === activeWhiteboardId ? updateTab : (id, updates) => {
+                                // Background update for non-active whiteboard tabs (e.g. title changes)
+                                updateBrowserState(wbId, {
+                                    tabs: wbState.tabs.map(t => t.id === id ? { ...t, ...updates } : t)
+                                });
+                            }}
+                            onMount={(id, ref) => handleMount(id, ref, wbId)}
+                            onNewTab={wbId === activeWhiteboardId ? addTab : () => { }} // Only allow new tabs on active board
+                            activeWhiteboardId={wbId}
+                        />
+                    ));
+                })}
             </div>
         </div>
     );

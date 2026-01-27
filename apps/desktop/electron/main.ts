@@ -4,6 +4,11 @@ import fs from 'fs';
 import url from 'url';
 import { spawn, ChildProcess } from 'child_process';
 import { openAuthBrowserAndWait, stopOAuthServer } from './auth';
+import { SQLiteDatabase } from './database/sqlite';
+import { initializeSchema } from './database/schema';
+import { LocalStorageService } from './services/local-storage';
+import { registerStorageHandlers } from './ipc/storage-handler';
+import { SyncService } from './services/sync-service';
 
 // Prevent multiple instances (Windows/Linux)
 const gotTheLock = app.requestSingleInstanceLock();
@@ -41,6 +46,9 @@ process.on('uncaughtException', (error) => {
 
 let mainWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
+let database: SQLiteDatabase | null = null;
+let storageService: LocalStorageService | null = null;
+let syncService: SyncService | null = null;
 
 function startBackend() {
     const storageDir = isDev 
@@ -83,21 +91,20 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    frame: true, // Use default frame for Windows compatibility
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webviewTag: true, // Enable <webview> tag for the browser integration
+      webviewTag: true,
     },
     backgroundColor: '#0a0a0a',
-    // Custom title bar style
     titleBarStyle: 'hidden',
     titleBarOverlay: { 
-        color: '#00000000', // Transparent to match app header
+        color: '#00000000',
         symbolColor: '#ffffff', 
-        height: 56 // Matches h-14 (56px) header
+        height: 56
     },
-    // Hide the standard menu bar
     autoHideMenuBar: true,
   });
   
@@ -108,7 +115,18 @@ function createWindow() {
 
     if (isDev && !hasProdAssets) {
         console.log('Running in development mode, loading from localhost:3000');
-        mainWindow.loadURL('http://localhost:3000');
+        
+        // Retry logic for when frontend isn't ready yet
+        const loadURL = () => {
+          mainWindow?.loadURL('http://localhost:3000').then(() => {
+            console.log('[Lifecycle] Successfully loaded localhost:3000');
+          }).catch((err) => {
+            console.log('[Lifecycle] Frontend not ready, retrying in 1s...', err.message);
+            setTimeout(loadURL, 1000); // Retry every second
+          });
+        };
+        
+        loadURL(); // Use the retry-capable loader
         mainWindow.webContents.openDevTools();
     } else {
         // Serve static files from the bundled frontend
@@ -135,6 +153,7 @@ function createWindow() {
   });
 
   mainWindow.on('closed', () => {
+    console.log('[Lifecycle] MainWindow closed');
     mainWindow = null;
   });
 
@@ -163,17 +182,91 @@ app.on('web-contents-created', (event, contents) => {
 });
 
 app.on('window-all-closed', () => {
+  console.log('[Lifecycle] window-all-closed event fired');
+  if (database) {
+    database.close();
+    database = null;
+  }
   if (backendProcess) {
     backendProcess.kill();
   }
   // Stop OAuth callback server
   stopOAuthServer();
   if (process.platform !== 'darwin') {
+    console.log('[Lifecycle] Quitting app (not darwin)');
+    app.quit();
+  }
+});
+
+// Graceful shutdown: sync before quit
+let hasShutdownSynced = false;
+app.on('before-quit', async (event) => {
+  console.log('[Lifecycle] before-quit event fired');
+  if (syncService && !hasShutdownSynced) {
+    event.preventDefault();
+    console.log('[App] Performing final sync before quit...');
+    
+    try {
+      await syncService.syncNow();
+      console.log('[App] Final sync complete');
+    } catch (error) {
+      console.error('[App] Final sync failed:', error);
+    }
+    
+    // Mark that we've done the shutdown sync
+    hasShutdownSynced = true;
+    
+    // Stop sync service
+    syncService.stop();
+    
+    // Now allow quit
+    console.log('[Lifecycle] Re-triggering quit after sync');
     app.quit();
   }
 });
 
 app.on('ready', () => {
+    // Initialize local database
+    console.log('[App] Initializing local database...');
+    database = new SQLiteDatabase();
+    initializeSchema(database.getDb());
+    
+    // Initialize storage service
+    storageService = new LocalStorageService(database.getDb());
+    
+    // Register IPC handlers for storage
+    registerStorageHandlers(storageService);
+    
+    console.log('[App] Local storage ready');
+    
+    // Initialize sync service
+    syncService = new SyncService(storageService, {
+      apiBaseUrl: 'http://127.0.0.1:8000',
+      syncIntervalMs: 5 * 60 * 1000, // 5 minutes
+    });
+    
+    // Start sync service
+    syncService.start();
+    console.log('[App] Sync service started');
+
+    // Listen for auth token updates (emitted from storage-handler or other main process parts)
+    ipcMain.on('sync:set-token', (token: any) => {
+        console.log(`[Main] sync:set-token received (internal)`);
+        if (syncService) {
+            syncService.setAuthToken(token);
+            syncService.syncNow().catch(err => console.error('[Sync] Immediate sync error:', err));
+        }
+    });
+
+    // Also listen directly for IPC from renderer if preferred
+    ipcMain.on('storage:sync:setToken', (event, token) => {
+        console.log(`[Main] storage:sync:setToken received (IPC)`);
+        if (syncService) {
+            syncService.setAuthToken(token);
+            syncService.syncNow().catch(err => console.error('[Sync] Immediate sync error:', err));
+        }
+    });
+    
     startBackend();
     createWindow();
 });

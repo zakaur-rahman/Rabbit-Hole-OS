@@ -25,7 +25,7 @@ async def upload_file(file: UploadFile = File(...), current_user: User = Depends
             
         return {
             "filename": file.filename,
-            "url": f"http://localhost:8000/static/uploads/{unique_filename}",
+            "url": f"http://127.0.0.1:8000/static/uploads/{unique_filename}",
             "path": file_path
         }
     except Exception as e:
@@ -38,6 +38,6 @@ async def list_files(current_user: User = Depends(get_current_user)):
         for filename in os.listdir(UPLOAD_DIR):
             files.append({
                 "filename": filename,
-                "url": f"http://localhost:8000/static/uploads/{filename}"
+                "url": f"http://127.0.0.1:8000/static/uploads/{filename}"
             })
     return files

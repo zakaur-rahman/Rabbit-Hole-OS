@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = 'http://127.0.0.1:8000/api/v1';
 import { Edge } from 'reactflow';
 
 // Generic fetch wrapper with error handling
@@ -312,6 +312,12 @@ export const whiteboardsApi = {
   create: (whiteboard: ApiWhiteboard): Promise<ApiWhiteboard> =>
     apiFetch('/whiteboards/', {
       method: 'POST',
+      body: JSON.stringify(whiteboard),
+    }),
+
+  update: (id: string, whiteboard: Partial<ApiWhiteboard>): Promise<ApiWhiteboard> =>
+    apiFetch(`/whiteboards/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(whiteboard),
     }),
 };

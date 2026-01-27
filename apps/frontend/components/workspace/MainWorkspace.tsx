@@ -9,9 +9,13 @@ import SearchModal from '@/components/ui/SearchModal';
 import NodeDetailsPanel from '@/components/canvas/NodeDetailsPanel';
 import { useGraphStore } from '@/store/graph.store';
 import FileTreeSidebar from '@/components/workspace/FileTreeSidebar';
+import { useRouter } from 'next/navigation';
 import { Globe, FolderTree } from 'lucide-react';
+import { SyncStatus } from '@/components/ui/SyncStatus';
+import AuthGuardModal from '@/components/modals/AuthGuardModal';
 
 export default function MainWorkspace() {
+    const router = useRouter();
     const [showSearch, setShowSearch] = useState(false);
     const [leftPanelMode, setLeftPanelMode] = useState<'browser' | 'files'>('browser');
     const { selectedNodeId, selectNode } = useGraphStore();
@@ -166,6 +170,9 @@ export default function MainWorkspace() {
 
             {/* Search Modal */}
             {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}
+
+            {/* Auth Guard Modal */}
+            <AuthGuardModal />
         </div>
     );
 }

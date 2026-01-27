@@ -10,6 +10,7 @@ import {
     applyEdgeChanges,
     MarkerType, // Import MarkerType
 } from 'reactflow';
+import { localStorage as storage, isElectron } from '@/lib/local-storage';
 import { nodesApi, edgesApi, whiteboardsApi } from '@/lib/api';
 
 export interface Whiteboard {
@@ -24,6 +25,8 @@ export interface Tab {
   title: string;
   isLoading?: boolean;
   lastNodeId?: string;
+  canGoBack?: boolean;
+  canGoForward?: boolean;
 }
 
 export interface BrowserState {
@@ -31,6 +34,7 @@ export interface BrowserState {
   displayInput: string;
   tabs: Tab[];
   activeTabId: string;
+  isAutoSyncEnabled: boolean;
 }
 
 export interface GraphState {
@@ -54,6 +58,7 @@ export interface GraphState {
   updateNodeFull: (id: string, updates: Partial<any>) => void;
   updateNodeData: (id: string, updater: (prevData: any) => any) => void;
   updateWhiteboard: (id: string, name: string) => void;
+  createWhiteboard: (name?: string) => Promise<string>;
   removeWhiteboard: (id: string) => void;
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
@@ -63,6 +68,8 @@ export interface GraphState {
   clearGraph: () => void;
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => void;
   updateNodeAndPersist: (id: string, updates: Partial<any>) => Promise<void>;
+  authModalState: { isOpen: boolean; message: string };
+  setAuthModal: (isOpen: boolean, message?: string) => void;
   fetchWhiteboards: () => Promise<void>;
 }
 
@@ -77,9 +84,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           url: '', 
           displayInput: '',
           tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
-          activeTabId: '1'
+          activeTabId: '1',
+          isAutoSyncEnabled: false
       }
   },
+  authModalState: { isOpen: false, message: '' },
+  setAuthModal: (isOpen: boolean, message = '') => set({ authModalState: { isOpen, message } }),
 
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => {
       set((s) => ({
@@ -90,7 +100,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                       url: '', 
                       displayInput: '',
                       tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
-                      activeTabId: '1'
+                      activeTabId: '1',
+                      isAutoSyncEnabled: false
                   }),
                   ...state
               }
@@ -113,24 +124,53 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 console.error("Failed to parse whiteboards from localStorage", e);
             }
         }
+
+        const storedBrowser = localStorage.getItem('browser_states');
+        if (storedBrowser) {
+            try {
+                set({ browserStates: JSON.parse(storedBrowser) });
+            } catch (e) {
+                console.error("Failed to parse browser_states from localStorage", e);
+            }
+        }
         
         // Initial fetch from API if possible
         if (sessionStorage.getItem('auth_token')) {
+            if (isElectron()) {
+                (window as any).electron.storage.sync.setToken(sessionStorage.getItem('auth_token'));
+            }
             get().fetchWhiteboards();
         }
+    }
+
+    // Add listener for login/logout to update Electron token
+    if (typeof window !== 'undefined' && isElectron()) {
+        window.addEventListener('auth-state-changed', () => {
+            const token = sessionStorage.getItem('auth_token');
+            (window as any).electron.storage.sync.setToken(token);
+        });
     }
   },
 
   fetchWhiteboards: async () => {
     try {
-        const apiWbs = await whiteboardsApi.list();
+        const apiWbs = isElectron() 
+            ? await storage.whiteboards.list()
+            : await whiteboardsApi.list();
         if (apiWbs && apiWbs.length > 0) {
             set({ whiteboards: apiWbs });
             localStorage.setItem('whiteboards', JSON.stringify(apiWbs));
         } else {
             // New user or empty backend, ensure 'main' exists
             const defaultWb = { id: 'main', name: 'Main Brain' };
-            await whiteboardsApi.create(defaultWb);
+            if (isElectron()) {
+                await storage.whiteboards.create({
+                    ...defaultWb,
+                    user_id: sessionStorage.getItem('user_id') || 'local'
+                });
+            } else {
+                await whiteboardsApi.create(defaultWb);
+            }
             set({ whiteboards: [defaultWb] });
             localStorage.setItem('whiteboards', JSON.stringify([defaultWb]));
         }
@@ -159,6 +199,50 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({ edges: uniqueEdges });
   },
 
+  createWhiteboard: async (providedName?: string) => {
+    const existingWhiteboards = get().whiteboards;
+    
+    let name = providedName;
+    if (!name || name === 'New Canvas') {
+      const untitledRegex = /^Untitled-(\d+)$/;
+      let maxNum = 0;
+      
+      existingWhiteboards.forEach(wb => {
+        const match = wb.name.match(untitledRegex);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+      
+      name = `Untitled-${maxNum + 1}`;
+    }
+
+    const id = `board-${Date.now()}`;
+    const newWb = { id, name };
+    
+    try {
+        if (isElectron()) {
+            await storage.whiteboards.create({
+                ...newWb,
+                user_id: sessionStorage.getItem('user_id') || 'local'
+            });
+        } else {
+            await whiteboardsApi.create(newWb);
+        }
+        
+        set(state => ({
+            whiteboards: [...state.whiteboards, newWb],
+        }));
+
+        await get().setWhiteboard(id);
+        return id;
+    } catch (e) {
+        console.error("Failed to create whiteboard", e);
+        throw e;
+    }
+  },
+
   setWhiteboard: async (id: string) => {
     set({ activeWhiteboardId: id, nodes: [], edges: [] });
     
@@ -169,49 +253,56 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         localStorage.setItem('whiteboards', JSON.stringify(whiteboards));
     }
 
-    if (!exists) {
-        // Persist new whiteboard to backend
-        try {
-            await whiteboardsApi.create({ id, name: `Board ${id}` });
-        } catch (e) {
-            console.error("Failed to persist whiteboard", e);
-        }
-    }
-    
     console.log(`[Store] Fetching data for whiteboard: ${id}`);
     try {
-        const [apiNodes, apiEdges] = await Promise.all([
-            nodesApi.list(id),
-            edgesApi.list(id) // Fetch edges
-        ]);
+        const [apiNodes, apiEdges] = isElectron()
+            ? await Promise.all([
+                storage.nodes.list(id),
+                storage.edges.list(id)
+            ])
+            : await Promise.all([
+                nodesApi.list(id),
+                edgesApi.list(id)
+            ]);
         
         // Transform ApiNodes to ReactFlow Nodes
-        const flowNodes = apiNodes.map(n => ({
+        const flowNodes = apiNodes.map((n: any) => ({
             id: n.id,
             type: n.type || 'article', // Default type
-            position: n.metadata?.position || { x: Math.random() * 500, y: Math.random() * 500 },
+            position: n.metadata?.position || { x: n.position_x || 0, y: n.position_y || 0 },
             data: { 
                 title: n.title,
                 url: n.url,
                 content: n.content,
                 outline: n.outline,
-                ...n.metadata 
+                ...(typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata || {})
             },
             style: n.metadata?.style,
             parentId: n.metadata?.parentId,
         }));
+
+        // Transform Edges if from Electron (SQLite uses source_id/target_id and snake_case handles)
+        const flowEdges = isElectron() 
+            ? (apiEdges || []).map((e: any) => ({
+                ...e,
+                source: e.source_id || e.source,
+                target: e.target_id || e.target,
+                sourceHandle: e.source_handle || e.sourceHandle,
+                targetHandle: e.target_handle || e.targetHandle,
+            }))
+            : (apiEdges || []);
         
         // Deduplicate
-        const uniqueNodes = Array.from(new Map(flowNodes.map(node => [node.id, node])).values());
+        const uniqueNodes = Array.from(new Map(flowNodes.map((node: any) => [node.id, node])).values());
         
         // Sanitize parentIds - remove if parent doesn't exist
-        const nodeIds = new Set(uniqueNodes.map(n => n.id));
-        const sanitizedNodes = uniqueNodes.map(n => ({
+        const nodeIds = new Set(uniqueNodes.map((n: any) => n.id));
+        const sanitizedNodes: any[] = uniqueNodes.map((n: any) => ({
             ...n,
             parentId: n.parentId && nodeIds.has(n.parentId) ? n.parentId : undefined
         }));
 
-        set({ nodes: sanitizedNodes, edges: apiEdges || [] });
+        set({ nodes: sanitizedNodes, edges: flowEdges });
     } catch(e) {
         console.error("Failed to set whiteboard", e);
     }
@@ -220,37 +311,55 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   fetchNodes: async () => {
       const { activeWhiteboardId } = get();
       try {
-          const [apiNodes, apiEdges] = await Promise.all([
-              nodesApi.list(activeWhiteboardId),
-              edgesApi.list(activeWhiteboardId)
-          ]);
+          // Use local storage if in Electron, otherwise fall back to API
+          const [apiNodes, apiEdges] = isElectron()
+            ? await Promise.all([
+                storage.nodes.list(activeWhiteboardId),
+                storage.edges.list(activeWhiteboardId)
+              ])
+            : await Promise.all([
+                nodesApi.list(activeWhiteboardId),
+                edgesApi.list(activeWhiteboardId)
+              ]);
 
-          const flowNodes = apiNodes.map(n => ({
+        const flowNodes = apiNodes.map((n: any) => ({
             id: n.id,
             type: n.type || 'article',
-            position: n.metadata?.position || { x: Math.random() * 500, y: Math.random() * 500 },
+            position: n.metadata?.position || (n.position_x !== undefined 
+                ? { x: n.position_x || 0, y: n.position_y || 0 }
+                : { x: Math.random() * 500, y: Math.random() * 500 }),
             data: { 
                 title: n.title,
                 url: n.url,
                 content: n.content,
-                label: n.metadata?.label, // For group nodes
-                text: n.metadata?.text,   // For text nodes
-                ...n.metadata 
+                label: n.metadata?.label || (typeof n.metadata === 'string' ? JSON.parse(n.metadata).label : undefined),
+                text: n.metadata?.text || (typeof n.metadata === 'string' ? JSON.parse(n.metadata).text : undefined),
+                ...(typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata || {})
             },
-            style: n.metadata?.style, // For group size
-            parentId: n.metadata?.parentId,
+            style: n.metadata?.style || (typeof n.metadata === 'string' ? JSON.parse(n.metadata).style : undefined),
+            parentId: n.metadata?.parentId || (typeof n.metadata === 'string' ? JSON.parse(n.metadata).parentId : undefined),
         }));
 
-        const uniqueNodes = Array.from(new Map(flowNodes.map(node => [node.id, node])).values());
+        const flowEdges = isElectron() 
+            ? (apiEdges || []).map((e: any) => ({
+                ...e,
+                source: e.source_id || e.source,
+                target: e.target_id || e.target,
+                sourceHandle: e.source_handle || e.sourceHandle,
+                targetHandle: e.target_handle || e.targetHandle,
+            }))
+            : (apiEdges || []);
+
+        const uniqueNodes = Array.from(new Map(flowNodes.map((node: any) => [node.id, node])).values());
 
         // Sanitize parentIds
-        const nodeIds = new Set(uniqueNodes.map(n => n.id));
-        const sanitizedNodes = uniqueNodes.map(n => ({
+        const nodeIds = new Set(uniqueNodes.map((n: any) => n.id));
+        const sanitizedNodes = uniqueNodes.map((n: any) => ({
             ...n,
             parentId: n.parentId && nodeIds.has(n.parentId) ? n.parentId : undefined
         }));
 
-        set({ nodes: sanitizedNodes, edges: apiEdges || [] });
+        set({ nodes: sanitizedNodes, edges: flowEdges });
       } catch (e) {
           console.error("[Store] Failed to fetchNodes", e);
       }
@@ -272,16 +381,31 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     if (persist) {
         try {
-            await nodesApi.create({
-                id: node.id,
-                type: node.type || 'article',
-                title: node.data.title,
-                url: node.data.url,
-                data: {
-                    ...nodeWithWb.data,
-                    style: node.style // Persist initial dimensions
-                }
-            });
+            if (isElectron()) {
+                await storage.nodes.create({
+                    id: node.id,
+                    type: node.type || 'article',
+                    title: node.data.title,
+                    content: node.data.content,
+                    url: node.data.url,
+                    whiteboard_id: activeWhiteboardId,
+                    user_id: node.data.user_id || 'local',
+                    position_x: node.position.x,
+                    position_y: node.position.y,
+                    metadata: JSON.stringify(nodeWithWb.data)
+                });
+            } else {
+                await nodesApi.create({
+                    id: node.id,
+                    type: node.type || 'article',
+                    title: node.data.title,
+                    url: node.data.url,
+                    data: {
+                        ...nodeWithWb.data,
+                        style: node.style
+                    }
+                });
+            }
         } catch(e) {
             console.error("Failed to persist node", e);
         }
@@ -315,10 +439,23 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         edges: [...state.edges, styledEdge] 
     }));
     try {
-        await edgesApi.create(edge, activeWhiteboardId);
+        if (isElectron()) {
+            await (window as any).electron.storage.edges.create({
+                id: styledEdge.id!,
+                source_id: styledEdge.source!,
+                target_id: styledEdge.target!,
+                label: (styledEdge as any).label,
+                whiteboard_id: activeWhiteboardId,
+                user_id: 'local',
+                source_handle: styledEdge.sourceHandle,
+                target_handle: styledEdge.targetHandle,
+                edge_type: styledEdge.type || 'default',
+            });
+        } else {
+            await edgesApi.create(styledEdge, activeWhiteboardId);
+        }
     } catch(e) {
         console.error("Failed to persist edge", e);
-        // data consistency? revert?
     }
   },
 
@@ -335,14 +472,22 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }));
 
     try {
-        // Delete node on backend
-        await nodesApi.delete(id);
+        // Delete node on backend or local storage
+        if (isElectron()) {
+            await storage.nodes.delete(id);
+        } else {
+            await nodesApi.delete(id);
+        }
         
         // Find and delete all edges connected to this node
         const edgesToDelete = edges.filter(e => e.source === id || e.target === id);
-        await Promise.all(edgesToDelete.map(e => 
-            edgesApi.delete(e.id, activeWhiteboardId).catch(() => {}) // Silently handle edge 404s
-        ));
+        await Promise.all(edgesToDelete.map(e => {
+            if (isElectron()) {
+                return storage.edges.delete(e.id).catch(() => {});
+            } else {
+                return edgesApi.delete(e.id, activeWhiteboardId).catch(() => {});
+            }
+        }));
     } catch(e) {
         console.error("Failed to persist node deletion", e);
     }
@@ -360,7 +505,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }));
 
     try {
-        await edgesApi.delete(id, activeWhiteboardId);
+        if (isElectron()) {
+            await storage.edges.delete(id);
+        } else {
+            await edgesApi.delete(id, activeWhiteboardId);
+        }
     } catch(e: any) {
         // Silently handle 404s as they can occur during rapid reconnections
         if (!e.message?.includes('404')) {
@@ -387,11 +536,24 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     ),
   })),
 
-  updateWhiteboard: (id: string, name: string) => set((state) => ({
-    whiteboards: state.whiteboards.map(wb => 
-      wb.id === id ? { ...wb, name } : wb
-    ),
-  })),
+  updateWhiteboard: async (id: string, name: string) => {
+    // Local state update
+    set((state) => ({
+      whiteboards: state.whiteboards.map(wb => 
+        wb.id === id ? { ...wb, name } : wb
+      ),
+    }));
+
+    // Persistence
+    try {
+        if (isElectron()) {
+            await storage.whiteboards.update(id, { name });
+        }
+        await whiteboardsApi.update(id, { name });
+    } catch (e) {
+        console.error("Failed to persist whiteboard renaming", e);
+    }
+  },
 
   updateNodeAndPersist: async (id: string, updates: Partial<any>) => {
     const node = get().nodes.find(n => n.id === id);
@@ -408,6 +570,18 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     try {
         const updatedNode = get().nodes.find(n => n.id === id);
         if (updatedNode) {
+            // Local Storage Sync (Electron)
+            if (isElectron()) {
+                await storage.nodes.update(id, {
+                    title: updatedNode.data.title,
+                    content: updatedNode.data.content,
+                    position_x: updatedNode.position.x,
+                    position_y: updatedNode.position.y,
+                    metadata: JSON.stringify(updatedNode.data)
+                });
+            }
+
+            // Cloud API Sync
             await nodesApi.update(id, {
                 title: updatedNode.data.title,
                 type: updatedNode.type,
@@ -443,17 +617,27 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Handle deletions
     changes.forEach(change => {
         if (change.type === 'remove') {
-            // Delete node on backend
-            nodesApi.delete(change.id).catch(err => {
-                if (!err.message?.includes('404')) {
-                    console.error("Failed to delete node in onNodesChange", err);
-                }
-            });
+            // Delete node on appropriate storage
+            if (isElectron()) {
+                storage.nodes.delete(change.id).catch(err => {
+                    console.error("Failed to delete node in Electron storage", err);
+                });
+            } else {
+                nodesApi.delete(change.id).catch(err => {
+                    if (!err.message?.includes('404')) {
+                        console.error("Failed to delete node in onNodesChange", err);
+                    }
+                });
+            }
 
             // Find and delete all edges connected to this node
             const edgesToDelete = edges.filter(e => e.source === change.id || e.target === change.id);
             edgesToDelete.forEach(edge => {
-                edgesApi.delete(edge.id, activeWhiteboardId).catch(() => {});
+                if (isElectron()) {
+                    storage.edges.delete(edge.id).catch(() => {});
+                } else {
+                    edgesApi.delete(edge.id, activeWhiteboardId).catch(() => {});
+                }
             });
         }
     });
@@ -479,11 +663,17 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         if (change.type === 'remove') {
             const exists = get().edges.some(e => e.id === change.id);
             if (exists) {
-                edgesApi.delete(change.id, activeWhiteboardId).catch(err => {
-                    if (!err.message?.includes('404')) {
-                        console.error("Failed to delete edge in onEdgesChange", err);
-                    }
-                });
+                if (isElectron()) {
+                    storage.edges.delete(change.id).catch(err => {
+                        console.error("Failed to delete edge in Electron storage", err);
+                    });
+                } else {
+                    edgesApi.delete(change.id, activeWhiteboardId).catch(err => {
+                        if (!err.message?.includes('404')) {
+                            console.error("Failed to delete edge in onEdgesChange", err);
+                        }
+                    });
+                }
             }
         }
     });

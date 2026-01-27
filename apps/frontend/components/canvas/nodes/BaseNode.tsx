@@ -100,7 +100,7 @@ function BaseNode({
                     group relative flex flex-col h-full w-full
                     bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
                     transition-all duration-300 shadow-2xl
-                    antialiased subpixel-antialiased
+                    antialiased
                     ${selected
                         ? `border-${effectiveAccentColor} shadow-${effectiveAccentColor}/10 ring-1 ring-${effectiveAccentColor}/20`
                         : `border-${effectiveAccentColor}/50 hover:border-${effectiveAccentColor} shadow-black/50`
@@ -115,7 +115,7 @@ function BaseNode({
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 {/* Accent line at the top */}
-                <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
                 {/* Header */}
                 <div className="flex items-center gap-2.5 p-3.5 bg-neutral-950/20 border-b border-white/5 rounded-t-2xl">
@@ -162,7 +162,7 @@ function BaseNode({
                 </div>
 
                 {/* Body */}
-                <div className={`flex-1 flex flex-col min-h-0 relative break-words ${!footer ? 'rounded-b-2xl' : ''} overflow-hidden`}>
+                <div className={`flex-1 flex flex-col min-h-0 relative wrap-break-word ${!footer ? 'rounded-b-2xl' : ''} overflow-hidden`}>
                     {children}
                 </div>
 
@@ -173,32 +173,23 @@ function BaseNode({
                     </div>
                 )}
 
-                {/* Handles - Standardized for bottom-to-top routing */}
+                {/* Handles - Standarized for all-to-all routing */}
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'group-hover:opacity-100 opacity-0'}`}>
-                    <Handle
-                        type="source"
-                        position={Position.Top}
-                        id="top"
-                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-top-1 transition-transform hover:scale-150`}
-                    />
-                    <Handle
-                        type="source"
-                        position={Position.Bottom}
-                        id="bottom"
-                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-bottom-1 transition-transform hover:scale-150`}
-                    />
-                    <Handle
-                        type="source"
-                        position={Position.Left}
-                        id="left"
-                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-left-1 transition-transform hover:scale-150`}
-                    />
-                    <Handle
-                        type="source"
-                        position={Position.Right}
-                        id="right"
-                        className={`!w-2 !h-2 !bg-${effectiveAccentColor} !border-2 !border-neutral-900 !-right-1 transition-transform hover:scale-150`}
-                    />
+                    {/* Top */}
+                    <Handle type="target" position={Position.Top} id="top-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -top-1! left-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Top} id="top-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -top-1! left-1/2! transition-transform hover:scale-150`} />
+
+                    {/* Bottom */}
+                    <Handle type="target" position={Position.Bottom} id="bottom-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
+
+                    {/* Left */}
+                    <Handle type="target" position={Position.Left} id="left-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -left-1! top-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Left} id="left-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -left-1! top-1/2! transition-transform hover:scale-150`} />
+
+                    {/* Right */}
+                    <Handle type="target" position={Position.Right} id="right-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -right-1! top-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Right} id="right-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -right-1! top-1/2! transition-transform hover:scale-150`} />
                 </div>
             </div>
         </>
