@@ -319,7 +319,7 @@ export default function BrowserView() {
 
     // Tab Management
     const addTab = useCallback((initialUrl: string = '', parentId?: string, title?: string) => {
-        const newId = Date.now().toString();
+        const newId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
         const newTab: Tab = {
             id: newId,
             url: initialUrl,
@@ -393,7 +393,8 @@ export default function BrowserView() {
         e.stopPropagation();
         if (tabs.length === 1) {
             // If closing last tab, just reset it
-            setTabs([{ id: Date.now().toString(), url: '', displayInput: '', title: 'New Tab' }]);
+            const newId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+            setTabs([{ id: newId, url: '', displayInput: '', title: 'New Tab' }]);
             return;
         }
 

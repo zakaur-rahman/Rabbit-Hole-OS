@@ -28,8 +28,8 @@ console.log('Is Packaged App:', isPackagedApp, 'Is Dev:', isDev);
 // Global error handlers to prevent console spam from benign Electron errors
 process.on('unhandledRejection', (reason, promise) => {
     const errorString = String(reason);
-    // Ignore ERR_ABORTED errors from GUEST_VIEW_MANAGER_CALL (common in webviews during redirects/cancellations)
-    if (errorString.includes('GUEST_VIEW_MANAGER_CALL') && (errorString.includes('ERR_ABORTED') || errorString.includes('(-3)'))) {
+    // Ignore ERR_ABORTED errors (common in webviews during redirects/cancellations)
+    if (errorString.includes('ERR_ABORTED') || errorString.includes('(-3)')) {
         return;
     }
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
@@ -179,6 +179,43 @@ app.on('web-contents-created', (event, contents) => {
         e.preventDefault();
     }
   });
+
+  // Context Menu for WebViews
+  if (contents.getType() === 'webview') {
+      contents.on('context-menu', (e, params) => {
+          const { Menu, MenuItem } = require('electron');
+          const menu = new Menu();
+
+          // Navigation
+          if (contents.canGoBack()) {
+              menu.append(new MenuItem({ label: 'Back', click: () => contents.goBack() }));
+          }
+          if (contents.canGoForward()) {
+              menu.append(new MenuItem({ label: 'Forward', click: () => contents.goForward() }));
+          }
+          menu.append(new MenuItem({ label: 'Reload', click: () => contents.reload() }));
+          
+          menu.append(new MenuItem({ type: 'separator' }));
+
+          // Edit Actions
+          menu.append(new MenuItem({ label: 'Cut', role: 'cut', enabled: params.editFlags.canCut }));
+          menu.append(new MenuItem({ label: 'Copy', role: 'copy', enabled: params.editFlags.canCopy }));
+          menu.append(new MenuItem({ label: 'Paste', role: 'paste', enabled: params.editFlags.canPaste }));
+
+          // Developer Tools (only in Dev or if requested)
+          if (isDev || true) { // Always enable for beta testing
+              menu.append(new MenuItem({ type: 'separator' }));
+              menu.append(new MenuItem({ 
+                  label: 'Inspect Element', 
+                  click: () => {
+                      contents.inspectElement(params.x, params.y);
+                  } 
+              }));
+          }
+
+          menu.popup();
+      });
+  }
 });
 
 app.on('window-all-closed', () => {

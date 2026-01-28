@@ -503,7 +503,7 @@ export class LocalStorageService {
     
     // Insert new tabs
     const stmt = this.db.prepare(`
-      INSERT INTO tabs (id, whiteboard_id, url, title, display_input, is_loading, last_node_id, created_at, updated_at)
+      INSERT OR REPLACE INTO tabs (id, whiteboard_id, url, title, display_input, is_loading, last_node_id, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     

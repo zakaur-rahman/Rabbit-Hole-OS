@@ -115,13 +115,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           browserStates: {
               ...s.browserStates,
               [whiteboardId]: {
-                  ...(s.browserStates[whiteboardId] || { 
-                      url: '', 
-                      displayInput: '',
-                      tabs: [{ id: '1', url: '', displayInput: '', title: 'New Tab' }],
-                      activeTabId: '1',
-                      isAutoSyncEnabled: false
-                  }),
+                  ...(s.browserStates[whiteboardId] || (() => {
+                      const tabId = `tab-${Date.now()}`;
+                      return { 
+                          url: '', 
+                          displayInput: '',
+                          tabs: [{ id: tabId, url: '', displayInput: '', title: 'New Tab' }],
+                          activeTabId: tabId,
+                          isAutoSyncEnabled: false
+                      };
+                  })()),
                   ...state
               }
           }
@@ -171,7 +174,29 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         const storedBrowser = localStorage.getItem('browser_states');
         if (storedBrowser) {
             try {
-                set({ browserStates: JSON.parse(storedBrowser) });
+                const parsed = JSON.parse(storedBrowser);
+                // Sanitize: Fix duplicate tab IDs from legacy code
+                const seenIds = new Set<string>();
+                
+                Object.keys(parsed).forEach(wbId => {
+                    if (parsed[wbId].tabs) {
+                        parsed[wbId].tabs.forEach((tab: any) => {
+                            // If ID is '1' OR we've seen this ID before in another whiteboard (or this one)
+                            if (tab.id === '1' || seenIds.has(tab.id)) {
+                                const oldId = tab.id;
+                                tab.id = `tab-legacy-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                                
+                                // Update activeTabId if it matched the changed ID
+                                if (parsed[wbId].activeTabId === oldId) {
+                                    parsed[wbId].activeTabId = tab.id;
+                                }
+                            }
+                            seenIds.add(tab.id);
+                        });
+                    }
+                });
+                set({ browserStates: parsed });
+                localStorage.setItem('browser_states', JSON.stringify(parsed));
             } catch (e) {
                 console.error("Failed to parse browser_states from localStorage", e);
             }
@@ -367,7 +392,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 outline: n.outline,
                 ...(typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata || {})
             },
-            style: n.metadata?.style,
+            width: n.width,
+            height: n.height,
+            style: { 
+                width: n.width, 
+                height: n.height,
+                ...(n.metadata?.style || {}) 
+            },
             parentId: n.metadata?.parentId,
         }));
 
@@ -661,14 +692,26 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         const updatedNode = get().nodes.find(n => n.id === id);
         if (updatedNode) {
             // Local Storage Sync (Electron)
+            // Local Storage Sync (Electron)
             if (isElectron()) {
-                await storage.nodes.update(id, {
+                const updatePayload: any = {
                     title: updatedNode.data.title,
                     content: updatedNode.data.content,
                     position_x: updatedNode.position.x,
                     position_y: updatedNode.position.y,
                     metadata: JSON.stringify(updatedNode.data)
-                });
+                };
+
+                // Add width/height if present in updates (resizing)
+                if (updates.style && (updates.style.width || updates.style.height)) {
+                    updatePayload.width = parseFloat(updates.style.width);
+                    updatePayload.height = parseFloat(updates.style.height);
+                } else if (updates.width || updates.height) {
+                    updatePayload.width = updates.width;
+                    updatePayload.height = updates.height;
+                }
+
+                await storage.nodes.update(id, updatePayload);
             }
 
             // Cloud API Sync
@@ -757,6 +800,46 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     set({
       nodes: finalNodes,
+    });
+
+    // Handle position/dimension persistence
+    changes.forEach(change => {
+        if (change.type === 'position' || change.type === 'dimensions') {
+            if ((change as any).dragging) return; // Skip while dragging for perf
+            
+            const node = get().nodes.find(n => n.id === change.id);
+            if (node) {
+                 // We can't use updateNodeAndPersist here directly because it might cause loops or race conditions
+                 // But we DO need to persist the new state.
+                 // Let's use a specialized debounced persister or just call storage directly if not dragging.
+                 
+                 if (isElectron()) {
+                     const payload: any = {
+                         position_x: node.position.x,
+                         position_y: node.position.y
+                     };
+                     if (node.width && node.height) {
+                         payload.width = node.width;
+                         payload.height = node.height;
+                     }
+                     if (node.style && (node.style.width || node.style.height)) {
+                        payload.width = parseFloat(node.style.width as string) || node.width;
+                        payload.height = parseFloat(node.style.height as string) || node.height;
+                     }
+
+                     storage.nodes.update(change.id, payload).catch(console.error);
+                 } else {
+                     // Cloud API debounce handled elsewhere or just update
+                     nodesApi.update(change.id, {
+                        metadata: {
+                            ...node.data,
+                            position: node.position,
+                            style: node.style
+                        }
+                     }).catch(() => {});
+                 }
+            }
+        }
     });
   },
   
