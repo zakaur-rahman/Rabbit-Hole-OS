@@ -131,6 +131,30 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       if (typeof window !== 'undefined') {
           localStorage.setItem('browser_states', JSON.stringify(browserStates));
       }
+
+      // Debounced Persistence (Electron)
+      if (isElectron()) {
+          const store = get() as any;
+          if (store._saveTimeout) clearTimeout(store._saveTimeout);
+          
+          store._saveTimeout = setTimeout(() => {
+              const currentState = get().browserStates[whiteboardId];
+              if (currentState) {
+                  // Save Tabs
+                  (window as any).electron.storage.tabs.save(whiteboardId, currentState.tabs);
+                  
+                  // Save UI State (Active Tab)
+                  (window as any).electron.storage.ui.save({
+                      whiteboard_id: whiteboardId,
+                      active_tab_id: currentState.activeTabId,
+                      viewport_x: 0, // Placeholder
+                      viewport_y: 0,
+                      viewport_zoom: 1,
+                      updated_at: Date.now()
+                  });
+              }
+          }, 1000);
+      }
   },
 
   initialize: () => {
@@ -268,6 +292,46 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const { openWhiteboardIds } = get();
     if (!openWhiteboardIds.includes(id)) {
         set({ openWhiteboardIds: [...openWhiteboardIds, id] });
+    }
+
+    // Try to load state from Electron
+    if (isElectron()) {
+        try {
+            const tabs = await (window as any).electron.storage.tabs.load(id);
+            const uiState = await (window as any).electron.storage.ui.load(id);
+
+            if (tabs && tabs.length > 0) {
+                const mappedTabs: Tab[] = tabs.map((t: any) => ({
+                    id: t.id,
+                    url: t.url,
+                    displayInput: t.display_input || t.url,
+                    title: t.title || 'New Tab',
+                    isLoading: !!t.is_loading,
+                    lastNodeId: t.last_node_id,
+                    canGoBack: false, 
+                    canGoForward: false
+                }));
+
+                const activeTabId = uiState?.active_tab_id || mappedTabs[0].id;
+                
+                const browserState = {
+                    url: mappedTabs.find(t => t.id === activeTabId)?.url || '',
+                    displayInput: mappedTabs.find(t => t.id === activeTabId)?.displayInput || '',
+                    tabs: mappedTabs,
+                    activeTabId: activeTabId,
+                    isAutoSyncEnabled: false
+                };
+                
+                set(state => ({
+                    browserStates: {
+                        ...state.browserStates,
+                        [id]: browserState
+                    }
+                }));
+            }
+        } catch (e) {
+             console.error('Failed to load tabs', e);
+        }
     }
 
     set({ activeWhiteboardId: id, nodes: [], edges: [] });
