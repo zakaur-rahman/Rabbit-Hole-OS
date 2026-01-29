@@ -104,7 +104,7 @@ Return a JSON object with this exact structure:
 {{
   "title": "Clear article title",
   "snippet": "2-3 sentence teaser",
-  "content": "A detailed 400-word analysis/summary",
+  "content": "A detailed 50-word analysis/summary",
   "outline": [
     {{
       "id": "1",

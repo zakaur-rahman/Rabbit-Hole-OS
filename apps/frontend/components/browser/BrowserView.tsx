@@ -112,15 +112,26 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         });
 
         // Link to parent if trace exists
+        console.log('[Browser] AutoAddNode:', {
+            url,
+            title,
+            nodeId,
+            lastNodeId: tab.lastNodeId,
+            tabId: tab.id
+        });
+
         if (tab.lastNodeId && tab.lastNodeId !== nodeId) {
+            console.log('[Browser] Creating edge:', tab.lastNodeId, '->', nodeId);
             addEdge({
                 id: `e-${tab.lastNodeId}-${nodeId}`,
                 source: tab.lastNodeId,
-                sourceHandle: 'bottom',
+                sourceHandle: 'bottom-source',
                 target: nodeId,
-                targetHandle: 'top',
+                targetHandle: 'top-target',
                 animated: true,
             });
+        } else {
+            console.log('[Browser] NOT creating edge. Missing lastNodeId or self-loop.');
         }
 
         // Update tab's trace pointer
