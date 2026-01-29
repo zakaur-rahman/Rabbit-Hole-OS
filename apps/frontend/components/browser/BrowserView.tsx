@@ -102,11 +102,13 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
         import('@/lib/api').then(({ nodesApi }) => {
             nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
-                useGraphStore.getState().updateNode(nodeId, {
-                    title: result.title,
-                    snippet: result.snippet,
-                    favicon: result.metadata?.favicon,
-                    outline: result.outline
+                useGraphStore.getState().updateNodeAndPersist(nodeId, {
+                    data: {
+                        title: result.title,
+                        snippet: result.snippet,
+                        favicon: result.metadata?.favicon,
+                        outline: result.outline
+                    }
                 });
             }).catch(console.error);
         });
@@ -179,10 +181,10 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
                 canGoForward: webview.canGoForward()
             });
 
-            const { nodes, updateNode } = useGraphStore.getState();
+            const { nodes, updateNodeAndPersist } = useGraphStore.getState();
             const targetNode = nodes.find(n => normalizeUrl(n.data?.url || '') === normalizeUrl(tab.url || ''));
             if (targetNode) {
-                updateNode(targetNode.id, { title: e.title });
+                updateNodeAndPersist(targetNode.id, { data: { title: e.title } });
             }
         };
 
@@ -515,11 +517,14 @@ export default function BrowserView() {
         // 3. Process URL
         import('@/lib/api').then(({ nodesApi }) => {
             nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
-                updateNode(nodeId, {
-                    title: result.title,
-                    snippet: result.snippet,
-                    favicon: result.metadata?.favicon,
-                    outline: result.outline
+                const { updateNodeAndPersist } = useGraphStore.getState();
+                updateNodeAndPersist(nodeId, {
+                    data: {
+                        title: result.title,
+                        snippet: result.snippet,
+                        favicon: result.metadata?.favicon,
+                        outline: result.outline
+                    }
                 });
             });
         });
