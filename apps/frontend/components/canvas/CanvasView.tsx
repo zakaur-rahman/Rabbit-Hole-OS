@@ -1372,8 +1372,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onNodeMouseEnter={onNodeMouseEnter}
                 onNodeMouseLeave={onNodeMouseLeave}
                 onNodeDragStop={onNodeDragStop}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
+                nodeTypes={useMemo(() => nodeTypes, [])}
+                edgeTypes={useMemo(() => edgeTypes, [])}
                 defaultEdgeOptions={defaultEdgeOptions}
                 selectionMode={SelectionMode.Partial}
                 selectionOnDrag
