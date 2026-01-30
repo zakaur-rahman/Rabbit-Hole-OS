@@ -50,6 +50,13 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         if (!isAutoSyncEnabled) return;
 
         const urlKey = normalizeUrl(url);
+
+        // Skip if we've already processed this URL in this tab's session (e.g., back/forward navigation)
+        if (processedUrlsRef.current.has(urlKey)) {
+            console.log('[Browser] Skipping already-processed URL:', urlKey);
+            return;
+        }
+
         const { nodes, addNode, addEdge } = useGraphStore.getState();
 
         // If URL already exists in graph, just update the tab's trace pointer and return
