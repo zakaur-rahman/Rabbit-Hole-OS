@@ -171,6 +171,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             }
         }
 
+        // Load browser states from localStorage as fallback
         const storedBrowser = localStorage.getItem('browser_states');
         if (storedBrowser) {
             try {
@@ -200,6 +201,46 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             } catch (e) {
                 console.error("Failed to parse browser_states from localStorage", e);
             }
+        }
+
+        // Load tabs from Electron SQLite storage (source of truth)
+        if (isElectron()) {
+            (async () => {
+                try {
+                    const activeWbId = get().activeWhiteboardId;
+                    const tabs = await (window as any).electron.storage.tabs.load(activeWbId);
+                    const uiState = await (window as any).electron.storage.ui.load(activeWbId);
+
+                    if (tabs && tabs.length > 0) {
+                        const mappedTabs = tabs.map((t: any) => ({
+                            id: t.id,
+                            url: t.url,
+                            displayInput: t.display_input || t.displayInput || t.url,
+                            title: t.title || 'New Tab',
+                            isLoading: false,
+                            lastNodeId: t.last_node_id || t.lastNodeId,
+                        }));
+
+                        const activeTabId = uiState?.active_tab_id || mappedTabs[0].id;
+
+                        set(state => ({
+                            browserStates: {
+                                ...state.browserStates,
+                                [activeWbId]: {
+                                    url: mappedTabs.find((t: any) => t.id === activeTabId)?.url || '',
+                                    displayInput: mappedTabs.find((t: any) => t.id === activeTabId)?.displayInput || '',
+                                    tabs: mappedTabs,
+                                    activeTabId: activeTabId,
+                                    isAutoSyncEnabled: state.browserStates[activeWbId]?.isAutoSyncEnabled || false
+                                }
+                            }
+                        }));
+                        console.log('[Store] Loaded tabs from Electron storage:', mappedTabs.length);
+                    }
+                } catch (e) {
+                    console.error('[Store] Failed to load tabs from Electron storage:', e);
+                }
+            })();
         }
         
         // Initial fetch from API if possible

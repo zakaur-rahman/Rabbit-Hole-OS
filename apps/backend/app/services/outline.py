@@ -104,7 +104,7 @@ Return a JSON object with this exact structure:
 {{
   "title": "Clear article title",
   "snippet": "2-3 sentence teaser",
-  "content": "A detailed 400-word analysis/summary",
+  "content": "A detailed 50-word analysis/summary",
   "outline": [
     {{
       "id": "1",
@@ -133,19 +133,22 @@ Ensure the 'outline' captures the full hierarchy of the article."""
             return analyze_url_mock(url)
             
         try:
-            # Clean possible markdown wrap
+            # Clean possible markdown wrap or conversational text
             text = response_text.strip()
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0].strip()
-            elif "```" in text:
-                text = text.split("```")[1].split("```")[0].strip()
+            
+            # Find the start and end of the JSON object
+            start_idx = text.find('{')
+            end_idx = text.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1:
+                text = text[start_idx : end_idx + 1]
             
             result = json.loads(text)
             print(f"Successfully analyzed URL with OllamaFreeAPI: {url}")
             return result
         except json.JSONDecodeError as e:
             print(f"Failed to parse Ollama JSON: {e}")
-            print(f"Raw response: {response_text[:500]}")
+            print(f"Raw response: {response_text[:500]}...")
             return analyze_url_mock(url)
             
     except Exception as e:
