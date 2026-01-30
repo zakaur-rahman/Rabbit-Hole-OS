@@ -50,6 +50,13 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         if (!isAutoSyncEnabled) return;
 
         const urlKey = normalizeUrl(url);
+
+        // Skip if we've already processed this URL in this tab's session (e.g., back/forward navigation)
+        if (processedUrlsRef.current.has(urlKey)) {
+            console.log('[Browser] Skipping already-processed URL:', urlKey);
+            return;
+        }
+
         const { nodes, addNode, addEdge } = useGraphStore.getState();
 
         // If URL already exists in graph, just update the tab's trace pointer and return
@@ -102,25 +109,38 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
         import('@/lib/api').then(({ nodesApi }) => {
             nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
-                useGraphStore.getState().updateNode(nodeId, {
-                    title: result.title,
-                    snippet: result.snippet,
-                    favicon: result.metadata?.favicon,
-                    outline: result.outline
+                useGraphStore.getState().updateNodeAndPersist(nodeId, {
+                    data: {
+                        title: result.title,
+                        snippet: result.snippet,
+                        favicon: result.metadata?.favicon,
+                        outline: result.outline
+                    }
                 });
             }).catch(console.error);
         });
 
         // Link to parent if trace exists
+        console.log('[Browser] AutoAddNode:', {
+            url,
+            title,
+            nodeId,
+            lastNodeId: tab.lastNodeId,
+            tabId: tab.id
+        });
+
         if (tab.lastNodeId && tab.lastNodeId !== nodeId) {
+            console.log('[Browser] Creating edge:', tab.lastNodeId, '->', nodeId);
             addEdge({
                 id: `e-${tab.lastNodeId}-${nodeId}`,
                 source: tab.lastNodeId,
-                sourceHandle: 'bottom',
+                sourceHandle: 'bottom-source',
                 target: nodeId,
-                targetHandle: 'top',
+                targetHandle: 'top-target',
                 animated: true,
             });
+        } else {
+            console.log('[Browser] NOT creating edge. Missing lastNodeId or self-loop.');
         }
 
         // Update tab's trace pointer
@@ -168,10 +188,10 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
                 canGoForward: webview.canGoForward()
             });
 
-            const { nodes, updateNode } = useGraphStore.getState();
+            const { nodes, updateNodeAndPersist } = useGraphStore.getState();
             const targetNode = nodes.find(n => normalizeUrl(n.data?.url || '') === normalizeUrl(tab.url || ''));
             if (targetNode) {
-                updateNode(targetNode.id, { title: e.title });
+                updateNodeAndPersist(targetNode.id, { data: { title: e.title } });
             }
         };
 
@@ -504,11 +524,14 @@ export default function BrowserView() {
         // 3. Process URL
         import('@/lib/api').then(({ nodesApi }) => {
             nodesApi.processUrl(url, activeWhiteboardId, nodeId).then(result => {
-                updateNode(nodeId, {
-                    title: result.title,
-                    snippet: result.snippet,
-                    favicon: result.metadata?.favicon,
-                    outline: result.outline
+                const { updateNodeAndPersist } = useGraphStore.getState();
+                updateNodeAndPersist(nodeId, {
+                    data: {
+                        title: result.title,
+                        snippet: result.snippet,
+                        favicon: result.metadata?.favicon,
+                        outline: result.outline
+                    }
                 });
             });
         });

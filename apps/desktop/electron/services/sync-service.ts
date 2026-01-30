@@ -216,8 +216,15 @@ export class SyncService {
         const url = new URL(`${this.config.apiBaseUrl}/api/v1/${entity_type}s/${operation === 'update' ? entity_id : ''}`);
         
         // Always include whiteboard_id in query if it's an edge (Backend requires it)
-        if (entity_type === 'edge' && entity.whiteboard_id) {
-            url.searchParams.append('whiteboard_id', entity.whiteboard_id);
+        if (entity_type === 'edge') {
+            if (operation === 'update') {
+                console.log('[Sync] Skipping edge update (immutable)');
+                this.storage.markSynced('edge', entity_id); // Auto-resolve
+                return;
+            }
+            if (entity.whiteboard_id) {
+                url.searchParams.append('whiteboard_id', entity.whiteboard_id);
+            }
         }
         
         const method = operation === 'create' ? 'POST' : 'PUT';

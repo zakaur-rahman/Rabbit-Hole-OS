@@ -509,23 +509,35 @@ export class LocalStorageService {
     
     const now = Date.now();
     for (const tab of tabs) {
+      // Map frontend camelCase to backend snake_case
+      const t = tab as any;
       stmt.run(
-        tab.id!,
+        t.id,
         whiteboardId,
-        tab.url!,
-        tab.title || null,
-        tab.display_input || null,
-        tab.is_loading || 0,
-        tab.last_node_id || null,
+        t.url,
+        t.title || null,
+        t.displayInput || t.display_input || null,
+        t.isLoading ? 1 : (t.is_loading || 0),
+        t.lastNodeId || t.last_node_id || null,
         now,
         now
       );
     }
   }
 
-  loadTabs(whiteboardId: string): TabRow[] {
+  loadTabs(whiteboardId: string): any[] {
     const stmt = this.db.prepare('SELECT * FROM tabs WHERE whiteboard_id = ? ORDER BY created_at');
-    return stmt.all(whiteboardId) as TabRow[];
+    const rows = stmt.all(whiteboardId) as any[];
+    
+    return rows.map(r => ({
+        id: r.id,
+        url: r.url,
+        title: r.title,
+        displayInput: r.display_input,
+        isLoading: !!r.is_loading,
+        lastNodeId: r.last_node_id,
+        whiteboardId: r.whiteboard_id
+    }));
   }
 
   // ==================== UI STATE ====================
