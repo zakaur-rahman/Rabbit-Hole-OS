@@ -50,9 +50,12 @@ For detailed technical documentation, see the **[Research Synthesis Guide](./doc
 
 ## 📚 Documentation
 
-- **[Architecture Overview](./docs/ARCHITECTURE.md)**
-- **[Research Synthesis Technical Guide](./docs/RESEARCH_SYNTHESIS.md)**
-- **[Authentication System](./docs/README.md)**
+The Cognode documentation is divided into **User** and **Developer** tracks.
+
+- **[Documentation Center](./docs/README.md)**: The central hub for all platform documentation.
+- **[Public System Guide](./docs/public/system-guide.md)**: Deep dive into the platform philosophy and user workflows.
+- **[Technical Architecture](./docs/developer/architecture.md)**: High-level system design and execution flows.
+- **[Research Synthesis Guide](./docs/developer/research-synthesis.md)**: Deep dive into the multi-agent execution pipeline.
 
 ---
 *Built with ❤️ by the Google Deepmind team for Advanced Agentic Coding*

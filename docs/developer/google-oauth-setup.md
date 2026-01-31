@@ -60,7 +60,7 @@
 - For Web application type, you MUST set `GOOGLE_CLIENT_SECRET` in your `.env` file
 - For Desktop app type, client_secret is not needed (PKCE provides security)
 - Loopback redirect (`http://127.0.0.1:PORT/callback`) works with both types
-- See `LOOPBACK_REDIRECT_SETUP.md` for detailed setup instructions
+- See [loopback-setup.md](./loopback-setup.md) for detailed setup instructions
 
 ## Step 4: Configure Desktop App Redirect URI
 
