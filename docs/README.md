@@ -1,84 +1,35 @@
-# Cognode Authentication System Documentation
+# Cognode Documentation Center
 
-Complete documentation for the enterprise-grade authentication system.
+Welcome to the official Cognode documentation. The documentation is organized into two primary tracks based on your needs:
 
-## 📚 Documentation Index
+---
 
-- **[System Guide](./SYSTEM_GUIDE.md)** - **Official Platform Documentation** (Complete Architecture & Philosophy)
-- **[Architecture Overview](./ARCHITECTURE.md)** - High-level system design and execution flows
-- **[Research Synthesis Guide](./RESEARCH_SYNTHESIS.md)** - Technical engine architecture and agent definitions
+## 🌎 Public & User Documentation
+**For researchers, writers, and analysts.**
+Learn what Cognode is, how it revolutionizes research, and how to use its features to build your knowledge graph.
 
-### Setup & Configuration
-- **[Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md)** - Step-by-step guide to configure Google OAuth
-- **[Complete Setup Guide](./AUTH_SETUP_GUIDE.md)** - Full setup instructions for the entire system
+- **[Platform Overview & Philosophy](./public/system-guide.md)**: The "North Star" document explaining the system's core logic.
+- **[User Guide Index](./public/README.md)**: Detailed feature guides and workflows.
 
-### Architecture & Security
-- **[Auth Flow Diagrams](./AUTH_FLOW_DIAGRAM.md)** - Visual representation of authentication flows
-- **[Threat Model](./THREAT_MODEL.md)** - Security analysis and mitigations
+---
 
-## 🚀 Quick Start
+## 🛠️ Developer & Technical Documentation
+**For contributors, system designers, and AI engineers.**
+Deep dive into the architecture, security models, and implementation details of the Cognode platform.
 
-1. **Follow [Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md)** to configure Google OAuth credentials
-2. **Follow [Complete Setup Guide](./AUTH_SETUP_GUIDE.md)** to set up the entire system
-3. **Review [Implementation Summary](./AUTH_IMPLEMENTATION_SUMMARY.md)** for architecture overview
+- **[System Architecture](./developer/architecture.md)**: High-level design and component interaction.
+- **[Research Synthesis Engine](./developer/research-synthesis.md)**: Technical specs of the multi-agent execution pipeline.
+- **[Developer Setup & Auth](./developer/README.md)**: Environment configuration and authentication internals.
 
-## 🏗️ Architecture
+---
 
-The authentication system consists of:
+## 🏗️ Project Structure
 
-### Frontend (Next.js)
-- PKCE implementation for secure OAuth
-- Sign-in pages with Google OAuth integration
-- Electron-specific auth handlers
+```text
+docs/
+├── public/          # User-facing guides
+└── developer/       # Technical specifications
+```
 
-### Backend (FastAPI)
-- OAuth code exchange
-- JWT token generation and validation
-- Session management
-- Token refresh and rotation
-
-### Desktop App (Electron)
-- Custom URI scheme handler (`cognode://`)
-- System browser integration
-- Deep link handling
-
-### Database (PostgreSQL/Neon)
-- User and session storage
-- Secure token hashing
-
-### Cache (Redis)
-- Token revocation tracking
-- Session caching
-- Rate limiting (ready for implementation)
-
-## 🔒 Security Features
-
-- ✅ PKCE (Proof Key for Code Exchange)
-- ✅ CSRF protection with state parameter
-- ✅ Refresh token rotation
-- ✅ Token revocation tracking
-- ✅ Short-lived access tokens (1 hour)
-- ✅ Secure token storage
-- ✅ HTTPS ready
-
-## 📋 Requirements
-
-- Node.js 20+
-- Python 3.11+
-- PostgreSQL (Neon Postgres recommended)
-- Redis server
-- Google Cloud account
-
-## 🎯 Key Features
-
-1. **Browser-based Login** - No passwords handled by desktop app
-2. **PKCE Security** - Prevents authorization code interception
-3. **Token Rotation** - Refresh tokens rotated on use
-4. **Session Management** - Track and revoke sessions
-5. **Cross-platform** - Works on Windows, macOS, Linux
-
-## 📞 Support
-
-For setup issues, see [AUTH_SETUP_GUIDE.md](./AUTH_SETUP_GUIDE.md).
-
-For security concerns, see [THREAT_MODEL.md](./THREAT_MODEL.md).
+---
+*Questions? Contact the system architects or check the [Troubleshooting Guide](./developer/troubleshooting.md).*

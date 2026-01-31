@@ -12,7 +12,7 @@ Complete guide to setting up the Cognode authentication system.
 
 ## Step 1: Google OAuth Setup
 
-Follow the instructions in [GOOGLE_OAUTH_SETUP.md](./GOOGLE_OAUTH_SETUP.md) to:
+Follow the instructions in [Google OAuth Setup](./google-oauth-setup.md) to:
 1. Create Google Cloud project
 2. Enable Google+ API
 3. Create OAuth 2.0 credentials
