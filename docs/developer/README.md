@@ -17,6 +17,7 @@ Technical specifications, setup guides, and internal architecture documentation 
 ## 🛠️ Environment & Setup
 
 - **[Troubleshooting](./troubleshooting.md)**: Common environment issues and fixes.
+- **[Production Deployment](./deployment-guide.md)**: Official guide for cloud and desktop releases.
 - **[Desktop Deployment](./desktop-setup.md)**: Building and configuring the Electron app.
 - **[Loopback Handling](./loopback-setup.md)**: Details on local auth redirection for desktop.
 
