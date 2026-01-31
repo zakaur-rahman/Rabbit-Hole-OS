@@ -4,10 +4,13 @@ Complete documentation for the enterprise-grade authentication system.
 
 ## 📚 Documentation Index
 
+### Research & Synthesis
+- **[Research Synthesis Guide](./RESEARCH_SYNTHESIS.md)** - Technical engine architecture and agent definitions
+- **[Implementation Summary](./AUTH_IMPLEMENTATION_SUMMARY.md)** - Overview of features
+
 ### Setup & Configuration
 - **[Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md)** - Step-by-step guide to configure Google OAuth
 - **[Complete Setup Guide](./AUTH_SETUP_GUIDE.md)** - Full setup instructions for the entire system
-- **[Implementation Summary](./AUTH_IMPLEMENTATION_SUMMARY.md)** - Overview of all components and features
 
 ### Architecture & Security
 - **[Auth Flow Diagrams](./AUTH_FLOW_DIAGRAM.md)** - Visual representation of authentication flows
