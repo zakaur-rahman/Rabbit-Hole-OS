@@ -9,8 +9,8 @@ class Edge(Base):
     __tablename__ = "edges"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    source_id: Mapped[str] = mapped_column(String, ForeignKey("nodes.id"))
-    target_id: Mapped[str] = mapped_column(String, ForeignKey("nodes.id"))
+    source_id: Mapped[str] = mapped_column(String, ForeignKey("nodes.id", ondelete="CASCADE"))
+    target_id: Mapped[str] = mapped_column(String, ForeignKey("nodes.id", ondelete="CASCADE"))
     label: Mapped[str | None] = mapped_column(String, nullable=True)
     whiteboard_id: Mapped[str] = mapped_column(String, ForeignKey("whiteboards.id"), nullable=False)
     user_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)

@@ -31,16 +31,16 @@ async def get_ai_client():
         print("--- AI Service: NO API KEYS FOUND - Using MOCK mode")
         return ("mock", None, None)
 
-async def generate_synthesis(query: str, node_contents: List[dict]) -> str:
+async def generate_synthesis(query: str, node_contents: List[dict], previous_summary: Optional[str] = None) -> str:
     """
     Generate an AI synthesis from multiple node contents.
     Uses Chutes.ai if available, falls back to OpenAI, then mock.
     """
     provider, api_key, base_url = await get_ai_client()
-    print(f"Generating synthesis using provider: {provider}")
+    print(f"Generating synthesis using provider: {provider} (Refining: {bool(previous_summary)})")
     
     if provider in ("chutes", "openai"):
-        return await generate_llm_synthesis(query, node_contents, api_key, base_url, provider)
+        return await generate_llm_synthesis(query, node_contents, api_key, base_url, provider, previous_summary)
     else:
         return generate_mock_synthesis(query, node_contents)
 
@@ -60,13 +60,13 @@ async def generate_research_report(query: str, context: str) -> dict:
         return generate_mock_report(query, context)
 
 
-async def generate_document_ast(query: str, context: str, source_map: dict) -> dict:
+async def generate_document_ast(query: str, context: str, source_map: dict, edges: Optional[List[dict]] = None) -> dict:
     """
     Generate a structured JSON AST for document synthesis.
     
     Returns a dict following the DocumentAST schema with sections, blocks, and references.
     """
-    provider, api_key, _ = await get_ai_client()
+    provider, api_key, base_url = await get_ai_client()
     print(f"Generating document AST using provider: {provider}")
     
     # Build references from source_map
@@ -84,24 +84,71 @@ async def generate_document_ast(query: str, context: str, source_map: dict) -> d
             
             client = genai.Client(api_key=api_key)
             
-            prompt = f'''You are an AI document synthesis engine. Generate a structured JSON AST for a research document.
+            # Build relationships context from edges
+            rel_context = ""
+            if edges:
+                rel_parts = []
+                for edge in edges:
+                    source_title = source_map.get(edge.get('source'), {}).get('title', edge.get('source'))
+                    target_title = source_map.get(edge.get('target'), {}).get('title', edge.get('target'))
+                    label = edge.get('label', 'connected to')
+                    rel_parts.append(f"- {source_title} -> {target_title} ({label})")
+                rel_context = "\n".join(rel_parts)
+
+            prompt = f'''You are an AI research synthesis engine responsible for generating a publication-ready structured document AST.
+
+Your role is NOT summarization. Your role is SYNTHESIS.
+
+────────────────────────────────────────
+DOCUMENT INTENT
+────────────────────────────────────────
+Generate a cohesive research report using ONLY the provided contexts extracted from connected knowledge graph nodes.
+The final document must read as a single, logically connected paper — not as independent summaries.
 
 TOPIC: {query}
+
+────────────────────────────────────────
+GRAPH-AWARE CONTEXT RULES
+────────────────────────────────────────
+RELATIONSHIPS:
+{rel_context or "No explicit edges provided; synthesize based on thematic resonance."}
 
 CONTEXT:
 {context[:20000]}
 
-AVAILABLE REFERENCES:
+IMPORTANT:
+• Parent nodes define high-level context. 
+• Child nodes must be analyzed in relation to their parent.
+• Multi-layered connections should reflect structural intentionality.
+
+────────────────────────────────────────
+CONTENT SELECTION RULES
+────────────────────────────────────────
+1. Include ONLY selected topics and selected subtopics found in the context.
+2. If data is insufficient, insert a warning block.
+
+────────────────────────────────────────
+REPETITION CONTROL
+────────────────────────────────────────
+Deduplicate semantic context across sources. If two sections overlap, mention it once and cross-reference conceptually.
+
+────────────────────────────────────────
+AVAILABLE REFERENCES
+────────────────────────────────────────
 {references_json}
 
-OUTPUT FORMAT (STRICT JSON):
+Every factual paragraph must include citation IDs inline, e.g. [1], [2]. Do NOT fabricate references.
+
+────────────────────────────────────────
+OUTPUT FORMAT (STRICT JSON ONLY)
+────────────────────────────────────────
 {{
   "document": {{
     "title": "string",
     "subtitle": "string or null",
     "authors": ["AI Research Synthesis Engine"],
     "date": "{datetime.now().strftime('%B %d, %Y')}",
-    "abstract": "150-word summary",
+    "abstract": "150-word synthesized abstract connecting all major sections",
     "sections": [
       {{
         "id": "sec-1",
@@ -111,7 +158,7 @@ OUTPUT FORMAT (STRICT JSON):
           {{
             "type": "paragraph",
             "data": {{
-              "text": "Text with citations [1] inline.",
+              "text": "Text with inline citations [1].",
               "citations": ["1"]
             }}
           }}
@@ -123,27 +170,26 @@ OUTPUT FORMAT (STRICT JSON):
   }}
 }}
 
-BLOCK TYPES ALLOWED:
-- paragraph: {{"type": "paragraph", "data": {{"text": "...", "citations": ["ref_id"]}}}}
-- list: {{"type": "list", "data": {{"ordered": true/false, "items": ["..."]}}}}
-- table: {{"type": "table", "data": {{"caption": "...", "columns": [...], "rows": [[...]], "source_refs": ["ref_id"]}}}}
-- quote: {{"type": "quote", "data": {{"text": "...", "source_refs": ["ref_id"]}}}}
-- warning: {{"type": "warning", "data": {{"text": "..."}}}}
+ALLOWED BLOCK TYPES: paragraph, list, table, quote, warning.
 
-RULES:
-1. Return ONLY valid JSON. No markdown, no explanations.
-2. Every citation must reference an ID from the AVAILABLE REFERENCES.
-3. If data is insufficient, add: {{"type": "warning", "data": {{"text": "Insufficient source data."}}}}
-4. Do NOT fabricate facts or references.
-5. Preserve factual accuracy over completeness.
+STRICT RULES:
+1. Return ONLY valid JSON.
+2. No markdown, No explanation text, No assistant commentary.
+3. Prioritize accuracy over completeness.
 '''
 
-            # Log the final prompt for debugging
-            print("\n" + "="*80)
-            print("[generate_document_ast] FINAL PROMPT:")
-            print("="*80)
-            print(prompt)
-            print("="*80 + "\n")
+            # Log the final prompt for debugging (handle Windows encoding)
+            try:
+                print("\n" + "="*80)
+                print("[generate_document_ast] FINAL PROMPT:")
+                print("="*80)
+                # Encode to ASCII with replacement for console compatibility
+                safe_prompt = prompt.encode('ascii', errors='replace').decode('ascii')
+                print(safe_prompt[:2000] + "..." if len(safe_prompt) > 2000 else safe_prompt)
+                print("="*80 + "\n")
+            except Exception:
+                print("[generate_document_ast] Prompt logged (encoding issues skipped)")
+
 
             def call():
                 return client.models.generate_content(
@@ -158,12 +204,16 @@ RULES:
             
             response = await asyncio.to_thread(call)
             if response and response.text:
-                return json.loads(response.text.strip())
+                data = json.loads(response.text.strip())
+                # Fix: Unwrap 'document' if LLM followed the nested schema prompt
+                if isinstance(data, dict) and "document" in data and "title" not in data:
+                    return data["document"]
+                return data
         except Exception as e:
             print(f"Error generating Gemini document AST: {e}")
             return _generate_mock_ast(query, source_map)
     elif provider in ("chutes", "openai"):
-        return await generate_llm_document_ast(query, context, source_map, api_key, base_url, provider)
+        return await generate_llm_document_ast(query, context, source_map, api_key, base_url, provider, edges)
     else:
         # Mock AST for other providers
         return _generate_mock_ast(query, source_map)
@@ -175,7 +225,8 @@ async def generate_llm_document_ast(
     source_map: dict,
     api_key: str, 
     base_url: str,
-    provider: str
+    provider: str,
+    edges: Optional[List[dict]] = None
 ) -> dict:
     """Generate structured JSON AST using generic LLM."""
     try:
@@ -187,24 +238,71 @@ async def generate_llm_document_ast(
             for ref_id, data in source_map.items()
         ], indent=2)
         
-        prompt = f'''You are an AI document synthesis engine. Generate a structured JSON AST for a research document.
+        # Build relationships context from edges
+        rel_context = ""
+        if edges:
+            rel_parts = []
+            for edge in edges:
+                source_title = source_map.get(edge.get('source'), {}).get('title', edge.get('source'))
+                target_title = source_map.get(edge.get('target'), {}).get('title', edge.get('target'))
+                label = edge.get('label', 'connected to')
+                rel_parts.append(f"- {source_title} -> {target_title} ({label})")
+            rel_context = "\n".join(rel_parts)
+
+        prompt = f'''You are an AI research synthesis engine responsible for generating a publication-ready structured document AST.
+
+Your role is NOT summarization. Your role is SYNTHESIS.
+
+────────────────────────────────────────
+DOCUMENT INTENT
+────────────────────────────────────────
+Generate a cohesive research report using ONLY the provided contexts extracted from connected knowledge graph nodes.
+The final document must read as a single, logically connected paper — not as independent summaries.
 
 TOPIC: {query}
+
+────────────────────────────────────────
+GRAPH-AWARE CONTEXT RULES
+────────────────────────────────────────
+RELATIONSHIPS:
+{rel_context or "No explicit edges provided; synthesize based on thematic resonance."}
 
 CONTEXT:
 {context[:15000]}
 
-AVAILABLE REFERENCES:
+IMPORTANT:
+• Parent nodes define high-level context. 
+• Child nodes must be analyzed in relation to their parent.
+• Multi-layered connections should reflect structural intentionality.
+
+────────────────────────────────────────
+CONTENT SELECTION RULES
+────────────────────────────────────────
+1. Include ONLY selected topics and selected subtopics found in the context.
+2. If data is insufficient, insert a warning block.
+
+────────────────────────────────────────
+REPETITION CONTROL
+────────────────────────────────────────
+Deduplicate semantic context across sources. If two sections overlap, mention it once and cross-reference conceptually.
+
+────────────────────────────────────────
+AVAILABLE REFERENCES
+────────────────────────────────────────
 {references_json}
 
-OUTPUT FORMAT (STRICT JSON):
+Every factual paragraph must include citation IDs inline, e.g. [1], [2]. Do NOT fabricate references.
+
+────────────────────────────────────────
+OUTPUT FORMAT (STRICT JSON ONLY)
+────────────────────────────────────────
 {{
   "document": {{
     "title": "string",
     "subtitle": "string or null",
     "authors": ["AI Research Synthesis Engine"],
     "date": "{datetime.now().strftime('%B %d, %Y')}",
-    "abstract": "150-word summary",
+    "abstract": "150-word synthesized abstract connecting all major sections",
     "sections": [
       {{
         "id": "sec-1",
@@ -214,7 +312,7 @@ OUTPUT FORMAT (STRICT JSON):
           {{
             "type": "paragraph",
             "data": {{
-              "text": "Text with citations [1] inline.",
+              "text": "Text with inline citations [1].",
               "citations": ["1"]
             }}
           }}
@@ -226,19 +324,12 @@ OUTPUT FORMAT (STRICT JSON):
   }}
 }}
 
-BLOCK TYPES ALLOWED:
-- paragraph: {{"type": "paragraph", "data": {{"text": "...", "citations": ["ref_id"]}}}}
-- list: {{"type": "list", "data": {{"ordered": true/false, "items": ["..."]}}}}
-- table: {{"type": "table", "data": {{"caption": "...", "columns": [...], "rows": [[...]], "source_refs": ["ref_id"]}}}}
-- quote: {{"type": "quote", "data": {{"text": "...", "source_refs": ["ref_id"]}}}}
-- warning: {{"type": "warning", "data": {{"text": "..."}}}}
+ALLOWED BLOCK TYPES: paragraph, list, table, quote, warning.
 
-RULES:
-1. Return ONLY valid JSON. No markdown, no explanations.
-2. Every citation must reference an ID from the AVAILABLE REFERENCES.
-3. If data is insufficient, add: {{"type": "warning", "data": {{"text": "Insufficient source data."}}}}
-4. Do NOT fabricate facts or references.
-5. Preserve factual accuracy over completeness.
+STRICT RULES:
+1. Return ONLY valid JSON.
+2. No markdown, No explanation text, No assistant commentary.
+3. Prioritize accuracy over completeness.
 '''
 
         # Log the final prompt for debugging
@@ -795,7 +886,8 @@ async def generate_llm_synthesis(
     node_contents: List[dict], 
     api_key: str, 
     base_url: str,
-    provider: str
+    provider: str,
+    previous_summary: Optional[str] = None
 ) -> str:
     """Generate synthesis using LLM API (Chutes.ai or OpenAI compatible)."""
     try:
@@ -810,7 +902,21 @@ async def generate_llm_synthesis(
         
         context = "\n---\n".join(context_parts)
         
-        prompt = f"""Based on the following sources, provide a comprehensive synthesis answering this query: "{query}"
+        if previous_summary:
+            prompt = f"""You previously synthesized these sources as follows:
+            
+"{previous_summary}"
+
+The user now has a follow-up query/instruction: "{query}"
+
+Please refine or expand the synthesis based on this new instruction, while maintaining factual consistency with the sources.
+
+SOURCES:
+{context}
+
+Updated Synthesis:"""
+        else:
+            prompt = f"""Based on the following sources, provide a comprehensive synthesis answering this query: "{query}"
 
 {context}
 

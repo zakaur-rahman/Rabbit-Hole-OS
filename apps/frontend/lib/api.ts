@@ -100,6 +100,7 @@ export const nodesApi = {
 export interface SynthesisRequest {
   node_ids: string[];
   query: string;
+  previous_summary?: string;
 }
 
 export interface SynthesisResponse {
@@ -135,9 +136,13 @@ export const synthesisApi = {
     }),
 
   generateResearchPdf: async (query: string, context_items: { title: string; content: string; url: string }[], use_dummy_data: boolean = false): Promise<Blob> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ query, context_items, use_dummy_data }),
     });
     if (!response.ok) throw new Error("Failed to generate PDF");
@@ -154,12 +159,17 @@ export const synthesisApi = {
       selected_topics: string[];
       outline: any[];
     }[],
-    use_dummy_data: boolean = false
+    use_dummy_data: boolean = false,
+    edges: Edge[] = []
   ): Promise<Blob> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-chunked`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items, use_dummy_data }),
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ query, context_items, use_dummy_data, edges }),
     });
     if (!response.ok) throw new Error("Failed to generate chunked PDF");
     return response.blob();
@@ -176,12 +186,17 @@ export const synthesisApi = {
       outline: any[];
     }[],
     return_tex: boolean = false,
-    use_dummy_data: boolean = false
+    use_dummy_data: boolean = false,
+    edges: Edge[] = []
   ): Promise<Blob> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-latex`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items, return_tex, use_dummy_data }),
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ query, context_items, return_tex, use_dummy_data, edges }),
     });
     if (!response.ok) throw new Error("Failed to generate LaTeX PDF");
     return response.blob();
@@ -197,15 +212,74 @@ export const synthesisApi = {
       selected_topics: string[];
       outline: any[];
     }[],
-    use_dummy_data: boolean = false
+    use_dummy_data: boolean = false,
+    edges: Edge[] = [],
+    whiteboardId?: string
   ): Promise<{ status: string; document: any }> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items, use_dummy_data }),
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ query, context_items, use_dummy_data, edges, whiteboard_id: whiteboardId }),
     });
     if (!response.ok) throw new Error("Failed to generate AST");
     return response.json();
+  },
+
+  streamResearchAST: async (
+    query: string,
+    context_items: {
+      node_id: string;
+      title: string;
+      content: string;
+      url: string;
+      selected_topics: string[];
+      outline: any[];
+    }[],
+    edges: Edge[] = [],
+    onUpdate: (step: { stage: string; status: string; message?: string; document?: any; error?: string }) => void,
+    whiteboardId?: string
+  ): Promise<void> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const response = await fetch(`${API_BASE}/synthesis/research-ast-stream`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ query, context_items, edges, whiteboard_id: whiteboardId }),
+    });
+
+    if (!response.ok) throw new Error("Failed to start research stream");
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) return;
+
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep the last partial line in buffer
+      
+      for (const line of lines) {
+        if (line.trim().startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.trim().slice(6));
+            onUpdate(data);
+          } catch (e) {
+            console.error("Error parsing stream step", e);
+          }
+        }
+      }
+    }
   },
 
   generateASTPdf: async (
@@ -218,21 +292,31 @@ export const synthesisApi = {
       selected_topics: string[];
       outline: any[];
     }[],
-    use_dummy_data: boolean = false
+    use_dummy_data: boolean = false,
+    edges: Edge[] = [],
+    whiteboardId?: string
   ): Promise<Blob> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast-pdf`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context_items, use_dummy_data }),
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ query, context_items, use_dummy_data, edges, whiteboard_id: whiteboardId }),
     });
     if (!response.ok) throw new Error("Failed to generate AST PDF");
     return response.blob();
   },
 
   generatePdfFromAST: async (document: any, strict_mode: boolean = true): Promise<Blob> => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-from-ast`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ document, strict_mode }),
     });
     if (!response.ok) {

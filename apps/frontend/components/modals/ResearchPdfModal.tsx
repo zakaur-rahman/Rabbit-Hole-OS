@@ -11,19 +11,31 @@ interface ResearchPdfModalProps {
     title?: string;
     onOpenAdvancedEditor?: () => void;
     error?: string | null;
+    stage?: string | null;
+    message?: string | null;
 }
 
-export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, title, onOpenAdvancedEditor, error }: ResearchPdfModalProps) {
+export default function ResearchPdfModal({
+    isOpen,
+    onClose,
+    pdfUrl,
+    isLoading,
+    title,
+    onOpenAdvancedEditor,
+    error,
+    stage,
+    message
+}: ResearchPdfModalProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="w-[90vw] h-[90vh] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative animate-in zoom-in-50 duration-200">
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 px-6 border-b border-neutral-800 bg-neutral-900/90 backdrop-blur z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-900/20">
+                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-900/20">
                             <Sparkles size={20} className="text-white" />
                         </div>
                         <div>
@@ -71,11 +83,23 @@ export default function ResearchPdfModal({ isOpen, onClose, pdfUrl, isLoading, t
                                 <div className="w-20 h-20 border-4 border-neutral-800 border-t-green-500 rounded-full animate-spin relative z-10" />
                                 <Sparkles size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-green-500 animate-pulse z-20" />
                             </div>
-                            <div className="text-center space-y-2">
-                                <h3 className="text-xl font-bold text-white">Synthesizing Research</h3>
-                                <p className="text-neutral-500 max-w-sm mx-auto">
-                                    AI is analyzing collected contexts, merging topics, and validating sources...
-                                </p>
+                            <div className="text-center space-y-4 max-w-sm">
+                                <h3 className="text-xl font-bold text-white">
+                                    {stage || 'Synthesizing Research'}
+                                </h3>
+                                <div className="space-y-2">
+                                    <p className="text-neutral-400 text-sm font-medium animate-pulse">
+                                        {message || 'AI is analyzing collected contexts, merging topics, and validating sources...'}
+                                    </p>
+                                    <div className="flex gap-1 justify-center">
+                                        {['Planning', 'Writing', 'Reviewing', 'Visual Analysis', 'Compiling'].map((s) => (
+                                            <div
+                                                key={s}
+                                                className={`h-1 w-8 rounded-full transition-colors duration-500 ${stage === s ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-neutral-800'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : pdfUrl ? (

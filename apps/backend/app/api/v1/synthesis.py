@@ -8,12 +8,18 @@ from app.api.v1.oauth import get_current_user
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
+from fastapi.responses import StreamingResponse
+import json
+from app.services.orchestrator import SynthesisOrchestrator
+
+orchestrator = SynthesisOrchestrator()
 
 router = APIRouter()
 
 class SynthesisRequest(BaseModel):
     node_ids: List[str]
     query: str
+    previous_summary: Optional[str] = None
 
 class SynthesisResponse(BaseModel):
     summary: str
@@ -56,7 +62,7 @@ async def create_synthesis(
         raise HTTPException(status_code=404, detail="No valid nodes found")
     
     # Generate synthesis
-    summary = await generate_synthesis(request.query, node_contents)
+    summary = await generate_synthesis(request.query, node_contents, request.previous_summary)
     
     return SynthesisResponse(
         summary=summary,
@@ -206,9 +212,13 @@ class ResearchPDFRequest(BaseModel):
     query: str
     context_items: List[ResearchContextItem]
     use_dummy_data: bool = False
+    edges: Optional[List[dict]] = None
 
 @router.post("/research-pdf")
-async def generate_research_pdf(request: ResearchPDFRequest):
+async def generate_research_pdf(
+    request: ResearchPDFRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate a full academic research PDF report from selected graph nodes.
     """
@@ -338,9 +348,13 @@ class ChunkedPDFRequest(BaseModel):
     query: str
     context_items: List[ChunkedContextItem]
     use_dummy_data: bool = False
+    edges: Optional[List[dict]] = None
 
 @router.post("/research-pdf-chunked")
-async def generate_chunked_research_pdf(request: ChunkedPDFRequest):
+async def generate_chunked_research_pdf(
+    request: ChunkedPDFRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate a research PDF using token-efficient multi-pass synthesis.
     """
@@ -490,9 +504,13 @@ class LaTeXPDFRequest(BaseModel):
     return_tex: bool = False  # If True, return .tex file instead of PDF
     use_dummy_data: bool = False
     strict_mode: bool = True
+    edges: Optional[List[dict]] = None
 
 @router.post("/research-latex")
-async def generate_latex_research_pdf(request: LaTeXPDFRequest):
+async def generate_latex_research_pdf(
+    request: LaTeXPDFRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate a publication-quality PDF using LaTeX.
     """
@@ -606,9 +624,15 @@ class ASTPDFRequest(BaseModel):
     context_items: List[ChunkedContextItem]
     use_dummy_data: bool = False
     strict_mode: bool = True
+    edges: Optional[List[dict]] = None
+    whiteboard_id: Optional[str] = None
+    parent_job_id: Optional[str] = None
 
 @router.post("/research-ast")
-async def get_research_ast(request: ASTPDFRequest):
+async def get_research_ast(
+    request: ASTPDFRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate and return the raw JSON AST for a research document.
     """
@@ -640,10 +664,32 @@ async def get_research_ast(request: ASTPDFRequest):
     context_str = prepare_synthesis_context(chunks)
     source_map = build_source_map(chunks)
     
-    print(f"[AST] Prepared {len(chunks)} chunks")
+    # 3. Build edge relationships for LLM
+    url_to_ref = get_url_to_ref_map(chunks)
+    node_to_ref = {c.node_id: url_to_ref[c.source_url] for c in chunks}
     
-    # 3. Generate AST
-    ast_dict = await generate_document_ast(request.query, context_str, source_map)
+    transformed_edges = []
+    if request.edges:
+        for edge in request.edges:
+            s_ref = node_to_ref.get(edge.get('source'))
+            t_ref = node_to_ref.get(edge.get('target'))
+            if s_ref and t_ref:
+                transformed_edges.append({
+                    "source": s_ref,
+                    "target": t_ref,
+                    "label": edge.get('label', '')
+                })
+
+    # 4. Generate AST via Multi-Agent Orchestrator
+    ast_dict = await orchestrator.run_to_completion(
+        request.query, 
+        context_str, 
+        source_map, 
+        transformed_edges,
+        user_id=current_user.id,
+        whiteboard_id=request.whiteboard_id or "default",
+        parent_job_id=request.parent_job_id
+    )
     
     # 4. Validate against schema
     try:
@@ -658,8 +704,68 @@ async def get_research_ast(request: ASTPDFRequest):
         return {"status": "partial", "document": ast_dict, "validation_error": str(e)}
 
 
+@router.post("/research-ast-stream")
+async def stream_research_ast(
+    request: ASTPDFRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Stream the research synthesis process using Server-Sent Events.
+    """
+    node_contexts = [
+        NodeContext(
+            node_id=item.node_id,
+            url=item.url,
+            title=item.title,
+            content=item.content,
+            selected_topics=item.selected_topics,
+            outline=item.outline
+        )
+        for item in request.context_items
+    ]
+    
+    chunks = segment_nodes(node_contexts)
+    chunks = order_chunks_hierarchically(chunks)
+    chunks = enforce_token_budget(chunks, TOKEN_LIMITS["synthesis_pass"])
+    
+    context_str = prepare_synthesis_context(chunks)
+    source_map = build_source_map(chunks)
+    
+    url_to_ref = get_url_to_ref_map(chunks)
+    node_to_ref = {c.node_id: url_to_ref[c.source_url] for c in chunks}
+    
+    transformed_edges = []
+    if request.edges:
+        for edge in request.edges:
+            s_ref = node_to_ref.get(edge.get('source'))
+            t_ref = node_to_ref.get(edge.get('target'))
+            if s_ref and t_ref:
+                transformed_edges.append({
+                    "source": s_ref,
+                    "target": t_ref,
+                    "label": edge.get('label', '')
+                })
+
+    async def event_generator():
+        async for step in orchestrator.execute(
+            request.query, 
+            context_str, 
+            source_map, 
+            transformed_edges,
+            user_id=current_user.id,
+            whiteboard_id=request.whiteboard_id or "default",
+            parent_job_id=request.parent_job_id
+        ):
+            yield f"data: {json.dumps(step)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 @router.post("/research-ast-pdf")
-async def generate_ast_pdf(request: ASTPDFRequest):
+async def generate_ast_pdf(
+    request: ASTPDFRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate a PDF using the AST → LaTeX pipeline.
     """
@@ -691,10 +797,24 @@ async def generate_ast_pdf(request: ASTPDFRequest):
         context_str = prepare_synthesis_context(chunks)
         source_map = build_source_map(chunks)
         
-        print(f"[AST-PDF] Prepared {len(chunks)} chunks")
+        # 3. Build edge relationships for LLM
+        url_to_ref = get_url_to_ref_map(chunks)
+        node_to_ref = {c.node_id: url_to_ref[c.source_url] for c in chunks}
         
-        # 3. Generate AST
-        ast_dict = await generate_document_ast(request.query, context_str, source_map)
+        transformed_edges = []
+        if request.edges:
+            for edge in request.edges:
+                s_ref = node_to_ref.get(edge.get('source'))
+                t_ref = node_to_ref.get(edge.get('target'))
+                if s_ref and t_ref:
+                    transformed_edges.append({
+                        "source": s_ref,
+                        "target": t_ref,
+                        "label": edge.get('label', '')
+                    })
+
+        # 4. Generate AST
+        ast_dict = await generate_document_ast(request.query, context_str, source_map, transformed_edges)
         
         # 4. Validate and convert
         try:
@@ -734,7 +854,10 @@ async def generate_ast_pdf(request: ASTPDFRequest):
 
 
 @router.post("/research-pdf-from-ast")
-async def generate_pdf_from_ast(request_data: dict):
+async def generate_pdf_from_ast(
+    request_data: dict,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate a PDF directly from a provided JSON AST.
     

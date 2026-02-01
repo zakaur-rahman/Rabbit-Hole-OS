@@ -9,7 +9,8 @@ from app.models.whiteboard import Whiteboard
 from app.core.database import get_db
 from app.api.v1.oauth import get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, desc
+from sqlalchemy import select, delete, desc, or_
+from app.models.edge import Edge
 from pydantic import BaseModel
 from app.models.user import User
 import uuid
@@ -300,6 +301,10 @@ async def delete_node(node_id: str, db: AsyncSession = Depends(get_db), current_
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
     
+    # Step 1: Manually delete any edges referencing this node (failsafe for migration)
+    await db.execute(delete(Edge).where(or_(Edge.source_id == node_id, Edge.target_id == node_id)))
+    
+    # Step 2: Delete the node
     await db.delete(node)
     await db.commit()
     return {"status": "deleted", "id": node_id}

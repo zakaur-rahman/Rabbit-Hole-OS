@@ -1,6 +1,6 @@
 {
-    "name": "rabbit-hole-os-desktop",
-    "version": "0.1.0",
+    "name": "Cognode",
+    "version": "1.0.0",
     "main": "build/electron/main.js",
     "scripts": {
         "dev": "tsc && electron .",
@@ -9,8 +9,8 @@
         "dist": "tsc && electron-builder"
     },
     "build": {
-        "appId": "com.rabbithole.os",
-        "productName": "RabbitHole OS",
+        "appId": "com.cognode.app",
+        "productName": "Cognode",
         "directories": {
             "output": "dist"
         },
@@ -30,8 +30,8 @@
             ],
             "extraResources": [
                 {
-                    "from": "../backend/dist/rabbit-hole-backend.exe",
-                    "to": "bin/rabbit-hole-backend.exe"
+                    "from": "../backend/dist/cognode-backend.exe",
+                    "to": "bin/cognode-backend.exe"
                 }
             ]
         },
@@ -43,8 +43,8 @@
             "category": "public.app-category.productivity",
             "extraResources": [
                 {
-                    "from": "../backend/dist/rabbit-hole-backend",
-                    "to": "bin/rabbit-hole-backend"
+                    "from": "../backend/dist/cognode-backend",
+                    "to": "bin/cognode-backend"
                 }
             ]
         },

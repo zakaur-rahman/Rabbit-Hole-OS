@@ -15,9 +15,9 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useGraphStore } from '@/store/graph.store';
-import { nodesApi } from '@/lib/api';
+import { nodesApi, synthesisApi } from '@/lib/api';
 import { useASTStore } from '@/store/ast.store'; // Import store
-import ASTEditorModal from '../modals/ASTEditorModal'; // Import modal
+import { ASTEditorModal } from '../modals/ASTEditorModal'; // Corrected named import
 
 // Import all node types
 import ArticleNode from './nodes/ArticleNode';
@@ -86,7 +86,6 @@ interface CanvasViewProps {
 
 function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasViewProps) {
     const { nodes, edges, onNodesChange, onEdgesChange, addEdge: addStoreEdge, selectNode, addNode, fetchNodes, activeWhiteboardId, whiteboards, setAuthModal } = useGraphStore();
-    const { synthesisApi } = require('@/lib/api');
     const [showSynthesis, setShowSynthesis] = useState(false);
 
     // Import Sparkles icon if not already imported (it is in line 53? No, line 53 has others. Sparkles is in ResearchPdfModal import, let's add it to imports if missing)
@@ -105,6 +104,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [isSynthesizing, setIsSynthesizing] = useState(false);
+    const [synthesisStage, setSynthesisStage] = useState<string | null>(null);
+    const [synthesisMessage, setSynthesisMessage] = useState<string | null>(null);
     const [synthesisError, setSynthesisError] = useState<string | null>(null);
 
     const [showASTEditor, setShowASTEditor] = useState(false);
@@ -117,7 +118,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             return;
         }
 
-        const currentNodes = useGraphStore.getState().nodes;
+        const { nodes: currentNodes, edges: sEdges } = useGraphStore.getState();
         if (currentNodes.length === 0) {
             return;
         }
@@ -137,7 +138,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 }
 
                 // Check for attached instruction
-                const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
+                const { edges: sEdges, nodes: sNodes, activeWhiteboardId: wbId } = useGraphStore.getState();
                 const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
 
                 return {
@@ -152,7 +153,8 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             });
 
             // Fetch AST
-            const response = await synthesisApi.getResearchAST("Synthesized Research Report", contextItems);
+            const { activeWhiteboardId: currentWbId } = useGraphStore.getState();
+            const response = await synthesisApi.getResearchAST("Synthesized Research Report", contextItems, false, sEdges, currentWbId);
             if (response.status === 'success' || response.status === 'partial') {
                 setInitialAST(response.document);
             }
@@ -160,7 +162,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             console.error("Failed to load AST:", error);
             setShowASTEditor(false);
         }
-    }, []);
+    }, [activeWhiteboardId]);
 
     const handleCompileAST = useCallback(async (ast: any) => {
         return await synthesisApi.generatePdfFromAST(ast);
@@ -175,7 +177,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             return;
         }
 
-        const currentNodes = useGraphStore.getState().nodes;
+        const { nodes: currentNodes, edges: currentEdges } = useGraphStore.getState();
         if (currentNodes.length === 0) return;
 
         setShowPdfModal(true);
@@ -184,47 +186,67 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setSynthesisError(null);
 
         try {
-            // Build context items with full structure for LaTeX endpoint
+            // Build context items
             const contextItems = currentNodes.map(node => {
-                let content = node.data.content || '';
-                const selectedTopics = node.data.selectedTopics || [];
-
-                // For Article nodes, filter content based on selection
-                if (node.type === 'article' && selectedTopics.length > 0) {
-                    const topics = selectedTopics.join(", ");
-                    content = `*** FOCUS TOPICS: ${topics} ***\n\nFULL SOURCE CONTENT:\n${content}`;
-                }
-
-                // Check for attached instruction
+                let content = (node.data as any).content || '';
+                const selectedTopics = (node.data as any).selectedTopics || [];
                 const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
                 const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
 
                 return {
                     node_id: node.id,
-                    title: node.data.title || 'Untitled',
+                    title: (node.data as any).title || 'Untitled',
                     content: content,
-                    url: node.data.url || '',
+                    url: (node.data as any).url || '',
                     selected_topics: selectedTopics,
-                    outline: node.data.outline || [],
-                    system_instruction: comment?.data?.content
+                    outline: (node.data as any).outline || [],
+                    system_instruction: (comment?.data as any)?.content
                 };
             });
 
-            // Use LaTeX-based PDF generation
-            const blob = await synthesisApi.generateLatexResearchPdf(
-                useDummyData ? "Dummy Research Report" : "Synthesized Research Report",
+            if (useDummyData) {
+                const blob = await synthesisApi.generateLatexResearchPdf("Dummy Research Report", contextItems, false, true, currentEdges);
+                setPdfUrl(URL.createObjectURL(blob));
+                return;
+            }
+
+            // --- Multi-Agent Streaming Synthesis ---
+            let finalAST: any = null;
+            const { activeWhiteboardId } = useGraphStore.getState();
+            await synthesisApi.streamResearchAST(
+                "Synthesized Research Report",
                 contextItems,
-                false, // return_tex
-                useDummyData // use_dummy_data
+                currentEdges,
+                (step: { stage: string; status: string; message?: string; document?: any; error?: string }) => {
+                    setSynthesisStage(step.stage);
+                    setSynthesisMessage(step.message || '');
+                    setSynthesisMessage(step.message || '');
+                    if ((step.stage === 'Ready' || step.status === 'COMPLETED') && step.document) {
+                        finalAST = step.document;
+                    }
+                    if (step.status === 'failed') {
+                        throw new Error(step.error || 'Synthesis failed');
+                    }
+                },
+                activeWhiteboardId
             );
-            const url = URL.createObjectURL(blob);
-            setPdfUrl(url);
+
+            if (!finalAST) throw new Error("Synthesis did not return a document.");
+
+            // --- AST to PDF Compilation ---
+            setSynthesisStage("Compiling");
+            setSynthesisMessage("Converting AST to LaTeX and compiling PDF...");
+            const pdfBlob = await synthesisApi.generatePdfFromAST(finalAST);
+            setPdfUrl(URL.createObjectURL(pdfBlob));
+
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Synthesis failed:", errorMessage);
             setSynthesisError(errorMessage);
         } finally {
             setIsSynthesizing(false);
+            setSynthesisStage(null);
+            setSynthesisMessage(null);
         }
     }, [handleOpenASTEditor]);
 
@@ -1444,7 +1466,10 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onClose={() => setShowPdfModal(false)}
                 pdfUrl={pdfUrl}
                 isLoading={isSynthesizing}
+                stage={synthesisStage}
+                message={synthesisMessage}
                 onOpenAdvancedEditor={handleOpenAdvancedEditor}
+                error={synthesisError}
             />
 
             <WebUrlModal
