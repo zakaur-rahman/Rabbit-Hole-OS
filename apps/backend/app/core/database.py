@@ -160,6 +160,9 @@ def get_session_maker():
         _async_session_maker = async_sessionmaker(get_engine(), class_=AsyncSession, expire_on_commit=False)
     return _async_session_maker
 
+def SessionLocal():
+    return get_session_maker()()
+
 async def get_db():
     async with get_session_maker()() as session:
         yield session

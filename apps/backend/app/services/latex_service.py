@@ -179,6 +179,7 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
     
     # Introduction
     latex_parts.append(r"""% Introduction
+% AST_NODE: introduction
 \section{Introduction}
 """ + introduction + "\n\n")
     
@@ -189,6 +190,8 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
         figures = section.get("figures", [])
         
         # Determine section level based on heading structure
+        section_id = section.get("id", "none")
+        latex_parts.append(f"% AST_NODE: section_{section_id}\n")
         latex_parts.append(f"\\section{{{heading}}}\n")
         latex_parts.append(body + "\n\n")
         
@@ -216,6 +219,7 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
     # Conclusion
     latex_parts.append(r"""
 % Conclusion
+% AST_NODE: conclusion
 \section{Conclusion}
 """ + conclusion + "\n\n")
     
@@ -354,6 +358,27 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
                     current_error['context'] = context_match.group(1).strip()
             continue
 
+    return errors
+
+def map_latex_error_to_ast(errors: List[Dict], latex_code: str) -> List[Dict]:
+    """
+    Maps LaTeX line errors back to AST nodes using embedded comments.
+    """
+    lines = latex_code.split('\n')
+    for error in errors:
+        line_idx = error.get('line', 0) - 1
+        if line_idx < 0 or line_idx >= len(lines):
+            continue
+            
+        # Scan upwards for AST_NODE comment
+        node_id = "unknown"
+        for i in range(line_idx, -1, -1):
+            if "% AST_NODE:" in lines[i]:
+                node_id = lines[i].split("AST_NODE:")[1].strip()
+                break
+        
+        error['ast_node_id'] = node_id
+    
     return errors
 
 def validate_latex_safety(latex_code: str) -> List[str]:

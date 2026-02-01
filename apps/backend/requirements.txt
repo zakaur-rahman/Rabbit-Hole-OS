@@ -19,3 +19,4 @@ matplotlib
 redis>=5.0.0
 pyjwt>=2.8.0
 cryptography
+arq>=0.25.0
