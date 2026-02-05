@@ -1,11 +1,20 @@
 import json
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+import re
+import html
+import random
+import logging
+from typing import List, Dict, Any, Optional, Tuple, Union
 from pydantic import BaseModel
 from datetime import datetime
+from json.decoder import JSONDecodeError
+
+import httpx
 
 from app.services.llm import get_ai_client
 from app.services.document_ast import DocumentAST
+
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # BASE AGENT
@@ -19,27 +28,165 @@ class AgentResponse(BaseModel):
     timestamp: str = datetime.now().isoformat()
 
 class BaseAgent:
+    # Class-level HTTP client (shared across instances)
+    _http_client: Optional[httpx.AsyncClient] = None
+    _client_lock = asyncio.Lock()
+    
+    # Retry configuration
+    MAX_RETRIES = 3
+    RETRY_DELAYS = [1, 2, 4]  # Exponential backoff
+
     def __init__(self, name: str, role: str):
         self.name = name
         self.role = role
+        self.logger = logging.getLogger(f"agent.{name.lower()}")
 
-    async def _call_llm(self, prompt: str, system_instruction: Optional[str] = None, temperature: float = 0.1) -> str:
+    @classmethod
+    async def _get_http_client(cls) -> httpx.AsyncClient:
+        """Get or create shared HTTP client."""
+        if cls._http_client is None:
+            async with cls._client_lock:
+                if cls._http_client is None:
+                    cls._http_client = httpx.AsyncClient(
+                        timeout=httpx.Timeout(60.0),
+                        limits=httpx.Limits(
+                            max_keepalive_connections=10,
+                            max_connections=20
+                        )
+                    )
+        return cls._http_client
+
+    @classmethod
+    async def cleanup_http_client(cls):
+        """Close shared HTTP client. Call on application shutdown."""
+        if cls._http_client:
+            await cls._http_client.aclose()
+            cls._http_client = None
+
+    def _clean_json_response(self, raw_text: str) -> str:
+        """Clean LLM response to extract valid JSON."""
+        # Remove markdown code blocks
+        cleaned = re.sub(r'^```(?:json)?\s*\n', '', raw_text, flags=re.MULTILINE)
+        cleaned = re.sub(r'\n```\s*$', '', cleaned, flags=re.MULTILINE)
+        
+        # Try to find JSON object boundaries
+        brace_match = re.search(r'\{.*\}', cleaned, re.DOTALL)
+        bracket_match = re.search(r'\[.*\]', cleaned, re.DOTALL)
+        
+        if brace_match:
+            cleaned = brace_match.group(0)
+        elif bracket_match:
+            cleaned = bracket_match.group(0)
+        
+        return cleaned.strip()
+
+    async def _parse_llm_json(
+        self, 
+        raw_response: str, 
+        expected_keys: list = None
+    ) -> Union[dict, list]:
+        """Parse LLM response as JSON with error recovery."""
+        cleaned = self._clean_json_response(raw_response)
+        
+        try:
+            data = json.loads(cleaned)
+            if expected_keys and isinstance(data, dict):
+                missing = [k for k in expected_keys if k not in data]
+                if missing:
+                    self.logger.warning(f"[{self.name}] Response missing keys: {missing}")
+            return data
+        except JSONDecodeError as e:
+            # Attempt to fix common issues (e.g., mixed quotes)
+            try:
+                fixed = cleaned.replace("'", '"')
+                return json.loads(fixed)
+            except JSONDecodeError:
+                pass
+            
+            error_msg = f"Failed to parse LLM response as JSON: {str(e)}"
+            self.logger.error(f"{error_msg}\nPreview: {raw_response[:200]}...")
+            raise ValueError(error_msg)
+
+    def _smart_truncate(self, text: str, max_chars: int) -> Tuple[str, bool]:
+        """Intelligently truncate text while preserving sentence boundaries."""
+        if len(text) <= max_chars:
+            return text, False
+        
+        truncated = text[:max_chars]
+        last_period = truncated.rfind('. ')
+        if last_period > max_chars * 0.8:
+            truncated = truncated[:last_period + 1]
+        
+        return truncated + "\n\n[... content truncated ...]", True
+
+    def _validate_input(self, value: Optional[str], name: str, min_length: int = 1, max_length: int = 100000, allow_empty: bool = False) -> str:
+        """Validate and sanitize text input."""
+        if value is None:
+            if allow_empty: return ""
+            raise ValueError(f"{name} cannot be None")
+        if not isinstance(value, str):
+            raise ValueError(f"{name} must be a string")
+            
+        value = value.strip()
+        if not allow_empty and len(value) < min_length:
+            raise ValueError(f"{name} too short")
+        if len(value) > max_length:
+            raise ValueError(f"{name} too long")
+            
+        return html.unescape(value)
+
+    def _log_llm_call(self, prompt: str, system_instruction: Optional[str] = None, direction: str = "request"):
+        """Log LLM interaction with proper formatting."""
+        if direction == "request":
+            self.logger.debug(f"Calling LLM for task: {self.role}")
+            if system_instruction:
+                self.logger.debug(f"System: {system_instruction[:200]}...")
+            self.logger.debug(f"Prompt: {prompt[:500]}...")
+        else:
+            self.logger.debug("Received LLM response")
+
+    async def _call_llm_with_retry(
+        self,
+        prompt: str,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.1
+    ) -> str:
+        """Call LLM with automatic retry on transient failures."""
+        last_error = None
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                response = await self._call_llm_impl(prompt, system_instruction, temperature)
+                if response and response != "{}":
+                    return response
+                last_error = "Empty response"
+            except httpx.HTTPStatusError as e:
+                last_error = e
+                if e.response.status_code in (429, 500, 502, 503, 504):
+                    if attempt < self.MAX_RETRIES - 1:
+                        delay = self.RETRY_DELAYS[attempt] + random.uniform(0, 0.5)
+                        self.logger.warning(f"Retry {attempt+1} after {e.response.status_code} in {delay:.1f}s")
+                        await asyncio.sleep(delay)
+                        continue
+                raise
+            except (httpx.ConnectError, httpx.TimeoutException) as e:
+                last_error = e
+                if attempt < self.MAX_RETRIES - 1:
+                    delay = self.RETRY_DELAYS[attempt]
+                    await asyncio.sleep(delay)
+                    continue
+                raise
+        raise RuntimeError(f"LLM call failed after {self.MAX_RETRIES} attempts: {last_error}")
+
+    async def _call_llm_impl(self, prompt: str, system_instruction: Optional[str] = None, temperature: float = 0.1) -> str:
+        """Implementation of LLM call."""
         provider, api_key, base_url = await get_ai_client()
+        self._log_llm_call(prompt, system_instruction, direction="request")
         
         if provider == "gemini":
             from google import genai
             from google.genai import types
             client = genai.Client(api_key=api_key)
             
-            # --- AGENT LOGGING (Safe for Windows) ---
-            try:
-                print(f"\n[{self.name}] Thinking...")
-                safe_prompt = prompt.encode('ascii', errors='replace').decode('ascii')
-                print(f"[{self.name}] PROMPT:\n{safe_prompt[:500]}..." if len(safe_prompt) > 500 else safe_prompt)
-            except:
-                pass
-            # ----------------------------------------
-
             config = types.GenerateContentConfig(
                 temperature=temperature,
                 max_output_tokens=8000,
@@ -48,13 +195,6 @@ class BaseAgent:
             )
             
             def call():
-                # Log system instruction if present
-                if system_instruction:
-                    try:
-                        safe_sys = system_instruction.encode('ascii', errors='replace').decode('ascii')
-                        print(f"[{self.name}] SYSTEM: {safe_sys[:200]}...")
-                    except: pass
-
                 return client.models.generate_content(
                     model="gemini-2.0-flash-preview-09-2025",
                     contents=prompt,
@@ -63,65 +203,32 @@ class BaseAgent:
             
             response = await asyncio.to_thread(call)
             text_resp = response.text.strip() if response and response.text else "{}"
-            
-            # --- RESPONSE LOGGING ---
-            try:
-                safe_resp = text_resp.encode('ascii', errors='replace').decode('ascii')
-                print(f"[{self.name}] RESPONSE:\n{safe_resp[:500]}..." if len(safe_resp) > 500 else safe_resp)
-                print(f"[{self.name}] DONE.\n")
-            except: pass
-            # ------------------------
-            
+            self._log_llm_call(text_resp, direction="response")
             return text_resp
         
         elif provider in ("openai", "chutes"):
-            import httpx
             model = "gpt-4o" if provider == "openai" else "deepseek-ai/DeepSeek-V3-0324"
-            
             messages = []
             if system_instruction:
                 messages.append({"role": "system", "content": system_instruction})
             messages.append({"role": "user", "content": prompt})
 
-            
-            # --- AGENT LOGGING (Safe for Windows) ---
-            try:
-                print(f"\n[{self.name}] Thinking (via {provider})...")
-                safe_prompt = prompt.encode('ascii', errors='replace').decode('ascii')
-                print(f"[{self.name}] PROMPT:\n{safe_prompt[:500]}..." if len(safe_prompt) > 500 else safe_prompt)
-            except: pass
-            # ----------------------------------------
-
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": model,
-                        "messages": messages,
-                        "temperature": temperature,
-                        "response_format": {"type": "json_object"}
-                    },
-                    timeout=60.0
-                )
-                
-                resp_content = "{}"
-                if response.status_code == 200:
-                    data = response.json()
-                    resp_content = data["choices"][0]["message"]["content"]
-                
-                # --- RESPONSE LOGGING ---
-                try:
-                    safe_resp = resp_content.encode('ascii', errors='replace').decode('ascii')
-                    print(f"[{self.name}] RESPONSE:\n{safe_resp[:500]}..." if len(safe_resp) > 500 else safe_resp)
-                    print(f"[{self.name}] DONE.\n")
-                except: pass
-                # ------------------------
-
-                return resp_content
+            client = await self._get_http_client()
+            response = await client.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "response_format": {"type": "json_object"}
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            resp_content = data["choices"][0]["message"]["content"]
+            self._log_llm_call(resp_content, direction="response")
+            return resp_content
         
         return "{}"
 
@@ -134,23 +241,26 @@ class PlannerAgent(BaseAgent):
         super().__init__("Planner", "AI Research Architect")
 
     async def plan(self, query: str, context: str, relationships: str) -> AgentResponse:
-        system = f"You are the {self.role}. Your task is to architect a synthesis plan for a research document."
-        prompt = f'''
+        try:
+            # Validate inputs
+            query = self._validate_input(query, "query", min_length=3, max_length=1000)
+            context_truncated, was_truncated = self._smart_truncate(context, 10000)
+            relationships = self._validate_input(relationships, "relationships", allow_empty=True, max_length=50000)
+            
+            system = f"You are the {self.role}. Your task is to architect a synthesis plan for a research document. Respond ONLY with valid JSON."
+            prompt = f'''
+CRITICAL: Respond ONLY with valid JSON. No preamble, no markdown.
+
 TOPIC: {query}
-
-RELATIONSHIPS:
-{relationships}
-
-CONTEXT:
-{context[:10000]}
+RELATIONSHIPS: {relationships}
+CONTEXT: {context_truncated}
+{f"NOTE: Context was truncated. Focus on available information." if was_truncated else ""}
 
 TASK:
 1. Analyze the context and graph relationships.
-2. Define a logical section ordering.
+2. Define a logical section ordering (max 8 sections).
 3. Identify cross-node dependencies.
 4. Prevent content duplication.
-
-NO content generation. ONLY structure.
 
 OUTPUT FORMAT (JSON):
 {{
@@ -158,16 +268,26 @@ OUTPUT FORMAT (JSON):
     {{ "id": "sec-1", "title": "...", "objective": "...", "ref_ids": ["1", "2"] }}
   ],
   "section_dependencies": {{ "sec-2": ["sec-1"] }},
-  "reasoning_plan": "Cohesive logic explaining the flow...",
-  "constraints": ["Keep it technical", "Focus on specific sub-topics..."]
+  "reasoning_plan": "...",
+  "constraints": ["Keep it technical", "Focus on specific sub-topics"]
 }}
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=json.loads(raw_response)
-        )
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system, temperature=0.2)
+            data = await self._parse_llm_json(raw_response, expected_keys=["document_outline", "section_dependencies"])
+            
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Planner failed: {e}", exc_info=True)
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data={},
+                reasoning=str(e)
+            )
 
 # ============================================================
 # 2. WRITER AGENT
@@ -178,18 +298,18 @@ class WriterAgent(BaseAgent):
         super().__init__("Writer", "Research Synthesis Writer")
 
     async def write(self, query: str, context: str, plan: Dict[str, Any], references_json: str) -> AgentResponse:
-        system = f"You are the {self.role}. Your task is to generate a structured JSON AST for a research document."
-        prompt = f'''
+        try:
+            # Validate inputs
+            query = self._validate_input(query, "query", max_length=1000)
+            context_truncated, was_truncated = self._smart_truncate(context, 20000)
+            
+            system = f"You are the {self.role}. Your task is to generate a structured JSON AST for a research document. Respond ONLY with valid JSON."
+            prompt = f'''
 TOPIC: {query}
-
-PLAN:
-{json.dumps(plan, indent=2)}
-
-CONTEXT:
-{context[:20000]}
-
-REFERENCES:
-{references_json}
+PLAN: {json.dumps(plan)}
+CONTEXT: {context_truncated}
+{f"NOTE: Context was truncated." if was_truncated else ""}
+REFERENCES: {references_json}
 
 TASK:
 - Generate a complete Document AST based on the plan.
@@ -197,21 +317,43 @@ TASK:
 - Insert inline citations [1], [2] using ref_ids.
 - STRICT JSON ONLY.
 
-OUTPUT SCHEMA:
-(Follow standard DocumentAST schema with 'document': {{ title, abstract, sections: [{{ id, title, content: [{{ type, data }}] }}], references }})
+OUTPUT SCHEMA (JSON):
+{{
+  "document": {{
+    "title": "string",
+    "sections": [
+      {{
+        "title": "string",
+        "content": [
+          {{ "type": "paragraph", "data": {{ "text": "...", "citations": ["1"] }} }}
+        ]
+      }}
+    ]
+  }}
+}}
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        
-        data = json.loads(raw_response)
-        # Fix: Unwrap 'document' if LLM followed the nested schema prompt
-        if isinstance(data, dict) and "document" in data and "title" not in data:
-            data = data["document"]
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
+            data = await self._parse_llm_json(raw_response)
             
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=data
-        )
+            if isinstance(data, dict) and "document" in data and "title" not in data:
+                data = data["document"]
+            
+            if not isinstance(data, dict) or "title" not in data:
+                raise ValueError("Incomplete AST returned")
+
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Writer failed: {e}", exc_info=True)
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data={},
+                reasoning=str(e)
+            )
 
 # ============================================================
 # 3. REVIEWER AGENT
@@ -222,29 +364,35 @@ class ReviewerAgent(BaseAgent):
         super().__init__("Reviewer", "Academic Validation Agent")
 
     async def review(self, ast: Dict[str, Any], context: str) -> AgentResponse:
-        system = f"You are the {self.role}. Your task is to validate and improve a research AST."
-        prompt = f'''
-CURRENT AST:
-{json.dumps(ast, indent=2)}
-
-CONTEXT:
-{context[:5000]}
+        try:
+            context_truncated, _ = self._smart_truncate(context, 10000)
+            system = f"You are the {self.role}. Your task is to validate and improve a research AST. Respond ONLY with valid JSON."
+            prompt = f'''
+CURRENT AST: {json.dumps(ast)}
+CONTEXT: {context_truncated}
 
 TASK:
 1. Detect hallucinations (facts not in context).
 2. Detect missing citations.
-3. Fix awkward headers or repetition.
-4. If a claim is weak, insert a warning block into the section content.
-5. Return the corrected AST.
-
-OUTPUT: Corrected JSON AST.
+3. Fix headers or repetition.
+4. Return the corrected AST as JSON.
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=json.loads(raw_response)
-        )
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
+            data = await self._parse_llm_json(raw_response)
+            
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Reviewer failed: {e}")
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data=ast, # Return original on failure
+                reasoning=str(e)
+            )
 
 # ============================================================
 # 4. CHART & FIGURE AGENT
@@ -255,34 +403,31 @@ class ChartFigureAgent(BaseAgent):
         super().__init__("ChartAgent", "Visual Reasoning Agent")
 
     async def analyze(self, ast: Dict[str, Any]) -> AgentResponse:
-        system = f"You are the {self.role}. Your task is to identify data visualization opportunities."
-        prompt = f'''
-DOCUMENT AST:
-{json.dumps(ast, indent=2)}
-
+        try:
+            system = f"You are the {self.role}. Your task is to identify data visualization opportunities. Respond ONLY with valid JSON."
+            prompt = f'''
+DOCUMENT AST: {json.dumps(ast)}
 TASK:
 - Identify numeric, comparative, or temporal data.
-- Recommend figures (bar, line, table, timeline).
-- Provide the data in the required format for the renderer.
-
-OUTPUT FORMAT:
-{{
-  "figures": [
-    {{
-      "type": "bar | line | table",
-      "section_id": "sec-x",
-      "reason": "Why this chart helps...",
-      "data": {{ "title": "...", "labels": [...], "values": [...] }}
-    }}
-  ]
-}}
+- Recommend figures (bar, line, table).
+- Provide JSON output.
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=json.loads(raw_response)
-        )
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
+            data = await self._parse_llm_json(raw_response, expected_keys=["figures"])
+            
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Chart analysis failed: {e}")
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data={"figures": []},
+                reasoning=str(e)
+            )
 
 # ============================================================
 # 5. BIBLIOGRAPHY NORMALIZER
@@ -293,29 +438,33 @@ class BibNormalizerAgent(BaseAgent):
         super().__init__("BibNormalizer", "Citation & Reference Engine")
 
     async def normalize(self, ast: Dict[str, Any], references: List[Dict[str, Any]]) -> AgentResponse:
-        # This agent can often be programmatic, but we'll use LLM for smart deduplication if titles are messy
-        system = f"You are the {self.role}. Your task is to deduplicate and normalize references."
-        prompt = f'''
-REFS USED IN AST: {json.dumps(ast.get('references', []), indent=2)}
-ALL REFS: {json.dumps(references, indent=2)}
+        try:
+            system = f"You are the {self.role}. Your task is to deduplicate and normalize references. Respond ONLY with valid JSON."
+            prompt = f'''
+REFS USED IN AST: {json.dumps(ast.get('references', []))}
+ALL REFS: {json.dumps(references)}
 
 TASK:
 1. Map all source_urls to unique ref_ids.
 2. Clean titles.
-3. Ensure the AST citations use these normalized IDs.
-
-OUTPUT:
-{{
-  "normalized_references": [...],
-  "ast_updates": {{ "old_id": "new_id" }}
-}}
+3. Return JSON.
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=json.loads(raw_response)
-        )
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
+            data = await self._parse_llm_json(raw_response, expected_keys=["normalized_references"])
+            
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Bib normalization failed: {e}")
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data={"normalized_references": references},
+                reasoning=str(e)
+            )
 
 # ============================================================
 # 6. MEMORY AGENT
@@ -326,29 +475,33 @@ class MemoryAgent(BaseAgent):
         super().__init__("Memory", "Cross-Document Learning Engine")
 
     async def learn(self, query: str, ast: Dict[str, Any]) -> AgentResponse:
-        system = f"You are the {self.role}. Your task is to extract high-level conceptual patterns."
-        # Memory storage logic will be in orchestrator/service, agent just extracts
-        prompt = f'''
+        try:
+            system = f"You are the {self.role}. Extract conceptual patterns. Respond ONLY with valid JSON."
+            prompt = f'''
 TOPIC: {query}
-AST: (Look at titles and abstract) {ast.get('document', {}).get('title')}
+TITLE: {ast.get('document', {}).get('title')}
 
 TASK:
-- Extract main concepts and their relationships.
-- DO NOT store raw text.
-- Analyze structural preferences (e.g., "The user prefers beginning with architectural overviews").
-
-OUTPUT:
-{{
-  "concepts": ["id": "...", "relation": "..."],
-  "structural_patterns": [...]
-}}
+- Extract main concepts and relationships.
+- Analyze structural preferences.
+- Output JSON.
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=json.loads(raw_response)
-        )
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
+            data = await self._parse_llm_json(raw_response)
+            
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Memory learning failed: {e}")
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data={},
+                reasoning=str(e)
+            )
 
 # ============================================================
 # 7. RECOVERY AGENT
@@ -359,25 +512,30 @@ class RecoveryAgent(BaseAgent):
         super().__init__("Recovery", "Stability & Recovery Engine")
 
     async def diagnose(self, error: str, failed_agent: str, last_output: str) -> AgentResponse:
-        system = f"You are the {self.role}. Your task is to fix pipeline failures."
-        prompt = f'''
+        try:
+            system = f"You are the {self.role}. Your task is to fix pipeline failures. Respond ONLY with valid JSON."
+            prompt = f'''
 FAILED AGENT: {failed_agent}
 ERROR: {error}
 LAST OUTPUT: {last_output}
 
 TASK:
-- Analyze why it failed (JSON error, hallucination, etc.).
-- Provide a recovery plan or a simplified instruction for the failed agent.
-
-OUTPUT:
-{{
-  "retry_action": "retry | fallback | stop",
-  "instruction_tweak": "Simplified prompt addition..."
-}}
+- Analyze why it failed.
+- Provide a recovery plan.
 '''
-        raw_response = await self._call_llm(prompt, system_instruction=system)
-        return AgentResponse(
-            agent_name=self.name,
-            status="success",
-            data=json.loads(raw_response)
-        )
+            raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
+            data = await self._parse_llm_json(raw_response, expected_keys=["retry_action"])
+            
+            return AgentResponse(
+                agent_name=self.name,
+                status="success",
+                data=data
+            )
+        except Exception as e:
+            self.logger.error(f"Recovery agent failed: {e}")
+            return AgentResponse(
+                agent_name=self.name,
+                status="failed",
+                data={"retry_action": "stop"},
+                reasoning=str(e)
+            )

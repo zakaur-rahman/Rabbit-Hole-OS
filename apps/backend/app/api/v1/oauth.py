@@ -16,6 +16,16 @@ from sqlalchemy import select, text, update, func
 from datetime import datetime, timedelta
 from upstash_redis.asyncio import Redis
 
+# In-memory cache for user objects to prevent N+1 queries during auth
+# key: user_id (UUID), value: (User, expiry)
+_user_cache = {}
+USER_CACHE_TTL = timedelta(minutes=10)
+
+# Track last session update to throttle database writes
+# key: session_id (str), value: last_updated (datetime)
+_session_update_tracker = {}
+SESSION_UPDATE_THROTTLE = timedelta(minutes=5)
+
 router = APIRouter()
 security = HTTPBearer()
 
@@ -109,32 +119,49 @@ async def get_current_user(
             detail="Invalid user ID format",
         )
     
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    
+    # 1. Check user cache
+    now = datetime.utcnow()
+    if user_id in _user_cache:
+        cached_user, expiry = _user_cache[user_id]
+        if now < expiry:
+            user = cached_user
+        else:
+            del _user_cache[user_id]
+            user = None
+    else:
+        user = None
+
+    # 2. Query DB if not cached
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+        # Store in cache
+        _user_cache[user_id] = (user, now + USER_CACHE_TTL)
     
-    # Update last_active_at for the current session
+    # 3. Update last_active_at (Throttled)
     session_id = payload.get("session_id")
     if session_id:
-        try:
-            # Update last_active_at using a background-style approach to not block the user too much
-            # but still await it to ensure it happens. In a real prod environment, 
-            # we might throttle this to once every minute per session.
-            await db.execute(
-                update(Session)
-                .where(Session.id == uuid_lib.UUID(session_id))
-                .values(last_active_at=func.now())
-            )
-            await db.commit()
-        except Exception as e:
-            # We don't want session timestamp failure to block the whole app request
-            print(f"Failed to update session activity: {e}")
-            await db.rollback()
+        last_updated = _session_update_tracker.get(session_id)
+        if not last_updated or (now - last_updated) > SESSION_UPDATE_THROTTLE:
+            try:
+                # Use a separate background session or just update within this one but throttle
+                await db.execute(
+                    update(Session)
+                    .where(Session.id == uuid_lib.UUID(session_id))
+                    .values(last_active_at=func.now())
+                )
+                await db.commit()
+                _session_update_tracker[session_id] = now
+                print(f"DEBUG: Throttled session update for {session_id[:8]}...")
+            except Exception as e:
+                print(f"Failed to update session activity: {e}")
+                await db.rollback()
 
     return user
 

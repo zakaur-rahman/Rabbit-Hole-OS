@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, Depends, Body
-from typing import List, Dict
+from typing import List, Dict, Optional
 from app.schemas.edge import Edge as EdgeSchema, EdgeCreate
 from app.models.edge import Edge
 from app.models.node import Node
@@ -104,17 +104,30 @@ async def create_edge(
 @router.delete("/{edge_id}")
 async def delete_edge(
     edge_id: str, 
-    whiteboard_id: str = Query(..., description="The ID of the whiteboard"),
+    whiteboard_id: Optional[str] = Query(None, description="The ID of the whiteboard"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Delete an edge."""
-    result = await db.execute(select(Edge).where(Edge.id == edge_id, Edge.whiteboard_id == whiteboard_id, Edge.user_id == current_user.id))
+    query = select(Edge).where(Edge.id == edge_id, Edge.user_id == current_user.id)
+    if whiteboard_id:
+        query = query.where(Edge.whiteboard_id == whiteboard_id)
+    
+    result = await db.execute(query)
     edge = result.scalar_one_or_none()
     
     if edge:
         await db.delete(edge)
         await db.commit()
         return {"status": "success"}
+    
+    # If not found with whiteboard_id, try without it just to be sure if we can delete it
+    if whiteboard_id:
+        result = await db.execute(select(Edge).where(Edge.id == edge_id, Edge.user_id == current_user.id))
+        edge = result.scalar_one_or_none()
+        if edge:
+            await db.delete(edge)
+            await db.commit()
+            return {"status": "success"}
     
     raise HTTPException(status_code=404, detail="Edge not found")

@@ -19,7 +19,6 @@ from app.models.job import ResearchJob, JobLog, JobStatus
 from app.services.agents import RecoveryAgent
 from app.services.versioning import VersioningService
 
-# Configure logger
 logger = logging.getLogger(__name__)
 
 
@@ -76,14 +75,39 @@ class SynthesisOrchestrator:
         )
 
     async def _get_redis_pool(self):
-        """Get or create Redis connection pool."""
+        """Get or create Redis connection pool with health check."""
         if self._redis_pool is None:
             try:
                 self._redis_pool = await create_pool(self.redis_settings)
+                logger.info("Created new Redis connection pool")
             except Exception as e:
                 logger.warning(f"Failed to create Redis pool: {e}")
                 raise
+        
+        # Health check
+        try:
+            # Simple ping to verify connection is alive
+            await asyncio.wait_for(self._redis_pool.ping(), timeout=1.0)
+        except (asyncio.TimeoutError, Exception) as e:
+            logger.warning(f"Redis pool health check failed: {e}, recreating pool")
+            try:
+                await self._redis_pool.close()
+            except Exception:
+                pass
+            self._redis_pool = None
+            return await self._get_redis_pool()  # Retry once
+            
         return self._redis_pool
+
+    async def cleanup(self):
+        """Call this on application shutdown to close the Redis pool."""
+        if self._redis_pool:
+            try:
+                await self._redis_pool.close()
+                self._redis_pool = None
+                logger.info("Redis pool closed on shutdown")
+            except Exception as e:
+                logger.error(f"Error closing Redis pool on shutdown: {e}")
 
     async def _run_sync_fallback(
         self, 
@@ -96,9 +120,9 @@ class SynthesisOrchestrator:
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Run synthesis synchronously when worker is unavailable.
-        Extracted to avoid code duplication.
+        Uses the same robust agents as the background worker.
         """
-        from app.services.llm import generate_document_ast
+        from app.services.agents import PlannerAgent, WriterAgent, BibNormalizerAgent
         
         yield {
             "stage": "Planning", 
@@ -108,8 +132,44 @@ class SynthesisOrchestrator:
         }
         
         try:
-            ast_dict = await generate_document_ast(query, context, source_map, edges)
+            # 1. Planning
+            planner = PlannerAgent()
+            # Convert edges to relations string for planner
+            rel_parts = []
+            for edge in edges:
+                source_title = source_map.get(edge.get('source'), {}).get('title', edge.get('source'))
+                target_title = source_map.get(edge.get('target'), {}).get('title', edge.get('target'))
+                label = edge.get('label', 'connected to')
+                rel_parts.append(f"- {source_title} -> {target_title} ({label})")
+            rel_context = "\n".join(rel_parts)
             
+            plan_resp = await planner.plan(query, context, rel_context)
+            if plan_resp.status != "success":
+                raise SynthesisError(f"Planning failed: {plan_resp.reasoning}", stage="Planning")
+            
+            yield {
+                "stage": "Writing", "status": "IN_PROGRESS", 
+                "message": "Generating document AST...", "progress": 40
+            }
+            
+            # 2. Writing
+            writer = WriterAgent()
+            references_json = json.dumps([
+                {"id": ref_id, "title": data.get("title", "Source"), "url": data.get("url", "")}
+                for ref_id, data in source_map.items()
+            ])
+            write_resp = await writer.write(query, context, plan_resp.data, references_json)
+            if write_resp.status != "success":
+                raise SynthesisError(f"Writing failed: {write_resp.reasoning}", stage="Writing")
+            
+            ast_dict = write_resp.data
+            
+            # 3. Bib Normalization (Optional but improves quality)
+            bib_agent = BibNormalizerAgent()
+            bib_resp = await bib_agent.normalize(ast_dict, list(source_map.values()))
+            if bib_resp.status == "success":
+                ast_dict["references"] = bib_resp.data.get("normalized_references", ast_dict.get("references", []))
+
             # Update job record with result
             async with SessionLocal() as update_db:
                 job_update = await update_db.execute(
@@ -119,6 +179,7 @@ class SynthesisOrchestrator:
                 if job_record:
                     job_record.status = JobStatus.COMPLETED
                     job_record.output_ast = ast_dict
+                    job_record.progress = 100
                     await update_db.commit()
             
             yield {
@@ -136,6 +197,12 @@ class SynthesisOrchestrator:
                 "message": f"Synthesis failed: {str(e)}",
                 "progress": 100
             }
+            # Record failure in DB
+            async with SessionLocal() as db:
+                job = (await db.execute(select(ResearchJob).where(ResearchJob.id == job_id))).scalar_one_or_none()
+                if job:
+                    job.status = JobStatus.FAILED
+                    await db.commit()
 
     async def _validate_whiteboard(
         self, 
@@ -183,6 +250,39 @@ class SynthesisOrchestrator:
             logger.error(f"Failed to create fallback whiteboard: {e}")
             return None
 
+    async def _claim_job_for_sync(self, job_id: str) -> bool:
+        """
+        Attempt to claim a job for synchronous execution.
+        Returns True if successfully claimed, False if already claimed by worker.
+        """
+        async with SessionLocal() as db:
+            try:
+                job = await db.execute(
+                    select(ResearchJob).where(ResearchJob.id == job_id)
+                )
+                job_record = job.scalar_one_or_none()
+                
+                if not job_record:
+                    return False
+                
+                # Only claim if still in IDLE state (not yet processed by worker)
+                if job_record.status == JobStatus.IDLE:
+                    job_record.status = JobStatus.PLANNING
+                    job_record.metadata_ = job_record.metadata_ or {}
+                    job_record.metadata_['execution_mode'] = 'sync_fallback'
+                    job_record.metadata_['claimed_at'] = datetime.utcnow().isoformat()
+                    await db.commit()
+                    logger.info(f"Successfully claimed job {job_id} for sync execution")
+                    return True
+                else:
+                    logger.info(f"Job {job_id} already claimed (status: {job_record.status})")
+                    return False
+                    
+            except Exception as e:
+                await db.rollback()
+                logger.error(f"Error claiming job: {e}")
+                return False
+
     async def execute(
         self, 
         query: str, 
@@ -209,65 +309,78 @@ class SynthesisOrchestrator:
         job_id = str(uuid.uuid4())
         
         try:
+            # ... (Lines 211-270 omitted for brevity in diff, assume unchanged) ...
             # 1. Compute content hash for caching
             selected_nodes = list(source_map.values())
             input_hash = compute_job_hash(query, selected_nodes, [], edges, self.PROMPT_VERSION)
             
             async with SessionLocal() as db:
-                # 2. Validate whiteboard
-                validated_whiteboard_id = await self._validate_whiteboard(db, whiteboard_id, user_id)
-                if validated_whiteboard_id is None:
+                try:
+                    # 2. Validate whiteboard
+                    validated_whiteboard_id = await self._validate_whiteboard(db, whiteboard_id, user_id)
+                    if validated_whiteboard_id is None:
+                        yield {
+                            "status": "FAILED", 
+                            "stage": "ERROR", 
+                            "message": "No valid whiteboard found."
+                        }
+                        return
+                    whiteboard_id = validated_whiteboard_id
+                    
+                    # 3. Check cache
+                    cached_job = await db.execute(
+                        select(ResearchJob).where(
+                            and_(
+                                ResearchJob.prompt_hash == input_hash,
+                                ResearchJob.status == JobStatus.COMPLETED
+                            )
+                        ).order_by(ResearchJob.created_at.desc())
+                    )
+                    cached = cached_job.scalar_one_or_none()
+                    
+                    if cached:
+                        logger.info(f"Cache hit for hash {input_hash[:16]}...")
+                        yield {
+                            "stage": "Ready", 
+                            "status": "COMPLETED", 
+                            "message": "Using cached synthesis result.", 
+                            "document": cached.output_ast
+                        }
+                        return
+                    
+                    # 4. Create job record
+                    version = "v1.0.0"
+                    if parent_job_id:
+                        version = await VersioningService.create_new_version_job(db, parent_job_id)
+                    
+                    new_job = ResearchJob(
+                        id=job_id,
+                        user_id=user_id,
+                        whiteboard_id=whiteboard_id,
+                        parent_job_id=parent_job_id,
+                        status=JobStatus.IDLE,
+                        prompt_hash=input_hash,
+                        document_version=version,
+                        query=query,
+                        input_payload={
+                            "context": context,
+                            "source_map": source_map,
+                            "edges": edges
+                        }
+                    )
+                    db.add(new_job)
+                    await db.commit()
+                    logger.info(f"Created new job {job_id} for synthesis")
+                    
+                except Exception as e:
+                    await db.rollback()
+                    logger.error(f"Database error during job setup: {e}", exc_info=True)
                     yield {
-                        "status": "FAILED", 
-                        "stage": "ERROR", 
-                        "message": "No valid whiteboard found."
+                        "status": "FAILED",
+                        "stage": "ERROR",
+                        "message": f"Failed to create job: {str(e)}"
                     }
                     return
-                whiteboard_id = validated_whiteboard_id
-                
-                # 3. Check cache
-                cached_job = await db.execute(
-                    select(ResearchJob).where(
-                        and_(
-                            ResearchJob.prompt_hash == input_hash,
-                            ResearchJob.status == JobStatus.COMPLETED
-                        )
-                    ).order_by(ResearchJob.created_at.desc())
-                )
-                cached = cached_job.scalar_one_or_none()
-                
-                if cached:
-                    logger.info(f"Cache hit for hash {input_hash[:16]}...")
-                    yield {
-                        "stage": "Ready", 
-                        "status": "COMPLETED", 
-                        "message": "Using cached synthesis result.", 
-                        "document": cached.output_ast
-                    }
-                    return
-                
-                # 4. Create job record
-                version = "v1.0.0"
-                if parent_job_id:
-                    version = await VersioningService.create_new_version_job(db, parent_job_id)
-                
-                new_job = ResearchJob(
-                    id=job_id,
-                    user_id=user_id,
-                    whiteboard_id=whiteboard_id,
-                    parent_job_id=parent_job_id,
-                    status=JobStatus.IDLE,
-                    prompt_hash=input_hash,
-                    document_version=version,
-                    query=query,
-                    input_payload={
-                        "context": context,
-                        "source_map": source_map,
-                        "edges": edges
-                    }
-                )
-                db.add(new_job)
-                await db.commit()
             
             # 5. Enqueue to worker
             try:
@@ -297,7 +410,11 @@ class SynthesisOrchestrator:
             
             first_message_received = False
             job_start_time = asyncio.get_event_loop().time()
-            wait_start_time = job_start_time  # Track when we started waiting for first message
+            wait_start_time = job_start_time
+            last_successful_read = job_start_time
+            consecutive_errors = 0
+            MAX_CONSECUTIVE_ERRORS = 5
+            PUBSUB_HEALTH_TIMEOUT = 30
             
             while True:
                 current_time = asyncio.get_event_loop().time()
@@ -314,38 +431,91 @@ class SynthesisOrchestrator:
                 
                 # Check worker timeout (only before first message)
                 if not first_message_received and (current_time - wait_start_time > self.WORKER_TIMEOUT_SECONDS):
-                    logger.warning(f"No worker response in {self.WORKER_TIMEOUT_SECONDS}s, using sync fallback")
-                    async for step in self._run_sync_fallback(
-                        job_id, query, context, source_map, edges,
-                        reason="Worker not responding"
-                    ):
-                        yield step
-                    break
+                    logger.warning(f"No worker response in {self.WORKER_TIMEOUT_SECONDS}s")
+                    
+                    # Attempt to claim the job before running sync
+                    if await self._claim_job_for_sync(job_id):
+                        logger.info(f"Claimed job {job_id}, running sync fallback")
+                        async for step in self._run_sync_fallback(
+                            job_id, query, context, source_map, edges,
+                            reason="Worker not responding"
+                        ):
+                            yield step
+                        break
+                    else:
+                        wait_start_time = current_time
+                        continue
                 
+                # Health check: if no messages for a while, verify connection
+                if first_message_received and (current_time - last_successful_read > PUBSUB_HEALTH_TIMEOUT):
+                    try:
+                        await asyncio.wait_for(redis.ping(), timeout=2.0)
+                        last_successful_read = current_time # Reset timer
+                    except Exception as health_error:
+                        logger.error(f"PubSub health check failed: {health_error}")
+                        yield {
+                            "status": "FAILED",
+                            "stage": "ERROR",
+                            "message": "Lost connection to job processing system.",
+                        }
+                        break
+
                 try:
                     # Poll for messages with short timeout
                     message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                     
                     if message is None:
+                        consecutive_errors = 0
                         continue
                     
                     if message['type'] == 'message':
                         first_message_received = True
-                        data = json.loads(message['data'])
-                        yield data
+                        last_successful_read = current_time
+                        consecutive_errors = 0
                         
-                        # Check for terminal status (handle both enum and string)
-                        status = data.get('status')
-                        if status in (JobStatus.COMPLETED, JobStatus.FAILED, 'COMPLETED', 'FAILED'):
-                            break
+                        try:
+                            data = json.loads(message['data'])
+                            yield data
                             
-                except Exception as e:
-                    logger.warning(f"Error reading pubsub message: {e}")
+                            status = data.get('status')
+                            if status in (JobStatus.COMPLETED, JobStatus.FAILED, 'COMPLETED', 'FAILED'):
+                                break
+                        except json.JSONDecodeError as e:
+                            logger.error(f"Invalid JSON in pubsub message: {e}")
+                            continue
+                            
+                except asyncio.TimeoutError:
+                    consecutive_errors = 0
                     continue
+                    
+                except Exception as e:
+                    consecutive_errors += 1
+                    logger.warning(f"Error reading pubsub message ({consecutive_errors}/{MAX_CONSECUTIVE_ERRORS}): {e}")
+                    
+                    if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+                        logger.error(f"Too many consecutive pubsub errors, aborting stream")
+                        yield {
+                            "status": "FAILED",
+                            "stage": "ERROR",
+                            "message": "Connection to job updates lost."
+                        }
+                        break
+                    
+                    await asyncio.sleep(min(consecutive_errors * 0.5, 3.0))
 
                     
         except Exception as e:
             logger.error(f"Orchestrator error: {e}", exc_info=True)
+            
+            # Only close pool on connection errors to force reconnect
+            if redis and isinstance(e, (ConnectionError, OSError, asyncio.TimeoutError)):
+                try:
+                    await redis.close()
+                    self._redis_pool = None
+                    logger.warning("Closed and reset Redis pool due to connection error")
+                except Exception as close_err:
+                    logger.debug(f"Error closing redis pool: {close_err}")
+
             yield {
                 "status": "FAILED",
                 "stage": "ERROR", 
@@ -356,14 +526,12 @@ class SynthesisOrchestrator:
             if pubsub:
                 try:
                     await pubsub.unsubscribe(f"job_updates:{job_id}")
+                    await pubsub.close()
                 except Exception as e:
                     logger.debug(f"Error unsubscribing pubsub: {e}")
-            if redis:
-                try:
-                    await redis.close()
-                    self._redis_pool = None  # Reset pool on close
-                except Exception as e:
-                    logger.debug(f"Error closing redis: {e}")
+            
+            # Do NOT close redis pool here, it is reused.
+            # Pool is only closed reset on connection errors above.
 
     async def run_to_completion(
         self, 

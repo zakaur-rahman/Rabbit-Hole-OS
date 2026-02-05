@@ -45,6 +45,9 @@ class ResearchJob(Base):
     # Relationships
     user = relationship("User")
     logs = relationship("JobLog", back_populates="job", cascade="all, delete-orphan")
+    
+    # Metadata for storing arbitrary job data (like plan, figures, latex code)
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSON, nullable=True)
 
 class JobLog(Base):
     __tablename__ = "job_logs"
