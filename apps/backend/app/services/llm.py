@@ -172,6 +172,12 @@ OUTPUT FORMAT (STRICT JSON ONLY)
 
 ALLOWED BLOCK TYPES: paragraph, list, table, quote, warning.
 
+SCHEMA for 'warning' block:
+{{
+  "type": "warning",
+  "data": {{ "text": "Insufficient data available..." }}
+}}
+
 STRICT RULES:
 1. Return ONLY valid JSON.
 2. No markdown, No explanation text, No assistant commentary.

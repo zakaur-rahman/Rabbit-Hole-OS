@@ -10,7 +10,7 @@
     "dev:frontend": "cd apps/frontend && npm run dev",
     "dev:electron": "cd apps/desktop && wait-on http://localhost:3000 && npm run dev",
     "dev:backend": "cd apps/backend && python -m uvicorn app.main:app --host 127.0.0.1 --reload",
-    "dev:worker": "cd apps/backend && arq app.workers.synthesis_worker.WorkerSettings --watch app",
+    "dev:worker": "cd apps/backend && python run_worker.py app.workers.synthesis_worker.WorkerSettings --watch app",
     "build:frontend": "cd apps/frontend && npm run build",
     "build:backend": "cd apps/backend && pip install pyinstaller && python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec",
     "package": "npm run build:frontend && npm run build:backend && cd apps/desktop && npm run dist"

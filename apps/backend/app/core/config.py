@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = None
     REDIS_PASSWORD: Optional[str] = None
     
+    # Storage Configuration
+    STORAGE_TYPE: str = "local"  # local, s3, supabase
+    STORAGE_LOCAL_DIR: str = "uploads"
+    STORAGE_BUCKET: Optional[str] = None
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_REGION: str = "us-east-1"
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_KEY: Optional[str] = None
+    
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

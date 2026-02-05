@@ -6,6 +6,18 @@ env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 load_dotenv(env_path)
 print(f"--- Backend: Loading .env from {env_path}")
 
+import logging
+import sys
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+# Silence SQLAlchemy noise
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
@@ -19,13 +31,11 @@ from fastapi.staticfiles import StaticFiles
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("--- Database: Initializing schema...")
     engine = get_engine()
     async with engine.begin() as conn:
         # Import models to ensure they are registered with Base
         import app.models # noqa
         await conn.run_sync(Base.metadata.create_all)
-    print("--- Database: Schema initialized.")
     yield
     # Shutdown
     await engine.dispose()
@@ -55,5 +65,6 @@ app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/health")
 def health_check():
+    """Legacy health check for backward compatibility."""
     return {"status": "ok", "app_name": settings.PROJECT_NAME}
 

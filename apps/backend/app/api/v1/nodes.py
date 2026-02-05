@@ -272,7 +272,11 @@ async def list_nodes(
     current_user: User = Depends(get_current_user)
 ):
     """Get all nodes, filtered by type and whiteboard."""
+    from sqlalchemy.orm import defer
+    
+    # Optimize query: defer loading of large content and embedding fields for list views
     query = select(Node).where(Node.whiteboard_id == whiteboard_id, Node.user_id == current_user.id)
+    query = query.options(defer(Node.content), defer(Node.embedding))
     
     if type:
         query = query.where(Node.type == type)
@@ -282,7 +286,7 @@ async def list_nodes(
     result = await db.execute(query)
     nodes = result.scalars().all()
     
-    return [_map_node_response(n) for n in nodes]
+    return [_map_node_response(n, include_content=False) for n in nodes]
 
 @router.get("/{node_id}", response_model=ProcessUrlResponse)
 async def get_node(node_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -316,16 +320,15 @@ async def get_related_nodes(node_id: str, limit: int = 5, db: AsyncSession = Dep
     # In production, use pgvector cosine similarity
     result = await db.execute(select(Node).where(Node.user_id == current_user.id).limit(limit))
     nodes = result.scalars().all()
-    return [_map_node_response(n) for n in nodes]
+    return [_map_node_response(n, include_content=False) for n in nodes]
 
-def _map_node_response(node: Node) -> dict:
+def _map_node_response(node: Node, include_content: bool = True) -> dict:
     meta = node.metadata_ or {}
-    return {
+    data = {
         "id": node.id,
         "type": node.type,
         "url": node.url or "",
         "title": node.title,
-        "content": node.content,
         "snippet": meta.get("snippet", ""),
         "created_at": node.created_at,
         "metadata": {
@@ -334,3 +337,6 @@ def _map_node_response(node: Node) -> dict:
         },
         "outline": meta.get("outline")
     }
+    if include_content:
+        data["content"] = node.content
+    return data

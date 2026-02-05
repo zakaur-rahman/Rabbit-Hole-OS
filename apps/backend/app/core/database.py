@@ -133,7 +133,7 @@ def get_engine():
         try:
             _engine = create_async_engine(
                 clean_url,
-                echo=True,
+                echo=False,  # Set to False to stop SQL statement flooding in console
                 pool_pre_ping=True,  # Verify connections before using
                 pool_size=5,
                 max_overflow=10,
