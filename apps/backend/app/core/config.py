@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = ""
     
     # AI API Keys
+    GEMINI_API_KEY: Optional[str] = None
     CHUTES_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     

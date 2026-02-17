@@ -96,12 +96,22 @@ class BaseAgent:
                     self.logger.warning(f"[{self.name}] Response missing keys: {missing}")
             return data
         except JSONDecodeError as e:
-            # Attempt to fix common issues (e.g., mixed quotes)
+            # Attempt 1: Fix common issues (e.g., mixed quotes)
             try:
                 fixed = cleaned.replace("'", '"')
                 return json.loads(fixed)
             except JSONDecodeError:
                 pass
+            
+            # Attempt 2: Handle "Extra data" — LLM may have appended text after valid JSON
+            if "Extra data" in str(e):
+                try:
+                    decoder = json.JSONDecoder()
+                    data, _ = decoder.raw_decode(cleaned)
+                    self.logger.warning(f"[{self.name}] Recovered JSON with trailing data")
+                    return data
+                except JSONDecodeError:
+                    pass
             
             error_msg = f"Failed to parse LLM response as JSON: {str(e)}"
             self.logger.error(f"{error_msg}\nPreview: {raw_response[:200]}...")
@@ -135,15 +145,18 @@ class BaseAgent:
             
         return html.unescape(value)
 
-    def _log_llm_call(self, prompt: str, system_instruction: Optional[str] = None, direction: str = "request"):
+    def _log_llm_call(self, prompt: str, system_instruction: Optional[str] = None, direction: str = "request", response: str = ""):
         """Log LLM interaction with proper formatting."""
         if direction == "request":
-            self.logger.debug(f"Calling LLM for task: {self.role}")
+            self.logger.info(f"[{self.name}] Calling LLM for task: {self.role}")
             if system_instruction:
-                self.logger.debug(f"System: {system_instruction[:200]}...")
-            self.logger.debug(f"Prompt: {prompt[:500]}...")
+                instr_preview = system_instruction[:100].replace('\n', ' ')
+                self.logger.debug(f"[{self.name}] System: {instr_preview}...")
+            prompt_preview = prompt[:200].replace('\n', ' ')
+            self.logger.debug(f"[{self.name}] Prompt: {prompt_preview}...")
         else:
-            self.logger.debug("Received LLM response")
+            resp_preview = response[:500].replace('\n', ' ')
+            self.logger.info(f"[{self.name}] Received LLM response: {resp_preview}...")
 
     async def _call_llm_with_retry(
         self,
@@ -196,14 +209,30 @@ class BaseAgent:
             
             def call():
                 return client.models.generate_content(
-                    model="gemini-2.0-flash-preview-09-2025",
+                    model="gemini-2.5-flash-lite",
                     contents=prompt,
                     config=config
                 )
             
             response = await asyncio.to_thread(call)
-            text_resp = response.text.strip() if response and response.text else "{}"
-            self._log_llm_call(text_resp, direction="response")
+            
+            # Diagnostics for empty responses
+            if not response or not response.text:
+                finish_reason = "UNKNOWN"
+                safety_ratings = []
+                
+                if response and hasattr(response, 'candidates') and response.candidates:
+                    cand = response.candidates[0]
+                    finish_reason = getattr(cand, 'finish_reason', 'NONE')
+                    if hasattr(cand, 'safety_ratings'):
+                        safety_ratings = [f"{r.category}: {r.probability}" for r in cand.safety_ratings if r.blocked]
+                
+                self.logger.warning(f"[{self.name}] Gemini returned EMPTY. Reason: {finish_reason}, Safety: {safety_ratings}")
+                text_resp = "{}"
+            else:
+                text_resp = response.text.strip()
+                
+            self._log_llm_call(prompt, direction="response", response=text_resp)
             return text_resp
         
         elif provider in ("openai", "chutes"):
@@ -227,8 +256,11 @@ class BaseAgent:
             response.raise_for_status()
             data = response.json()
             resp_content = data["choices"][0]["message"]["content"]
-            self._log_llm_call(resp_content, direction="response")
+            self._log_llm_call(prompt, direction="response", response=resp_content)
             return resp_content
+        
+        else:
+            self.logger.warning(f"[{self.name}] Unhandled LLM provider: {provider}")
         
         return "{}"
 
@@ -447,10 +479,20 @@ ALL REFS: {json.dumps(references)}
 TASK:
 1. Map all source_urls to unique ref_ids.
 2. Clean titles.
-3. Return JSON.
+3. Return a JSON OBJECT (not array) in this exact format:
+
+{{{{
+  "normalized_references": [
+    {{"ref_id": "R1", "url": "...", "title": "..."}}
+  ]
+}}}}
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response, expected_keys=["normalized_references"])
+            
+            # If LLM returned a raw array, wrap it
+            if isinstance(data, list):
+                data = {"normalized_references": data}
             
             return AgentResponse(
                 agent_name=self.name,

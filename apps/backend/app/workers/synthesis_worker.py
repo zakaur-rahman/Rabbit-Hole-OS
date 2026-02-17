@@ -170,9 +170,6 @@ async def writer_task(ctx, job_id: str):
 async def reviewer_task(ctx, job_id: str):
     await update_job_status(ctx, job_id, JobStatus.REVIEWING, "Reviewing", "Validating and refining content...", 50)
     
-async def reviewer_task(ctx, job_id: str):
-    await update_job_status(ctx, job_id, JobStatus.REVIEWING, "Reviewing", "Validating and refining content...", 50)
-    
     # 1. Read
     async with SessionLocal() as db:
         try:

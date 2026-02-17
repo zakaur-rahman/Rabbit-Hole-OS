@@ -10,10 +10,12 @@ CHUTES_API_BASE = "https://llm.chutes.ai/v1"
 
 async def get_ai_client():
     """Determine which AI provider to use based on environment variables."""
-    gemini_key = os.environ.get("GEMINI_API_KEY")
+    from app.core.config import settings as app_settings
+    
+    gemini_key = app_settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
+    chutes_key = app_settings.CHUTES_API_KEY or os.environ.get("CHUTES_API_KEY")
+    openai_key = app_settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
     hf_token = os.environ.get("HF_TOKEN")
-    chutes_key = os.environ.get("CHUTES_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
     
     if gemini_key:
         print("--- AI Service: Using GEMINI (Priority)")

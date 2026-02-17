@@ -80,31 +80,31 @@ async def get_chutes_embedding(text: str, api_key: str) -> List[float]:
         return get_mock_embedding(text, OPENAI_DIMENSION)
 
 async def get_gemini_embedding(text: str, api_key: str) -> List[float]:
-    """Get real embedding from Gemini API."""
+    """Get real embedding from Gemini API using official SDK."""
     try:
-        import httpx
+        from google import genai
+        import asyncio
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}",
-                headers={"Content-Type": "application/json"},
-                json={
-                    "model": "models/text-embedding-004",
-                    "content": {
-                        "parts": [{"text": text[:8000]}]
-                    }
-                },
-                timeout=30.0
+        client = genai.Client(api_key=api_key)
+        model_id = "text-embedding-004"
+        
+        print(f"--- Gemini: Generating embedding using {model_id}")
+        
+        def call_gemini():
+            return client.models.embed_content(
+                model=model_id,
+                contents=text[:8000]
             )
-            
-            if response.status_code == 200:
-                data = response.json()
-                return data["embedding"]["values"]
-            else:
-                print(f"Gemini embedding error: {response.status_code}")
-                return get_mock_embedding(text, GEMINI_DIMENSION)
+
+        response = await asyncio.to_thread(call_gemini)
+        
+        if response and response.embeddings:
+            return response.embeddings[0].values
+        
+        print(f"Gemini embedding returned empty result")
+        return get_mock_embedding(text, GEMINI_DIMENSION)
     except Exception as e:
-        print(f"Error getting Gemini embedding: {e}")
+        print(f"Error getting Gemini embedding via SDK: {e}")
         return get_mock_embedding(text, GEMINI_DIMENSION)
 
 async def get_openai_embedding(text: str, api_key: str) -> List[float]:

@@ -6,28 +6,18 @@ from typing import List, Optional, Tuple
 import json
 import os
 
+from app.core.config import settings
+
 async def get_ai_client():
-    """Determine which AI provider to use based on environment variables."""
-    hf_token = os.environ.get("HF_TOKEN")
-    chutes_key = os.environ.get("CHUTES_API_KEY")
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    
-    if gemini_key:
-        print("--- AI Service: Found GEMINI_API_KEY (Priority)")
-        return ("gemini", gemini_key, "https://generativelanguage.googleapis.com/v1beta")
-    elif hf_token:
-        print("--- AI Service: Found HF_TOKEN")
-        return ("huggingface", hf_token, None)
-    elif chutes_key:
-        print("--- AI Service: Found CHUTES_API_KEY")
-        return ("chutes", chutes_key, "https://llm.chutes.ai/v1")
-    elif openai_key:
-        print("--- AI Service: Found OPENAI_API_KEY")
-        return ("openai", openai_key, "https://api.openai.com/v1")
+    """Determine which AI provider to use based on settings."""
+    if settings.GEMINI_API_KEY:
+        return ("gemini", settings.GEMINI_API_KEY, "https://generativelanguage.googleapis.com/v1beta")
+    elif settings.CHUTES_API_KEY:
+        return ("chutes", settings.CHUTES_API_KEY, "https://llm.chutes.ai/v1")
+    elif settings.OPENAI_API_KEY:
+        return ("openai", settings.OPENAI_API_KEY, "https://api.openai.com/v1")
     else:
-        # Default to OllamaFreeAPI as the high-quality free fallback
-        print("--- AI Service: No keys found, using OllamaFreeAPI (Free Priority)")
+        # Default fallback
         return ("ollama", None, None)
 
 
@@ -253,9 +243,8 @@ async def analyze_url_gemini(url: str, api_key: str) -> dict:
         
         # Initialize the client
         client = genai.Client(api_key=api_key)
-        model_id = "gemini-2.5-flash-lite-preview-09-2025"
+        model_id = "gemini-2.0-flash" 
         
-        # Using the robust prompt with explicit JSON schema instruction
         prompt = f"""You are a curator. Analyze the webpage at {url}.
 Return a JSON object with this exact structure:
 {{
@@ -294,7 +283,6 @@ Ensure the 'outline' captures the full hierarchy of the article."""
             
         try:
             # The SDK handles JSON parsing indirectly via the text property
-            # but we still want to be safe with candidate checks
             response_text = response.text
             
             # Clean possible markdown wrap just in case
@@ -440,48 +428,53 @@ async def extract_outline(content: str, title: str = "") -> List[dict]:
 
 
 async def extract_outline_gemini(content: str, title: str, api_key: str) -> List[dict]:
-    """Extract outline from content text using Gemini."""
+    """Extract outline from content text using Gemini SDK."""
     try:
-        import httpx
+        from google import genai
+        from google.genai import types
+        import asyncio
         
-        truncated_content = content[:15000] if len(content) > 15000 else content
+        client = genai.Client(api_key=api_key)
+        model_id = "gemini-2.0-flash" # Use stable flash for extraction
+        
+        truncated_content = content[:20000] if len(content) > 20000 else content
         
         prompt = f"""Extract the hierarchical outline from this article.
-Return ONLY a JSON array:
-[{{"id": "1", "number": "1", "title": "Section", "children": [...]}}]
+Return ONLY valid JSON array with objects containing id, number, title, and children[].
 
-Article: {title}
+Article Title: {title}
+Content:
 {truncated_content}"""
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
-                headers={"Content-Type": "application/json"},
-                json={
-                    "contents": [{
-                        "parts": [{"text": prompt}]
-                    }],
-                    "generationConfig": {
-                        "temperature": 0.3,
-                        "maxOutputTokens": 2000
-                    }
-                },
-                timeout=60.0
+        print(f"--- Gemini: Extracting outline for '{title}' using {model_id}")
+        
+        def call_gemini():
+            return client.models.generate_content(
+                model=model_id,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.1,
+                    max_output_tokens=4000,
+                    response_mime_type="application/json"
+                )
             )
+
+        response = await asyncio.to_thread(call_gemini)
+        
+        if not response or not response.text:
+            return extract_outline_mock(content, title)
             
-            if response.status_code == 200:
-                data = response.json()
-                text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                if text.startswith("```"):
-                    parts = text.split("```")
-                    text = parts[1] if len(parts) > 1 else text
-                    if text.startswith("json"):
-                        text = text[4:]
-                return json.loads(text.strip())
+        text = response.text.strip()
+        # Strip potential markdown
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0].strip()
+            
+        return json.loads(text)
     except Exception as e:
-        print(f"Gemini outline error: {e}")
-    
-    return extract_outline_mock(content, title)
+        print(f"Gemini SDK outline error: {e}")
+        return extract_outline_mock(content, title)
 
 
 async def extract_outline_from_content(content: str, title: str, api_key: str, base_url: str, provider: str) -> List[dict]:
