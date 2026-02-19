@@ -109,6 +109,24 @@ export interface SynthesisResponse {
   query: string;
 }
 
+/**
+ * Shared type for context items passed to all synthesis endpoints.
+ * node_type and metadata power the type-aware chunk_service.
+ */
+export interface SynthesisContextItem {
+  node_id: string;
+  title: string;
+  content: string;
+  url: string;
+  /** ReactFlow node type, e.g. "article" | "code" | "image" | "note" | "pdf" | "academic" | "product" | "canvas" | "group" */
+  node_type?: string;
+  /** Type-specific metadata (language, authors, alt, description, tags, etc.) */
+  metadata?: Record<string, any>;
+  selected_topics: string[];
+  outline: any[];
+  system_instruction?: string;
+}
+
 // Synthesis API
 export const synthesisApi = {
   generate: (request: SynthesisRequest): Promise<SynthesisResponse> =>
@@ -151,14 +169,7 @@ export const synthesisApi = {
 
   generateChunkedResearchPdf: async (
     query: string,
-    context_items: {
-      node_id: string;
-      title: string;
-      content: string;
-      url: string;
-      selected_topics: string[];
-      outline: any[];
-    }[],
+    context_items: SynthesisContextItem[],
     use_dummy_data: boolean = false,
     edges: Edge[] = []
   ): Promise<Blob> => {
@@ -177,14 +188,7 @@ export const synthesisApi = {
 
   generateLatexResearchPdf: async (
     query: string,
-    context_items: {
-      node_id: string;
-      title: string;
-      content: string;
-      url: string;
-      selected_topics: string[];
-      outline: any[];
-    }[],
+    context_items: SynthesisContextItem[],
     return_tex: boolean = false,
     use_dummy_data: boolean = false,
     edges: Edge[] = []
@@ -204,14 +208,7 @@ export const synthesisApi = {
 
   getResearchAST: async (
     query: string,
-    context_items: {
-      node_id: string;
-      title: string;
-      content: string;
-      url: string;
-      selected_topics: string[];
-      outline: any[];
-    }[],
+    context_items: SynthesisContextItem[],
     use_dummy_data: boolean = false,
     edges: Edge[] = [],
     whiteboardId?: string
@@ -231,14 +228,7 @@ export const synthesisApi = {
 
   streamResearchAST: async (
     query: string,
-    context_items: {
-      node_id: string;
-      title: string;
-      content: string;
-      url: string;
-      selected_topics: string[];
-      outline: any[];
-    }[],
+    context_items: SynthesisContextItem[],
     edges: Edge[] = [],
     onUpdate: (step: { stage: string; status: string; message?: string; document?: any; error?: string }) => void,
     whiteboardId?: string
@@ -284,14 +274,7 @@ export const synthesisApi = {
 
   generateASTPdf: async (
     query: string,
-    context_items: {
-      node_id: string;
-      title: string;
-      content: string;
-      url: string;
-      selected_topics: string[];
-      outline: any[];
-    }[],
+    context_items: SynthesisContextItem[],
     use_dummy_data: boolean = false,
     edges: Edge[] = [],
     whiteboardId?: string
@@ -328,9 +311,13 @@ export const synthesisApi = {
   },
 
   regenerateSection: async (sectionId: string, sectionTitle: string, currentContent: string, sourceContext: string, referenceIds: string[]) => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/regenerate-section`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
         section_id: sectionId,
         section_title: sectionTitle,

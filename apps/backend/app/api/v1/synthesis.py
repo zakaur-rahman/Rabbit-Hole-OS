@@ -335,11 +335,13 @@ async def generate_research_pdf(
 # ============================================================
 
 class ChunkedContextItem(BaseModel):
-    """Enhanced context item with topic hierarchy info."""
+    """Enhanced context item with topic hierarchy and node type info."""
     node_id: str
     title: str
     content: str
     url: str
+    node_type: str = "article"           # NEW: explicit node type
+    metadata: dict = {}                   # NEW: full node metadata (language, authors, tags, etc.)
     selected_topics: List[str] = []
     outline: List[dict] = []
     system_instruction: Optional[str] = None
@@ -373,6 +375,8 @@ async def generate_chunked_research_pdf(
                 url=item.url,
                 title=item.title,
                 content=item.content,
+                node_type=item.node_type,
+                metadata=item.metadata or {},
                 selected_topics=item.selected_topics,
                 outline=item.outline,
                 system_instruction=item.system_instruction or ""
@@ -650,6 +654,8 @@ async def get_research_ast(
             url=item.url,
             title=item.title,
             content=item.content,
+            node_type=item.node_type,
+            metadata=item.metadata or {},
             selected_topics=item.selected_topics,
             outline=item.outline
         )
@@ -718,6 +724,8 @@ async def stream_research_ast(
             url=item.url,
             title=item.title,
             content=item.content,
+            node_type=item.node_type,
+            metadata=item.metadata or {},
             selected_topics=item.selected_topics,
             outline=item.outline
         )

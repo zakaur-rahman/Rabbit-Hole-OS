@@ -343,25 +343,63 @@ CONTEXT: {context_truncated}
 {f"NOTE: Context was truncated." if was_truncated else ""}
 REFERENCES: {references_json}
 
+────────────────────────────────────────
+NODE TYPE MARKERS — MANDATORY HANDLING
+────────────────────────────────────────
+The context may contain special markers from different node types.
+You MUST apply the following rules when you encounter each marker:
+
+[IMAGE] → Insert a "figure" block:
+  {{ "type": "figure", "data": {{ "path": "<url>", "caption": "<title>", "source_refs": [] }} }}
+
+[CODE:<lang>] → Insert a "code_block" block:
+  {{ "type": "code_block", "data": {{ "language": "<lang>", "code": "<snippet>", "caption": "<title>", "source_refs": [] }} }}
+
+[RESEARCHER_NOTE] → Insert a "quote" block:
+  {{ "type": "quote", "data": {{ "text": "<note content>", "source_refs": [] }} }}
+
+[ANNOTATION] → Insert as a "quote" block inline in the nearest section.
+
+[ACADEMIC_PAPER] → Treat with highest citation priority. Include abstract in the relevant section as a paragraph. Add to references.
+
+[PRODUCT] → Consider including in a "table" block with columns: Name, Brand, Price, Rating.
+
+[SUB_CANVAS] → Use as a section heading. Treat child-node titles as topic keywords.
+
+[GROUP] → Use as a section heading for thematic grouping.
+
+Plain content (no marker) → Standard synthesis into "paragraph" blocks with citations.
+
 TASK:
-- Generate a complete Document AST based on the plan.
+- Generate a complete Document AST based on the plan above.
 - Use ONLY the provided context.
-- Insert inline citations [1], [2] using ref_ids.
-- STRICT JSON ONLY.
+- Insert inline citations [1], [2] in paragraphs using ref IDs from REFERENCES.
+- Apply NODE TYPE MARKER rules strictly.
+- STRICT JSON ONLY. No markdown, no preamble.
 
 OUTPUT SCHEMA (JSON):
 {{
-  "document": {{
-    "title": "string",
-    "sections": [
-      {{
-        "title": "string",
-        "content": [
-          {{ "type": "paragraph", "data": {{ "text": "...", "citations": ["1"] }} }}
-        ]
-      }}
-    ]
-  }}
+  "title": "string",
+  "abstract": "string",
+  "sections": [
+    {{
+      "id": "sec-1",
+      "title": "string",
+      "level": 1,
+      "content": [
+        {{ "type": "paragraph", "data": {{ "text": "...", "citations": ["1"] }} }},
+        {{ "type": "figure", "data": {{ "path": "https://...", "caption": "Figure caption", "source_refs": [] }} }},
+        {{ "type": "code_block", "data": {{ "language": "python", "code": "print('hello')", "caption": "Example", "source_refs": [] }} }},
+        {{ "type": "quote", "data": {{ "text": "Researcher note text", "source_refs": [] }} }},
+        {{ "type": "list", "data": {{ "ordered": false, "items": ["item 1", "item 2"] }} }},
+        {{ "type": "table", "data": {{ "caption": "Comparison", "columns": ["Name", "Value"], "rows": [["A", "1"]] }} }}
+      ],
+      "subsections": []
+    }}
+  ],
+  "references": [
+    {{ "id": "1", "title": "Source Title", "url": "https://...", "authors": [], "year": "" }}
+  ]
 }}
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
