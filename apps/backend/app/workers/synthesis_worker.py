@@ -466,11 +466,17 @@ async def run_synthesis_pipeline(ctx, job_id: str):
                 result = await step(ctx, job_id)
                 logger.info(f"Job {job_id}: Step {step_name} completed with result: {result}")
                 
+                # compilation_task and memory_task are non-fatal — AST is already complete
+                non_fatal_steps = {"compilation_task", "memory_task"}
+                
                 if result == "FAILED":
-                    pipeline_failed = True
-                    failed_step = step_name
-                    failure_reason = "Step returned FAILED status"
-                    break
+                    if step_name in non_fatal_steps:
+                        logger.warning(f"Job {job_id}: Non-fatal step {step_name} failed, continuing pipeline")
+                    else:
+                        pipeline_failed = True
+                        failed_step = step_name
+                        failure_reason = "Step returned FAILED status"
+                        break
                 elif result == "ABORTED":
                     logger.warning(f"Job {job_id}: Step {step_name} aborted (status modified elsewhere)")
                     return
@@ -483,14 +489,40 @@ async def run_synthesis_pipeline(ctx, job_id: str):
                 last_known_progress = progress_map.get(step_name, last_known_progress)
                 
             except Exception as e:
-                pipeline_failed = True
-                failed_step = step_name
-                failure_reason = str(e)
-                logger.error(f"Job {job_id}: Unhandled exception in {step_name}: {e}", exc_info=True)
-                break
+                if step_name in non_fatal_steps:
+                    logger.warning(f"Job {job_id}: Non-fatal step {step_name} crashed: {e}")
+                else:
+                    pipeline_failed = True
+                    failed_step = step_name
+                    failure_reason = str(e)
+                    logger.error(f"Job {job_id}: Unhandled exception in {step_name}: {e}", exc_info=True)
+                    break
                 
         if not pipeline_failed:
             logger.info(f"Job {job_id}: Pipeline finished successfully.")
+            try:
+                async with SessionLocal() as db:
+                    job_result = await db.execute(select(ResearchJob).where(ResearchJob.id == job_id))
+                    job_record = job_result.scalar_one_or_none()
+                    
+                    if job_record:
+                        job_record.status = JobStatus.COMPLETED
+                        job_record.progress = 100
+                        await db.commit()
+                        
+                        # Publish success notification
+                        redis = await ctx['redis_pool']
+                        output_data = job_record.output_ast or {}
+                        await redis.publish(f"job_updates:{job_id}", json.dumps({
+                            "job_id": job_id,
+                            "status": "COMPLETED",
+                            "stage": "DONE",
+                            "message": "Research synthesis complete",
+                            "progress": 100,
+                            "output_ast": output_data
+                        }))
+            except Exception as e:
+                logger.error(f"Critical: Failed to record job success: {e}", exc_info=True)
             
     finally:
         # 3. Guaranteed Final State Update
