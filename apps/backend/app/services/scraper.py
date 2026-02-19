@@ -182,6 +182,16 @@ def detect_content_type(url: str) -> str:
     """Detect the type of content based on URL patterns."""
     url_lower = url.lower()
     
+    # PDF
+    if url_lower.endswith('.pdf') or '/pdf/' in url_lower or 'type=pdf' in url_lower:
+        return 'pdf'
+    
+    # Image
+    if any(url_lower.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp']):
+        return 'image'
+    if any(x in url_lower for x in ['imgur.', 'images.', 'photos.', 'flickr.', 'unsplash.']):
+        return 'image'
+    
     # Shopping
     if any(x in url_lower for x in ['amazon.', 'ebay.', 'shop', 'product', 'buy', 'store', 'cart']):
         return 'product'

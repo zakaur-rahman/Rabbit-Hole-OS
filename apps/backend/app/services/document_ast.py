@@ -63,6 +63,14 @@ class WarningData(BaseModel):
     text: str
 
 
+class CodeBlockData(BaseModel):
+    """Data for a code block from a CodeNode."""
+    language: str = "text"
+    code: str
+    caption: Optional[str] = None
+    source_refs: List[str] = Field(default_factory=list)
+
+
 # ============================================================
 # BLOCK TYPES
 # ============================================================
@@ -103,8 +111,14 @@ class WarningBlock(BaseModel):
     data: WarningData
 
 
+class CodeBlockBlock(BaseModel):
+    """A code snippet from a CodeNode, rendered verbatim with syntax highlighting."""
+    type: Literal["code_block"] = "code_block"
+    data: CodeBlockData
+
+
 # Union of all block types
-Block = Union[ParagraphBlock, ListBlock, TableBlock, FigureBlock, QuoteBlock, WarningBlock]
+Block = Union[ParagraphBlock, ListBlock, TableBlock, FigureBlock, QuoteBlock, WarningBlock, CodeBlockBlock]
 
 
 # ============================================================
@@ -204,7 +218,7 @@ class DocumentAST(BaseModel):
                     for cit in block.data.citations:
                         if cit not in ref_ids:
                             orphans.append(cit)
-                elif block.type in ("table", "figure", "quote"):
+                elif block.type in ("table", "figure", "quote", "code_block"):
                     for ref in getattr(block.data, 'source_refs', []):
                         if ref not in ref_ids:
                             orphans.append(ref)
