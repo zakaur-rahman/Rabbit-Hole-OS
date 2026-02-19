@@ -127,7 +127,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setInitialAST(null); // Clear previous
 
         try {
-            // Build context items same as for PDF
+            // Build context items with node_type + metadata for type-aware synthesis
             const contextItems = currentNodes.map(node => {
                 let content = node.data.content || '';
                 const selectedTopics = node.data.selectedTopics || [];
@@ -138,7 +138,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 }
 
                 // Check for attached instruction
-                const { edges: sEdges, nodes: sNodes, activeWhiteboardId: wbId } = useGraphStore.getState();
+                const { edges: sEdges, nodes: sNodes } = useGraphStore.getState();
                 const comment = sNodes.find(n => n.type === 'comment' && sEdges.some(e => e.source === n.id && e.target === node.id));
 
                 return {
@@ -146,6 +146,19 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     title: node.data.title || 'Untitled',
                     content: content,
                     url: node.data.url || '',
+                    node_type: node.type || 'article',
+                    metadata: {
+                        language: node.data.language,
+                        authors: node.data.authors,
+                        tags: node.data.tags,
+                        description: node.data.description,
+                        alt: node.data.alt,
+                        doi: node.data.doi,
+                        journal: node.data.journal,
+                        price: node.data.price,
+                        brand: node.data.brand,
+                        rating: node.data.rating,
+                    },
                     selected_topics: selectedTopics,
                     outline: node.data.outline || [],
                     system_instruction: comment?.data?.content
@@ -186,7 +199,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         setSynthesisError(null);
 
         try {
-            // Build context items
+            // Build context items with node_type + metadata for type-aware synthesis
             const contextItems = currentNodes.map(node => {
                 let content = (node.data as any).content || '';
                 const selectedTopics = (node.data as any).selectedTopics || [];
@@ -198,6 +211,19 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     title: (node.data as any).title || 'Untitled',
                     content: content,
                     url: (node.data as any).url || '',
+                    node_type: node.type || 'article',
+                    metadata: {
+                        language: (node.data as any).language,
+                        authors: (node.data as any).authors,
+                        tags: (node.data as any).tags,
+                        description: (node.data as any).description,
+                        alt: (node.data as any).alt,
+                        doi: (node.data as any).doi,
+                        journal: (node.data as any).journal,
+                        price: (node.data as any).price,
+                        brand: (node.data as any).brand,
+                        rating: (node.data as any).rating,
+                    },
                     selected_topics: selectedTopics,
                     outline: (node.data as any).outline || [],
                     system_instruction: (comment?.data as any)?.content
@@ -219,7 +245,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 currentEdges,
                 (step: { stage: string; status: string; message?: string; document?: any; error?: string }) => {
                     setSynthesisStage(step.stage);
-                    setSynthesisMessage(step.message || '');
                     setSynthesisMessage(step.message || '');
                     if ((step.stage === 'Ready' || step.status === 'COMPLETED') && step.document) {
                         finalAST = step.document;
@@ -248,7 +273,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             setSynthesisStage(null);
             setSynthesisMessage(null);
         }
-    }, [handleOpenASTEditor]);
+    }, [setAuthModal]);  // removed handleOpenASTEditor — not used in this callback
 
     const handleOpenAdvancedEditor = useCallback(() => {
         setShowPdfModal(false);
@@ -1063,8 +1088,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const onNodeDragStop = useCallback((_event: React.MouseEvent, node: any) => {
         if (node.type === 'group') return;
 
-        const groupNodes = nodes.filter(n => n.type === 'group');
-        const updateNodeFull = useGraphStore.getState().updateNodeFull;
+        // Use getState() to avoid capturing stale nodes array in closure
+        const { nodes: allNodes, updateNodeFull: updateFull, updateNodeAndPersist: persistUpdate } = useGraphStore.getState();
+        const groupNodes = allNodes.filter(n => n.type === 'group');
 
         let finalParentId = node.parentId;
         let finalPosition = node.position;
@@ -1098,7 +1124,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     x: nodeX - groupX,
                     y: nodeY - groupY
                 };
-                updateNodeFull(node.id, { parentId: finalParentId, position: finalPosition });
+                updateFull(node.id, { parentId: finalParentId, position: finalPosition });
                 break;
             }
         }
@@ -1127,64 +1153,27 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                         x: parentGroup.position.x + node.position.x,
                         y: parentGroup.position.y + node.position.y
                     };
-                    updateNodeFull(node.id, { parentId: finalParentId, position: finalPosition });
+                    updateFull(node.id, { parentId: finalParentId, position: finalPosition });
                 }
             }
         }
 
         // Persist position and parent
-        useGraphStore.getState().updateNodeAndPersist(node.id, {
+        persistUpdate(node.id, {
             position: finalPosition,
             parentId: finalParentId,
-            style: node.style // Ensure style is preserved on move
+            style: node.style
         });
-    }, [nodes]);
+    }, []); // No dependency on nodes — reads fresh state via getState()
 
 
     const onNodeClick = useCallback((_: React.MouseEvent, node: any) => {
+        // Always call selectNode — it bumps nodeClickTs even for the same node,
+        // so BrowserView's useEffect re-runs and switches to the correct tab.
         selectNode(node.id);
-
-        // Force Browser Sync if node has URL
-        if (node.data?.url) {
-            const { activeWhiteboardId, updateBrowserState, browserStates } = useGraphStore.getState();
-            const currentState = browserStates[activeWhiteboardId];
-
-            // If browser is already there, do nothing (prevent reload)
-            // But if we want to switch tab?
-            // BrowserView handles activeTabId switch on selectNodeId change.
-            // But if selectedNodeId didn't change?
-            // We can force update activeTabId if we know it.
-            // But BrowserView logic is inside BrowserView.
-
-            // Simplest hack: Toggle selection if same? No.
-            // Just update browser state with 'forceSync' timestamp?
-            // Or sets url directly?
-            // updateBrowserState(activeWhiteboardId, { url: node.data.url }); 
-            // This updates the 'url' field of browserState, which BrowserView syncs to.
-            // Let's check BrowserView effect:
-            /* 
-            useEffect(() => {
-               const s = browserStates[activeWhiteboardId];
-               if (s) { ... setTabs ... }
-            }, [activeWhiteboardId]); 
-            */
-            // It DOES NOT listen to browserStates deep changes.
-            // So updating store won't help BrowserView unless we mount/unmount.
-
-            // BUT, we can use a custom event or just accept that "Clicking already selected node" 
-            // requires the user to use the browser tabs?
-            // The user request is "Graph Pointer (intent) -> Browser Tab Trace".
-            // If I click, I express intent.
-
-            // Let's use the 'selectedNodeId' change.
-            // If I click same node, I can null it then set it back?
-            if (node.id === useGraphStore.getState().selectedNodeId) {
-                // Force re-selection effect
-                selectNode(null);
-                setTimeout(() => selectNode(node.id), 10);
-            }
-        }
     }, [selectNode]);
+
+
 
 
     const handleAddNote = useCallback(async () => {

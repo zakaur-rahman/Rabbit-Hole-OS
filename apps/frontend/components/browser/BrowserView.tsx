@@ -275,7 +275,7 @@ BrowserTab.displayName = 'BrowserTab';
 
 // --- Main BrowserView Component ---
 export default function BrowserView() {
-    const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodes, setAuthModal } = useGraphStore();
+    const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodeClickTs, nodes, setAuthModal } = useGraphStore();
 
     // Track which whiteboards have their tabs mounted in the DOM
     const [mountedWhiteboardIds, setMountedWhiteboardIds] = useState<string[]>([activeWhiteboardId]);
@@ -388,7 +388,7 @@ export default function BrowserView() {
             addTab(node.data.url, node.id, node.data.title);
         }
 
-    }, [selectedNodeId, addTab]); // ONLY run when selection changes. NOT when nodes change.
+    }, [selectedNodeId, nodeClickTs, addTab]); // nodeClickTs fires even when same node re-clicked
 
     // --- Browser -> Graph Sync ---
     // When active tab changes, select the corresponding node in the graph
