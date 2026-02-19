@@ -233,9 +233,29 @@ def document_to_dict(doc: DocumentAST) -> dict:
     return doc.dict()
 
 
+def _normalize_ast_data(data: dict) -> dict:
+    """Normalize LLM output to match DocumentAST schema before parsing."""
+    # Normalize sections: auto-generate missing 'id' fields
+    for i, section in enumerate(data.get("sections", [])):
+        if "id" not in section:
+            section["id"] = f"sec-{i+1}"
+        # Recursively normalize subsections
+        for j, sub in enumerate(section.get("subsections", [])):
+            if "id" not in sub:
+                sub["id"] = f"sec-{i+1}-{j+1}"
+    
+    # Normalize references: map 'ref_id' -> 'id'
+    for ref in data.get("references", []):
+        if "id" not in ref and "ref_id" in ref:
+            ref["id"] = ref.pop("ref_id")
+    
+    return data
+
+
 def parse_document_ast(data: dict) -> DocumentAST:
-    """Parse a dictionary into a DocumentAST model."""
-    return DocumentAST(**data)
+    """Parse a dictionary into a DocumentAST model with normalization."""
+    normalized = _normalize_ast_data(data)
+    return DocumentAST(**normalized)
 
 
 def create_insufficient_data_block(message: str) -> WarningBlock:

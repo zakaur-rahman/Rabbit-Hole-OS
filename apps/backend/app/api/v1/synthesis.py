@@ -823,7 +823,7 @@ async def generate_ast_pdf(
         except Exception as e:
             print(f"[AST-PDF] Validation warning: {e}")
             # Continue with unvalidated dict
-            validated = DocumentAST(**ast_dict) if isinstance(ast_dict, dict) else None
+            validated = parse_document_ast(ast_dict) if isinstance(ast_dict, dict) else None
             if not validated:
                 return {"error": "AST generation failed"}
     
@@ -873,7 +873,7 @@ async def generate_pdf_from_ast(
     
     try:
         # 1. Parse and validate
-        validated = DocumentAST(**document)
+        validated = parse_document_ast(document)
         # We skip strict validation here to allow flexibility during editing,
         # but the DocumentAST constructor ensures basic schema conformity.
         
@@ -941,7 +941,7 @@ async def generate_latex_from_ast(document: dict):
     Convert a JSON AST directly to LaTeX source code.
     """
     try:
-        validated = DocumentAST(**document)
+        validated = parse_document_ast(document)
         latex_code = convert_document_to_latex(validated)
         return {"latex": latex_code}
     except Exception as e:
@@ -956,7 +956,7 @@ async def validate_ast(document: dict):
     """
     try:
         # Pydantic validation first
-        validated = DocumentAST(**document)
+        validated = parse_document_ast(document)
         
         # Structural validation
         issues = validated.validate_structure()
