@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { useReactFlow } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
@@ -8,83 +9,118 @@ interface UseNodeCreationParams {
     addNode: (node: any, persist?: boolean) => Promise<void>;
 }
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Returns a canvas position near the current viewport center, with a small
+ * random jitter so that rapidly-created nodes don't perfectly overlap.
+ */
+function getViewportCenter(getViewport: () => { x: number; y: number; zoom: number }): { x: number; y: number } {
+    if (typeof window === 'undefined') return { x: 200, y: 200 };
+    const vp = getViewport();
+    const centerX = (-vp.x + window.innerWidth / 2) / vp.zoom;
+    const centerY = (-vp.y + window.innerHeight / 2) / vp.zoom;
+    // ±60 px jitter so successive nodes fan out slightly
+    return {
+        x: centerX + (Math.random() * 120 - 60),
+        y: centerY + (Math.random() * 120 - 60),
+    };
+}
+
+/**
+ * Persists a node to the backend.  Called fire-and-forget after optimistic
+ * local creation so the UI never blocks on the network.
+ */
+async function persistNode(node: {
+    id: string;
+    type: string;
+    title: string;
+    data: Record<string, any>;
+    position: { x: number; y: number };
+    style?: Record<string, any>;
+}) {
+    const whiteboardId = useGraphStore.getState().activeWhiteboardId;
+    try {
+        await nodesApi.create({
+            id: node.id,
+            type: node.type,
+            title: node.title,
+            data: { ...node.data, position: node.position, style: node.style, whiteboard_id: whiteboardId },
+        });
+    } catch (e) {
+        console.error(`[useNodeCreation] Failed to sync ${node.type} node to backend:`, e);
+    }
+}
+
+// ─── Hook ───────────────────────────────────────────────────────────────────
+
 export function useNodeCreation({ addNode }: UseNodeCreationParams) {
     const [showTemplateModal, setShowTemplateModal] = useState(false);
+    const { getViewport } = useReactFlow();
 
+    // ── Add Note ─────────────────────────────────────────────────────────────
     const handleAddNote = useCallback(async () => {
         const nodeId = `note-${Date.now()}`;
+        const position = getViewportCenter(getViewport);
         const newNode = {
             id: nodeId,
             type: 'note',
-            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            position,
             style: { width: 350 },
             data: { title: 'New Note', content: '' },
         };
         addNode(newNode);
-        try {
-            await nodesApi.create({
-                id: newNode.id, type: 'note', title: 'New Note',
-                data: { ...newNode.data, position: newNode.position, whiteboard_id: useGraphStore.getState().activeWhiteboardId },
-            });
-        } catch (e) { console.error('Failed to sync note to backend:', e); }
-    }, [addNode]);
+        persistNode({ id: nodeId, type: 'note', title: 'New Note', data: newNode.data, position });
+    }, [addNode, getViewport]);
 
+    // ── Add Group ────────────────────────────────────────────────────────────
     const handleAddGroup = useCallback(async () => {
         const nodeId = `group-${Date.now()}`;
+        const position = getViewportCenter(getViewport);
+        const style = { width: 400, height: 300 };
         const newNode = {
             id: nodeId,
             type: 'group',
-            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+            position,
             data: { label: 'New Section' },
-            style: { width: 400, height: 300 },
+            style,
         };
         addNode(newNode);
-        try {
-            await nodesApi.create({
-                id: newNode.id, type: 'group', title: 'New Section',
-                data: { ...newNode.data, position: newNode.position, style: newNode.style, whiteboard_id: useGraphStore.getState().activeWhiteboardId },
-            });
-        } catch (e) { console.error('Failed to sync group to backend:', e); }
-    }, [addNode]);
+        persistNode({ id: nodeId, type: 'group', title: 'New Section', data: newNode.data, position, style });
+    }, [addNode, getViewport]);
 
+    // ── Add Text ─────────────────────────────────────────────────────────────
     const handleAddText = useCallback(async () => {
         const nodeId = `text-${Date.now()}`;
+        const position = getViewportCenter(getViewport);
+        const style = { width: 250, height: 100 };
         const newNode = {
-            id: nodeId, type: 'text',
-            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-            style: { width: 250, height: 100 },
+            id: nodeId,
+            type: 'text',
+            position,
+            style,
             data: { text: 'Type something...' },
         };
         addNode(newNode);
-        try {
-            await nodesApi.create({
-                id: newNode.id, type: 'text', title: 'Text Node',
-                data: { ...newNode.data, position: newNode.position, whiteboard_id: useGraphStore.getState().activeWhiteboardId },
-            });
-        } catch (e) { console.error('Failed to sync text to backend:', e); }
-    }, [addNode]);
+        persistNode({ id: nodeId, type: 'text', title: 'Text Node', data: newNode.data, position, style });
+    }, [addNode, getViewport]);
 
+    // ── Export ───────────────────────────────────────────────────────────────
     const handleExport = useCallback(() => {
         const { nodes, edges } = useGraphStore.getState();
         import('@/lib/export').then(mod => mod.exportGraphToMarkdown(nodes, edges));
     }, []);
 
+    // ── Template Select ──────────────────────────────────────────────────────
     const handleTemplateSelect = useCallback(async (template: any) => {
         setShowTemplateModal(false);
         const nodeId = `note-${Date.now()}`;
-        const newNode = {
-            id: nodeId, type: 'note',
-            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-            data: { title: template.name, content: template.content, tags: template.tags },
-        };
+        const position = getViewportCenter(getViewport);
+        const data = { title: template.name, content: template.content, tags: template.tags };
+        const newNode = { id: nodeId, type: 'note', position, data };
         addNode(newNode);
-        try {
-            await nodesApi.create({
-                id: newNode.id, type: 'note', title: newNode.data.title,
-                data: { ...newNode.data, position: newNode.position, whiteboard_id: useGraphStore.getState().activeWhiteboardId },
-            });
-        } catch (e) { console.error('Failed to create template node', e); }
-    }, [addNode]);
+        persistNode({ id: nodeId, type: 'note', title: template.name, data, position });
+    }, [addNode, getViewport]);
 
     return {
         showTemplateModal, setShowTemplateModal,
