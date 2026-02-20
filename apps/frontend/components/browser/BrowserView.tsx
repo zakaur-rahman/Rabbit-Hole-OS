@@ -13,7 +13,8 @@ interface BrowserTabProps {
     tab: Tab;
     isActive: boolean;
     onUpdate: (id: string, updates: Partial<Tab>) => void;
-    onMount: (id: string, ref: any) => void;
+    /** Must include the whiteboardId so the parent stores refs under the correct composite key. */
+    onMount: (id: string, ref: any, whiteboardId: string) => void;
     onNewTab: (url: string, parentId?: string) => void;
     activeWhiteboardId: string;
 }
@@ -26,23 +27,33 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
     const processedUrlsRef = useRef<Set<string>>(new Set());
     const currentTitleRef = useRef(tab.title);
     const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // Mirror lastNodeId into a ref so autoAddNodeToGraph always gets the
+    // latest value even when the useCallback closure is stale.
+    const lastNodeIdRef = useRef(tab.lastNodeId);
 
     useEffect(() => {
         setIsMounted(true);
         if (webviewRef.current) {
-            onMount(tab.id, webviewRef.current);
+            // Pass whiteboardId so the parent keys the ref correctly
+            onMount(tab.id, webviewRef.current, activeWhiteboardId);
         }
-    }, [tab.id, onMount]);
+    }, [tab.id, onMount, activeWhiteboardId]);
 
     useEffect(() => {
         currentTitleRef.current = tab.title;
     }, [tab.title]);
+
+    useEffect(() => {
+        lastNodeIdRef.current = tab.lastNodeId;
+    }, [tab.lastNodeId]);
 
     // detectNodeType remains local or moved? For now let's leave it as it depends on detectNodeType
     // Actually normalizeUrl and extractSearchQuery were defined inside BrowserTab or BrowserView. 
     // Let's remove them from there.
 
     // Auto add node logic
+    // Note: reads lastNodeIdRef.current (not tab.lastNodeId from closure) so that
+    // rapid navigations always use the freshest parent pointer.
     const autoAddNodeToGraph = useCallback((url: string, title: string) => {
         const { isAutoSyncEnabled } = useGraphStore.getState().browserStates[activeWhiteboardId] || { isAutoSyncEnabled: false };
 
@@ -62,8 +73,9 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         // If URL already exists in graph, just update the tab's trace pointer and return
         const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
         if (existingNode) {
+            lastNodeIdRef.current = existingNode.id;
             onUpdate(tab.id, { lastNodeId: existingNode.id });
-            useGraphStore.getState().selectNode(existingNode.id); // Sync Graph Pointer
+            useGraphStore.getState().selectNode(existingNode.id);
             processedUrlsRef.current.add(urlKey);
             return;
         }
@@ -73,21 +85,24 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         const nodeType = detectNodeType(url);
         const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+        // Use freshest lastNodeId from ref (not stale closure)
+        const lastNodeId = lastNodeIdRef.current;
+
         // Smart Positioning: Place relative to parent if it exists
         let position = { x: 100 + (nodes.length % 4) * 280, y: 100 + Math.floor(nodes.length / 4) * 220 };
-        const parentNode = tab.lastNodeId ? nodes.find(n => n.id === tab.lastNodeId) : null;
+        const parentNode = lastNodeId ? nodes.find(n => n.id === lastNodeId) : null;
 
         if (parentNode) {
             position = {
-                x: parentNode.position.x + (Math.random() * 40 - 20), // Slight jitter
-                y: parentNode.position.y + 200
+                x: parentNode.position.x + (Math.random() * 40 - 20),
+                y: parentNode.position.y + 200,
             };
         }
 
-        let nodeData: any = {
+        const nodeData: any = {
             title: title || new URL(url).hostname,
-            url: url,
-            whiteboard_id: activeWhiteboardId
+            url,
+            whiteboard_id: activeWhiteboardId,
         };
 
         addNode({
@@ -97,6 +112,9 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             style: { width: 320 },
             data: nodeData,
         });
+
+        // Immediately update ref so the next navigation in this tab uses this node as parent
+        lastNodeIdRef.current = nodeId;
 
         // Sync Graph Pointer
         useGraphStore.getState().selectNode(nodeId);
@@ -114,26 +132,18 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
                         title: result.title,
                         snippet: result.snippet,
                         favicon: result.metadata?.favicon,
-                        outline: result.outline
+                        outline: result.outline,
                     }
                 });
             }).catch(console.error);
         });
 
         // Link to parent if trace exists
-        console.log('[Browser] AutoAddNode:', {
-            url,
-            title,
-            nodeId,
-            lastNodeId: tab.lastNodeId,
-            tabId: tab.id
-        });
-
-        if (tab.lastNodeId && tab.lastNodeId !== nodeId) {
-            console.log('[Browser] Creating edge:', tab.lastNodeId, '->', nodeId);
+        if (lastNodeId && lastNodeId !== nodeId) {
+            console.log('[Browser] Creating edge:', lastNodeId, '->', nodeId);
             addEdge({
-                id: `e-${tab.lastNodeId}-${nodeId}`,
-                source: tab.lastNodeId,
+                id: `e-${lastNodeId}-${nodeId}`,
+                source: lastNodeId,
                 sourceHandle: 'bottom-source',
                 target: nodeId,
                 targetHandle: 'top-target',
@@ -143,9 +153,9 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             console.log('[Browser] NOT creating edge. Missing lastNodeId or self-loop.');
         }
 
-        // Update tab's trace pointer
+        // Update tab's trace pointer in store state
         onUpdate(tab.id, { lastNodeId: nodeId });
-    }, [activeWhiteboardId, tab.id, tab.lastNodeId, onUpdate]);
+    }, [activeWhiteboardId, tab.id, onUpdate]);
 
     // Webview Event Listeners
     useEffect(() => {
@@ -240,8 +250,8 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
     // Ref forwarding on mount
     useEffect(() => {
-        if (webviewRef.current) onMount(tab.id, webviewRef.current);
-    }, [onMount, tab.id]);
+        if (webviewRef.current) onMount(tab.id, webviewRef.current, activeWhiteboardId);
+    }, [onMount, tab.id, activeWhiteboardId]);
 
     // Handle initial mount or URL change logic is distinct:
     // We pass `src={tab.url}`. If tab.url changes EXTERNALLY (address bar), webview navigates.
