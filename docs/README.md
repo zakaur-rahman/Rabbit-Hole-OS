@@ -1,35 +1,53 @@
 # Cognode Documentation Center
 
-Welcome to the official Cognode documentation. The documentation is organized into two primary tracks based on your needs:
+Welcome to the official Cognode documentation. Organized into two tracks:
 
 ---
 
-## 🌎 Public & User Documentation
-**For researchers, writers, and analysts.**
-Learn what Cognode is, how it revolutionizes research, and how to use its features to build your knowledge graph.
+## 🌎 User Documentation
 
-- **[Platform Overview & Philosophy](./public/system-guide.md)**: The "North Star" document explaining the system's core logic.
-- **[User Guide Index](./public/README.md)**: Detailed feature guides and workflows.
+For researchers, writers, and analysts using the platform.
 
----
-
-## 🛠️ Developer & Technical Documentation
-**For contributors, system designers, and AI engineers.**
-Deep dive into the architecture, security models, and implementation details of the Cognode platform.
-
-- **[System Architecture](./developer/architecture.md)**: High-level design and component interaction.
-- **[Research Synthesis Engine](./developer/research-synthesis.md)**: Technical specs of the multi-agent execution pipeline.
-- **[Developer Setup & Auth](./developer/README.md)**: Environment configuration and authentication internals.
+- **[Platform Overview & Philosophy](./public/system-guide.md)**: What is Cognode and why it exists.
+- **[User Guide Index](./public/README.md)**: Feature guides and workflows.
 
 ---
 
-## 🏗️ Project Structure
+## 🛠️ Developer Documentation
 
-```text
+For contributors, AI engineers, and system designers.
+
+### Core Architecture
+- **[System Architecture](./developer/architecture.md)**: Frontend hooks, backend services, data flow diagrams.
+- **[Research Synthesis Engine](./developer/research-synthesis.md)**: Multi-agent pipeline technical specs.
+
+### Component Guides
+- **[Agent Reference](../apps/backend/AGENTS.md)**: All 7 agents — inputs, outputs, failure modes.
+- **[Node Types Reference](../apps/backend/NODES.md)**: All 15 node types and their synthesis influence.
+
+### Setup & Operations
+- **[Auth Setup Guide](./developer/auth-setup.md)**: Clerk + Google OAuth configuration.
+- **[Google OAuth Specifics](./developer/google-oauth-setup.md)**: Step-by-step GCloud setup.
+- **[Auth Flow Diagrams](./developer/auth-flow.md)**: PKCE and redirect handler flows.
+- **[Desktop Setup](./developer/desktop-setup.md)**: Building and configuring the Electron app.
+- **[Deployment Guide](./developer/deployment-guide.md)**: Production backend, DB, Redis, and Electron.
+- **[Loopback Handling](./developer/loopback-setup.md)**: Local auth redirect for desktop.
+- **[Troubleshooting](./developer/troubleshooting.md)**: Common environment issues.
+- **[Threat Model](./developer/threat-model.md)**: Security analysis and mitigations.
+
+---
+
+## Project Structure
+
+```
 docs/
-├── public/          # User-facing guides
-└── developer/       # Technical specifications
+├── public/     User-facing guides
+└── developer/  Technical specifications
+apps/
+├── backend/AGENTS.md   Agent pipeline reference
+└── backend/NODES.md    Node types reference
 ```
 
 ---
-*Questions? Contact the system architects or check the [Troubleshooting Guide](./developer/troubleshooting.md).*
+
+*Questions? See the [Troubleshooting Guide](./developer/troubleshooting.md).*

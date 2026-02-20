@@ -1,50 +1,177 @@
 # Cognode Architecture Overview
 
-Cognode is designed as a modular, scalable knowledge synthesis platform. This document outlines the high-level architecture across the frontend, backend, and infrastructure layers.
-
-## 🏗️ System Components
-
-### 1. Frontend (Next.js + ReactFlow)
-The user interface is a dynamic canvas where users interact with knowledge nodes.
-- **Canvas Orchestration**: Powered by `reactflow` for visualizing document relationships.
-- **State Management**: Uses `zustand` for high-performance, predictable state across the graph.
-- **Real-time Updates**: Consumes Server-Sent Events (SSE) from the backend to display agent progress.
-
-### 2. Backend (FastAPI + Arq)
-The intelligence layer that manages data and executes research tasks.
-- **API Strategy**: Stateless REST API with long-polling/streaming for heavy operations.
-- **Agent Framework**: A custom multi-agent system where roles (Planner, Writer, Reviewer) are isolated.
-- **Job Queue**: Utilizes `arq` and Redis to handle asynchronous research synthesis without blocking user interactions.
-
-### 3. Desktop (Electron)
-Provides a native experience with deeper system integration.
-- **Browser Interop**: Custom handle for `cognode://` deep links for secure authentication.
-- **Local Cache**: Potential future integration for offline knowledge nodes.
-
-## 💾 Data Architecture
-
-### Database (PostgreSQL)
-- **Primary Persistence**: Stores users, whiteboards, nodes, and edges.
-- **Execution History**: Stores `ResearchJob` and `JobLog` for auditability and recovery.
-
-### Cache & Message Broker (Redis)
-- **Distributed Lock/Queue**: Managed by `arq`.
-- **Streaming**: Used for Pub/Sub updates of synthesis progress.
-
-## 🔒 Security Model
-
-- **Authentication**: JWT-based auth via Clerk and Google OAuth (PKCE compliant).
-- **Data Isolation**: Multi-tenant design where resources are strictly isolated by `user_id` and `whiteboard_id`.
-- **API Safety**: Strict mode enforcement for LaTeX compilation to prevent RCE.
-
-## 🚀 Execution Flow: Multi-Agent Synthesis
-
-1. **Request**: User triggers synthesis on the frontend.
-2. **Orchestration**: Backend hashes the request and checks Redis for a cache hit.
-3. **Tasking**: If no cache, a job is inserted into the DB and enqueued in Redis.
-4. **Execution**: Arq workers pick up the job, executing the agent pipeline in isolation.
-5. **Streaming**: Progress updates are published to Redis and streamed to the frontend via SSE.
-6. **Completion**: Final AST is stored, compiled to PDF, and served to the user.
+Cognode is a modular, scalable knowledge synthesis platform. This document covers the full system architecture as it exists today.
 
 ---
-*Last Updated: 2026-01-31*
+
+## System Components
+
+```
+cognode/
+├── apps/frontend/      Next.js 16 — canvas UI, browser, synthesis modals
+├── apps/backend/       FastAPI — REST API, agent pipeline, job queue
+└── apps/desktop/       Electron — desktop wrapper with integrated webview
+```
+
+---
+
+## Frontend Architecture (Next.js + ReactFlow)
+
+### Canvas System
+
+`CanvasView.tsx` is the root canvas component, composed from 5 hooks:
+
+```
+CanvasView.tsx (~490 lines)
+├── useSynthesis.ts          PDF generation, AST editor modal state
+├── useContextMenu.ts        Node / pane / edge right-click menus, clipboard
+├── useConnectionDrop.ts     Drop-on-empty-canvas → node creation popup
+├── useNodeCreation.ts       Toolbar quick-add: note, group, text, template
+└── useFileDrop.ts           Drag-and-drop image/PDF → auto-upload node
+```
+
+Two extracted canvas components:
+- `CanvasOverlay.tsx` — stats badge + node-type legend
+- `ConnectionDropMenu.tsx` — connection-drop popup + SVG line overlay
+
+### State Management (Zustand)
+
+| Store | Key State |
+|---|---|
+| `graph.store.ts` | `nodes`, `edges`, `whiteboards`, `selectedNodeId`, `nodeClickTs`, `activeWhiteboardId` |
+| `ast.store.ts` | `document` (DocumentAST), `selectedSectionId`, `validationStatus`, `isDirty` |
+
+`nodeClickTs` — a `Date.now()` timestamp bumped on every `selectNode()` call, including re-clicks of the same node. Allows `BrowserView.tsx` to sync even when `selectedNodeId` doesn't change.
+
+### Node Types (15)
+
+| Type | Component |
+|---|---|
+| `article`, `web` | ArticleNode, WebNode |
+| `pdf`, `image` | PdfNode (dynamic import), ImageNode |
+| `video`, `academic` | VideoNode, AcademicNode |
+| `code` | CodeNode |
+| `note`, `text`, `annotation` | NoteNode, TextNode, AnnotationNode |
+| `product` | ProductNode |
+| `canvas` | CanvasNode (sub-canvas / nested whiteboard) |
+| `group` | GroupNode (container, zIndex -1) |
+| `comment` | CommentNode (AI instruction, dashed amber edge) |
+| `synthesis` | SynthesisNode (output document) |
+| `ghost` | GhostNode (placeholder) |
+
+### Browser Integration
+
+`BrowserView.tsx` embeds an Electron webview. Key behaviors:
+- Every navigation creates a child node (parent–child graph)
+- Syncs to `selectedNodeId` via `useEffect` — re-runs when `nodeClickTs` changes
+- `autoAddNodeToGraph` uses a debounced timeout ref (no race conditions)
+
+### API Client
+
+`lib/api.ts` provides typed wrappers for all backend endpoints. Auth token is read from `sessionStorage.getItem('auth_token')`.
+
+---
+
+## Backend Architecture (FastAPI + arq)
+
+### API Layers
+```
+app/
+├── api/v1/
+│   ├── nodes.py        CRUD + processUrl (scrape + auto-type-detect)
+│   ├── edges.py        Edge CRUD with cascade-delete
+│   ├── synthesis.py    POST /research-ast + SSE progress stream
+│   ├── files.py        File upload (image/PDF → storage)
+│   └── oauth.py        Clerk + Google PKCE OAuth
+├── services/
+│   ├── agents.py       7 AI agents (Planner→Writer→Reviewer→Charts→Bib→Memory→Recovery)
+│   ├── chunk_service.py  Type-aware context chunking (15 node types)
+│   ├── document_ast.py   Pydantic DocumentAST schema + validation
+│   ├── scraper.py      URL scraper + detect_content_type()
+│   └── llm.py          LLM provider selection (Gemini→HF→Chutes→OpenAI→Mock)
+└── workers/
+    └── synthesis_worker.py  arq background job handler
+```
+
+### Agent Pipeline
+
+```
+POST /research-ast
+  │
+  ├─ SHA256 hash check (Redis cache hit? → return instantly)
+  │
+  └─ ResearchJob created in Postgres → enqueued in Redis
+       │
+       ▼  [arq worker picks up]
+       1. PlannerAgent     → outline (progress 20%)
+       2. WriterAgent      → DocumentAST JSON (progress 40%)  ← FATAL if fails
+       3. ReviewerAgent    → validated AST (progress 60%)
+       4. ChartFigureAgent → figure recommendations (progress 75%)
+       5. BibNormalizerAgent → deduplicated refs (progress 85%)
+       6. CompilationTask  → LaTeX → PDF (non-fatal)
+       7. MemoryAgent      → cross-doc patterns (non-fatal)
+       │
+       └─ COMPLETED event published → SSE stream → frontend
+```
+
+See [`AGENTS.md`](../../apps/backend/AGENTS.md) for full agent reference.
+
+### Database (PostgreSQL)
+
+Tables: `users`, `whiteboards`, `nodes`, `edges`, `research_jobs`, `job_logs`
+
+Edge rows have `CASCADE DELETE` on `node_id` foreign keys — deleting a node removes its edges automatically.
+
+### Cache & Job Queue (Redis)
+
+- **arq** manages the synthesis job queue
+- **Pub/Sub** streams progress events to the API SSE endpoint
+- **Cache key** = SHA256 of `(query + sorted context + orchestrator_version)`
+- Recommended eviction policy: `allkeys-lru` (but protect queue keys)
+
+---
+
+## Data Flow: Synthesis
+
+```
+Canvas (Frontend)
+  └── User clicks "Synthesize"
+      │
+      POST /api/v1/synthesis/research-ast
+      { query, context_items: [{ node_id, node_type, metadata, content, ... }] }
+      │
+      chunk_service.segment_nodes()   ← type-aware chunking
+      │   [ACADEMIC_PAPER], [IMAGE], [CODE:python], [RESEARCHER_NOTE] ...
+      │
+      agents pipeline (7 steps)
+      │
+      DocumentAST → LaTeX → PDF
+      │
+      SSE stream → ResearchPdfModal (frontend)
+      │
+      ASTEditorModal (optional manual editing before recompile)
+```
+
+See [`NODES.md`](../../apps/backend/NODES.md) for how each node type influences the synthesis output.
+
+---
+
+## Security
+
+- **Auth**: Clerk JWT + Google OAuth (PKCE). Auth token verified server-side on every request.
+- **Data isolation**: All queries are filtered by `user_id` + `whiteboard_id`.
+- **LaTeX sandbox**: Compilation via `tectonic.exe` (bundled binary) — no network, restricted filesystem.
+- **CORS**: Only whitelisted origins (`localhost:3000` in dev, configured domain in prod).
+
+---
+
+## Desktop (Electron)
+
+- Renders the Next.js frontend in a `BrowserWindow` (not the system browser)
+- Embeds a separate `<webview>` for the integrated browser (separate renderer process)
+- Custom protocol: `cognode://` deep links for OAuth redirect handling
+- Preload script: `contextIsolation: true`, `sandbox: true`
+
+---
+
+*Last updated: 2026-02-20*
