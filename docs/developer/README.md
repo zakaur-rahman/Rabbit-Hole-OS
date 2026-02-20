@@ -2,10 +2,21 @@
 
 Technical specifications, setup guides, and internal architecture documentation for Cognode contributors.
 
+---
+
 ## 🏗️ Core Architecture
 
 - **[System Architecture](./architecture.md)**: High-level overview of components and data flow.
 - **[Research Synthesis Engine](./research-synthesis.md)**: Details on the multi-agent orchestration and arq workers.
+
+---
+
+## 📦 Component Guides
+
+- **[Agent Reference](../../apps/backend/AGENTS.md)**: All 7 agents — inputs, outputs, failure modes, and JSON contracts.
+- **[Node Types Reference](../../apps/backend/NODES.md)**: All 15 node types and how each influences synthesis.
+
+---
 
 ## 🔑 Authentication & Security
 
@@ -13,6 +24,8 @@ Technical specifications, setup guides, and internal architecture documentation 
 - **[Google OAuth Specifics](./google-oauth-setup.md)**: Step-by-step GCloud configuration.
 - **[Auth Flow Diagrams](./auth-flow.md)**: Visualizing PKCE and redirect handlers.
 - **[Threat Model](./threat-model.md)**: Security analysis and mitigations.
+
+---
 
 ## 🛠️ Environment & Setup
 
@@ -22,4 +35,5 @@ Technical specifications, setup guides, and internal architecture documentation 
 - **[Loopback Handling](./loopback-setup.md)**: Details on local auth redirection for desktop.
 
 ---
-[Return to Documentation Center](../README.md)
+
+[← Return to Documentation Center](../README.md)
