@@ -21,7 +21,6 @@ interface BrowserTabProps {
 
 const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhiteboardId }: BrowserTabProps) => {
     const webviewRef = useRef<any>(null);
-    const [isMounted, setIsMounted] = useState(false);
 
     // Auto-add helper refs
     const processedUrlsRef = useRef<Set<string>>(new Set());
@@ -31,13 +30,12 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
     // latest value even when the useCallback closure is stale.
     const lastNodeIdRef = useRef(tab.lastNodeId);
 
+    // Forward webview ref to parent once it's available
     useEffect(() => {
-        setIsMounted(true);
         if (webviewRef.current) {
-            // Pass whiteboardId so the parent keys the ref correctly
             onMount(tab.id, webviewRef.current, activeWhiteboardId);
         }
-    }, [tab.id, onMount, activeWhiteboardId]);
+    });
 
     useEffect(() => {
         currentTitleRef.current = tab.title;
@@ -47,9 +45,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         lastNodeIdRef.current = tab.lastNodeId;
     }, [tab.lastNodeId]);
 
-    // detectNodeType remains local or moved? For now let's leave it as it depends on detectNodeType
-    // Actually normalizeUrl and extractSearchQuery were defined inside BrowserTab or BrowserView. 
-    // Let's remove them from there.
+
 
     // Auto add node logic
     // Note: reads lastNodeIdRef.current (not tab.lastNodeId from closure) so that
@@ -179,15 +175,16 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
                 canGoForward: webview.canGoForward()
             });
 
-            if (url.startsWith('http')) {
-                const isSearchPage = url.includes('google.com/search') || url.includes('bing.com/search');
-                if (!isSearchPage) {
-                    if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
+            // Only auto-add a node for the very first navigation in this tab
+            // (i.e. the initial page load). All subsequent link clicks open new tabs
+            // via the JS interceptor / new-window handler, so their own BrowserTab
+            // instances handle node creation independently.
+            if (url.startsWith('http') && processedUrlsRef.current.size === 0) {
+                if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
 
-                    navigationTimeoutRef.current = setTimeout(() => {
-                        autoAddNodeToGraph(url, currentTitleRef.current || url);
-                    }, 800);
-                }
+                navigationTimeoutRef.current = setTimeout(() => {
+                    autoAddNodeToGraph(url, currentTitleRef.current || url);
+                }, 800);
             }
         };
 
@@ -217,15 +214,56 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
                 canGoBack: webview.canGoBack(),
                 canGoForward: webview.canGoForward()
             });
+
+            // ── Link intercept: open ALL anchor clicks in a new internal tab ──
+            // Uses event delegation so it works with dynamically-added content (SPAs).
+            // We capture the click, prevent default, and signal the host via console.log.
+            // The webview's `console-message` event picks up our prefixed message.
+            // We can't use window.open() because Electron blocks it without allowpopups.
+            webview.executeJavaScript(`
+                (function() {
+                    if (window.__cognode_link_interceptor__) return;
+                    window.__cognode_link_interceptor__ = true;
+
+                    document.addEventListener('click', function(e) {
+                        var el = e.target;
+                        while (el && el.tagName !== 'A') el = el.parentElement;
+                        if (!el) return;
+
+                        var href = el.getAttribute('href');
+                        if (!href) return;
+                        if (href.startsWith('#') || href.startsWith('javascript:') ||
+                            href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+                        var absoluteUrl;
+                        try { absoluteUrl = new URL(href, window.location.href).href; }
+                        catch(ex) { return; }
+
+                        if (!absoluteUrl.startsWith('http')) return;
+
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        console.log('__COGNODE_NAV__:' + absoluteUrl);
+                    }, true);
+                })();
+            `).catch(() => {/* webview not ready */ });
         };
 
+        // ── console-message: picks up our __COGNODE_NAV__ signals from the injected interceptor ──
+        const handleConsoleMessage = (e: any) => {
+            const msg = e.message;
+            if (typeof msg === 'string' && msg.startsWith('__COGNODE_NAV__:')) {
+                const url = msg.slice('__COGNODE_NAV__:'.length);
+                if (url.startsWith('http')) {
+                    onNewTab(url, lastNodeIdRef.current);
+                }
+            }
+        };
+
+        // ── new-window: fallback for target="_blank" and window.open() from page JS ──
         const handleNewWindow = (e: any) => {
-            // Prevent default popup behavior if possible, or just manage our internal tab
-            // Electron's allowpopups="true" might open a window. We want to intercept.
-            // But with webview, usually we need to listen and maybe prevent default if we want to handle it ourselves.
-            // For now, let's just create our internal tab.
-            if (e.url) {
-                onNewTab(e.url, tab.lastNodeId);
+            if (e.url && e.url.startsWith('http')) {
+                onNewTab(e.url, lastNodeIdRef.current);
             }
         };
 
@@ -233,25 +271,23 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         webview.addEventListener('did-stop-loading', handleDidStopLoading);
         webview.addEventListener('did-navigate', handleNavigation);
         webview.addEventListener('did-navigate-in-page', handleNavigation);
+        webview.addEventListener('console-message', handleConsoleMessage);
         webview.addEventListener('new-window', handleNewWindow);
         webview.addEventListener('page-title-updated', handleTitleUpdate);
         webview.addEventListener('dom-ready', handleDomReady);
 
         return () => {
+            if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
             webview.removeEventListener('did-start-loading', handleDidStartLoading);
             webview.removeEventListener('did-stop-loading', handleDidStopLoading);
             webview.removeEventListener('did-navigate', handleNavigation);
             webview.removeEventListener('did-navigate-in-page', handleNavigation);
+            webview.removeEventListener('console-message', handleConsoleMessage);
             webview.removeEventListener('new-window', handleNewWindow);
             webview.removeEventListener('page-title-updated', handleTitleUpdate);
             webview.removeEventListener('dom-ready', handleDomReady);
         };
-    }, [tab.id, onUpdate, autoAddNodeToGraph, tab.url, onNewTab, tab.lastNodeId]);
-
-    // Ref forwarding on mount
-    useEffect(() => {
-        if (webviewRef.current) onMount(tab.id, webviewRef.current, activeWhiteboardId);
-    }, [onMount, tab.id, activeWhiteboardId]);
+    }, [tab.id, tab.url, onUpdate, autoAddNodeToGraph, onNewTab]);
 
     // Handle initial mount or URL change logic is distinct:
     // We pass `src={tab.url}`. If tab.url changes EXTERNALLY (address bar), webview navigates.
@@ -267,16 +303,13 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
     return (
         <div className="w-full h-full" style={{ display: isActive ? 'block' : 'none' }}>
-            {isMounted && (
-                <webview
-                    ref={webviewRef}
-                    src={tab.url}
-                    className="w-full h-full"
-                    // @ts-ignore
-                    allowpopups="true"
-                    useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                />
-            )}
+            <webview
+                ref={webviewRef}
+                src={tab.url}
+                className="w-full h-full"
+                // @ts-ignore
+                useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            />
         </div>
     );
 });
@@ -287,12 +320,18 @@ BrowserTab.displayName = 'BrowserTab';
 export default function BrowserView() {
     const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodeClickTs, nodes, setAuthModal } = useGraphStore();
 
-    // Track which whiteboards have their tabs mounted in the DOM
+    // Track which whiteboards have their tabs mounted in DOM.
+    // Capped at 5 to prevent unbounded memory growth from accumulated webviews.
     const [mountedWhiteboardIds, setMountedWhiteboardIds] = useState<string[]>([activeWhiteboardId]);
 
     useEffect(() => {
         if (!mountedWhiteboardIds.includes(activeWhiteboardId)) {
-            setMountedWhiteboardIds(prev => [...prev, activeWhiteboardId]);
+            setMountedWhiteboardIds(prev => {
+                const next = [...prev, activeWhiteboardId];
+                // Keep the active + last 4 — evict oldest background whiteboards
+                if (next.length > 5) return next.slice(next.length - 5);
+                return next;
+            });
         }
     }, [activeWhiteboardId, mountedWhiteboardIds]);
 
@@ -422,9 +461,10 @@ export default function BrowserView() {
     const closeTab = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         if (tabs.length === 1) {
-            // If closing last tab, just reset it
+            // If closing last tab, reset to a fresh blank tab
             const newId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
             setTabs([{ id: newId, url: '', displayInput: '', title: 'New Tab' }]);
+            setActiveTabId(newId); // ← was missing: keeps isActive in sync
             return;
         }
 
@@ -438,8 +478,8 @@ export default function BrowserView() {
             setActiveTabId(nextTab.id);
         }
 
-        // Cleanup ref
-        delete webviewRefs.current[id];
+        // Cleanup ref — must use composite key to match how handleMount stores it
+        delete webviewRefs.current[`${activeWhiteboardId}-${id}`];
     };
 
     const updateTab = useCallback((id: string, updates: Partial<Tab>) => {
@@ -543,7 +583,7 @@ export default function BrowserView() {
                         outline: result.outline
                     }
                 });
-            });
+            }).catch(err => console.error('[Browser] Manual sync processUrl failed:', err));
         });
 
         // 4. Link
@@ -551,9 +591,9 @@ export default function BrowserView() {
             addEdge({
                 id: `e-${tab.lastNodeId}-${nodeId}`,
                 source: tab.lastNodeId,
-                sourceHandle: 'bottom',
+                sourceHandle: 'bottom-source',
                 target: nodeId,
-                targetHandle: 'top',
+                targetHandle: 'top-target',
                 animated: true,
             });
         }
@@ -665,24 +705,28 @@ export default function BrowserView() {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 relative bg-white overflow-hidden">
+            <div className="flex-1 relative bg-neutral-950 overflow-hidden">
                 {mountedWhiteboardIds.map(wbId => {
                     const wbState = browserStates[wbId] || (wbId === activeWhiteboardId ? state : null);
                     if (!wbState) return null;
 
-                    return (wbState.tabs || []).map(tab => (
+                    // For the active whiteboard, use local `tabs` state (always fresh).
+                    // For background whiteboards, read from store.
+                    const renderedTabs = wbId === activeWhiteboardId ? tabs : (wbState.tabs || []);
+                    const renderedActiveTabId = wbId === activeWhiteboardId ? activeTabId : wbState.activeTabId;
+
+                    return renderedTabs.map(tab => (
                         <BrowserTab
                             key={`${wbId}-${tab.id}`}
                             tab={tab}
-                            isActive={wbId === activeWhiteboardId && tab.id === (wbId === activeWhiteboardId ? activeTabId : wbState.activeTabId)}
+                            isActive={wbId === activeWhiteboardId && tab.id === renderedActiveTabId}
                             onUpdate={wbId === activeWhiteboardId ? updateTab : (id, updates) => {
-                                // Background update for non-active whiteboard tabs (e.g. title changes)
                                 updateBrowserState(wbId, {
                                     tabs: wbState.tabs.map(t => t.id === id ? { ...t, ...updates } : t)
                                 });
                             }}
                             onMount={(id, ref) => handleMount(id, ref, wbId)}
-                            onNewTab={wbId === activeWhiteboardId ? addTab : () => { }} // Only allow new tabs on active board
+                            onNewTab={wbId === activeWhiteboardId ? addTab : () => { }}
                             activeWhiteboardId={wbId}
                         />
                     ));
