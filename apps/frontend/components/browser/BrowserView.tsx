@@ -51,10 +51,23 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
     // Note: reads lastNodeIdRef.current (not tab.lastNodeId from closure) so that
     // rapid navigations always use the freshest parent pointer.
     const autoAddNodeToGraph = useCallback((url: string, title: string) => {
-        const { isAutoSyncEnabled } = useGraphStore.getState().browserStates[activeWhiteboardId] || { isAutoSyncEnabled: false };
+        const browserState = useGraphStore.getState().browserStates[activeWhiteboardId] || { isAutoSyncEnabled: false };
+
+        // Auth gate — if user isn't logged in, force auto-sync off and bail
+        const hasAuth = typeof window !== 'undefined' && !!sessionStorage.getItem('auth_token');
+        if (!hasAuth) {
+            if (browserState.isAutoSyncEnabled) {
+                useGraphStore.getState().updateBrowserState(activeWhiteboardId, { isAutoSyncEnabled: false });
+            }
+            return;
+        }
 
         // Block if auto-sync is off
-        if (!isAutoSyncEnabled) return;
+        if (!browserState.isAutoSyncEnabled) return;
+
+        // Skip search engine result pages — only destination pages get nodes
+        const isSearchEngine = /\b(google|bing|duckduckgo|yahoo|baidu|yandex)\.\w+\/(search|results)/i.test(url);
+        if (isSearchEngine) return;
 
         const urlKey = normalizeUrl(url);
 
