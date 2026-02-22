@@ -31,7 +31,7 @@ export interface Session {
 
 async function getAuthToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem('auth_token');
+  return localStorage.getItem('auth_token');
 }
 
 async function authenticatedFetch(

@@ -58,7 +58,7 @@ export function useSynthesis() {
 
     /** Open AST editor: fetches document structure from backend first */
     const handleOpenASTEditor = useCallback(async () => {
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
             setAuthModal(true, 'Research synthesis and AI document structuring require a premium account.');
             return;
         }
@@ -91,7 +91,7 @@ export function useSynthesis() {
     const handleSynthesis = useCallback(async (useDummyDataArg: any = false) => {
         const useDummyData = useDummyDataArg === true;
 
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
             setAuthModal(true, 'Advanced research synthesis and report generation require an account.');
             return;
         }

@@ -4,13 +4,13 @@
 import { AUTH_CONFIG } from './config';
 
 export async function logout(): Promise<void> {
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
   
   if (!token) {
     // No token, just clear storage
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('auth_token');
-      sessionStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
       window.dispatchEvent(new Event('auth-state-changed'));
     }
     return;
@@ -35,9 +35,9 @@ export async function logout(): Promise<void> {
   } finally {
     // Always clear local storage
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('auth_token');
-      sessionStorage.removeItem('refresh_token');
-      sessionStorage.removeItem('cached_user');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('cached_user');
       window.dispatchEvent(new Event('auth-state-changed'));
     }
   }

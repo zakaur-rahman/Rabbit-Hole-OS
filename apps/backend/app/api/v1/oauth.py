@@ -1,6 +1,8 @@
 """
 OAuth 2.0 API endpoints
 """
+import secrets
+import json
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -40,6 +42,9 @@ class OAuthExchangeRequest(BaseModel):
     platform: Optional[str] = None
     app_version: Optional[str] = None
     user_agent: Optional[str] = None
+    # Desktop deep link flow: if present, generate a one-time auth code
+    desktop_device_id: Optional[str] = None
+    desktop_redirect_uri: Optional[str] = None
 
 
 class RefreshTokenRequest(BaseModel):
@@ -51,6 +56,7 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     user: dict
+    desktop_auth_code: Optional[str] = None
 
 
 class AccessTokenResponse(BaseModel):
@@ -58,11 +64,17 @@ class AccessTokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class DesktopExchangeRequest(BaseModel):
+    """Request schema for exchanging a one-time desktop auth code for tokens"""
+    code: str
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
     name: Optional[str]
     avatar_url: Optional[str]
+    plan: str = "free"
 
 
 class SessionResponse(BaseModel):
@@ -199,8 +211,29 @@ async def exchange_code(
             user_agent=request.user_agent or req.headers.get("User-Agent"),
             ip_address=ip_address
         )
-        
-        return TokenResponse(**token_response)
+
+        response_data = dict(token_response)
+
+        # Desktop deep link flow: generate a one-time auth code stored in Redis
+        if request.desktop_device_id and request.desktop_redirect_uri:
+            try:
+                redis = await get_redis()
+                desktop_auth_code = secrets.token_urlsafe(32)
+                code_payload = json.dumps({
+                    "user_id": token_response["user"]["id"],
+                    "access_token": token_response["access_token"],
+                    "refresh_token": token_response["refresh_token"],
+                })
+                await redis.set(
+                    f"desktop_auth_code:{desktop_auth_code}",
+                    code_payload,
+                    ex=300,  # 5-minute TTL — single use
+                )
+                response_data["desktop_auth_code"] = desktop_auth_code
+            except Exception as e:
+                print(f"[Desktop Auth Code Error] Failed to store code in Redis: {e}")
+
+        return response_data
     except ValueError as e:
         # ValueError includes validation errors and clear error messages
         raise HTTPException(
@@ -340,6 +373,7 @@ async def get_current_user_info(
         email=current_user.email,
         name=current_user.name,
         avatar_url=current_user.avatar_url,
+        plan="free"  # Default hardcoded for now, waiting for database integration
     )
 
 
@@ -490,3 +524,63 @@ async def revoke_all_sessions(
     await db.commit()
     
     return {"message": f"Revoked {revoked_count} session(s)"}
+
+
+@router.post("/oauth/desktop/exchange")
+async def desktop_exchange(
+    request: DesktopExchangeRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Exchange a one-time desktop auth code for access and refresh tokens.
+    The code is generated during the web-based Google OAuth exchange when
+    the request includes desktop_device_id and desktop_redirect_uri.
+    Codes are single-use and expire after 5 minutes.
+    """
+    try:
+        redis = await get_redis()
+        key = f"desktop_auth_code:{request.code}"
+        raw = await redis.get(key)
+
+        if not raw:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired desktop auth code",
+            )
+
+        # DELETE immediately — one-time use only
+        await redis.delete(key)
+
+        data = json.loads(raw)
+
+        # Look up the user to return fresh info
+        import uuid as uuid_lib
+        user_id = uuid_lib.UUID(data["user_id"])
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+
+        return {
+            "access_token": data["access_token"],
+            "refresh_token": data["refresh_token"],
+            "token_type": "bearer",
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "avatar_url": user.avatar_url,
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Desktop Exchange Error] {type(e).__name__}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to exchange desktop auth code",
+        )

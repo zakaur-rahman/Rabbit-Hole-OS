@@ -1,9 +1,9 @@
 """
-Redis client for session management and caching using Upstash Redis
+Redis client for session management and caching using standard Redis
 """
 from typing import Optional
 from app.core.config import settings
-from upstash_redis.asyncio import Redis as AsyncRedis
+from redis.asyncio import Redis as AsyncRedis
 import json
 
 
@@ -12,19 +12,15 @@ class RedisClient:
     
     @classmethod
     async def get_client(cls) -> AsyncRedis:
-        """Get or create Upstash Redis async client"""
+        """Get or create standard Redis async client"""
         if cls._client is None:
-            # Validate configuration
-            if not settings.UPSTASH_REDIS_REST_URL or not settings.UPSTASH_REDIS_REST_TOKEN:
-                raise ValueError(
-                    "Upstash Redis credentials not configured. "
-                    "Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in your .env file."
-                )
+            redis_url = settings.REDIS_URL or "redis://localhost:6379"
             
-            # Use Upstash Redis REST API with async support
-            cls._client = AsyncRedis(
-                url=settings.UPSTASH_REDIS_REST_URL,
-                token=settings.UPSTASH_REDIS_REST_TOKEN,
+            # Use standard redis.asyncio
+            cls._client = AsyncRedis.from_url(
+                redis_url,
+                password=settings.REDIS_PASSWORD,
+                decode_responses=True
             )
         return cls._client
     
@@ -32,8 +28,7 @@ class RedisClient:
     async def close(cls):
         """Close Redis connection"""
         if cls._client:
-            # Upstash Redis async client doesn't need explicit close
-            # but we'll reset the reference
+            await cls._client.close()
             cls._client = None
 
 

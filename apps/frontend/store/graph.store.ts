@@ -256,9 +256,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         }
         
         // Initial fetch from API if possible
-        if (sessionStorage.getItem('auth_token')) {
+        if (localStorage.getItem('auth_token')) {
             if (isElectron()) {
-                (window as any).electron.storage.sync.setToken(sessionStorage.getItem('auth_token'));
+                (window as any).electron.storage.sync.setToken(localStorage.getItem('auth_token'));
             }
             get().fetchWhiteboards();
         }
@@ -267,7 +267,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Add listener for login/logout to update Electron token
     if (typeof window !== 'undefined' && isElectron()) {
         window.addEventListener('auth-state-changed', () => {
-            const token = sessionStorage.getItem('auth_token');
+            const token = localStorage.getItem('auth_token');
             (window as any).electron.storage.sync.setToken(token);
         });
     }
@@ -287,7 +287,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             if (isElectron()) {
                 await storage.whiteboards.create({
                     ...defaultWb,
-                    user_id: sessionStorage.getItem('user_id') || 'local'
+                    user_id: localStorage.getItem('user_id') || 'local'
                 });
             } else {
                 await whiteboardsApi.create(defaultWb);
@@ -346,7 +346,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         if (isElectron()) {
             await storage.whiteboards.create({
                 ...newWb,
-                user_id: sessionStorage.getItem('user_id') || 'local'
+                user_id: localStorage.getItem('user_id') || 'local'
             });
         } else {
             await whiteboardsApi.create(newWb);

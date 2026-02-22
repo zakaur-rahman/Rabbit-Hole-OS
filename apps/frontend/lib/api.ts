@@ -8,8 +8,8 @@ async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
   
-  // Get token from sessionStorage (matches auth/api.ts logic)
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+  // Get token from localStorage (matches auth/api.ts logic)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
   
   const headers = new Headers(options.headers);
   if (!headers.has('Content-Type')) {
@@ -154,7 +154,7 @@ export const synthesisApi = {
     }),
 
   generateResearchPdf: async (query: string, context_items: { title: string; content: string; url: string }[], use_dummy_data: boolean = false): Promise<Blob> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf`, {
       method: "POST",
       headers: { 
@@ -173,7 +173,7 @@ export const synthesisApi = {
     use_dummy_data: boolean = false,
     edges: Edge[] = []
   ): Promise<Blob> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-chunked`, {
       method: "POST",
       headers: { 
@@ -193,7 +193,7 @@ export const synthesisApi = {
     use_dummy_data: boolean = false,
     edges: Edge[] = []
   ): Promise<Blob> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-latex`, {
       method: "POST",
       headers: { 
@@ -213,7 +213,7 @@ export const synthesisApi = {
     edges: Edge[] = [],
     whiteboardId?: string
   ): Promise<{ status: string; document: any }> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast`, {
       method: "POST",
       headers: { 
@@ -233,7 +233,7 @@ export const synthesisApi = {
     onUpdate: (step: { stage: string; status: string; message?: string; document?: any; error?: string }) => void,
     whiteboardId?: string
   ): Promise<void> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast-stream`, {
       method: "POST",
       headers: { 
@@ -279,7 +279,7 @@ export const synthesisApi = {
     edges: Edge[] = [],
     whiteboardId?: string
   ): Promise<Blob> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast-pdf`, {
       method: "POST",
       headers: { 
@@ -293,7 +293,7 @@ export const synthesisApi = {
   },
 
   generatePdfFromAST: async (document: any, strict_mode: boolean = true): Promise<Blob> => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-from-ast`, {
       method: "POST",
       headers: { 
@@ -311,7 +311,7 @@ export const synthesisApi = {
   },
 
   regenerateSection: async (sectionId: string, sectionTitle: string, currentContent: string, sourceContext: string, referenceIds: string[]) => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/regenerate-section`, {
       method: 'POST',
       headers: {

@@ -11,6 +11,12 @@
     "build": {
         "appId": "com.cognode.app",
         "productName": "Cognode",
+        "protocols": {
+            "name": "Cognode",
+            "schemes": [
+                "cognode"
+            ]
+        },
         "directories": {
             "output": "dist"
         },

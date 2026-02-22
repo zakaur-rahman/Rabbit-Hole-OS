@@ -38,7 +38,7 @@ function base64URLEncode(buffer: Uint8Array): string {
 }
 
 /**
- * Stores PKCE verifier temporarily in sessionStorage
+ * Stores PKCE verifier temporarily in localStorage
  * @param verifier - The code verifier to store
  * @param state - The OAuth state parameter
  */
@@ -46,16 +46,16 @@ export function storePKCEVerifier(verifier: string, state: string): void {
   if (typeof window === 'undefined') return;
   
   const key = `pkce_verifier_${state}`;
-  sessionStorage.setItem(key, verifier);
+  localStorage.setItem(key, verifier);
   
   // Clean up after 10 minutes (OAuth codes expire quickly)
   setTimeout(() => {
-    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
   }, 10 * 60 * 1000);
 }
 
 /**
- * Retrieves and removes PKCE verifier from sessionStorage
+ * Retrieves and removes PKCE verifier from localStorage
  * @param state - The OAuth state parameter
  * @returns The code verifier or null if not found
  */
@@ -63,10 +63,10 @@ export function getPKCEVerifier(state: string): string | null {
   if (typeof window === 'undefined') return null;
   
   const key = `pkce_verifier_${state}`;
-  const verifier = sessionStorage.getItem(key);
+  const verifier = localStorage.getItem(key);
   
   if (verifier) {
-    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
   }
   
   return verifier;

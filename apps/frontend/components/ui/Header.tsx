@@ -23,7 +23,7 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
         // Check if user is authenticated by checking for token
         const checkAuth = () => {
             if (typeof window !== 'undefined') {
-                const token = sessionStorage.getItem('auth_token');
+                const token = localStorage.getItem('auth_token');
                 setIsAuthenticated(!!token);
             }
         };

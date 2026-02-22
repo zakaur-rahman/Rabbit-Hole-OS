@@ -6,10 +6,8 @@ export interface ElectronAPI {
   };
   platform: string;
   auth: {
-    startLogin: (authUrl: string, port?: number) => Promise<{ code: string; state: string; error?: string }>;
-
-    handleCallback: (data: { code: string; state: string; codeVerifier: string }) => Promise<any>;
-    onCallback: (callback: (data: { code?: string; state?: string; error?: string }) => void) => () => void;
+    openLogin: (loginUrl: string) => Promise<void>;
+    onDeepLinkAuth: (callback: (data: { code: string }) => void) => () => void;
   };
   storage: {
     nodes: {
