@@ -1,18 +1,20 @@
 /**
  * Authentication configuration
- * Desktop-only: This app only supports Electron desktop authentication
+ * Supports both Electron desktop (deep link) and web browser flows.
  */
 
 export const AUTH_CONFIG = {
   // Google OAuth
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
   
-  // OAuth redirect URI - Desktop only (loopback redirect - Google recommended)
-  // Using loopback instead of custom URI scheme for better compatibility
-  REDIRECT_URI: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI_DESKTOP || 'http://127.0.0.1:53682/oauth/callback',
+  // Web login URL — where the sign-in page lives (used by Electron to open system browser)
+  WEB_BASE_URL: process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3001',
   
-  // Loopback server port (default 53682, can be changed via env)
-  OAUTH_PORT: parseInt(process.env.NEXT_PUBLIC_OAUTH_PORT || '53682', 10),
+  // OAuth redirect URI — Google redirects here after consent (web callback page)
+  REDIRECT_URI: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI || 'http://localhost:3001/auth/google',
+
+  // Deep link protocol for desktop app
+  DESKTOP_PROTOCOL: 'cognode',
   
   // API endpoints
   API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
@@ -23,7 +25,6 @@ export const AUTH_CONFIG = {
 
 /**
  * Detects if running in Electron desktop app
- * Desktop-only: This app is designed for Electron, so always check for Electron API
  */
 export function isElectron(): boolean {
   if (typeof window === 'undefined') return false;
@@ -38,16 +39,8 @@ export function isElectron(): boolean {
 }
 
 /**
- * Gets the redirect URI for Electron desktop app
- * Desktop-only: Returns loopback redirect URI (Google recommended for desktop apps)
+ * Gets the redirect URI for web-based OAuth callback
  */
 export function getRedirectUri(): string {
   return AUTH_CONFIG.REDIRECT_URI;
-}
-
-/**
- * Gets the OAuth callback port
- */
-export function getOAuthPort(): number {
-  return AUTH_CONFIG.OAUTH_PORT;
 }

@@ -12,16 +12,13 @@ contextBridge.exposeInMainWorld('electron', {
   },
   platform: process.platform,
   auth: {
-    startLogin: (authUrl: string, port?: number) => {
-      return ipcRenderer.invoke('auth:start-login', authUrl, port);
+    openLogin: (loginUrl: string) => {
+      return ipcRenderer.invoke('auth:open-login', loginUrl);
     },
-    handleCallback: (data: { code: string; state: string; codeVerifier: string }) => {
-      return ipcRenderer.invoke('auth:handle-callback', data);
-    },
-    onCallback: (callback: (data: { code?: string; state?: string; error?: string }) => void) => {
+    onDeepLinkAuth: (callback: (data: { code: string }) => void) => {
       const subscription = (_event: any, data: any) => callback(data);
-      ipcRenderer.on('auth:callback', subscription);
-      return () => ipcRenderer.removeListener('auth:callback', subscription);
+      ipcRenderer.on('auth:deep-link-received', subscription);
+      return () => ipcRenderer.removeListener('auth:deep-link-received', subscription);
     },
   },
   storage: {

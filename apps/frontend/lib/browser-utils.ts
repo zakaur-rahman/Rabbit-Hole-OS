@@ -62,34 +62,49 @@ export const normalizeUrl = (u: string) => {
 
 /**
  * Detects the type of content at a URL based on patterns.
+ * Matches on hostname only for shopping/product sites to avoid false positives
+ * (e.g. github.com/releases, brew.sh/formula/store would wrongly become 'product').
  */
 export const detectNodeType = (url: string): string => {
+    let hostname = '';
+    try {
+        hostname = new URL(url).hostname.toLowerCase();
+    } catch {
+        hostname = url.toLowerCase();
+    }
     const lowerUrl = url.toLowerCase();
 
-    // Shopping sites
-    if (lowerUrl.includes('amazon.') || lowerUrl.includes('ebay.') ||
-        lowerUrl.includes('shop') || lowerUrl.includes('product') ||
-        lowerUrl.includes('buy') || lowerUrl.includes('store')) {
+    // Shopping sites — hostname-only to avoid path false-positives
+    const shoppingDomains = ['amazon.', 'ebay.', 'etsy.', 'aliexpress.', 'walmart.', 'shopify.', 'shop.'];
+    if (shoppingDomains.some(d => hostname.includes(d))) {
         return 'product';
     }
 
-    // Video sites
-    if (lowerUrl.includes('youtube.') || lowerUrl.includes('vimeo.') ||
-        lowerUrl.includes('video') || lowerUrl.includes('watch')) {
+    // Video sites — hostname-only
+    const videoDomains = ['youtube.', 'youtu.be', 'vimeo.', 'twitch.', 'dailymotion.', 'tiktok.'];
+    if (videoDomains.some(d => hostname.includes(d))) {
         return 'video';
     }
 
-    // Developer/Code sites
-    if (lowerUrl.includes('stackoverflow.') || lowerUrl.includes('github.') ||
-        lowerUrl.includes('gitlab.') || lowerUrl.includes('docs.') ||
-        lowerUrl.includes('developer.') || lowerUrl.includes('api.')) {
+    // Developer / code sites — hostname-only
+    const codeDomains = [
+        'stackoverflow.com', 'github.com', 'gitlab.com', 'npmjs.com',
+        'pypi.org', 'crates.io', 'pkg.go.dev', 'developer.mozilla.org',
+        'developer.apple.com', 'developer.android.com', 'docs.microsoft.com',
+        'learn.microsoft.com', 'devdocs.io', 'jsfiddle.net', 'codepen.io',
+    ];
+    if (codeDomains.some(d => hostname.includes(d))) {
+        return 'code';
+    }
+    // Also catch *.docs.* and docs.* subdomains
+    if (hostname.startsWith('docs.') || hostname.startsWith('api.') || hostname.startsWith('developer.')) {
         return 'code';
     }
 
-    // Academic sites
-    if (lowerUrl.includes('scholar.') || lowerUrl.includes('arxiv.') ||
-        lowerUrl.includes('journal') || lowerUrl.includes('research') ||
-        lowerUrl.includes('academic') || lowerUrl.includes('.edu')) {
+    // Academic sites — hostname only + .edu TLD
+    const academicDomains = ['arxiv.org', 'scholar.google.', 'pubmed.ncbi.', 'semanticscholar.org',
+        'researchgate.net', 'jstor.org', 'springer.com', 'nature.com', 'sciencedirect.com'];
+    if (academicDomains.some(d => hostname.includes(d)) || hostname.endsWith('.edu')) {
         return 'academic';
     }
 

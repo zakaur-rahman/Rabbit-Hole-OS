@@ -1,4 +1,8 @@
-# Loopback Redirect Setup Guide
+# [DEPRECATED] Loopback Redirect Setup Guide
+
+> [!CAUTION]
+> This document describes a legacy loopback server architecture that is no longer used. Cognode has migrated to a Secure Deep Link PKCE flow. 
+> Refer to [Authentication System (Current)](./authentication-system.md) instead.
 
 ## Overview
 
