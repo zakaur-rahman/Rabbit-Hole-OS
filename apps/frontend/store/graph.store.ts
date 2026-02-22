@@ -782,20 +782,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 }
 
                 await storage.nodes.update(id, updatePayload);
+            } else {
+                // Cloud API Sync
+                await nodesApi.update(id, {
+                    title: updatedNode.data.title,
+                    type: updatedNode.type,
+                    content: updatedNode.data.content,
+                    metadata: {
+                        ...updatedNode.data,
+                        position: updatedNode.position,
+                        style: updatedNode.style,
+                        parentId: updatedNode.parentId
+                    }
+                });
             }
-
-            // Cloud API Sync
-            await nodesApi.update(id, {
-                title: updatedNode.data.title,
-                type: updatedNode.type,
-                content: updatedNode.data.content,
-                metadata: {
-                    ...updatedNode.data,
-                    position: updatedNode.position,
-                    style: updatedNode.style,
-                    parentId: updatedNode.parentId
-                }
-            });
         }
     } catch(e) {
         console.error("Failed to persist node update", e);

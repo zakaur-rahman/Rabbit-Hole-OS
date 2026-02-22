@@ -96,7 +96,10 @@ function SignInContent() {
         const response = await fetch(exchangeUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: desktopCode }),
+          body: JSON.stringify({
+            code: desktopCode,
+            ...getDeviceInfo()
+          }),
         });
 
         if (!response.ok) {
