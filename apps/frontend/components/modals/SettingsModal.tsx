@@ -190,15 +190,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setIsLoadingUser(true);
       const data = await getCurrentUser();
       setUser(data);
-      // Cache user data in sessionStorage
+      // Cache user data in localStorage
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('cached_user', JSON.stringify(data));
+        localStorage.setItem('cached_user', JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to load user:', err);
       // Clear cache on error
       if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('cached_user');
+        localStorage.removeItem('cached_user');
         setUser(null);
       }
     } finally {

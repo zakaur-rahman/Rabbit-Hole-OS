@@ -41,7 +41,7 @@ function GoogleCallbackContent() {
                     state,
                     redirect_uri: REDIRECT_URI,
                     // We can attach basic device info here if needed
-                    device_info: navigator.userAgent
+                    user_agent: navigator.userAgent
                 };
 
                 // If desktop flow, attach required triggers

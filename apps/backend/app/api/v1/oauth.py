@@ -9,9 +9,11 @@ from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.core.jwt import verify_token, create_access_token, hash_refresh_token
+from app.core.jwt import verify_token, create_access_token, hash_refresh_token, create_refresh_token
+from app.core.config import settings
 from app.core.redis_client import get_redis, RedisKeys
 from app.services.oauth_service import exchange_google_code
+from app.services.geo_service import get_location_from_ip
 from app.models.user import User
 from app.models.session import Session
 from sqlalchemy import select, text, update, func
@@ -67,6 +69,11 @@ class AccessTokenResponse(BaseModel):
 class DesktopExchangeRequest(BaseModel):
     """Request schema for exchanging a one-time desktop auth code for tokens"""
     code: str
+    device_id: Optional[str] = None
+    device_name: Optional[str] = None
+    platform: Optional[str] = None
+    app_version: Optional[str] = None
+    user_agent: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -529,6 +536,7 @@ async def revoke_all_sessions(
 @router.post("/oauth/desktop/exchange")
 async def desktop_exchange(
     request: DesktopExchangeRequest,
+    req: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -565,9 +573,59 @@ async def desktop_exchange(
                 detail="User not found",
             )
 
+        # Resolve location from IP
+        forwarded = req.headers.get("X-Forwarded-For")
+        if forwarded:
+            ip_address = forwarded.split(",")[0].strip()
+        else:
+            ip_address = req.client.host if req.client else None
+
+        location = await get_location_from_ip(ip_address) if ip_address else {}
+
+        # Create new refresh token
+        refresh_token = create_refresh_token({"sub": str(user.id), "session_id": None})
+        refresh_token_hash = hash_refresh_token(refresh_token)
+
+        # Create session
+        session = Session(
+            user_id=user.id,
+            refresh_token_hash=refresh_token_hash,
+            device_id=request.device_id,
+            device_name=request.device_name,
+            platform=request.platform,
+            app_version=request.app_version,
+            user_agent=request.user_agent or req.headers.get("User-Agent"),
+            ip_address=ip_address,
+            country=location.get("country"),
+            region=location.get("region"),
+            city=location.get("city"),
+            timezone=location.get("timezone"),
+            created_at=datetime.utcnow(),
+            expires_at=datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS),
+        )
+        db.add(session)
+        await db.commit()
+        await db.refresh(session)
+
+        # Update refresh token with new session ID
+        refresh_token = create_refresh_token({
+            "sub": str(user.id),
+            "session_id": str(session.id),
+        })
+        refresh_token_hash = hash_refresh_token(refresh_token)
+        session.refresh_token_hash = refresh_token_hash
+        await db.commit()
+
+        # Create new access token
+        access_token_jwt = create_access_token({
+            "sub": str(user.id),
+            "email": user.email,
+            "session_id": str(session.id),
+        })
+
         return {
-            "access_token": data["access_token"],
-            "refresh_token": data["refresh_token"],
+            "access_token": access_token_jwt,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
             "user": {
                 "id": str(user.id),
