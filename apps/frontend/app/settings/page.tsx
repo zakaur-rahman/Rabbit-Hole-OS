@@ -32,8 +32,10 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <SettingsIcon size={24} className="text-green-400" />
-            <h1 className="text-2xl font-bold text-white">Settings</h1>
+            <div className="p-2 bg-green-500/10 rounded-xl">
+              <SettingsIcon size={20} className="text-green-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Settings</h1>
           </div>
           <p className="text-neutral-400 text-sm">
             Manage your account settings and preferences.
@@ -48,10 +50,10 @@ export default function SettingsPage() {
               <button
                 key={item.title}
                 onClick={item.onClick}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-6 hover:border-neutral-700 transition-colors text-left flex items-center justify-between group"
+                className="w-full bg-neutral-900/60 backdrop-blur-xl border border-neutral-800/60 rounded-2xl p-6 hover:border-neutral-700/80 hover:bg-neutral-800/40 transition-all text-left flex items-center justify-between group"
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-lg bg-neutral-800 flex items-center justify-center ${item.color}`}>
+                  <div className={`w-12 h-12 rounded-xl bg-neutral-800/80 flex items-center justify-center ${item.color}`}>
                     <Icon size={20} />
                   </div>
                   <div>
@@ -59,7 +61,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-neutral-400">{item.description}</p>
                   </div>
                 </div>
-                <ArrowRight size={20} className="text-neutral-500 group-hover:text-neutral-400 transition-colors" />
+                <ArrowRight size={20} className="text-neutral-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
               </button>
             );
           })}

@@ -18,13 +18,13 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
 
     // Mock local state just for demo UI interactions
     const [uiStateCanceled, setUiStateCanceled] = useState(isCanceled);
+    const [pauseSuccess, setPauseSuccess] = useState(false);
 
     const isFree = currentPlan === 'free';
 
     // Handle Cancel Action
     const handleCancel = async () => {
         setIsLoading(true);
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
         setIsLoading(false);
         setUiStateCanceled(true);
@@ -34,11 +34,11 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
     // Handle Pause Action
     const handlePause = async () => {
         setIsLoading(true);
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
         setIsLoading(false);
         setIsCancelModalOpen(false);
-        alert('Plan paused for 1 month.');
+        setPauseSuccess(true);
+        setTimeout(() => setPauseSuccess(false), 5000);
     };
 
     // Handle Resubscribe Action
@@ -62,6 +62,13 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
             transition={{ delay: 0.2 }}
             className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 mt-8"
         >
+            {pauseSuccess && (
+                <div className="mb-6 flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-xl text-primary text-sm">
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    <p>Your plan has been paused for 1 month. You won&apos;t be charged during this period.</p>
+                </div>
+            )}
+
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
                     <h3 className="text-xl font-bold text-foreground mb-1">

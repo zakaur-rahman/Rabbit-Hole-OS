@@ -1,10 +1,27 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Database, Sparkles, FolderSync } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export default function DashboardOverview() {
+    const [userName, setUserName] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadUser() {
+            try {
+                const res = await apiFetch('/oauth/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    setUserName(data.name?.split(' ')[0] || null);
+                }
+            } catch { }
+        }
+        loadUser();
+    }, []);
+
     const cards = [
         {
             title: 'Active Projects',
@@ -35,7 +52,9 @@ export default function DashboardOverview() {
     return (
         <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Welcome Back!</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
+                    {userName ? `Welcome Back, ${userName}!` : 'Welcome Back!'}
+                </h1>
                 <p className="text-muted-foreground">Select an option below to manage your account or view your recent activity.</p>
             </div>
 

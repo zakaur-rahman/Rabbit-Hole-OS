@@ -11,22 +11,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        const checkAuth = () => {
-            const token = getToken();
-            if (!token) {
-                // No token found -> force login
-                router.replace('/login');
-            } else {
-                // Token exists -> grant access
-                setIsAuthenticated(true);
-                setIsChecking(false);
-            }
-        };
-
-        // A small delay to prevent immediate jarring flashes ensures smooth navigation
-        const timeoutId = setTimeout(checkAuth, 100);
-
-        return () => clearTimeout(timeoutId);
+        const token = getToken();
+        if (!token) {
+            router.replace('/login');
+        } else {
+            setIsAuthenticated(true);
+            setIsChecking(false);
+        }
     }, [router]);
 
     if (isChecking || !isAuthenticated) {

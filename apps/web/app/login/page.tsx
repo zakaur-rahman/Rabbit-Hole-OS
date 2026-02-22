@@ -128,7 +128,7 @@ function LoginContent() {
                 </button>
 
                 <div className="mt-8 text-xs text-muted-foreground text-center">
-                    By signing in, you agree to our <a href="#" className="hover:text-primary transition-colors underline underline-offset-2">Terms</a> and <a href="#" className="hover:text-primary transition-colors underline underline-offset-2">Privacy Policy</a>
+                    By signing in, you agree to our <a href="/terms" className="hover:text-primary transition-colors underline underline-offset-2">Terms</a> and <a href="/privacy" className="hover:text-primary transition-colors underline underline-offset-2">Privacy Policy</a>
                 </div>
             </div>
         </motion.div>

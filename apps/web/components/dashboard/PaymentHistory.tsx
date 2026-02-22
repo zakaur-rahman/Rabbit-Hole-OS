@@ -37,6 +37,14 @@ export function PaymentHistory() {
         setIsRefreshing(false);
     };
 
+    const formatDate = (dateStr: string) => {
+        return new Intl.DateTimeFormat('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        }).format(new Date(dateStr));
+    };
+
     const StatusBadge = ({ status }: { status: Transaction['status'] }) => {
         const styles = {
             paid: 'bg-primary/10 text-primary border-primary/20',
@@ -115,7 +123,7 @@ export function PaymentHistory() {
                                 <tr key={tx.id} className="hover:bg-white/2 transition-colors group">
                                     <td className="p-4 text-foreground flex items-center gap-2">
                                         <Calendar className="w-4 h-4 text-muted-foreground opacity-50" />
-                                        {tx.date}
+                                        {formatDate(tx.date)}
                                     </td>
                                     <td className="p-4 font-medium text-foreground">${tx.amount.toFixed(2)}</td>
                                     <td className="p-4 text-muted-foreground">{tx.plan}</td>

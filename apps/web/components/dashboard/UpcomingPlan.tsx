@@ -14,7 +14,8 @@ export function UpcomingPlan({ currentPlan }: UpcomingPlanProps) {
     const amountDue = isFree ? '$0.00' : currentPlan === 'pro' ? '$12.00' : '$49.00';
     const renewalDate = 'March 15, 2026';
     const cardInfo = 'Visa ending in 4242';
-    const expiringSoon = true; // Hardcoded mock for expiring soon indicator
+    const cardExpiryDate = new Date('2026-05-01'); // Mock expiry date
+    const expiringSoon = (cardExpiryDate.getTime() - Date.now()) < 60 * 24 * 60 * 60 * 1000; // Within 60 days
 
     if (isFree) return null; // No upcoming automated bill for free tier
 

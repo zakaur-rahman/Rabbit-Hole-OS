@@ -13,22 +13,32 @@ export default function BillingPage() {
     const [plan, setPlan] = useState<PlanType | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        async function loadUser() {
-            try {
-                const res = await apiFetch('/oauth/me');
-                if (!res.ok) throw new Error('Failed to load user profile');
-                const data = await res.json();
-                setPlan((data.plan as PlanType) || 'free');
-            } catch (err: any) {
-                setError(err.message);
-            }
+    const loadUser = async () => {
+        setError(null);
+        setPlan(null);
+        try {
+            const res = await apiFetch('/oauth/me');
+            if (!res.ok) throw new Error('Failed to load user profile');
+            const data = await res.json();
+            setPlan((data.plan as PlanType) || 'free');
+        } catch (err: any) {
+            setError(err.message);
         }
+    };
+
+    useEffect(() => {
         loadUser();
     }, []);
 
     if (error) {
-        return <div className="p-4 text-destructive bg-destructive/10 rounded-xl">{error}</div>;
+        return (
+            <div className="p-6 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl flex flex-col items-center gap-4 max-w-md mx-auto mt-16">
+                <p className="text-sm text-center">{error}</p>
+                <button onClick={loadUser} className="px-4 py-2 text-sm font-medium bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 rounded-lg transition-colors">
+                    Try Again
+                </button>
+            </div>
+        );
     }
 
     if (!plan) {
@@ -64,7 +74,10 @@ export default function BillingPage() {
                     <p className="font-medium text-foreground">Email Notifications</p>
                     <p className="text-sm text-muted-foreground">Receive receipts and billing updates directly to your inbox.</p>
                 </div>
-                <button className="text-sm font-medium border border-border bg-secondary hover:bg-white/5 transition-colors px-4 py-2 rounded-lg">
+                <button
+                    onClick={() => window.open('/dashboard/billing#preferences', '_self')}
+                    className="text-sm font-medium border border-border bg-secondary hover:bg-white/5 transition-colors px-4 py-2 rounded-lg"
+                >
                     Manage Preferences
                 </button>
             </div>

@@ -20,7 +20,7 @@ const navItems = [
     { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
     const pathname = usePathname();
 
     const handleLogout = () => {
@@ -38,12 +38,15 @@ export function Sidebar() {
             {/* Navigation Links */}
             <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = item.href === '/dashboard'
+                        ? pathname === '/dashboard'
+                        : pathname.startsWith(item.href);
 
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={onNavigate}
                             className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative
                 ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'}
