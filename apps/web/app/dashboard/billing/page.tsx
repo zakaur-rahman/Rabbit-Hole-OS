@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { PlanCard } from '@/components/dashboard/PlanCard';
+import { UpcomingPlan } from '@/components/dashboard/UpcomingPlan';
+import { SubscriptionManagement } from '@/components/dashboard/SubscriptionManagement';
+import { PaymentHistory } from '@/components/dashboard/PaymentHistory';
 import { PlanType } from '@/lib/constants';
 import { Loader2 } from 'lucide-react';
 
@@ -16,8 +19,6 @@ export default function BillingPage() {
                 const res = await apiFetch('/oauth/me');
                 if (!res.ok) throw new Error('Failed to load user profile');
                 const data = await res.json();
-
-                // Use realistic DB plan or default to free
                 setPlan((data.plan as PlanType) || 'free');
             } catch (err: any) {
                 setError(err.message);
@@ -39,13 +40,35 @@ export default function BillingPage() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Billing & Plans</h1>
                 <p className="text-muted-foreground">Manage your subscription, view current limits, and upgrade your account.</p>
             </div>
 
-            <PlanCard currentPlan={plan} />
+            {/* Top Level: Upcoming Bill & Current Plan details */}
+            <div className="space-y-8">
+                <UpcomingPlan currentPlan={plan} />
+                <PlanCard currentPlan={plan} />
+            </div>
+
+            {/* Mid Level: Invoice History */}
+            <PaymentHistory />
+
+            {/* Bottom Level: Destructive / Lifecycle Actions */}
+            <SubscriptionManagement currentPlan={plan} />
+
+            {/* Added Email Preferences inside page container directly for simplicity */}
+            <div className="bg-card/20 border border-border/30 rounded-3xl p-6 flex justify-between items-center mt-6">
+                <div>
+                    <p className="font-medium text-foreground">Email Notifications</p>
+                    <p className="text-sm text-muted-foreground">Receive receipts and billing updates directly to your inbox.</p>
+                </div>
+                <button className="text-sm font-medium border border-border bg-secondary hover:bg-white/5 transition-colors px-4 py-2 rounded-lg">
+                    Manage Preferences
+                </button>
+            </div>
         </div>
     );
 }
+
