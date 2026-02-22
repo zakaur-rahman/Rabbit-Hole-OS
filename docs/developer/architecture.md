@@ -68,7 +68,7 @@ Two extracted canvas components:
 
 ### API Client
 
-`lib/api.ts` provides typed wrappers for all backend endpoints. Auth token is read from `sessionStorage.getItem('auth_token')`.
+`lib/api.ts` provides typed wrappers for all backend endpoints. Auth token is read from `localStorage.getItem('auth_token')`.
 
 ---
 
@@ -158,8 +158,9 @@ See [`NODES.md`](../../apps/backend/NODES.md) for how each node type influences 
 
 ## Security
 
-- **Auth**: Clerk JWT + Google OAuth (PKCE). Auth token verified server-side on every request.
+- **Auth**: Modern JWT + Google OAuth (PKCE) with independent session management. Auth token verified server-side on every request.
 - **Data isolation**: All queries are filtered by `user_id` + `whiteboard_id`.
+- **LocalStorage Persistence**: Authentication tokens and user profiles are stored in `localStorage` to ensure persistence across sessions and tabs.
 - **LaTeX sandbox**: Compilation via `tectonic.exe` (bundled binary) — no network, restricted filesystem.
 - **CORS**: Only whitelisted origins (`localhost:3000` in dev, configured domain in prod).
 

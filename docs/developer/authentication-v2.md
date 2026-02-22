@@ -1,4 +1,7 @@
-# Authentication Architecture (v2)
+# [DEPRECATED] Authentication Architecture (v2)
+
+> [!CAUTION]
+> This document has been superseded by [Authentication System (Current)](./authentication-system.md).
 
 This document outlines the modern authentication flow for the Cognode ecosystem, encompassing the Next.js Web Application, FastAPI Backend, and Electron Desktop Application.
 

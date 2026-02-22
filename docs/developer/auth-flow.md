@@ -1,4 +1,7 @@
-# Authentication Flow Diagram
+# [DEPRECATED] Authentication Flow Diagram
+
+> [!CAUTION]
+> This document is outdated. Please refer to [Authentication System (Current)](./authentication-system.md) for the modern PKCE deep-link architecture.
 
 ## Desktop App Flow (Electron)
 
