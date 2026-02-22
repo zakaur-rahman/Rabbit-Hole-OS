@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export function Logo() {
+export function Logo({ className }: { className?: string }) {
     return (
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className={`flex items-center gap-2 group ${className || ''}`}>
             <div className="relative h-8 w-8 overflow-hidden rounded-lg">
                 <Image
                     src="/logo.jpg"

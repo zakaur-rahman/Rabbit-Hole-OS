@@ -3,7 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import url from 'url';
 import { spawn, ChildProcess } from 'child_process';
-import { openAuthBrowserAndWait, stopOAuthServer } from './auth';
 import { SQLiteDatabase } from './database/sqlite';
 import { initializeSchema } from './database/schema';
 import { LocalStorageService } from './services/local-storage';
@@ -13,14 +12,35 @@ import { SyncService } from './services/sync-service';
 // Prevent multiple instances (Windows/Linux)
 const gotTheLock = app.requestSingleInstanceLock();
 
+// ── Deep Link Protocol Registration ─────────────────────────────────────────
+const PROTOCOL = 'cognode';
+
+if (process.defaultApp) {
+  // Dev mode: register with the path to the Electron executable + the script
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
+    console.log('[Protocol] Registered Dev Protocol:', PROTOCOL, process.execPath, path.resolve(process.argv[1]));
+  }
+} else {
+  // Production mode: register the packaged app as the protocol handler
+  app.setAsDefaultProtocolClient(PROTOCOL);
+  console.log('[Protocol] Registered Prod Protocol:', PROTOCOL);
+}
+
+const isProtocolRegistered = app.isDefaultProtocolClient(PROTOCOL);
+console.log('[Protocol] Is currently registered in OS?', isProtocolRegistered);
+
 if (!gotTheLock) {
+  console.log('[Lifecycle] Second instance launched with args:', process.argv);
   app.quit();
+} else {
+  console.log('[Lifecycle] First instance started with args:', process.argv);
 }
 
 // Robust production detection: check if app is inside an asar archive
 const appPath = app.getAppPath();
 const isPackagedApp = appPath.includes('app.asar') || fs.existsSync(path.join(process.resourcesPath, 'app.asar'));
-const isDev = !isPackagedApp;
+const isDev = !isPackagedApp || process.defaultApp;
 
 console.log('App Path:', appPath);
 console.log('Is Packaged App:', isPackagedApp, 'Is Dev:', isDev);
@@ -227,8 +247,6 @@ app.on('window-all-closed', () => {
   if (backendProcess) {
     backendProcess.kill();
   }
-  // Stop OAuth callback server
-  stopOAuthServer();
   if (process.platform !== 'darwin') {
     console.log('[Lifecycle] Quitting app (not darwin)');
     app.quit();
@@ -308,11 +326,40 @@ app.on('ready', () => {
     createWindow();
 });
 
-// Handle second instance (focus window)
-app.on('second-instance', () => {
+// Handle second instance (focus window + deep link on Windows/Linux)
+app.on('second-instance', (event, commandLine) => {
+  // On Windows/Linux, the deep link URL is passed as a command line argument
+  const deepLink = commandLine.find(arg => arg.startsWith(`${PROTOCOL}://`));
+  if (deepLink) {
+    try {
+      const parsed = new URL(deepLink);
+      const code = parsed.searchParams.get('code');
+      if (code && mainWindow && !mainWindow.isDestroyed()) {
+        console.log('[Auth] Deep link received (second-instance):', deepLink);
+        mainWindow.webContents.send('auth:deep-link-received', { code });
+      }
+    } catch (e) {
+      console.error('[Auth] Failed to parse deep link:', e);
+    }
+  }
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
+  }
+});
+
+// Handle deep link on macOS
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  try {
+    const parsed = new URL(url);
+    const code = parsed.searchParams.get('code');
+    if (code && mainWindow && !mainWindow.isDestroyed()) {
+      console.log('[Auth] Deep link received (open-url):', url);
+      mainWindow.webContents.send('auth:deep-link-received', { code });
+    }
+  } catch (e) {
+    console.error('[Auth] Failed to parse deep link URL:', e);
   }
 });
 
@@ -325,28 +372,10 @@ app.on('activate', () => {
 // IPC Handlers
 ipcMain.handle('app:version', () => app.getVersion());
 
-// Auth IPC Handlers - Using loopback redirect (Google recommended for desktop apps)
-ipcMain.handle('auth:start-login', async (event, authUrl: string, port: number = 53682) => {
-  try {
-    // Open browser and wait for callback on loopback server
-    // Returns callback directly (code, state) or error
-    const callback = await openAuthBrowserAndWait(authUrl, port, mainWindow);
-    return {
-      code: callback.code,
-      state: callback.state,
-    };
-  } catch (error) {
-    console.error('Auth login error:', error);
-    // Return error in callback format instead of throwing
-    return {
-      error: error instanceof Error ? error.message : 'Authentication failed',
-    };
-  }
-});
-
-ipcMain.handle('auth:handle-callback', (event, data: { code: string; state: string; codeVerifier: string }) => {
-  // This IPC handler is for the renderer to send the code to backend
-  return data;
+// Auth IPC Handler — opens system browser to the web login page
+ipcMain.handle('auth:open-login', async (event, loginUrl: string) => {
+  console.log('[Auth] Opening login URL in system browser:', loginUrl);
+  shell.openExternal(loginUrl);
 });
 
 // Example: Persist node creation from Renderer

@@ -89,7 +89,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // User state - initialize from cache if available
   const [user, setUser] = useState<UserType | null>(() => {
     if (typeof window !== 'undefined') {
-      const cachedUser = sessionStorage.getItem('cached_user');
+      const cachedUser = localStorage.getItem('cached_user');
       if (cachedUser) {
         try {
           return JSON.parse(cachedUser);
@@ -103,7 +103,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window !== 'undefined') {
-      return !!sessionStorage.getItem('auth_token');
+      return !!localStorage.getItem('auth_token');
     }
     return false;
   });
@@ -132,7 +132,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   useEffect(() => {
     if (isOpen) {
       if (typeof window !== 'undefined') {
-        const token = sessionStorage.getItem('auth_token');
+        const token = localStorage.getItem('auth_token');
         const authenticated = !!token;
         setIsAuthenticated(authenticated);
 
@@ -144,7 +144,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         } else {
           // If not authenticated, clear cached user and set loading to false
           setUser(null);
-          sessionStorage.removeItem('cached_user');
+          localStorage.removeItem('cached_user');
           setIsLoadingUser(false);
         }
       }
@@ -155,7 +155,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   useEffect(() => {
     const handleAuthChange = () => {
       if (typeof window !== 'undefined') {
-        const token = sessionStorage.getItem('auth_token');
+        const token = localStorage.getItem('auth_token');
         const authenticated = !!token;
         setIsAuthenticated(authenticated);
 
@@ -165,7 +165,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         } else {
           // Clear user data on logout
           setUser(null);
-          sessionStorage.removeItem('cached_user');
+          localStorage.removeItem('cached_user');
           setIsLoadingUser(false);
         }
       }
@@ -376,7 +376,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {/* Main Content */}
           <div className="flex flex-1 overflow-hidden">
             {/* Left Sidebar */}
-            <div className="w-80 bg-neutral-950 border-r border-neutral-800 overflow-y-auto flex-shrink-0 flex flex-col">
+            <div className="w-80 bg-neutral-950 border-r border-neutral-800 overflow-y-auto shrink-0 flex flex-col">
               {/* User Info or Sign In Prompt */}
               <div className="p-4 border-b border-neutral-800">
                 {isLoadingUser && isAuthenticated ? (
@@ -397,7 +397,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           className="w-10 h-10 rounded-full"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-semibold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-semibold text-sm">
                           {getUserInitials()}
                         </div>
                       )}
@@ -453,7 +453,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           >
                             <Icon
                               size={18}
-                              className={`flex-shrink-0 ${isSelected ? 'text-green-400' : 'text-neutral-400 group-hover:text-neutral-300'
+                              className={`shrink-0 ${isSelected ? 'text-green-400' : 'text-neutral-400 group-hover:text-neutral-300'
                                 }`}
                             />
                             <span className="text-sm font-medium flex-1">{item.title}</span>
@@ -583,7 +583,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 className="w-24 h-24 rounded-full"
                               />
                             ) : (
-                              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-semibold text-2xl">
+                              <div className="w-24 h-24 rounded-full bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-semibold text-2xl">
                                 {getUserInitials()}
                               </div>
                             )}

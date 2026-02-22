@@ -54,7 +54,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         const browserState = useGraphStore.getState().browserStates[activeWhiteboardId] || { isAutoSyncEnabled: false };
 
         // Auth gate — if user isn't logged in, force auto-sync off and bail
-        const hasAuth = typeof window !== 'undefined' && !!sessionStorage.getItem('auth_token');
+        const hasAuth = typeof window !== 'undefined' && !!localStorage.getItem('auth_token');
         if (!hasAuth) {
             if (browserState.isAutoSyncEnabled) {
                 useGraphStore.getState().updateBrowserState(activeWhiteboardId, { isAutoSyncEnabled: false });
@@ -129,7 +129,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         useGraphStore.getState().selectNode(nodeId);
 
         // Check auth before processing AI metadata
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
             console.log('[Browser] AI processing skipped - User not signed in');
             return;
         }
@@ -509,7 +509,7 @@ export default function BrowserView() {
         if (!input) return;
 
         // Auth Gate for search/navigation
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
             setAuthModal(true, "Browsing and AI features require an account to save your progress and access real-time analysis.");
             return;
         }
@@ -524,7 +524,7 @@ export default function BrowserView() {
 
     const handleToggleAutoSync = () => {
         // Auth Gate
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
             setAuthModal(true, "Auto-sync requires an account to save your browsing path and sync it across devices.");
             return;
         }
@@ -539,7 +539,7 @@ export default function BrowserView() {
         if (!tab || !tab.url) return;
 
         // Auth Gate
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
             setAuthModal(true, "Syncing and processing web content requires an active account.");
             return;
         }

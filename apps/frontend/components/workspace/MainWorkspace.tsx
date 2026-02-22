@@ -39,7 +39,7 @@ export default function MainWorkspace() {
     const { fetchNodes, fetchWhiteboards, clearGraph, activeWhiteboardId, initialize } = useGraphStore();
     useEffect(() => {
         const handleAuthChange = () => {
-            if (typeof window !== 'undefined' && sessionStorage.getItem('auth_token')) {
+            if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
                 console.log('[MainWorkspace] Auth changed (Login), refreshing data...');
                 fetchWhiteboards();
                 fetchNodes();
@@ -60,7 +60,7 @@ export default function MainWorkspace() {
 
         // Initial setup
         initialize();
-        if (typeof window !== 'undefined' && sessionStorage.getItem('auth_token')) {
+        if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
             fetchWhiteboards();
             fetchNodes();
         }
