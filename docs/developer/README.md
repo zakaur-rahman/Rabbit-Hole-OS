@@ -20,19 +20,20 @@ Technical specifications, setup guides, and internal architecture documentation 
 
 ## 🔑 Authentication & Security
 
-- **[Auth Setup Guide](./auth-setup.md)**: Comprehensive guide for setting up Clerk and Google OAuth.
-- **[Google OAuth Specifics](./google-oauth-setup.md)**: Step-by-step GCloud configuration.
-- **[Auth Flow Diagrams](./auth-flow.md)**: Visualizing PKCE and redirect handlers.
+- **[Authentication System (Current)](./authentication-system.md)**: Comprehensive guide for Design, Setup, and Troubleshooting.
 - **[Threat Model](./threat-model.md)**: Security analysis and mitigations.
+
+> [!NOTE]
+> Files like `auth-setup.md`, `auth-flow.md`, and `authentication-v2.md` are preserved for historical reference but have been superseded by the **Authentication System (Current)** guide.
 
 ---
 
 ## 🛠️ Environment & Setup
 
+- **[Setup Guide](./authentication-system.md#7-setup-guide)**: Core environment configuration.
 - **[Troubleshooting](./troubleshooting.md)**: Common environment issues and fixes.
 - **[Production Deployment](./deployment-guide.md)**: Official guide for cloud and desktop releases.
 - **[Desktop Deployment](./desktop-setup.md)**: Building and configuring the Electron app.
-- **[Loopback Handling](./loopback-setup.md)**: Details on local auth redirection for desktop.
 
 ---
 

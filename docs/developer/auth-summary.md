@@ -1,4 +1,7 @@
-# Authentication System Implementation Summary
+# [DEPRECATED] Authentication System Implementation Summary
+
+> [!CAUTION]
+> This is a historical progress summary. For current architecture and setup, see [Authentication System (Current)](./authentication-system.md).
 
 ## ✅ Completed Components
 

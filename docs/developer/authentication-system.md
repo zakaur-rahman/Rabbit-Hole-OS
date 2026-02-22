@@ -77,8 +77,85 @@ Because each device (Web browser, Desktop Mac, Desktop Windows) negotiates token
 
 ---
 
-## 5. Security Mitigations
-*   **No Client Secrets on Desktop**: Prevents secret extraction from the Electron binary.
-*   **No Loopback Servers**: Avoids firewall blocks and port conflicts.
-*   **Single-Use Payload Code**: The `desktop_auth_code` stored in Redis is immediately deleted upon its first read, preventing replay attacks if the `cognode://` protocol is intercepted.
-*   **PKCE**: Mitigates Authorization Code Interception Attacks by cryptographically tying the initial web consent request to the final backend code exchange.
+## 6. Authentication Diagrams
+
+### Desktop Deep-Link Flow
+```mermaid
+sequenceDiagram
+    participant D as Desktop App (Electron)
+    participant B as Browser (Web App)
+    participant G as Google OAuth
+    participant S as API Backend
+
+    D->>B: Open /login?source=desktop
+    B->>B: Generate PKCE & State
+    B->>G: Redirect to Google (+challenge)
+    G->>B: Redirect to /auth/callback (+code)
+    B->>S: POST /oauth/google/exchange (+code, verifier, device_id)
+    S->>G: Exchange Google Code
+    S->>S: Generate desktop_auth_code (Redis)
+    S->>B: Return web tokens + desktop_auth_code
+    B->>D: Trigger cognode://auth/callback?code=...
+    D->>S: POST /oauth/desktop/exchange (+code, device_info)
+    S->>S: Pop code from Redis
+    S->>S: Create Independent Session
+    S->>D: Return fresh desktop tokens
+```
+
+---
+
+## 7. Setup Guide
+
+### Google Cloud Console Configuration
+1.  **Create Project**: Create a new project in [Google Cloud Console](https://console.cloud.google.com/).
+2.  **OAuth Consent Screen**:
+    - User Type: **External**
+    - Scopes: `openid`, `profile`, `email`.
+    - Add your email to **Test Users**.
+3.  **Credentials**: Create an **OAuth 2.0 Client ID**.
+    - **Application Type**: Web Application.
+    - **Authorized Redirect URIs**:
+        - `http://localhost:3001/auth/google/callback` (for local development)
+        - `https://your-app.com/auth/google/callback` (for production)
+4.  **Secrets**: Copy the **Client ID** and **Client Secret**.
+
+### Environment Variables
+
+#### Backend (`apps/backend/.env`)
+```bash
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+OAUTH_REDIRECT_URI_WEB=http://localhost:3001/auth/google/callback
+OAUTH_REDIRECT_URI_DESKTOP=cognode://auth/callback
+JWT_SECRET_KEY=... # Generate with: openssl rand -hex 32
+REDIS_URL=redis://localhost:6379/0
+```
+
+#### Web App (`apps/web/.env.local`)
+```bash
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_OAUTH_REDIRECT_URI=http://localhost:3001/auth/google/callback
+```
+
+#### Desktop App (`apps/frontend/.env`)
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_DESKTOP_PROTOCOL=cognode
+```
+
+---
+
+## 8. Troubleshooting
+
+### "Error 400: invalid_request" in Browser
+- **Cause**: Redirect URI mismatch or trying to use `cognode://` directly in a browser.
+- **Fix**: Ensure `http://localhost:3001/auth/google/callback` is exactly matched in both your `.env` and Google Cloud Console. Google rejects custom protocols (`cognode://`) for web client types.
+
+### Desktop App 401 Unauthorized after Web Logout
+- **Status**: Fixed.
+- **Details**: Sessions are now independent. Revoking a Web session no longer invalidates the Desktop session unless "Revoke All Sessions" is explicitly selected.
+
+### Hydration Mismatch on `<html>` tag
+- **Cause**: Browser extensions modifying attributes (e.g., Grammarly).
+- **Fix**: The Root Layout uses `suppressHydrationWarning` on the `<html>` tag.
