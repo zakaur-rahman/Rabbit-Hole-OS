@@ -85,7 +85,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Search RabbitHole..."
+                        placeholder="Search Cognode..."
                         value={query}
                         onChange={(e) => handleSearch(e.target.value)}
                         className="flex-1 bg-transparent text-lg text-white placeholder-neutral-500 outline-none"
@@ -108,8 +108,8 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                             onClick={() => handleSelectResult(node)}
                             onMouseEnter={() => setActiveIndex(index)}
                             className={`w-full p-4 flex items-start gap-3 transition-colors text-left border-l-2 ${index === activeIndex
-                                    ? 'bg-neutral-800 border-green-500'
-                                    : 'hover:bg-neutral-800 border-transparent'
+                                ? 'bg-neutral-800 border-green-500'
+                                : 'hover:bg-neutral-800 border-transparent'
                                 }`}
                         >
                             <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center shrink-0">

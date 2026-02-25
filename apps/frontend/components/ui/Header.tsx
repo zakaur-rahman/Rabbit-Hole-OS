@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Bell, Settings, User, Rabbit, LayoutTemplate } from 'lucide-react';
 import { CognodeLogo } from '../icons/cognode-logo';
-import UserMenu from './UserMenu';
 import SettingsModal from '../modals/SettingsModal';
 import LibraryModal from '../modals/LibraryModal';
 interface HeaderProps {
@@ -17,9 +16,12 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
     const [showSettingsModal, setShowSettingsModal] = React.useState(false);
     const [showLibraryModal, setShowLibraryModal] = React.useState(false);
     const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+    const [isMac, setIsMac] = React.useState(true);
     const router = useRouter();
 
     useEffect(() => {
+        // Detect OS for shortcuts
+        setIsMac(navigator.userAgent.toLowerCase().includes('mac'));
         // Check if user is authenticated by checking for token
         const checkAuth = () => {
             if (typeof window !== 'undefined') {
@@ -58,14 +60,8 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
         }
     };
 
-    const handleUserClick = () => {
-        if (isAuthenticated) {
-            // TODO: Show user menu/dropdown
-            console.log('User menu');
-        } else {
-            // Navigate to sign-in page
-            router.push('/sign-in');
-        }
+    const handleSignInClick = () => {
+        router.push('/sign-in');
     };
 
     return (
@@ -95,14 +91,15 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
                             className="w-full bg-neutral-900 border border-neutral-800 rounded-full pl-10 pr-4 py-2 text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-all"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-neutral-500 bg-neutral-800 rounded">⌘K</kbd>
+                            <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-neutral-500 bg-neutral-800 rounded">
+                                {isMac ? '⌘K' : 'Ctrl+K'}
+                            </kbd>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-2" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-                    <NavLink label="Explore" />
                     <NavLink
                         label="Library"
                         onClick={() => setShowLibraryModal(true)}
@@ -110,18 +107,24 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
 
                     <div className="w-px h-6 bg-neutral-800 mx-2" />
 
-                    <button className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors">
+                    <button
+                        onClick={() => alert("Notifications coming soon!")}
+                        className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors"
+                        aria-label="Notifications"
+                    >
                         <Bell size={18} />
                     </button>
                     <button
                         onClick={() => setShowSettingsModal(true)}
                         className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors"
+                        aria-label="Settings"
                     >
                         <Settings size={18} />
                     </button>
+
                     {!isAuthenticated && (
                         <button
-                            onClick={handleUserClick}
+                            onClick={handleSignInClick}
                             className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
                         >
                             <User size={16} />

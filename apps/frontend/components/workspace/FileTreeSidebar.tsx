@@ -123,8 +123,9 @@ export default function FileTreeSidebar({ onSelectNode }: FileTreeSidebarProps) 
             {/* Tree Content */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {nodes.length === 0 && (
-                    <div className="text-center py-8 text-xs text-neutral-500">
-                        No files in graph
+                    <div className="flex flex-col items-center justify-center py-12 text-neutral-500 gap-2">
+                        <Ghost size={24} className="opacity-20" />
+                        <span className="text-xs">No files in graph</span>
                     </div>
                 )}
 

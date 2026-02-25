@@ -378,6 +378,12 @@ ipcMain.handle('auth:open-login', async (event, loginUrl: string) => {
   shell.openExternal(loginUrl);
 });
 
+// Generic Shell IPC Handler — opens system browser for external links
+ipcMain.handle('shell:open-external', async (event, extUrl: string) => {
+  console.log('[Shell] Opening external URL:', extUrl);
+  shell.openExternal(extUrl);
+});
+
 // Example: Persist node creation from Renderer
 ipcMain.on('node:create', (event, data) => {
   console.log('Main Process: Creating Node', data);

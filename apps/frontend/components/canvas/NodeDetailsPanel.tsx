@@ -19,7 +19,7 @@ const typeIcons: Record<string, React.ReactNode> = {
     note: <StickyNote size={16} className="text-yellow-400" />,
 };
 
-export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, activeNodeId: initialActiveId, onActivate }: NodeDetailsPanelProps) {
+export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, onActivate }: NodeDetailsPanelProps) {
     const { nodes, setNodes, edges, setEdges, selectNode } = useGraphStore();
     const [relatedNodes, setRelatedNodes] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -175,14 +175,34 @@ export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, activ
             </div>
 
             {/* Footer Actions */}
-            <div className="p-3 border-t border-neutral-800 flex gap-2">
+            <div className="p-3 border-t border-neutral-800 grid grid-cols-3 gap-2">
+                {data.url ? (
+                    <button
+                        onClick={openExternal}
+                        className="col-span-2 py-1.5 px-3 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs font-medium text-white transition-colors flex items-center justify-center gap-2"
+                    >
+                        <ExternalLink size={14} />
+                        Open URL
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => alert('Editing content coming soon')}
+                        className="col-span-2 py-1.5 px-3 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs font-medium text-white transition-colors flex items-center justify-center gap-2"
+                    >
+                        Copy Info
+                    </button>
+                )}
                 <button
-                    onClick={handleDelete}
+                    onClick={() => {
+                        if (window.confirm('Delete this node from the graph?')) {
+                            handleDelete();
+                        }
+                    }}
                     disabled={loading}
-                    className="flex-1 py-1.5 px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2"
+                    className="py-1.5 px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
+                    title="Delete Node"
                 >
                     <Trash2 size={14} />
-                    Delete
                 </button>
             </div>
         </div>

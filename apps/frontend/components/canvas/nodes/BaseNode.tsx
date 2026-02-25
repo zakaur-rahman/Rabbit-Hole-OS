@@ -177,18 +177,14 @@ function BaseNode({
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'group-hover:opacity-100 opacity-0'}`}>
                     {/* Top */}
                     <Handle type="target" position={Position.Top} id="top-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -top-1! left-1/2! transition-transform hover:scale-150`} />
-                    <Handle type="source" position={Position.Top} id="top-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -top-1! left-1/2! transition-transform hover:scale-150`} />
 
                     {/* Bottom */}
-                    <Handle type="target" position={Position.Bottom} id="bottom-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
                     <Handle type="source" position={Position.Bottom} id="bottom-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
 
                     {/* Left */}
                     <Handle type="target" position={Position.Left} id="left-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -left-1! top-1/2! transition-transform hover:scale-150`} />
-                    <Handle type="source" position={Position.Left} id="left-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -left-1! top-1/2! transition-transform hover:scale-150`} />
 
                     {/* Right */}
-                    <Handle type="target" position={Position.Right} id="right-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -right-1! top-1/2! transition-transform hover:scale-150`} />
                     <Handle type="source" position={Position.Right} id="right-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -right-1! top-1/2! transition-transform hover:scale-150`} />
                 </div>
             </div>

@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('electron', {
       return () => ipcRenderer.removeListener('auth:deep-link-received', subscription);
     },
   },
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url)
+  },
   storage: {
     // Nodes
     nodes: {

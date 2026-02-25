@@ -98,7 +98,9 @@ export function NodeActionsToolbar({
                     className="p-1.5 hover:bg-neutral-800 rounded text-neutral-400 hover:text-white transition-colors"
                     onClick={(e) => {
                         e.stopPropagation();
-                        removeNode(nodeId);
+                        if (window.confirm('Delete this node from the graph?')) {
+                            removeNode(nodeId);
+                        }
                     }}
                     title="Delete"
                 >
@@ -114,18 +116,6 @@ export function NodeActionsToolbar({
                     title="Color"
                 >
                     <Palette size={14} />
-                </button>
-                <button className="p-1.5 hover:bg-neutral-800 rounded text-neutral-400 hover:text-white transition-colors" title="Focus">
-                    <Scan size={14} />
-                </button>
-                <button className="p-1.5 hover:bg-neutral-800 rounded text-neutral-400 hover:text-white transition-colors" title="Duplicate">
-                    <Copy size={14} />
-                </button>
-                <button className="p-1.5 hover:bg-neutral-800 rounded text-neutral-400 hover:text-white transition-colors" title="Edit">
-                    <Edit2 size={14} />
-                </button>
-                <button className="p-1.5 hover:bg-neutral-800 rounded text-neutral-400 hover:text-white transition-colors" title="Change Image">
-                    <ImageIcon size={14} />
                 </button>
             </div>
         </NodeToolbar>

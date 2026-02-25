@@ -31,6 +31,10 @@ export default function CanvasOverlay({ nodeCount }: CanvasOverlayProps) {
                             { color: 'bg-orange-500', label: 'Code' },
                             { color: 'bg-purple-500', label: 'Products' },
                             { color: 'bg-yellow-500', label: 'Notes' },
+                            { color: 'bg-blue-500', label: 'Academic' },
+                            { color: 'bg-emerald-500', label: 'Synthesis' },
+                            { color: 'bg-neutral-500', label: 'Ghost' },
+                            { color: 'bg-cyan-500', label: 'Images' },
                         ].map(({ color, label }) => (
                             <div key={label} className="flex items-center gap-2">
                                 <div className={`w-2 h-2 rounded-full ${color}`} />

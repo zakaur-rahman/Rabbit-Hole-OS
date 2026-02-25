@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useGraphStore } from '@/store/graph.store';
-import { Plus, LayoutTemplate, X } from 'lucide-react';
+import { Plus, LayoutTemplate, X, Edit2 } from 'lucide-react';
 
 export default function WhiteboardSelector() {
     const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, closeWhiteboard, openWhiteboardIds, initialize, createWhiteboard } = useGraphStore();
@@ -50,7 +50,7 @@ export default function WhiteboardSelector() {
 
     if (!mounted) {
         return (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px] h-9">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px] h-9">
                 <div className="flex items-center gap-1 overflow-x-auto flex-1 px-3">
                     <span className="text-xs font-medium text-neutral-500">Main Brain</span>
                 </div>
@@ -62,7 +62,7 @@ export default function WhiteboardSelector() {
     const openWhiteboards = whiteboards.filter(wb => openWhiteboardIds?.includes(wb.id));
 
     return (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px]">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px]">
             {/* Scrollable list of whiteboards */}
             <div className="flex items-center gap-1 overflow-x-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                 {openWhiteboards.map(wb => (
@@ -89,6 +89,7 @@ export default function WhiteboardSelector() {
                             >
                                 {wb.name}
                             </button>
+                            <Edit2 size={10} className="absolute left-1/2 -top-1 -translate-x-1/2 text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                             {wb.id !== 'main' && (
                                 <button
                                     onClick={(e) => handleClose(e, wb.id)}

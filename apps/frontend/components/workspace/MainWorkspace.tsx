@@ -23,12 +23,18 @@ export default function MainWorkspace() {
 
     const [showLeftPanel, setShowLeftPanel] = useState(true);
 
-    // Keyboard shortcut for sidebar
+    // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Sidebar toggle (Cmd/Ctrl + B)
             if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
                 e.preventDefault();
                 setShowLeftPanel(prev => !prev);
+            }
+            // Search modal (Cmd/Ctrl + K)
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setShowSearch(true);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -167,6 +173,9 @@ export default function MainWorkspace() {
                     )}
                 </Panel>
             </PanelGroup>
+
+            {/* Sync Status Badge */}
+            <SyncStatus />
 
             {/* Search Modal */}
             {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}

@@ -10,10 +10,12 @@ import {
 import { getCurrentUser, getSessions, revokeSession, revokeAllSessions, User as UserType, Session } from '@/lib/auth/api';
 import { logout } from '@/lib/auth/logout';
 import { useRouter } from 'next/navigation';
+import { isElectron } from '@/lib/auth/config';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: string;
 }
 
 interface SettingsSection {
@@ -82,8 +84,8 @@ const settingsSections: SettingsSection[] = [
   },
 ];
 
-export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [selectedItem, setSelectedItem] = useState<string | null>('general');
+export default function SettingsModal({ isOpen, onClose, initialTab = 'general' }: SettingsModalProps) {
+  const [selectedItem, setSelectedItem] = useState<string | null>(initialTab);
   const router = useRouter();
 
   // User state - initialize from cache if available
@@ -127,6 +129,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
+
+  // Synchronize internal selected tab when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (initialTab) setSelectedItem(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // Check authentication status and load user (only if not cached)
   useEffect(() => {
@@ -229,7 +238,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (err instanceof Error && (errorMessage.includes('401') || errorMessage.includes('Not authenticated') || errorMessage.includes('Invalid or expired token'))) {
         await logout();
         onClose();
-        router.push('/sign-in');
+        router.push('/sign-in?auto=false');
       }
     } finally {
       setIsLoadingSessions(false);
@@ -246,7 +255,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (currentSession) {
         await logout();
         onClose();
-        router.push('/sign-in');
+        router.push('/sign-in?auto=false');
       }
     } catch (err) {
       console.error('Failed to revoke session:', err);
@@ -417,7 +426,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       <button
                         onClick={() => {
                           onClose();
-                          router.push('/sign-in');
+                          router.push('/sign-in?auto=false');
                         }}
                         className="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                       >
@@ -472,7 +481,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     onClick={async () => {
                       await logout();
                       onClose();
-                      router.push('/sign-in');
+                      router.push('/sign-in?auto=false');
                     }}
                     className="w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 text-red-400 hover:bg-neutral-800 hover:text-red-300 group"
                   >
@@ -504,7 +513,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                               <h5 className="text-sm font-medium text-white mb-1">Manage Account</h5>
                               <p className="text-xs text-neutral-400">Manage your account and billing</p>
                             </div>
-                            <button className="px-4 py-2 text-sm text-white bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                const url = process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://cognode.app';
+                                const billingUrl = `${url}/dashboard/billing`;
+                                if (isElectron()) {
+                                  const electron = (window as any).electron;
+                                  if (electron?.shell?.openExternal) {
+                                    electron.shell.openExternal(billingUrl);
+                                    return;
+                                  }
+                                }
+                                window.open(billingUrl, '_blank');
+                              }}
+                              className="px-4 py-2 text-sm text-white bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors flex items-center gap-2"
+                            >
                               <span>Open</span>
                               <ExternalLink size={14} />
                             </button>

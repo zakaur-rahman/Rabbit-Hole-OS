@@ -42,7 +42,6 @@ export default function ContextMenu({ position, actions, onClose }: ContextMenuP
 
     // Adjust position to keep within viewport
     // (Simple implementation: just clamp or render. For now, render exactly at cursor)
-    console.log("ContextMenu rendered at", position);
 
     return (
         <div

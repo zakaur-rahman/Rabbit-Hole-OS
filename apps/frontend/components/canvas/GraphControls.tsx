@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useReactFlow } from 'reactflow';
-import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download, Network, FilePen } from 'lucide-react';
+import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download, Network, FilePen, LayoutTemplate } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 
 interface GraphControlsProps {
@@ -21,7 +21,7 @@ export default function GraphControls({ onSynthesis, onASTEditor, onAddNote, onA
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     return (
-        <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-4 z-[60] pointer-events-auto">
+        <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-4 z-60 pointer-events-auto">
             {/* AI Synthesis */}
             <div className="flex flex-col gap-2">
                 <button
@@ -71,7 +71,7 @@ export default function GraphControls({ onSynthesis, onASTEditor, onAddNote, onA
                     className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
                     title="Use Template"
                 >
-                    <Layout size={18} className="rotate-90" />
+                    <LayoutTemplate size={18} />
                 </button>
                 <button
                     onClick={onExport}
@@ -123,7 +123,7 @@ export default function GraphControls({ onSynthesis, onASTEditor, onAddNote, onA
                 >
                     <MousePointer2 size={18} />
                 </button>
-                <div className="h-px bg-neutral-800 mx-2" />
+
             </div>
         </div>
     );

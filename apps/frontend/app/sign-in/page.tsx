@@ -22,10 +22,13 @@ function SignInContent() {
   const deviceId = searchParams.get('device_id');
   const isDesktopSource = source === 'desktop';
 
+  const autoStartParam = searchParams.get('auto');
+  const shouldAutoStart = autoStartParam !== 'false';
+
   const hasAutoStarted = useRef(false);
 
   useEffect(() => {
-    if (isElectron() && !hasAutoStarted.current) {
+    if (isElectron() && !hasAutoStarted.current && shouldAutoStart) {
       hasAutoStarted.current = true;
       handleGoogleSignIn();
     }

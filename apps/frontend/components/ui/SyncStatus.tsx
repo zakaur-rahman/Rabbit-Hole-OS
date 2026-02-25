@@ -13,6 +13,7 @@ export function SyncStatus() {
     useEffect(() => {
         // Check if running in Electron
         if (typeof window === 'undefined' || !window.electron) {
+            setLastSync(new Date());
             return;
         }
 
