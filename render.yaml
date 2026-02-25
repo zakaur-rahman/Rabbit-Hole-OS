@@ -1,7 +1,7 @@
 services:
   - type: web
     name: cognode-web-dashboard
-    runtime: docker
+    env: docker
     dockerfilePath: apps/web/Dockerfile
     dockerContext: .
     envVars:
@@ -17,7 +17,7 @@ services:
 
   - type: web
     name: cognode-backend
-    runtime: docker
+    env: docker
     dockerfilePath: apps/backend/Dockerfile
     dockerContext: .
     envVars:
