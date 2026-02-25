@@ -12,7 +12,7 @@
     "dev:backend": "cd apps/backend && \"C:\\Users\\zakau\\Rabbit-Hole-OS\\.venv\\Scripts\\python.exe\" -m uvicorn app.main:app --host 127.0.0.1 --reload",
     "dev:worker": "cd apps/backend && \"C:\\Users\\zakau\\Rabbit-Hole-OS\\.venv\\Scripts\\python.exe\" run_worker.py app.workers.synthesis_worker.WorkerSettings --watch app",
     "build:frontend": "cd apps/frontend && npm run build",
-    "build:backend": "cd apps/backend && \"C:\\Users\\zakau\\Rabbit-Hole-OS\\.venv\\Scripts\\python.exe\" -m pip install pyinstaller && \"C:\\Users\\zakau\\Rabbit-Hole-OS\\.venv\\Scripts\\python.exe\" -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec",
+    "build:backend": "cd apps/backend && python -m pip install pyinstaller && python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec",
     "package": "npm run build:frontend && npm run build:backend && cd apps/desktop && npm run dist"
   },
   "devDependencies": {

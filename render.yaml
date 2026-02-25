@@ -17,3 +17,22 @@ services:
     customDomains:
       - cognode.tech
       - www.cognode.tech
+
+  - type: web
+    name: cognode-backend
+    env: python
+    buildCommand: pip install -r apps/backend/requirements.txt
+    startCommand: cd apps/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      # Note: add all sensitive keys directly in the Render dashboard
+
