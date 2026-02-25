@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -19,19 +20,20 @@ class Settings(BaseSettings):
     OAUTH_REDIRECT_URI_DESKTOP: str = "cognode://auth/callback"
     
     # JWT Configuration
-    JWT_SECRET_KEY: str = ""  # Should be a strong random secret in production
+    JWT_SECRET_KEY: str = ""  # MUST be set in production (validated at startup)
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 1 hour
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30 days
     
-    # Redis Configuration (Upstash Redis)
-    # Default values from Upstash dashboard (override in .env file if needed)
-    UPSTASH_REDIS_REST_URL: str = ""
-    UPSTASH_REDIS_REST_TOKEN: str = ""
-    
-    # Legacy Redis config (deprecated, use UPSTASH_REDIS_* instead)
-    REDIS_URL: Optional[str] = None
+    # Redis Configuration (standard Redis)
+    REDIS_URL: str = "redis://localhost:6379"
     REDIS_PASSWORD: Optional[str] = None
+    
+    # Database Pool Configuration (tune for your DB plan)
+    DB_POOL_SIZE: int = 3       # Conservative for free tier
+    DB_MAX_OVERFLOW: int = 5    # Burst capacity (total max = pool_size + max_overflow)
+    DB_POOL_RECYCLE: int = 300  # 5 min — free tier connections may be reaped
+    DB_POOL_TIMEOUT: int = 10   # Fail fast
     
     # Storage Configuration
     STORAGE_TYPE: str = "local"  # local, s3, supabase
@@ -46,3 +48,13 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
+
+# Validate critical secrets at startup in production
+if os.getenv("NODE_ENV") == "production":
+    if not settings.JWT_SECRET_KEY:
+        raise RuntimeError(
+            "FATAL: JWT_SECRET_KEY must be set in production. "
+            "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+        )
+    if not settings.DATABASE_URL:
+        raise RuntimeError("FATAL: DATABASE_URL must be set in production.")

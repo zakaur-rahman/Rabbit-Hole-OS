@@ -18,7 +18,7 @@ from app.models.user import User
 from app.models.session import Session
 from sqlalchemy import select, text, update, func
 from datetime import datetime, timedelta
-from upstash_redis.asyncio import Redis
+from redis.asyncio import Redis
 
 # In-memory cache for user objects to prevent N+1 queries during auth
 # key: user_id (UUID), value: (User, expiry)

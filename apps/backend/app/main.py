@@ -33,6 +33,8 @@ from contextlib import asynccontextmanager
 from app.core.database import get_engine, Base
 from fastapi.staticfiles import StaticFiles
 
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -45,10 +47,20 @@ async def lifespan(app: FastAPI):
     # Shutdown
     await engine.dispose()
 
-app = FastAPI(title="RabbitHole OS API", openapi_url="/api/v1/openapi.json", lifespan=lifespan)
+# Disable OpenAPI docs in production to prevent schema exposure
+is_production = os.getenv("NODE_ENV") == "production"
+openapi_url = None if is_production else "/api/v1/openapi.json"
 
-# CORS middleware for Electron/Next.js
-origins = [
+app = FastAPI(
+    title="RabbitHole OS API",
+    openapi_url=openapi_url,
+    lifespan=lifespan,
+)
+
+# CORS — configurable via ALLOWED_ORIGINS env var
+default_origins = [
+    "https://cognode.tech",
+    "https://www.cognode.tech",
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:8000",
@@ -56,6 +68,8 @@ origins = [
     "http://127.0.0.1:3001",
     "http://127.0.0.1:8000",
 ]
+env_origins = os.getenv("ALLOWED_ORIGINS", "")
+origins = [o.strip() for o in env_origins.split(",") if o.strip()] if env_origins else default_origins
 
 app.add_middleware(
     CORSMiddleware,

@@ -4,11 +4,15 @@
 .venv
 .turbo
 __pycache__
-*.md
 *.spec
 docs
 scripts
 verify_*.py
+
+# Environment files — NEVER bake secrets into images
+**/.env
+**/.env.*
+**/.env.local
 
 # Desktop/Frontend aren't needed for web or backend Docker builds
 apps/desktop
@@ -18,3 +22,7 @@ apps/frontend
 apps/web/.next
 apps/backend/dist
 node_modules
+
+# Misc
+*.md
+.gitignore

@@ -4,6 +4,8 @@ services:
     env: docker
     dockerfilePath: apps/web/Dockerfile
     dockerContext: .
+    plan: free
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,15 +22,19 @@ services:
     env: docker
     dockerfilePath: apps/backend/Dockerfile
     dockerContext: .
+    plan: free
+    healthCheckPath: /api/v1/health/
     envVars:
       - key: DATABASE_URL
         sync: false
-      - key: UPSTASH_REDIS_REST_URL
-        sync: false
-      - key: UPSTASH_REDIS_REST_TOKEN
+      - key: REDIS_URL
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-      - key: CLERK_SECRET_KEY
+      - key: JWT_SECRET_KEY
         sync: false
+      - key: ALLOWED_ORIGINS
+        value: "https://cognode.tech,https://www.cognode.tech"
       # Note: add all sensitive keys directly in the Render dashboard
+    customDomains:
+      - api.cognode.tech
