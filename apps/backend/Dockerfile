@@ -32,6 +32,13 @@ COPY --from=builder /install /usr/local
 # Copy application code with correct ownership
 COPY --chown=appuser:appgroup apps/backend/ .
 
+# Pre-create writable directories for the non-root user
+RUN mkdir -p /app/static/uploads /tmp/matplotlib && \
+    chown -R appuser:appgroup /app/static /tmp/matplotlib
+
+# Set matplotlib config dir to a writable location
+ENV MPLCONFIGDIR=/tmp/matplotlib
+
 # Render sets the PORT env variable
 ENV PORT=8000
 EXPOSE ${PORT}
