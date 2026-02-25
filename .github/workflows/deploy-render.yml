@@ -10,18 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Web Dashboard Deployment
+        if: ${{ secrets.RENDER_WEB_DEPLOY_HOOK != '' }}
         uses: fjogeleit/http-request-action@v1.15.2
         with:
           url: ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}
           method: 'POST'
           timeout: 10000
+      
+      - name: Skip Web Deployment
+        if: ${{ secrets.RENDER_WEB_DEPLOY_HOOK == '' }}
+        run: echo "RENDER_WEB_DEPLOY_HOOK secret is not set. Please add it to GitHub Settings -> Secrets -> Actions to enable automatic deployments."
           
   deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Backend Deployment
+        if: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK != '' }}
         uses: fjogeleit/http-request-action@v1.15.2
         with:
           url: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
           method: 'POST'
           timeout: 10000
+
+      - name: Skip Backend Deployment
+        if: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK == '' }}
+        run: echo "RENDER_BACKEND_DEPLOY_HOOK secret is not set. Please add it to GitHub Settings -> Secrets -> Actions to enable automatic deployments."
