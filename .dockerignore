@@ -14,14 +14,16 @@ verify_*.py
 **/.env.*
 **/.env.local
 
-# Desktop/Frontend aren't needed for web or backend Docker builds
+# Desktop/Frontend source not needed, but keep package.json for workspace resolution
 apps/desktop
 apps/frontend
+!apps/desktop/package.json
+!apps/frontend/package.json
 
 # Build artifacts
 apps/web/.next
 apps/backend/dist
-node_modules
+**/node_modules
 
 # Misc
 *.md
