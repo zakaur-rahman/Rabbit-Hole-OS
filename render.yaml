@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: cognode-web-dashboard
+    env: node
+    # Using Node 20 as specified in package.json
+    nodeVersion: 20
+    # Running npm install from root but building specifically the web app
+    buildCommand: npm ci --legacy-peer-deps && cd apps/web && npm run build
+    startCommand: cd apps/web && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://api.cognode.tech/api/v1
+      - key: NEXT_PUBLIC_OAUTH_REDIRECT_URI
+        value: https://cognode.tech/auth/google
+    customDomains:
+      - cognode.tech
+      - www.cognode.tech
