@@ -1,31 +1,24 @@
-# ---- Stage 1: Install dependencies ----
-FROM node:20-alpine AS deps
+# ---- Stage 1: Install + Build ----
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy ALL workspace package.json files for complete npm ci resolution
+# Copy workspace structure for npm ci
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY apps/desktop/package.json ./apps/desktop/package.json
-COPY packages/shared-types/package.json ./packages/shared-types/package.json
+COPY packages/ ./packages/
 
-# Full monorepo install to resolve all hoisted dependencies
+# Install all monorepo dependencies (keeps hoisting + symlinks intact)
 RUN npm ci --legacy-peer-deps
 
-# ---- Stage 2: Build the application ----
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+# Copy web app source and build
 COPY apps/web/ ./apps/web/
-COPY packages/ ./packages/
-COPY package.json ./
 
 WORKDIR /app/apps/web
 RUN npm run build
 
-# ---- Stage 3: Production runner ----
+# ---- Stage 2: Production runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
 
