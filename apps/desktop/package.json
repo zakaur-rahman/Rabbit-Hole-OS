@@ -1,6 +1,8 @@
 {
     "name": "Cognode",
     "version": "1.0.0",
+    "description": "Cognode Desktop Application",
+    "author": "Cognode",
     "main": "build/electron/main.js",
     "scripts": {
         "dev": "tsc && electron .",
@@ -63,9 +65,8 @@
         "@types/better-sqlite3": "^7.6.8",
         "@types/node": "^20.0.0",
         "better-sqlite3": "^9.2.2",
-        "electron": "^40.0.0",
+        "electron": "40.6.1",
         "electron-builder": "^26.0.12",
-        "electron-rebuild": "^3.2.9",
         "typescript": "^5.3.0"
     }
 }

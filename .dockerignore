@@ -1,0 +1,20 @@
+# Ignore everything not needed for Docker builds
+.git
+.github
+.venv
+.turbo
+__pycache__
+*.md
+*.spec
+docs
+scripts
+verify_*.py
+
+# Desktop/Frontend aren't needed for web or backend Docker builds
+apps/desktop
+apps/frontend
+
+# Build artifacts
+apps/web/.next
+apps/backend/dist
+node_modules
