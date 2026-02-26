@@ -12,6 +12,7 @@ concurrency:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -30,16 +31,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install Node dependencies
-        run: npm install --legacy-peer-deps --ignore-scripts
-        timeout-minutes: 10
+      - name: Install Frontend dependencies
+        working-directory: apps/frontend
+        run: npm install --legacy-peer-deps
+        timeout-minutes: 5
 
       - name: Build Frontend
+        working-directory: apps/frontend
+        run: npx next build
         env:
           BUILD_TARGET: electron
-        run: npm run build:frontend
+
+      - name: Install Desktop dependencies
+        working-directory: apps/desktop
+        run: npm install
+        timeout-minutes: 10
 
       - name: Build Electron App
         working-directory: apps/desktop
