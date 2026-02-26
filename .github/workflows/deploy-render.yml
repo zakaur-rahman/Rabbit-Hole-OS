@@ -1,9 +1,9 @@
 name: Deploy to Render
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [created]
+  workflow_dispatch:
 
 jobs:
   lint:

@@ -50,10 +50,12 @@
             "allowToChangeInstallationDirectory": true
         }
     },
+    "dependencies": {
+        "better-sqlite3": "^9.2.2"
+    },
     "devDependencies": {
         "@types/better-sqlite3": "^7.6.8",
         "@types/node": "^20.0.0",
-        "better-sqlite3": "^9.2.2",
         "electron": "40.6.1",
         "electron-builder": "^26.0.12",
         "typescript": "^5.3.0"
