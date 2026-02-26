@@ -1,26 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Database, Sparkles, FolderSync } from 'lucide-react';
-import { apiFetch } from '@/lib/api';
+import { useUser } from '@/components/providers/UserContext';
 
 export default function DashboardOverview() {
-    const [userName, setUserName] = useState<string | null>(null);
-
-    useEffect(() => {
-        async function loadUser() {
-            try {
-                const res = await apiFetch('/oauth/me');
-                if (res.ok) {
-                    const data = await res.json();
-                    setUserName(data.name?.split(' ')[0] || null);
-                }
-            } catch { }
-        }
-        loadUser();
-    }, []);
+    const { user } = useUser();
+    const userName = user?.name?.split(' ')[0] || null;
 
     const cards = [
         {

@@ -4,30 +4,22 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { ProjectsGrid, ProjectData } from '@/components/dashboard/ProjectsGrid';
 import { PlanType } from '@/lib/constants';
+import { useUser } from '@/components/providers/UserContext';
 import { Loader2 } from 'lucide-react';
 
 export default function ProjectsPage() {
-    const [data, setData] = useState<{ projects: ProjectData[], plan: PlanType } | null>(null);
+    const { user, isLoading: userLoading } = useUser();
+    const [projects, setProjects] = useState<ProjectData[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const loadProjects = async () => {
         setError(null);
-        setData(null);
+        setProjects(null);
         try {
-            const [userRes, projectsRes] = await Promise.all([
-                apiFetch('/oauth/me'),
-                apiFetch('/projects/me')
-            ]);
-
-            if (!userRes.ok || !projectsRes.ok) throw new Error('Failed to load projects view');
-
-            const user = await userRes.json();
-            const projects = await projectsRes.json();
-
-            setData({
-                projects,
-                plan: (user.plan as PlanType) || 'free'
-            });
+            const res = await apiFetch('/projects/me');
+            if (!res.ok) throw new Error('Failed to load projects');
+            const data = await res.json();
+            setProjects(data);
         } catch (err: any) {
             setError(err.message);
         }
@@ -36,6 +28,8 @@ export default function ProjectsPage() {
     useEffect(() => {
         loadProjects();
     }, []);
+
+    const plan = (user?.plan as PlanType) || 'free';
 
     if (error) {
         return (
@@ -48,7 +42,7 @@ export default function ProjectsPage() {
         );
     }
 
-    if (!data) {
+    if (!projects || userLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -58,7 +52,7 @@ export default function ProjectsPage() {
 
     return (
         <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <ProjectsGrid initialProjects={data.projects} plan={data.plan} />
+            <ProjectsGrid initialProjects={projects} plan={plan} />
         </div>
     );
 }

@@ -1,47 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { apiFetch } from '@/lib/api';
 import { PlanCard } from '@/components/dashboard/PlanCard';
 import { UpcomingPlan } from '@/components/dashboard/UpcomingPlan';
 import { SubscriptionManagement } from '@/components/dashboard/SubscriptionManagement';
 import { PaymentHistory } from '@/components/dashboard/PaymentHistory';
 import { PlanType } from '@/lib/constants';
+import { useUser } from '@/components/providers/UserContext';
 import { Loader2 } from 'lucide-react';
 
 export default function BillingPage() {
-    const [plan, setPlan] = useState<PlanType | null>(null);
-    const [error, setError] = useState<string | null>(null);
-
-    const loadUser = async () => {
-        setError(null);
-        setPlan(null);
-        try {
-            const res = await apiFetch('/oauth/me');
-            if (!res.ok) throw new Error('Failed to load user profile');
-            const data = await res.json();
-            setPlan((data.plan as PlanType) || 'free');
-        } catch (err: any) {
-            setError(err.message);
-        }
-    };
-
-    useEffect(() => {
-        loadUser();
-    }, []);
+    const { user, isLoading, error, reload } = useUser();
+    const plan = (user?.plan as PlanType) || 'free';
 
     if (error) {
         return (
             <div className="p-6 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl flex flex-col items-center gap-4 max-w-md mx-auto mt-16">
                 <p className="text-sm text-center">{error}</p>
-                <button onClick={loadUser} className="px-4 py-2 text-sm font-medium bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 rounded-lg transition-colors">
+                <button onClick={reload} className="px-4 py-2 text-sm font-medium bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 rounded-lg transition-colors">
                     Try Again
                 </button>
             </div>
         );
     }
 
-    if (!plan) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -68,7 +50,7 @@ export default function BillingPage() {
             {/* Bottom Level: Destructive / Lifecycle Actions */}
             <SubscriptionManagement currentPlan={plan} />
 
-            {/* Added Email Preferences inside page container directly for simplicity */}
+            {/* Email Preferences */}
             <div className="bg-card/20 border border-border/30 rounded-3xl p-6 flex justify-between items-center mt-6">
                 <div>
                     <p className="font-medium text-foreground">Email Notifications</p>
@@ -84,4 +66,3 @@ export default function BillingPage() {
         </div>
     );
 }
-
