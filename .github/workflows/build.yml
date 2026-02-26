@@ -5,6 +5,10 @@ on:
     types: [created]
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     strategy:
@@ -29,7 +33,8 @@ jobs:
           cache: 'npm'
 
       - name: Install Node dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps --ignore-scripts
+        timeout-minutes: 10
 
       - name: Build Frontend
         env:
