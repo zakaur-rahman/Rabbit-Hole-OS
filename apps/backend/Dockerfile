@@ -26,6 +26,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Tectonic (LaTeX → PDF compiler) from GitHub releases
+RUN curl -fsSL https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz \
+    | tar xz -C /usr/local/bin/ \
+    && chmod +x /usr/local/bin/tectonic
+
 # Copy installed Python packages from builder
 COPY --from=builder /install /usr/local
 
