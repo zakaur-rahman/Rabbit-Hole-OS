@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Cognode Desktop Application",
     "author": "Cognode",
+    "repository": "https://github.com/zakaur-rahman/Rabbit-Hole-OS",
     "main": "build/electron/main.js",
     "scripts": {
         "dev": "tsc && electron .",
@@ -35,12 +36,6 @@
         "win": {
             "target": [
                 "nsis"
-            ],
-            "extraResources": [
-                {
-                    "from": "../backend/dist/cognode-backend.exe",
-                    "to": "bin/cognode-backend.exe"
-                }
             ]
         },
         "mac": {
@@ -48,13 +43,7 @@
                 "dmg",
                 "zip"
             ],
-            "category": "public.app-category.productivity",
-            "extraResources": [
-                {
-                    "from": "../backend/dist/cognode-backend",
-                    "to": "bin/cognode-backend"
-                }
-            ]
+            "category": "public.app-category.productivity"
         },
         "nsis": {
             "oneClick": false,
