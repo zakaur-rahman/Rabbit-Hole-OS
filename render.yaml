@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: cognode-web-dashboard
+    env: docker
+    dockerfilePath: apps/web/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://api.cognode.tech/api/v1
+      - key: NEXT_PUBLIC_OAUTH_REDIRECT_URI
+        value: https://cognode.tech/auth/google
+    customDomains:
+      - cognode.tech
+      - www.cognode.tech
+
+  - type: web
+    name: cognode-backend
+    env: docker
+    dockerfilePath: apps/backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "https://cognode.tech,https://www.cognode.tech"
+      # Note: add all sensitive keys directly in the Render dashboard
+    customDomains:
+      - api.cognode.tech
