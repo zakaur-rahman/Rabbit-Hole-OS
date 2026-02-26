@@ -2,6 +2,16 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Build-time args for NEXT_PUBLIC env vars (baked into JS bundle)
+ARG NEXT_PUBLIC_API_URL=https://api.cognode.tech/api/v1
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=792621487150-e9gs7qqoaog8itci4omijccgakdrvuk3.apps.googleusercontent.com
+ARG NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://cognode.tech/auth/google
+
+# Make ARGs available as ENV during build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_OAUTH_REDIRECT_URI=$NEXT_PUBLIC_OAUTH_REDIRECT_URI
+
 # Copy workspace structure for npm ci
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/package.json
