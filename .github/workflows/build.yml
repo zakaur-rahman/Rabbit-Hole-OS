@@ -42,6 +42,11 @@ jobs:
         run: npx next build
         env:
           BUILD_TARGET: electron
+          NEXT_PUBLIC_API_BASE_URL: https://api.cognode.tech
+          NEXT_PUBLIC_WEB_URL: https://cognode.tech
+          NEXT_PUBLIC_OAUTH_REDIRECT_URI: https://cognode.tech/auth/google
+          NEXT_PUBLIC_OAUTH_REDIRECT_URI_WEB: https://cognode.tech/auth/google
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
 
       - name: Install Desktop dependencies
         working-directory: apps/desktop
