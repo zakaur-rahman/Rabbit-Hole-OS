@@ -71,13 +71,22 @@ function GoogleCallbackContent() {
                 localStorage.removeItem(`desktop_context_${state}`);
 
                 // 3. Desktop Handoff Logic
-                if (data.desktop_auth_code && desktopContext?.redirect_uri?.startsWith('cognode://')) {
-                    // Redirect to the desktop app via deep link protocol
-                    // This triggers Electron's protocol handler which sends the code to the renderer
-                    const desktopRedirectUrl = `${desktopContext.redirect_uri}?code=${encodeURIComponent(data.desktop_auth_code)}`;
-                    console.log('[Auth] Redirecting to desktop app:', desktopRedirectUrl);
+                if (desktopContext?.redirect_uri?.startsWith('cognode://')) {
+                    let desktopRedirectUrl: string;
+
+                    if (data.desktop_auth_code) {
+                        // Standard path: backend generated a one-time code via Redis
+                        desktopRedirectUrl = `${desktopContext.redirect_uri}?code=${encodeURIComponent(data.desktop_auth_code)}`;
+                    } else {
+                        // Fallback: Redis unavailable (free tier) — pass tokens directly in the deep link
+                        // The desktop app receives these via the cognode:// protocol handler
+                        console.warn('[Auth] No desktop_auth_code from backend (Redis may be unavailable), falling back to direct token handoff');
+                        desktopRedirectUrl = `${desktopContext.redirect_uri}?access_token=${encodeURIComponent(data.access_token)}&refresh_token=${encodeURIComponent(data.refresh_token || '')}`;
+                    }
+
+                    console.log('[Auth] Redirecting to desktop app via deep link');
                     window.location.href = desktopRedirectUrl;
-                    return; // Don't navigate to dashboard — the desktop app handles it
+                    return; // Don't navigate to dashboard
                 }
 
                 // Navigate to the Dashboard (web-only flow)

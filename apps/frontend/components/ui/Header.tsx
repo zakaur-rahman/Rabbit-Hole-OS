@@ -74,7 +74,7 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
             // Open system browser for OAuth
             electronApi.auth.openLogin(loginUrl);
 
-            // Listen for the deep link callback with the auth code
+            // Path A: Redis available — backend generates one-time code, desktop exchanges it
             if (electronApi.auth.onDeepLinkAuth) {
                 electronApi.auth.onDeepLinkAuth(async ({ code }: { code: string }) => {
                     try {
@@ -84,17 +84,26 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ code }),
                         });
-
                         if (!response.ok) throw new Error('Exchange failed');
-
                         const data = await response.json();
                         localStorage.setItem('auth_token', data.access_token);
                         localStorage.setItem('refresh_token', data.refresh_token);
                         window.dispatchEvent(new Event('auth-state-changed'));
                         setIsAuthenticated(true);
                     } catch (err) {
-                        console.error('[Auth] Desktop exchange failed:', err);
+                        console.error('[Auth] Desktop code exchange failed:', err);
                     }
+                });
+            }
+
+            // Path B: Redis unavailable (free tier fallback) — web app embeds tokens directly in deep link
+            if (electronApi.auth.onDirectTokensReceived) {
+                electronApi.auth.onDirectTokensReceived(({ access_token, refresh_token }: { access_token: string; refresh_token: string }) => {
+                    console.log('[Auth] Direct token handoff received, storing tokens');
+                    localStorage.setItem('auth_token', access_token);
+                    if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+                    window.dispatchEvent(new Event('auth-state-changed'));
+                    setIsAuthenticated(true);
                 });
             }
         } else {

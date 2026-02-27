@@ -383,9 +383,22 @@ app.on('second-instance', (event, commandLine) => {
     try {
       const parsed = new URL(deepLink);
       const code = parsed.searchParams.get('code');
-      if (code && mainWindow && !mainWindow.isDestroyed()) {
-        console.log('[Auth] Deep link received (second-instance):', deepLink);
-        mainWindow.webContents.send('auth:deep-link-received', { code });
+      const accessToken = parsed.searchParams.get('access_token');
+      const refreshToken = parsed.searchParams.get('refresh_token');
+
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        if (code) {
+          // Standard path: one-time code to exchange at backend
+          console.log('[Auth] Deep link received with code (second-instance):', deepLink);
+          mainWindow.webContents.send('auth:deep-link-received', { code });
+        } else if (accessToken) {
+          // Fallback path: tokens passed directly (Redis unavailable on backend)
+          console.log('[Auth] Deep link received with direct tokens (second-instance)');
+          mainWindow.webContents.send('auth:tokens-received', { 
+            access_token: accessToken, 
+            refresh_token: refreshToken || '' 
+          });
+        }
       }
     } catch (e) {
       console.error('[Auth] Failed to parse deep link:', e);
@@ -403,9 +416,22 @@ app.on('open-url', (event, url) => {
   try {
     const parsed = new URL(url);
     const code = parsed.searchParams.get('code');
-    if (code && mainWindow && !mainWindow.isDestroyed()) {
-      console.log('[Auth] Deep link received (open-url):', url);
-      mainWindow.webContents.send('auth:deep-link-received', { code });
+    const accessToken = parsed.searchParams.get('access_token');
+    const refreshToken = parsed.searchParams.get('refresh_token');
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (code) {
+        // Standard path: one-time code to exchange at backend
+        console.log('[Auth] Deep link received with code (open-url):', url);
+        mainWindow.webContents.send('auth:deep-link-received', { code });
+      } else if (accessToken) {
+        // Fallback path: tokens passed directly (Redis unavailable on backend)
+        console.log('[Auth] Deep link received with direct tokens (open-url)');
+        mainWindow.webContents.send('auth:tokens-received', { 
+          access_token: accessToken, 
+          refresh_token: refreshToken || '' 
+        });
+      }
     }
   } catch (e) {
     console.error('[Auth] Failed to parse deep link URL:', e);

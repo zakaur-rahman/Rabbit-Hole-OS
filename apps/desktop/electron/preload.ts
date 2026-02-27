@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.on('auth:deep-link-received', subscription);
       return () => ipcRenderer.removeListener('auth:deep-link-received', subscription);
     },
+    onDirectTokensReceived: (callback: (data: { access_token: string; refresh_token: string }) => void) => {
+      const subscription = (_event: any, data: any) => callback(data);
+      ipcRenderer.on('auth:tokens-received', subscription);
+      return () => ipcRenderer.removeListener('auth:tokens-received', subscription);
+    },
   },
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url)
