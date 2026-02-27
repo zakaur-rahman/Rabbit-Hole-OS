@@ -72,12 +72,15 @@ function GoogleCallbackContent() {
 
                 // 3. Desktop Handoff Logic
                 if (data.desktop_auth_code && desktopContext?.redirect_uri?.startsWith('cognode://')) {
-                    // Store the desktop transfer code to show the banner in the Dashboard
-                    localStorage.setItem('pending_desktop_auth_code', data.desktop_auth_code);
-                    localStorage.removeItem('desktop_banner_dismissed'); // Ensure banner shows
+                    // Redirect to the desktop app via deep link protocol
+                    // This triggers Electron's protocol handler which sends the code to the renderer
+                    const desktopRedirectUrl = `${desktopContext.redirect_uri}?code=${encodeURIComponent(data.desktop_auth_code)}`;
+                    console.log('[Auth] Redirecting to desktop app:', desktopRedirectUrl);
+                    window.location.href = desktopRedirectUrl;
+                    return; // Don't navigate to dashboard — the desktop app handles it
                 }
 
-                // Navigate to the Dashboard
+                // Navigate to the Dashboard (web-only flow)
                 router.replace('/dashboard');
 
             } catch (err: any) {
