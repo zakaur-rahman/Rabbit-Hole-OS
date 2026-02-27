@@ -1,4 +1,4 @@
-name: Deploy to Render
+name: CI Lint
 
 on:
   push:
@@ -25,39 +25,3 @@ jobs:
 
       - name: Lint Python backend
         run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841
-
-  deploy-web:
-    needs: lint
-    runs-on: ubuntu-latest
-    env:
-      WEB_HOOK: ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}
-    steps:
-      - name: Trigger Web Dashboard Deployment
-        if: env.WEB_HOOK != ''
-        uses: fjogeleit/http-request-action@v1.15.2
-        with:
-          url: ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}
-          method: 'POST'
-          timeout: 10000
-      
-      - name: Skip Web Deployment
-        if: env.WEB_HOOK == ''
-        run: echo "RENDER_WEB_DEPLOY_HOOK secret is not set. Please add it to GitHub Settings -> Secrets -> Actions to enable automatic deployments."
-          
-  deploy-backend:
-    needs: lint
-    runs-on: ubuntu-latest
-    env:
-      BACKEND_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
-    steps:
-      - name: Trigger Backend Deployment
-        if: env.BACKEND_HOOK != ''
-        uses: fjogeleit/http-request-action@v1.15.2
-        with:
-          url: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
-          method: 'POST'
-          timeout: 10000
-
-      - name: Skip Backend Deployment
-        if: env.BACKEND_HOOK == ''
-        run: echo "RENDER_BACKEND_DEPLOY_HOOK secret is not set. Please add it to GitHub Settings -> Secrets -> Actions to enable automatic deployments."
