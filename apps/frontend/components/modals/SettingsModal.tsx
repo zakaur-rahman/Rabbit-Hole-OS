@@ -519,7 +519,6 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                     onClick={async () => {
                       await logout();
                       onClose();
-                      handleSignIn();
                     }}
                     className="w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 text-red-400 hover:bg-neutral-800 hover:text-red-300 group"
                   >
