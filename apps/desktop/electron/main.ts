@@ -185,6 +185,55 @@ function createWindow() {
     // Regular clicks inside the <webview> don't bubble up here the same way
     return { action: 'allow' }; 
   });
+
+  // ── SPA Navigation Interceptor for file:// mode ─────────────────────────────
+  // In production, Next.js static export is served from file:// protocol.
+  // Client-side router.push('/sign-in') resolves to file:///C:/sign-in/ instead
+  // of the correct file:///path/to/resources/frontend/sign-in/index.html.
+  // This interceptor catches those navigations and redirects to the right path.
+  if (isPackagedApp || hasProdAssets) {
+    const frontendDir = path.join(process.resourcesPath, 'frontend');
+
+    mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+      // Only intercept file:// navigations
+      if (!navigationUrl.startsWith('file://')) return;
+
+      try {
+        const filePath = url.fileURLToPath(navigationUrl);
+        const normalizedPath = path.normalize(filePath);
+
+        // If the path is already inside the frontend dir, allow it
+        if (normalizedPath.startsWith(path.normalize(frontendDir))) return;
+
+        // Extract the route from the URL (e.g., file:///C:/sign-in/ -> /sign-in/)
+        const parsedUrl = new URL(navigationUrl);
+        let route = parsedUrl.pathname;
+
+        // On Windows, file:///C:/sign-in/ has pathname = /C:/sign-in/
+        // Strip the drive letter prefix
+        if (process.platform === 'win32' && /^\/[A-Z]:\//i.test(route)) {
+          route = route.replace(/^\/[A-Z]:/i, '');
+        }
+
+        // Remove trailing slash for path resolution, then look for index.html
+        const cleanRoute = route.replace(/\/$/, '') || '/';
+        const targetFile = cleanRoute === '/'
+          ? path.join(frontendDir, 'index.html')
+          : path.join(frontendDir, cleanRoute, 'index.html');
+
+        if (fs.existsSync(targetFile)) {
+          event.preventDefault();
+          const correctUrl = url.pathToFileURL(targetFile).toString() + parsedUrl.search + parsedUrl.hash;
+          console.log(`[Nav] Redirecting ${navigationUrl} -> ${correctUrl}`);
+          mainWindow!.loadURL(correctUrl);
+        } else {
+          console.warn(`[Nav] No index.html found for route: ${cleanRoute} (looked at: ${targetFile})`);
+        }
+      } catch (err) {
+        console.error('[Nav] Navigation intercept error:', err);
+      }
+    });
+  }
 }
 
 
