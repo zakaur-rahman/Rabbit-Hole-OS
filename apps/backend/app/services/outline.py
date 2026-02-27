@@ -2,9 +2,8 @@
 AI-powered URL analysis and outline extraction service.
 Sends URL directly to AI for content analysis and outline generation.
 """
-from typing import List, Optional, Tuple
+from typing import List
 import json
-import os
 
 from app.core.config import settings
 
@@ -22,8 +21,8 @@ async def get_ai_client():
 
 
 FILTER_KEYWORDS = {
-    "see also", "references", "bibliography", "notes", "external links", 
-    "further reading", "sources", "citations", "literature", "footnotes", 
+    "see also", "references", "bibliography", "notes", "external links",
+    "further reading", "sources", "citations", "literature", "footnotes",
     "works cited", "gallery", "related topics", "documents"
 }
 
@@ -31,23 +30,23 @@ def filter_outline(outline: List[dict]) -> List[dict]:
     """Filter out unwanted sections from the outline recursively."""
     if not outline:
         return []
-        
+
     filtered = []
     for item in outline:
         title_lower = item.get("title", "").strip().lower()
-        
+
         # Check if title matches any keyword
         if any(keyword == title_lower or keyword in title_lower for keyword in FILTER_KEYWORDS):
             continue
-            
+
         # Specific check for "Notes and references" combined style
         if "reference" in title_lower and "note" in title_lower:
             continue
-        
+
         # Recursively filter children
         if item.get("children"):
             item["children"] = filter_outline(item["children"])
-            
+
         filtered.append(item)
     return filtered
 
@@ -59,7 +58,7 @@ async def analyze_url(url: str) -> dict:
     """
     provider, api_key, base_url = await get_ai_client()
     print(f"Analyzing URL using provider: {provider}")
-    
+
     if provider == "ollama":
         result = await analyze_url_ollama(url)
     elif provider == "huggingface":
@@ -70,14 +69,14 @@ async def analyze_url(url: str) -> dict:
         result = await analyze_url_llm(url, api_key, base_url, provider)
     else:
         result = analyze_url_mock(url)
-        
+
     # Post-process the outline to remove unwanted sections
     if result and result.get("outline"):
         print(f"Filtering outline for {url}...")
         original_count = len(result["outline"])
         result["outline"] = filter_outline(result["outline"])
         print(f"Outline filtered: {original_count} -> {len(result['outline'])} items")
-        
+
     return result
 
 
@@ -86,9 +85,9 @@ async def analyze_url_ollama(url: str) -> dict:
     try:
         from ollamafreeapi import OllamaFreeAPI
         import asyncio
-        
+
         client = OllamaFreeAPI()
-        
+
         prompt = f"""You are a curator. Analyze the webpage at {url}.
 Return a JSON object with this exact structure:
 {{
@@ -117,22 +116,22 @@ Ensure the 'outline' captures the full hierarchy of the article."""
 
         print(f"--- OllamaFreeAPI: Requesting analysis for {url} using Llama 3.3 70B")
         response_text = await asyncio.to_thread(call_ollama)
-        
+
         if not response_text:
             print("OllamaFreeAPI returned empty response.")
             return analyze_url_mock(url)
-            
+
         try:
             # Clean possible markdown wrap or conversational text
             text = response_text.strip()
-            
+
             # Find the start and end of the JSON object
             start_idx = text.find('{')
             end_idx = text.rfind('}')
-            
+
             if start_idx != -1 and end_idx != -1:
                 text = text[start_idx : end_idx + 1]
-            
+
             result = json.loads(text)
             print(f"Successfully analyzed URL with OllamaFreeAPI: {url}")
             return result
@@ -140,12 +139,12 @@ Ensure the 'outline' captures the full hierarchy of the article."""
             print(f"Failed to parse Ollama JSON: {e}")
             print(f"Raw response: {response_text[:500]}...")
             return analyze_url_mock(url)
-            
+
     except Exception as e:
         # Check for common connection/timeout errors to avoid log spam
         error_msg = str(e)
         if "connection" in error_msg.lower() or "failed" in error_msg.lower() or "timeout" in error_msg.lower():
-            print(f"--- AI Service: Ollama connection failed (AI Offline). Using mock fallback.")
+            print("--- AI Service: Ollama connection failed (AI Offline). Using mock fallback.")
         else:
             print(f"Error in analyze_url_ollama: {e}")
         return analyze_url_mock(url)
@@ -155,13 +154,12 @@ async def analyze_url_huggingface(url: str, hf_token: str) -> dict:
     """Analyze URL using Hugging Face Inference API (Direct Conversational)."""
     try:
         import httpx
-        import asyncio
-        
+
         # Mistral 7B v0.3 is the requested model
         model = "mistralai/Mistral-7B-Instruct-v0.3"
         api_url = f"https://api-inference.huggingface.co/models/{model}"
         headers = {"Authorization": f"Bearer {hf_token}", "Content-Type": "application/json"}
-        
+
         # Enhanced systematic prompt from user feedback
         system_prompt = """You are an AI content analysis engine designed to extract structured article outlines from URLs.
 Task:
@@ -194,10 +192,10 @@ Accuracy Rules (STRICT):
         }
 
         print(f"--- Hugging Face: Requesting analysis for {url} using {model} (Direct Conversational)")
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.post(api_url, headers=headers, json=payload, timeout=90.0)
-            
+
             if response.status_code == 200:
                 data = response.json()
                 # Conversational API returns a dict with 'generated_text'
@@ -208,11 +206,11 @@ Accuracy Rules (STRICT):
             else:
                 print(f"Hugging Face API error: {response.status_code} - {response.text}")
                 return analyze_url_mock(url)
-        
+
         if not response_text:
             print("Hugging Face returned empty response.")
             return analyze_url_mock(url)
-            
+
         try:
             # Clean possible markdown wrap
             text = response_text.strip()
@@ -220,7 +218,7 @@ Accuracy Rules (STRICT):
                 text = text.split("```json")[1].split("```")[0].strip()
             elif "```" in text:
                 text = text.split("```")[1].split("```")[0].strip()
-            
+
             result = json.loads(text)
             print(f"Successfully analyzed URL with Hugging Face: {url}")
             return result
@@ -228,7 +226,7 @@ Accuracy Rules (STRICT):
             print(f"Failed to parse Hugging Face JSON: {e}")
             print(f"Raw response: {response_text[:500]}")
             return analyze_url_mock(url)
-            
+
     except Exception as e:
         print(f"Error in analyze_url_huggingface: {e}")
         return analyze_url_mock(url)
@@ -240,11 +238,11 @@ async def analyze_url_gemini(url: str, api_key: str) -> dict:
         from google import genai
         from google.genai import types
         import asyncio
-        
+
         # Initialize the client
         client = genai.Client(api_key=api_key)
-        model_id = "gemini-2.0-flash" 
-        
+        model_id = "gemini-2.0-flash"
+
         prompt = f"""You are a curator. Analyze the webpage at {url}.
 Return a JSON object with this exact structure:
 {{
@@ -263,7 +261,7 @@ Return a JSON object with this exact structure:
 Ensure the 'outline' captures the full hierarchy of the article."""
 
         print(f"--- Gemini: Requesting analysis for {url} using {model_id} (Official SDK)")
-        
+
         def call_gemini():
             return client.models.generate_content(
                 model=model_id,
@@ -276,22 +274,22 @@ Ensure the 'outline' captures the full hierarchy of the article."""
             )
 
         response = await asyncio.to_thread(call_gemini)
-        
+
         if not response or not response.text:
             print("Gemini returned empty text response.")
             return analyze_url_mock(url)
-            
+
         try:
             # The SDK handles JSON parsing indirectly via the text property
             response_text = response.text
-            
+
             # Clean possible markdown wrap just in case
             text = response_text.strip()
             if "```json" in text:
                 text = text.split("```json")[1].split("```")[0].strip()
             elif "```" in text:
                 text = text.split("```")[1].split("```")[0].strip()
-            
+
             result = json.loads(text)
             print(f"Successfully analyzed URL with Gemini: {url}")
             return result
@@ -299,7 +297,7 @@ Ensure the 'outline' captures the full hierarchy of the article."""
             print(f"Failed to parse Gemini JSON: {e}")
             print(f"Raw response: {response_text[:500]}")
             return analyze_url_mock(url)
-            
+
     except Exception as e:
         print(f"Error in analyze_url_gemini: {e}")
         return analyze_url_mock(url)
@@ -310,7 +308,7 @@ async def analyze_url_llm(url: str, api_key: str, base_url: str, provider: str) 
     """Analyze URL using LLM API with web browsing capability."""
     try:
         import httpx
-        
+
         prompt = f"""Analyze the webpage at this URL and provide a structured analysis:
 
 URL: {url}
@@ -363,11 +361,11 @@ Important:
                 },
                 timeout=90.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 response_text = data["choices"][0]["message"]["content"]
-                
+
                 # Parse JSON from response
                 try:
                     clean_text = response_text.strip()
@@ -378,7 +376,7 @@ Important:
                         if clean_text.startswith("json"):
                             clean_text = clean_text[4:]
                     clean_text = clean_text.strip()
-                    
+
                     result = json.loads(clean_text)
                     print(f"Successfully analyzed URL: {url}")
                     return result
@@ -401,7 +399,7 @@ def analyze_url_mock(url: str) -> dict:
     parsed = urllib.parse.urlparse(url)
     path = parsed.path.rstrip('/')
     title = path.split('/')[-1].replace('_', ' ').replace('-', ' ').title() if path else parsed.netloc
-    
+
     return {
         "title": title or "Web Page",
         "snippet": f"[AI OFFLINE] Summary for {parsed.netloc}. Please check your connection or AI API keys.",
@@ -418,7 +416,7 @@ def analyze_url_mock(url: str) -> dict:
 async def extract_outline(content: str, title: str = "") -> List[dict]:
     """Legacy function - extract outline from pre-fetched content."""
     provider, api_key, base_url = await get_ai_client()
-    
+
     if provider == "gemini":
         return await extract_outline_gemini(content, title, api_key)
     elif provider in ("chutes", "openai"):
@@ -433,12 +431,12 @@ async def extract_outline_gemini(content: str, title: str, api_key: str) -> List
         from google import genai
         from google.genai import types
         import asyncio
-        
+
         client = genai.Client(api_key=api_key)
         model_id = "gemini-2.0-flash" # Use stable flash for extraction
-        
+
         truncated_content = content[:20000] if len(content) > 20000 else content
-        
+
         prompt = f"""Extract the hierarchical outline from this article.
 Return ONLY valid JSON array with objects containing id, number, title, and children[].
 
@@ -447,7 +445,7 @@ Content:
 {truncated_content}"""
 
         print(f"--- Gemini: Extracting outline for '{title}' using {model_id}")
-        
+
         def call_gemini():
             return client.models.generate_content(
                 model=model_id,
@@ -460,17 +458,17 @@ Content:
             )
 
         response = await asyncio.to_thread(call_gemini)
-        
+
         if not response or not response.text:
             return extract_outline_mock(content, title)
-            
+
         text = response.text.strip()
         # Strip potential markdown
         if "```json" in text:
             text = text.split("```json")[1].split("```")[0].strip()
         elif "```" in text:
             text = text.split("```")[1].split("```")[0].strip()
-            
+
         return json.loads(text)
     except Exception as e:
         print(f"Gemini SDK outline error: {e}")
@@ -481,9 +479,9 @@ async def extract_outline_from_content(content: str, title: str, api_key: str, b
     """Extract outline from content text using LLM."""
     try:
         import httpx
-        
+
         truncated_content = content[:8000] if len(content) > 8000 else content
-        
+
         prompt = f"""Extract the hierarchical outline from this article.
 Return ONLY a JSON array:
 [{{"id": "1", "number": "1", "title": "Section", "children": [...]}}]
@@ -505,7 +503,7 @@ Article: {title}
                 },
                 timeout=60.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 text = data["choices"][0]["message"]["content"].strip()
@@ -516,7 +514,7 @@ Article: {title}
                 return json.loads(text.strip())
     except Exception as e:
         print(f"Error: {e}")
-    
+
     return extract_outline_mock(content, title)
 
 

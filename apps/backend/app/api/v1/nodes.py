@@ -1,21 +1,17 @@
 from fastapi import APIRouter, HTTPException, Query, Body, Depends
 from typing import List, Optional
 from app.services.scraper import extract_content, detect_content_type
-from app.services.embeddings import get_embedding
 from app.services.outline import analyze_url, extract_outline
-from app.schemas.node import NodeCreate, Node as NodeSchema
 from app.models.node import Node
 from app.models.whiteboard import Whiteboard
 from app.core.database import get_db
 from app.api.v1.oauth import get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, desc, or_
+from sqlalchemy import select, delete, or_
 from app.models.edge import Edge
 from pydantic import BaseModel
 from app.models.user import User
 import uuid
-import json
-import os
 from datetime import datetime
 
 router = APIRouter()
@@ -67,14 +63,14 @@ async def process_url(
         existing_node = result.scalar_one_or_none()
         if existing_node:
             return existing_node
-    
+
     target_id = node_id or str(uuid.uuid4())
-    
+
     # Try AI-powered URL analysis first
     print(f"Analyzing URL with AI: {url}")
     try:
         ai_result = await analyze_url(url)
-        
+
         if ai_result and ai_result.get("title") and ai_result.get("outline"):
             node_data = {
                 "id": target_id,
@@ -102,14 +98,14 @@ async def process_url(
             else:
                 node = Node(**node_data)
                 db.add(node)
-                
+
             await db.commit()
             await db.refresh(node)
             print(f"Successfully created node with AI analysis: {node.title}")
             return _map_node_response(node)
     except Exception as e:
         print(f"AI analysis failed: {e}")
-    
+
     # Fallback to scraper if AI fails
     print(f"Falling back to scraper for: {url}")
     try:
@@ -122,7 +118,7 @@ async def process_url(
     detected_type = detect_content_type(url)
     node_type = extracted.get("content_type", detected_type or "article")
     node_title = extracted.get("title") or url.split("/")[-1].replace("_", " ").replace("-", " ").title() or "Web Page"
-    
+
     # Try to extract outline from scraped content
     outline = None
     if node_type == "article" and content:
@@ -132,7 +128,7 @@ async def process_url(
         except Exception as e:
             print(f"Failed to extract outline: {e}")
             outline = None
-    
+
     node_data = {
         "id": target_id,
         "type": node_type,
@@ -153,7 +149,7 @@ async def process_url(
     # Upsert logic
     existing_result = await db.execute(select(Node).where(Node.id == target_id, Node.user_id == current_user.id))
     existing_node = existing_result.scalar_one_or_none()
-    
+
     if existing_node:
         for k, v in node_data.items():
              if k != "id": setattr(existing_node, k, v)
@@ -161,7 +157,7 @@ async def process_url(
     else:
         node = Node(**node_data)
         db.add(node)
-    
+
     await db.commit()
     await db.refresh(node)
     return _map_node_response(node)
@@ -177,7 +173,7 @@ async def create_node(
     """
     node_id = node_data.get("id") or str(uuid.uuid4())
     whiteboard_id = node_data.get("whiteboard_id") or node_data.get("data", {}).get("whiteboard_id", "main")
-    
+
     # Auto-create whiteboard if needed
     if whiteboard_id:
         wb_result = await db.execute(select(Whiteboard).where(Whiteboard.id == whiteboard_id, Whiteboard.user_id == current_user.id))
@@ -193,11 +189,11 @@ async def create_node(
     content = node_data.get("content") or node_data.get("data", {}).get("content", "")
     metadata = node_data.get("data", {})
     if not isinstance(metadata, dict): metadata = {}
-    
+
     # Check for existing node (Upsert logic to prevent duplicate key errors)
     existing_result = await db.execute(select(Node).where(Node.id == node_id, Node.user_id == current_user.id))
     existing_node = existing_result.scalar_one_or_none()
-    
+
     node_fields = {
         "type": node_data.get("type", "article"),
         "url": node_data.get("url", ""),
@@ -227,12 +223,12 @@ async def create_node(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-        
+
     return _map_node_response(new_node)
 
 @router.put("/{node_id}", response_model=ProcessUrlResponse)
 async def update_node(
-    node_id: str, 
+    node_id: str,
     node_data: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -242,22 +238,22 @@ async def update_node(
     """
     result = await db.execute(select(Node).where(Node.id == node_id, Node.user_id == current_user.id))
     node = result.scalar_one_or_none()
-    
+
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
-    
+
     # Update regular fields
     if "title" in node_data: node.title = node_data["title"]
     if "type" in node_data: node.type = node_data["type"]
     if "url" in node_data: node.url = node_data["url"]
     if "content" in node_data: node.content = node_data["content"]
-    
+
     # Update metadata
     current_meta = dict(node.metadata_) if node.metadata_ else {}
     if "data" in node_data: current_meta.update(node_data["data"])
     if "metadata" in node_data: current_meta.update(node_data["metadata"])
     node.metadata_ = current_meta
-        
+
     await db.commit()
     await db.refresh(node)
     return _map_node_response(node)
@@ -273,19 +269,19 @@ async def list_nodes(
 ):
     """Get all nodes, filtered by type and whiteboard."""
     from sqlalchemy.orm import defer
-    
+
     # Optimize query: defer loading of large content and embedding fields for list views
     query = select(Node).where(Node.whiteboard_id == whiteboard_id, Node.user_id == current_user.id)
     query = query.options(defer(Node.content), defer(Node.embedding))
-    
+
     if type:
         query = query.where(Node.type == type)
-        
+
     query = query.offset(skip).limit(limit).order_by(Node.created_at)
-    
+
     result = await db.execute(query)
     nodes = result.scalars().all()
-    
+
     return [_map_node_response(n, include_content=False) for n in nodes]
 
 @router.get("/{node_id}", response_model=ProcessUrlResponse)
@@ -304,10 +300,10 @@ async def delete_node(node_id: str, db: AsyncSession = Depends(get_db), current_
     node = result.scalar_one_or_none()
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
-    
+
     # Step 1: Manually delete any edges referencing this node (failsafe for migration)
     await db.execute(delete(Edge).where(or_(Edge.source_id == node_id, Edge.target_id == node_id)))
-    
+
     # Step 2: Delete the node
     await db.delete(node)
     await db.commit()

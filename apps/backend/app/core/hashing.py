@@ -11,7 +11,7 @@ def compute_job_hash(
 ) -> str:
     """
     Computes a deterministic SHA256 hash based on the synthesis inputs.
-    
+
     Inputs are normalized (sorted keys/lists) to ensure consistent hashing.
     """
     # Normalize nodes: Use node_id and updated_at to detect content changes efficiently
@@ -25,7 +25,7 @@ def compute_job_hash(
             content = str(node.get("content", ""))
             updated_at = hashlib.sha256(content.encode()).hexdigest()
         node_summaries.append(f"{node_id}:{updated_at}")
-    
+
     node_summaries.sort()
 
     # Normalize edges
@@ -51,6 +51,6 @@ def compute_job_hash(
 
     # Generate JSON string with sorted keys
     canonical_str = json.dumps(canonical_data, sort_keys=True)
-    
+
     # Compute SHA256
     return hashlib.sha256(canonical_str.encode()).hexdigest()

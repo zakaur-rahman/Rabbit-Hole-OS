@@ -5,7 +5,6 @@ Generates compilable LaTeX documents from structured research data.
 Compiles to PDF using tectonic or pdflatex.
 """
 import io
-import os
 import re
 import subprocess
 import tempfile
@@ -33,32 +32,32 @@ LATEX_SPECIAL_CHARS = {
 def escape_latex(text: str) -> str:
     """
     Escape LaTeX special characters in text.
-    
+
     Preserves already escaped sequences and LaTeX commands.
     """
     if not text:
         return ""
-    
+
     # First, protect existing LaTeX commands and escaped chars
     protected = []
     result = text
-    
+
     # Preserve existing backslash commands (like \section, \cite, etc.)
     command_pattern = r'\\[a-zA-Z]+(?:\{[^}]*\})*'
     for i, match in enumerate(re.finditer(command_pattern, text)):
         placeholder = f"__LATEX_CMD_{i}__"
         protected.append((placeholder, match.group()))
         result = result.replace(match.group(), placeholder, 1)
-    
+
     # Now escape special characters
     for char, escaped in LATEX_SPECIAL_CHARS.items():
         if char != '\\':  # Handle backslash separately
             result = result.replace(char, escaped)
-    
+
     # Restore protected commands
     for placeholder, original in protected:
         result = result.replace(placeholder, original)
-    
+
     return result
 
 
@@ -68,10 +67,10 @@ def sanitize_for_latex(text: str) -> str:
     """
     if not text:
         return ""
-    
+
     # Remove control characters
     text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
-    
+
     # Escape special chars
     return escape_latex(text)
 
@@ -79,11 +78,11 @@ def sanitize_for_latex(text: str) -> str:
 def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, Dict]) -> str:
     """
     Generate a complete LaTeX document from structured report data.
-    
+
     Args:
         report_data: Dict with title, abstract, introduction, sections, conclusion, references
         source_map: Dict mapping reference numbers to source URLs and titles
-    
+
     Returns:
         Complete, compilable LaTeX code as string.
     """
@@ -93,10 +92,10 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
     conclusion = sanitize_for_latex(report_data.get("conclusion", ""))
     sections = report_data.get("sections", [])
     references = report_data.get("references", [])
-    
+
     # Build LaTeX document
     latex_parts = []
-    
+
     # Preamble
     latex_parts.append(r"""\documentclass[11pt,a4paper]{article}
 
@@ -155,7 +154,7 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
 \renewcommand{\headrulewidth}{0.4pt}
 
 """)
-    
+
     # Title and abstract
     latex_parts.append(r"\title{" + title + r"}")
     latex_parts.append(r"\author{AI Research Synthesis Engine}")
@@ -176,33 +175,33 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
 \newpage
 
 """)
-    
+
     # Introduction
     latex_parts.append(r"""% Introduction
 % AST_NODE: introduction
 \section{Introduction}
 """ + introduction + "\n\n")
-    
+
     # Main sections
     for section in sections:
         heading = sanitize_for_latex(section.get("heading", ""))
         body = sanitize_for_latex(section.get("body", ""))
         figures = section.get("figures", [])
-        
+
         # Determine section level based on heading structure
         section_id = section.get("id", "none")
         latex_parts.append(f"% AST_NODE: section_{section_id}\n")
         latex_parts.append(f"\\section{{{heading}}}\n")
         latex_parts.append(body + "\n\n")
-        
+
         # Add figures if present
         for i, fig in enumerate(figures):
             if not fig or fig.get("type") == "image_placeholder":
                 continue
-            
+
             fig_type = fig.get("type", "")
             caption = sanitize_for_latex(fig.get("caption", f"Figure {i+1}"))
-            
+
             if fig_type == "table":
                 # Render table
                 latex_parts.append(_generate_latex_table(fig, caption))
@@ -215,14 +214,14 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
 \\caption{{{caption}}}
 \\end{{figure}}
 """)
-    
+
     # Conclusion
     latex_parts.append(r"""
 % Conclusion
 % AST_NODE: conclusion
 \section{Conclusion}
 """ + conclusion + "\n\n")
-    
+
     # References
     latex_parts.append(r"""
 % References
@@ -243,13 +242,13 @@ def generate_latex_document(report_data: Dict[str, Any], source_map: Dict[str, D
         for i, ref in enumerate(references):
             ref_clean = sanitize_for_latex(str(ref))
             latex_parts.append(f"\\bibitem{{{i+1}}} {ref_clean}\n")
-    
+
     latex_parts.append(r"""
 \end{thebibliography}
 
 \end{document}
 """)
-    
+
     return "".join(latex_parts)
 
 
@@ -258,13 +257,13 @@ def _generate_latex_table(fig: Dict, caption: str) -> str:
     data = fig.get("data", {})
     headers = data.get("headers", [])
     rows = data.get("rows", [])
-    
+
     if not headers or not rows:
         return f"\n% Table data not available for: {caption}\n"
-    
+
     num_cols = len(headers)
     col_spec = "l" + "c" * (num_cols - 1)
-    
+
     table_latex = f"""
 \\begin{{table}}[htbp]
 \\centering
@@ -272,21 +271,21 @@ def _generate_latex_table(fig: Dict, caption: str) -> str:
 \\begin{{tabular}}{{{col_spec}}}
 \\toprule
 """
-    
+
     # Header row
     header_row = " & ".join([sanitize_for_latex(str(h)) for h in headers])
     table_latex += header_row + " \\\\\n\\midrule\n"
-    
+
     # Data rows
     for row in rows:
         row_cells = " & ".join([sanitize_for_latex(str(cell)) for cell in row])
         table_latex += row_cells + " \\\\\n"
-    
+
     table_latex += """\\bottomrule
 \\end{tabular}
 \\end{table}
 """
-    
+
     return table_latex
 
 
@@ -296,9 +295,9 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
     """
     errors = []
     lines = log.split('\n')
-    
+
     current_error = None
-    
+
     for i, line in enumerate(lines):
         # 1. Tectonic/pdflatex style: document.tex:58: error: ... or document.tex:58: ! LaTeX...
         # We make the second colon and error level optional
@@ -319,7 +318,7 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
             msg = line[2:].strip()
             if msg.startswith('LaTeX Error:'):
                 msg = msg.replace('LaTeX Error:', '').strip()
-            
+
             current_error = {
                 'message': msg,
                 'line': 0,
@@ -327,7 +326,7 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
             }
             errors.append(current_error)
             continue
-        
+
         # 3. Specific Tectonic style: "  error: <message>" followed by line info
         tectonic_error_match = re.search(r'^\s*error:\s+(.*)', line)
         if tectonic_error_match and not current_error:
@@ -343,11 +342,11 @@ def parse_latex_log(log: str) -> List[Dict[str, Any]]:
         line_match = re.search(r'l\.(\d+)', line)
         if not line_match:
             line_match = re.search(r'line (\d+)', line, re.IGNORECASE)
-        
+
         # 5. Tectonic pointer style: "  --> document.tex:5:1"
         if not line_match:
             line_match = re.search(r'-->\s+document\.tex:(\d+)', line)
-            
+
         if line_match and current_error:
             # Only update if we don't have a line yet (line 0)
             if current_error.get('line') == 0:
@@ -369,37 +368,37 @@ def map_latex_error_to_ast(errors: List[Dict], latex_code: str) -> List[Dict]:
         line_idx = error.get('line', 0) - 1
         if line_idx < 0 or line_idx >= len(lines):
             continue
-            
+
         # Scan upwards for AST_NODE comment
         node_id = "unknown"
         for i in range(line_idx, -1, -1):
             if "% AST_NODE:" in lines[i]:
                 node_id = lines[i].split("AST_NODE:")[1].strip()
                 break
-        
+
         error['ast_node_id'] = node_id
-    
+
     return errors
 
 def validate_latex_safety(latex_code: str) -> List[str]:
     """
     Check LaTeX code for unsafe or disallowed commands (Strict Mode).
-    
+
     Returns list of error messages if violations found.
     """
     violations = []
-    
+
     # Safe packages whitelist
     SAFE_PACKAGES = {
-        'inputenc', 'fontenc', 'geometry', 'graphicx', 'booktabs', 
-        'xcolor', 'fancyhdr', 'titlesec', 'parskip', 'microtype', 
+        'inputenc', 'fontenc', 'geometry', 'graphicx', 'booktabs',
+        'xcolor', 'fancyhdr', 'titlesec', 'parskip', 'microtype',
         'hyperref', 'amsmath', 'amssymb', 'amsfonts', 'url', 'enumitem',
         'caption', 'subcaption', 'float', 'array', 'longtable'
     }
 
     # Safe commands whitelist (targets for \renewcommand, etc)
     SAFE_REDEFINITIONS = {
-        '\\headrulewidth', '\\footrulewidth', '\\thesection', 
+        '\\headrulewidth', '\\footrulewidth', '\\thesection',
         '\\thesubsection', '\\thesubsubsection', '\\contentsname',
         '\\abstractname'
     }
@@ -417,23 +416,23 @@ def validate_latex_safety(latex_code: str) -> List[str]:
         (r'\\read', 'File operations are not allowed'),
         (r'\\catcode', 'Catcode modification is not allowed'),
     ]
-    
+
     lines = latex_code.split('\n')
     for i, line in enumerate(lines):
         # Strip comments
         clean_line = line.split('%')[0].strip()
-    
+
     # Check for forbidden packages
     FORBIDDEN_PACKAGES = [
         'shellesc', 'write18', 'catchfile', 'pythontex', 'bashful'
     ]
-    
+
     for i, line in enumerate(lines):
         # Strip comments for safety checks
         clean_line = line.split('%')[0].strip()
         if not clean_line:
             continue
-            
+
         # 1. Check for forbidden packages
         for pkg in FORBIDDEN_PACKAGES:
             if re.search(rf'\\usepackage(?:\s*\[[^\]]*\])?\s*\{{{pkg}\}}', clean_line):
@@ -442,7 +441,7 @@ def validate_latex_safety(latex_code: str) -> List[str]:
                     "line": i + 1,
                     "context": "Strict Mode Violation"
                 })
-        
+
         # 2. Check for high-risk commands
         for pattern, msg in BLACKLIST:
             if re.search(pattern, clean_line):
@@ -451,14 +450,14 @@ def validate_latex_safety(latex_code: str) -> List[str]:
                     "line": i + 1,
                     "context": "Strict Mode Violation"
                 })
-        
+
         # 3. Check for arbitrary redefinitions (preventing \def, \let, \renewcommand of core primitives)
         # We allow a whitelist of redefinitions used in our standard template
         SAFE_REDEFINITIONS = [
-            '\\headrulewidth', '\\footrulewidth', '\\thesection', '\\topmargin', 
+            '\\headrulewidth', '\\footrulewidth', '\\thesection', '\\topmargin',
             '\\textheight', '\\textwidth', '\\oddsidemargin', '\\evensidemargin'
         ]
-        
+
         redef_match = re.search(r'(\\def(?![a-zA-Z])|\\let(?![a-zA-Z])|\\renewcommand)\s*(\\[a-zA-Z]+)', line)
         if redef_match:
             cmd = redef_match.group(2)
@@ -477,11 +476,11 @@ def validate_latex_safety(latex_code: str) -> List[str]:
 def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional[io.BytesIO], List[Dict[str, Any]]):
     """
     Compile LaTeX code to PDF using tectonic or pdflatex.
-    
+
     Args:
         latex_code: The LaTeX source.
         strict_mode: If True, validate code against safety blacklist before compiling.
-        
+
     Returns:
         Tuple (pdf_bytes, errors)
     """
@@ -499,7 +498,7 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
         Path(__file__).parent / "tectonic.exe",  # beside this script
         "tectonic",  # system PATH
     ]
-    
+
     tectonic_exe = None
     for p in tectonic_paths:
         if isinstance(p, Path):
@@ -509,16 +508,16 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
                 break
         else:
             tectonic_exe = p  # Use system PATH
-    
+
     errors = []
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tex_path = Path(tmpdir) / "document.tex"
         pdf_path = Path(tmpdir) / "document.pdf"
-        
+
         # Write LaTeX file
         tex_path.write_text(latex_code, encoding='utf-8')
-        
+
         # Try tectonic first
         if tectonic_exe:
             try:
@@ -528,7 +527,7 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
                     capture_output=True,
                     timeout=120
                 )
-                
+
                 if pdf_path.exists():
                     print("[LaTeX] Compiled successfully with tectonic")
                     buffer = io.BytesIO(pdf_path.read_bytes())
@@ -538,7 +537,7 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
                     print(f"[LaTeX] Tectonic failed: {log_output[:500]}")
                     errors = parse_latex_log(log_output)
                     return None, errors
-                    
+
             except FileNotFoundError:
                 print("[LaTeX] Tectonic not found, trying pdflatex...")
             except subprocess.TimeoutExpired:
@@ -548,7 +547,7 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
                 print(f"[LaTeX] Tectonic error: {e}")
                 errors.append({"message": str(e), "line": 0})
 
-        
+
         # Try pdflatex
         try:
             # Run twice for TOC
@@ -560,7 +559,7 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
                     capture_output=True,
                     timeout=60
                 )
-            
+
             if pdf_path.exists():
                 print("[LaTeX] Compiled successfully with pdflatex")
                 buffer = io.BytesIO(pdf_path.read_bytes())
@@ -580,14 +579,14 @@ def compile_latex_to_pdf(latex_code: str, strict_mode: bool = True) -> (Optional
         except Exception as e:
             print(f"[LaTeX] pdflatex error: {e}")
             errors.append({"message": str(e), "line": 0})
-    
+
     return None, errors
 
 
 def get_latex_only(report_data: Dict[str, Any], source_map: Dict[str, Dict]) -> str:
     """
     Generate LaTeX code without compiling.
-    
+
     Useful when no LaTeX compiler is available.
     """
     return generate_latex_document(report_data, source_map)

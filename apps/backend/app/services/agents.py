@@ -12,7 +12,6 @@ from json.decoder import JSONDecodeError
 import httpx
 
 from app.services.llm import get_ai_client
-from app.services.document_ast import DocumentAST
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class BaseAgent:
     # Class-level HTTP client (shared across instances)
     _http_client: Optional[httpx.AsyncClient] = None
     _client_lock = asyncio.Lock()
-    
+
     # Retry configuration
     MAX_RETRIES = 3
     RETRY_DELAYS = [1, 2, 4]  # Exponential backoff
@@ -68,26 +67,26 @@ class BaseAgent:
         # Remove markdown code blocks
         cleaned = re.sub(r'^```(?:json)?\s*\n', '', raw_text, flags=re.MULTILINE)
         cleaned = re.sub(r'\n```\s*$', '', cleaned, flags=re.MULTILINE)
-        
+
         # Try to find JSON object boundaries
         brace_match = re.search(r'\{.*\}', cleaned, re.DOTALL)
         bracket_match = re.search(r'\[.*\]', cleaned, re.DOTALL)
-        
+
         if brace_match:
             cleaned = brace_match.group(0)
         elif bracket_match:
             cleaned = bracket_match.group(0)
-        
+
         return cleaned.strip()
 
     async def _parse_llm_json(
-        self, 
-        raw_response: str, 
+        self,
+        raw_response: str,
         expected_keys: list = None
     ) -> Union[dict, list]:
         """Parse LLM response as JSON with error recovery."""
         cleaned = self._clean_json_response(raw_response)
-        
+
         try:
             data = json.loads(cleaned)
             if expected_keys and isinstance(data, dict):
@@ -102,7 +101,7 @@ class BaseAgent:
                 return json.loads(fixed)
             except JSONDecodeError:
                 pass
-            
+
             # Attempt 2: Handle "Extra data" — LLM may have appended text after valid JSON
             if "Extra data" in str(e):
                 try:
@@ -112,7 +111,7 @@ class BaseAgent:
                     return data
                 except JSONDecodeError:
                     pass
-            
+
             error_msg = f"Failed to parse LLM response as JSON: {str(e)}"
             self.logger.error(f"{error_msg}\nPreview: {raw_response[:200]}...")
             raise ValueError(error_msg)
@@ -121,12 +120,12 @@ class BaseAgent:
         """Intelligently truncate text while preserving sentence boundaries."""
         if len(text) <= max_chars:
             return text, False
-        
+
         truncated = text[:max_chars]
         last_period = truncated.rfind('. ')
         if last_period > max_chars * 0.8:
             truncated = truncated[:last_period + 1]
-        
+
         return truncated + "\n\n[... content truncated ...]", True
 
     def _validate_input(self, value: Optional[str], name: str, min_length: int = 1, max_length: int = 100000, allow_empty: bool = False) -> str:
@@ -136,13 +135,13 @@ class BaseAgent:
             raise ValueError(f"{name} cannot be None")
         if not isinstance(value, str):
             raise ValueError(f"{name} must be a string")
-            
+
         value = value.strip()
         if not allow_empty and len(value) < min_length:
             raise ValueError(f"{name} too short")
         if len(value) > max_length:
             raise ValueError(f"{name} too long")
-            
+
         return html.unescape(value)
 
     def _log_llm_call(self, prompt: str, system_instruction: Optional[str] = None, direction: str = "request", response: str = ""):
@@ -194,47 +193,47 @@ class BaseAgent:
         """Implementation of LLM call."""
         provider, api_key, base_url = await get_ai_client()
         self._log_llm_call(prompt, system_instruction, direction="request")
-        
+
         if provider == "gemini":
             from google import genai
             from google.genai import types
             client = genai.Client(api_key=api_key)
-            
+
             config = types.GenerateContentConfig(
                 temperature=temperature,
                 max_output_tokens=8000,
                 response_mime_type="application/json",
                 system_instruction=system_instruction
             )
-            
+
             def call():
                 return client.models.generate_content(
                     model="gemini-2.5-flash-lite",
                     contents=prompt,
                     config=config
                 )
-            
+
             response = await asyncio.to_thread(call)
-            
+
             # Diagnostics for empty responses
             if not response or not response.text:
                 finish_reason = "UNKNOWN"
                 safety_ratings = []
-                
+
                 if response and hasattr(response, 'candidates') and response.candidates:
                     cand = response.candidates[0]
                     finish_reason = getattr(cand, 'finish_reason', 'NONE')
                     if hasattr(cand, 'safety_ratings'):
                         safety_ratings = [f"{r.category}: {r.probability}" for r in cand.safety_ratings if r.blocked]
-                
+
                 self.logger.warning(f"[{self.name}] Gemini returned EMPTY. Reason: {finish_reason}, Safety: {safety_ratings}")
                 text_resp = "{}"
             else:
                 text_resp = response.text.strip()
-                
+
             self._log_llm_call(prompt, direction="response", response=text_resp)
             return text_resp
-        
+
         elif provider in ("openai", "chutes"):
             model = "gpt-4o" if provider == "openai" else "deepseek-ai/DeepSeek-V3-0324"
             messages = []
@@ -258,10 +257,10 @@ class BaseAgent:
             resp_content = data["choices"][0]["message"]["content"]
             self._log_llm_call(prompt, direction="response", response=resp_content)
             return resp_content
-        
+
         else:
             self.logger.warning(f"[{self.name}] Unhandled LLM provider: {provider}")
-        
+
         return "{}"
 
 # ============================================================
@@ -278,7 +277,7 @@ class PlannerAgent(BaseAgent):
             query = self._validate_input(query, "query", min_length=3, max_length=1000)
             context_truncated, was_truncated = self._smart_truncate(context, 10000)
             relationships = self._validate_input(relationships, "relationships", allow_empty=True, max_length=50000)
-            
+
             system = f"You are the {self.role}. Your task is to architect a synthesis plan for a research document. Respond ONLY with valid JSON."
             prompt = f'''
 CRITICAL: Respond ONLY with valid JSON. No preamble, no markdown.
@@ -286,7 +285,7 @@ CRITICAL: Respond ONLY with valid JSON. No preamble, no markdown.
 TOPIC: {query}
 RELATIONSHIPS: {relationships}
 CONTEXT: {context_truncated}
-{f"NOTE: Context was truncated. Focus on available information." if was_truncated else ""}
+{"NOTE: Context was truncated. Focus on available information." if was_truncated else ""}
 
 TASK:
 1. Analyze the context and graph relationships.
@@ -306,7 +305,7 @@ OUTPUT FORMAT (JSON):
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system, temperature=0.2)
             data = await self._parse_llm_json(raw_response, expected_keys=["document_outline", "section_dependencies"])
-            
+
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
@@ -334,13 +333,13 @@ class WriterAgent(BaseAgent):
             # Validate inputs
             query = self._validate_input(query, "query", max_length=1000)
             context_truncated, was_truncated = self._smart_truncate(context, 20000)
-            
+
             system = f"You are the {self.role}. Your task is to generate a structured JSON AST for a research document. Respond ONLY with valid JSON."
             prompt = f'''
 TOPIC: {query}
 PLAN: {json.dumps(plan)}
 CONTEXT: {context_truncated}
-{f"NOTE: Context was truncated." if was_truncated else ""}
+{"NOTE: Context was truncated." if was_truncated else ""}
 REFERENCES: {references_json}
 
 ────────────────────────────────────────
@@ -404,10 +403,10 @@ OUTPUT SCHEMA (JSON):
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response)
-            
+
             if isinstance(data, dict) and "document" in data and "title" not in data:
                 data = data["document"]
-            
+
             if not isinstance(data, dict) or "title" not in data:
                 raise ValueError("Incomplete AST returned")
 
@@ -449,7 +448,7 @@ TASK:
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response)
-            
+
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
@@ -484,7 +483,7 @@ TASK:
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response, expected_keys=["figures"])
-            
+
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
@@ -527,11 +526,11 @@ TASK:
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response, expected_keys=["normalized_references"])
-            
+
             # If LLM returned a raw array, wrap it
             if isinstance(data, list):
                 data = {"normalized_references": data}
-            
+
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
@@ -568,7 +567,7 @@ TASK:
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response)
-            
+
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
@@ -605,7 +604,7 @@ TASK:
 '''
             raw_response = await self._call_llm_with_retry(prompt, system_instruction=system)
             data = await self._parse_llm_json(raw_response, expected_keys=["retry_action"])
-            
+
             return AgentResponse(
                 agent_name=self.name,
                 status="success",

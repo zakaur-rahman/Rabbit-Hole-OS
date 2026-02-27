@@ -4,18 +4,17 @@ Redis client for session management and caching using standard Redis
 from typing import Optional
 from app.core.config import settings
 from redis.asyncio import Redis as AsyncRedis
-import json
 
 
 class RedisClient:
     _client: Optional[AsyncRedis] = None
-    
+
     @classmethod
     async def get_client(cls) -> AsyncRedis:
         """Get or create standard Redis async client"""
         if cls._client is None:
             redis_url = settings.REDIS_URL or "redis://localhost:6379"
-            
+
             # Use standard redis.asyncio
             cls._client = AsyncRedis.from_url(
                 redis_url,
@@ -23,7 +22,7 @@ class RedisClient:
                 decode_responses=True
             )
         return cls._client
-    
+
     @classmethod
     async def close(cls):
         """Close Redis connection"""

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 import os
 import hashlib
 
@@ -18,7 +18,7 @@ async def get_embedding(text: str, use_real: bool = True) -> List[float]:
     hf_token = os.environ.get("HF_TOKEN")
     gemini_key = os.environ.get("GEMINI_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
-    
+
     if use_real:
         if gemini_key:
             return await get_gemini_embedding(text, gemini_key)
@@ -28,7 +28,7 @@ async def get_embedding(text: str, use_real: bool = True) -> List[float]:
             return await get_huggingface_embedding(text, hf_token)
         elif openai_key:
             return await get_openai_embedding(text, openai_key)
-    
+
     return get_mock_embedding(text, OPENAI_DIMENSION)
 
 async def get_huggingface_embedding(text: str, hf_token: str) -> List[float]:
@@ -36,11 +36,11 @@ async def get_huggingface_embedding(text: str, hf_token: str) -> List[float]:
     try:
         from huggingface_hub import InferenceClient
         import asyncio
-        
+
         # Using a high-quality small embedding model (384 dims)
         model = "BAAI/bge-small-en-v1.5"
         client = InferenceClient(model=model, token=hf_token)
-        
+
         def call_hf():
             return client.feature_extraction(text[:8000])
 
@@ -54,7 +54,7 @@ async def get_chutes_embedding(text: str, api_key: str) -> List[float]:
     """Get real embedding from Chutes API (OpenAI compatible)."""
     try:
         import httpx
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 "https://llm.chutes.ai/v1/embeddings",
@@ -68,7 +68,7 @@ async def get_chutes_embedding(text: str, api_key: str) -> List[float]:
                 },
                 timeout=30.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 return data["data"][0]["embedding"]
@@ -84,12 +84,12 @@ async def get_gemini_embedding(text: str, api_key: str) -> List[float]:
     try:
         from google import genai
         import asyncio
-        
+
         client = genai.Client(api_key=api_key)
         model_id = "text-embedding-004"
-        
+
         print(f"--- Gemini: Generating embedding using {model_id}")
-        
+
         def call_gemini():
             return client.models.embed_content(
                 model=model_id,
@@ -97,11 +97,11 @@ async def get_gemini_embedding(text: str, api_key: str) -> List[float]:
             )
 
         response = await asyncio.to_thread(call_gemini)
-        
+
         if response and response.embeddings:
             return response.embeddings[0].values
-        
-        print(f"Gemini embedding returned empty result")
+
+        print("Gemini embedding returned empty result")
         return get_mock_embedding(text, GEMINI_DIMENSION)
     except Exception as e:
         print(f"Error getting Gemini embedding via SDK: {e}")
@@ -111,7 +111,7 @@ async def get_openai_embedding(text: str, api_key: str) -> List[float]:
     """Get real embedding from OpenAI API."""
     try:
         import httpx
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 "https://api.openai.com/v1/embeddings",
@@ -125,7 +125,7 @@ async def get_openai_embedding(text: str, api_key: str) -> List[float]:
                 },
                 timeout=30.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 return data["data"][0]["embedding"]
@@ -143,7 +143,7 @@ def get_mock_embedding(text: str, dimension: int = 1536) -> List[float]:
     """
     # Create a hash of the text
     text_hash = hashlib.sha256(text.encode()).hexdigest()
-    
+
     # Use hash to seed a deterministic sequence
     embedding = []
     for i in range(dimension):
@@ -152,7 +152,7 @@ def get_mock_embedding(text: str, dimension: int = 1536) -> List[float]:
         val = int(text_hash[idx:idx+2], 16) / 255.0  # Normalize to 0-1
         # Center around 0
         embedding.append((val - 0.5) * 2)
-    
+
     return embedding
 
 async def get_batch_embeddings(texts: List[str]) -> List[List[float]]:
@@ -164,8 +164,8 @@ def cosine_similarity(a: List[float], b: List[float]) -> float:
     dot_product = sum(x * y for x, y in zip(a, b))
     norm_a = sum(x * x for x in a) ** 0.5
     norm_b = sum(x * x for x in b) ** 0.5
-    
+
     if norm_a == 0 or norm_b == 0:
         return 0.0
-    
+
     return dot_product / (norm_a * norm_b)

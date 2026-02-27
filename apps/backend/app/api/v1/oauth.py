@@ -109,10 +109,10 @@ async def get_current_user(
 ) -> User:
     """Dependency to get current authenticated user"""
     import uuid as uuid_lib
-    
+
     token = credentials.credentials
     payload = verify_token(token, token_type="access")
-    
+
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -120,14 +120,14 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     print(f"DEBUG: Token verified for user: {payload.get('sub')}")
-    
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    
+
     # Convert user_id to UUID if it's a string
     try:
         if isinstance(user_id, str):
@@ -137,7 +137,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid user ID format",
         )
-    
+
     # 1. Check user cache
     now = datetime.utcnow()
     if user_id in _user_cache:
@@ -154,7 +154,7 @@ async def get_current_user(
     if user is None:
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
-        
+
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -162,7 +162,7 @@ async def get_current_user(
             )
         # Store in cache
         _user_cache[user_id] = (user, now + USER_CACHE_TTL)
-    
+
     # 3. Update last_active_at (Throttled)
     session_id = payload.get("session_id")
     if session_id:
@@ -198,7 +198,7 @@ async def exchange_code(
         # Desktop-only: Use loopback redirect (Google recommended for desktop apps)
         # The redirect URI must match what was used in the OAuth request (http://127.0.0.1:PORT/oauth/callback)
         redirect_uri = request.redirect_uri or "http://127.0.0.1:53682/oauth/callback"
-        
+
         # Capture client IP (handle proxies)
         forwarded = req.headers.get("X-Forwarded-For")
         if forwarded:
@@ -256,7 +256,7 @@ async def exchange_code(
         error_trace = traceback.format_exc()
         print(f"[OAuth Exchange Error] {type(e).__name__}: {str(e)}")
         print(f"[OAuth Exchange Traceback]\n{error_trace}")
-        
+
         # Return a more informative error message
         error_detail = str(e) if str(e) else f"{type(e).__name__}: An unexpected error occurred"
         raise HTTPException(
@@ -282,16 +282,16 @@ async def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
         )
-    
+
     user_id = payload.get("sub")
     session_id = payload.get("session_id")
-    
+
     if not user_id or not session_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    
+
     # Check if token is revoked
     token_hash = hash_refresh_token(request.refresh_token)
     revoked_key = RedisKeys.REVOKED_TOKEN.format(token_hash=token_hash)
@@ -305,38 +305,38 @@ async def refresh_token(
     except Exception as e:
         # Graceful fallback: log error but continue if Redis fails
         print(f"[Redis Error] Failed to check revoked token: {str(e)}")
-    
+
     # Get session
     result = await db.execute(
         select(Session).where(Session.id == session_id)
     )
     session = result.scalar_one_or_none()
-    
+
     if session is None or session.revoked_at is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session not found or revoked",
         )
-    
+
     if session.expires_at < datetime.utcnow():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session expired",
         )
-    
+
     # Revoke old refresh token (rotation)
     # Upstash Redis uses set() with ex parameter instead of setex()
     try:
         await redis_client.set(revoked_key, "1", ex=86400 * 30)  # 30 days
     except Exception as e:
         print(f"[Redis Error] Failed to revoke old refresh token: {str(e)}")
-    
+
     # Create new access token
     access_token = create_access_token({
         "sub": user_id,
         "session_id": session_id,
     })
-    
+
     return AccessTokenResponse(access_token=access_token, token_type="bearer")
 
 
@@ -352,7 +352,7 @@ async def logout(
     """
     token = credentials.credentials
     payload = verify_token(token, token_type="access")
-    
+
     if payload:
         session_id = payload.get("session_id")
         if session_id:
@@ -364,7 +364,7 @@ async def logout(
             if session:
                 session.revoked_at = datetime.utcnow()
                 await db.commit()
-    
+
     return {"message": "Logged out successfully"}
 
 
@@ -396,12 +396,12 @@ async def list_sessions(
     token = credentials.credentials
     payload = verify_token(token, token_type="access")
     current_session_id = payload.get("session_id") if payload else None
-    
+
     # Get all sessions for the user
     # Use explicit UUID casting in SQL to handle type mismatch
     import uuid as uuid_lib
     user_id_uuid = current_user.id if isinstance(current_user.id, uuid_lib.UUID) else uuid_lib.UUID(str(current_user.id))
-    
+
     # Use text() with bindparams() for proper parameter binding
     result = await db.execute(
         select(Session)
@@ -411,7 +411,7 @@ async def list_sessions(
         .order_by(Session.expires_at.desc())
     )
     sessions = result.scalars().all()
-    
+
     return [
         SessionResponse(
             id=str(session.id),
@@ -456,23 +456,23 @@ async def revoke_session(
         .where(text("sessions.user_id::uuid = :user_id").bindparams(user_id=user_id_uuid))
     )
     session = result.scalar_one_or_none()
-    
+
     if session is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found",
         )
-    
+
     if session.revoked_at is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Session already revoked",
         )
-    
+
     # Revoke the session
     session.revoked_at = datetime.utcnow()
     await db.commit()
-    
+
     # Also revoke the refresh token in Redis
     token_hash = session.refresh_token_hash
     revoked_key = RedisKeys.REVOKED_TOKEN.format(token_hash=token_hash)
@@ -480,7 +480,7 @@ async def revoke_session(
         await redis_client.set(revoked_key, "1", ex=86400 * 30)  # 30 days
     except Exception as e:
         print(f"[Redis Error] Failed to revoke session in Redis: {str(e)}")
-    
+
     return {"message": "Session revoked successfully"}
 
 
@@ -497,7 +497,7 @@ async def revoke_all_sessions(
     token = credentials.credentials
     payload = verify_token(token, token_type="access")
     current_session_id = payload.get("session_id") if payload else None
-    
+
     import uuid as uuid_lib
     user_id_uuid = current_user.id if isinstance(current_user.id, uuid_lib.UUID) else uuid_lib.UUID(str(current_user.id))
 
@@ -507,14 +507,14 @@ async def revoke_all_sessions(
     ).where(
         Session.revoked_at.is_(None)
     )
-    
+
     if current_session_id:
         current_session_id_uuid = uuid_lib.UUID(current_session_id) if isinstance(current_session_id, str) else current_session_id
         query = query.where(text("sessions.id::uuid != :current_session_id").bindparams(current_session_id=current_session_id_uuid))
-    
+
     result = await db.execute(query)
     sessions = result.scalars().all()
-    
+
     # Revoke all sessions
     revoked_count = 0
     for session in sessions:
@@ -527,9 +527,9 @@ async def revoke_all_sessions(
         except Exception as e:
             print(f"[Redis Error] Failed to revoke session {session.id} in Redis: {str(e)}")
         revoked_count += 1
-    
+
     await db.commit()
-    
+
     return {"message": f"Revoked {revoked_count} session(s)"}
 
 

@@ -9,7 +9,7 @@ Handles:
 - Supported node types: article, web, note, code, pdf, image, video,
   academic, product, annotation, comment, canvas, group, text, search
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from dataclasses import dataclass, field
 import re
 import html as html_lib

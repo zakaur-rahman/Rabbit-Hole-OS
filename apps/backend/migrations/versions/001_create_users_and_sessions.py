@@ -1,7 +1,7 @@
 """Create users and sessions tables
 
 Revision ID: 001_users_sessions
-Revises: 
+Revises:
 Create Date: 2024-01-01 00:00:00.000000
 
 """
@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.create_index('ix_users_id', 'users', ['id'])
     op.create_index('ix_users_google_id', 'users', ['google_id'])
     op.create_index('ix_users_email', 'users', ['email'])
-    
+
     # Create sessions table
     op.create_table(
         'sessions',

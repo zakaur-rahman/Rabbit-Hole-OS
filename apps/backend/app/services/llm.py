@@ -11,12 +11,12 @@ CHUTES_API_BASE = "https://llm.chutes.ai/v1"
 async def get_ai_client():
     """Determine which AI provider to use based on environment variables."""
     from app.core.config import settings as app_settings
-    
+
     gemini_key = app_settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
     chutes_key = app_settings.CHUTES_API_KEY or os.environ.get("CHUTES_API_KEY")
     openai_key = app_settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
     hf_token = os.environ.get("HF_TOKEN")
-    
+
     if gemini_key:
         print("--- AI Service: Using GEMINI (Priority)")
         return ("gemini", gemini_key, "https://generativelanguage.googleapis.com/v1beta")
@@ -40,7 +40,7 @@ async def generate_synthesis(query: str, node_contents: List[dict], previous_sum
     """
     provider, api_key, base_url = await get_ai_client()
     print(f"Generating synthesis using provider: {provider} (Refining: {bool(previous_summary)})")
-    
+
     if provider in ("chutes", "openai"):
         return await generate_llm_synthesis(query, node_contents, api_key, base_url, provider, previous_summary)
     else:
@@ -53,7 +53,7 @@ async def generate_research_report(query: str, context: str) -> dict:
     """
     provider, api_key, base_url = await get_ai_client()
     print(f"Generating research report using provider: {provider}")
-    
+
     if provider == "gemini":
         return await generate_gemini_report(query, context, api_key)
     elif provider in ("chutes", "openai"):
@@ -65,27 +65,27 @@ async def generate_research_report(query: str, context: str) -> dict:
 async def generate_document_ast(query: str, context: str, source_map: dict, edges: Optional[List[dict]] = None) -> dict:
     """
     Generate a structured JSON AST for document synthesis.
-    
+
     Returns a dict following the DocumentAST schema with sections, blocks, and references.
     """
     provider, api_key, base_url = await get_ai_client()
     print(f"Generating document AST using provider: {provider}")
-    
+
     # Build references from source_map
     references_json = json.dumps([
         {"id": ref_id, "title": data.get("title", "Source"), "url": data.get("url", "")}
         for ref_id, data in source_map.items()
     ], indent=2)
-    
+
     if provider == "gemini":
         try:
             from google import genai
             from google.genai import types
             import asyncio
             from datetime import datetime
-            
+
             client = genai.Client(api_key=api_key)
-            
+
             # Build relationships context from edges
             rel_context = ""
             if edges:
@@ -119,7 +119,7 @@ CONTEXT:
 {context[:20000]}
 
 IMPORTANT:
-• Parent nodes define high-level context. 
+• Parent nodes define high-level context.
 • Child nodes must be analyzed in relation to their parent.
 • Multi-layered connections should reflect structural intentionality.
 
@@ -209,7 +209,7 @@ STRICT RULES:
                         response_mime_type="application/json"
                     )
                 )
-            
+
             response = await asyncio.to_thread(call)
             if response and response.text:
                 data = json.loads(response.text.strip())
@@ -225,13 +225,13 @@ STRICT RULES:
     else:
         # Mock AST for other providers
         return _generate_mock_ast(query, source_map)
-    
-    
+
+
 async def generate_llm_document_ast(
-    query: str, 
-    context: str, 
+    query: str,
+    context: str,
     source_map: dict,
-    api_key: str, 
+    api_key: str,
     base_url: str,
     provider: str,
     edges: Optional[List[dict]] = None
@@ -240,12 +240,12 @@ async def generate_llm_document_ast(
     try:
         import httpx
         from datetime import datetime
-        
+
         references_json = json.dumps([
             {"id": ref_id, "title": data.get("title", "Source"), "url": data.get("url", "")}
             for ref_id, data in source_map.items()
         ], indent=2)
-        
+
         # Build relationships context from edges
         rel_context = ""
         if edges:
@@ -279,7 +279,7 @@ CONTEXT:
 {context[:15000]}
 
 IMPORTANT:
-• Parent nodes define high-level context. 
+• Parent nodes define high-level context.
 • Child nodes must be analyzed in relation to their parent.
 • Multi-layered connections should reflect structural intentionality.
 
@@ -367,11 +367,11 @@ STRICT RULES:
                 },
                 timeout=120.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 content = data["choices"][0]["message"]["content"].strip()
-                
+
                 # Strip markdown code blocks
                 if content.startswith("```"):
                     content = content.split("```")[1]
@@ -382,7 +382,7 @@ STRICT RULES:
                     content = content.split("```json")[1].split("```")[0].strip()
                 elif "```" in content:
                     content = content.split("```")[1].split("```")[0].strip()
-                
+
                 # Basic JSON cleanup
                 try:
                     ast_data = json.loads(content)
@@ -397,7 +397,7 @@ STRICT RULES:
             else:
                 print(f"AST generation error: {response.status_code} - {response.text}")
                 return _generate_mock_ast(query, source_map)
-                
+
     except Exception as e:
         print(f"Error generating LLM document AST: {e}")
         return _generate_mock_ast(query, source_map)
@@ -406,12 +406,12 @@ STRICT RULES:
 def _generate_mock_ast(query: str, source_map: dict) -> dict:
     """Generate a mock AST for testing."""
     from datetime import datetime
-    
+
     refs = [
         {"id": ref_id, "title": data.get("title", "Source"), "url": data.get("url", "")}
         for ref_id, data in source_map.items()
     ]
-    
+
     return {
         "title": f"Research Report: {query}",
         "subtitle": None,
@@ -461,19 +461,19 @@ def _generate_mock_ast(query: str, source_map: dict) -> dict:
 async def summarize_topic_chunk(chunk_content: str, chunk_heading: str, source_ref: str) -> dict:
     """
     Pass 1: Summarize a single topic chunk.
-    
+
     Returns: {summary: str, citations: [str], data_available: bool}
     """
     provider, api_key, base_url = await get_ai_client()
-    
+
     if provider == "gemini":
         try:
             from google import genai
             from google.genai import types
             import asyncio
-            
+
             client = genai.Client(api_key=api_key)
-            
+
             prompt = f"""Summarize this topic chunk for a research report.
 
 Topic: {chunk_heading}
@@ -515,7 +515,7 @@ IMPORTANT: Do NOT infer or fabricate information. If data is not present, say "D
                         response_mime_type="application/json"
                     )
                 )
-            
+
             response = await asyncio.to_thread(call)
             if response and response.text:
                 return json.loads(response.text.strip())
@@ -523,35 +523,35 @@ IMPORTANT: Do NOT infer or fabricate information. If data is not present, say "D
             print(f"Pass 1 error (Gemini): {e}")
     elif provider in ("chutes", "openai"):
         return await generate_llm_summarize_topic_chunk(chunk_content, chunk_heading, source_ref, api_key, base_url, provider)
-    
+
     return {"summary": chunk_content[:500], "citations": [source_ref], "data_available": True}
 
 
 async def merge_topic_sections(topic_heading: str, summaries: List[dict]) -> dict:
     """
     Pass 2: Merge multiple summaries of the same topic across nodes.
-    
+
     Returns: {heading: str, body: str, figures: [], citations: []}
     """
     provider, api_key, base_url = await get_ai_client()
-    
+
     # Combine summaries
     combined = "\n\n".join([
-        f"Summary {i+1}: {s.get('summary', '')}" 
+        f"Summary {i+1}: {s.get('summary', '')}"
         for i, s in enumerate(summaries)
     ])
     all_citations = []
     for s in summaries:
         all_citations.extend(s.get("citations", []))
-    
+
     if provider == "gemini":
         try:
             from google import genai
             from google.genai import types
             import asyncio
-            
+
             client = genai.Client(api_key=api_key)
-            
+
             prompt = f"""Merge these summaries into a unified section for a research report.
 
 Topic: {topic_heading}
@@ -593,7 +593,7 @@ IMPORTANT: Do NOT fabricate data. Use "Data not available" if information is mis
                         response_mime_type="application/json"
                     )
                 )
-            
+
             response = await asyncio.to_thread(call)
             if response and response.text:
                 return json.loads(response.text.strip())
@@ -601,7 +601,7 @@ IMPORTANT: Do NOT fabricate data. Use "Data not available" if information is mis
             print(f"Pass 2 error (Gemini): {e}")
     elif provider in ("chutes", "openai"):
         return await generate_llm_merge_topic_sections(topic_heading, summaries, api_key, base_url, provider)
-    
+
     return {
         "heading": topic_heading,
         "body": combined,
@@ -613,30 +613,30 @@ IMPORTANT: Do NOT fabricate data. Use "Data not available" if information is mis
 async def assemble_research_document(query: str, sections: List[dict], source_map: dict) -> dict:
     """
     Pass 3: Assemble final research document from merged sections.
-    
+
     Returns full report structure for PDF generation.
     """
     provider, api_key, base_url = await get_ai_client()
-    
+
     # Build sections context
     sections_text = "\n\n".join([
         f"## {s.get('heading', 'Section')}\n{s.get('body', '')}"
         for s in sections
     ])
-    
+
     # Build references
     references = []
     for ref_num, ref_data in source_map.items():
         references.append(f"[{ref_num}] {ref_data.get('title', 'Source')} - {ref_data.get('url', '')}")
-    
+
     if provider == "gemini":
         try:
             from google import genai
             from google.genai import types
             import asyncio
-            
+
             client = genai.Client(api_key=api_key)
-            
+
             prompt = f"""Assemble a final research document from these sections.
 
 Query: {query}
@@ -684,7 +684,7 @@ IMPORTANT: Preserve all citations. Do NOT add new claims.
                         response_mime_type="application/json"
                     )
                 )
-            
+
             response = await asyncio.to_thread(call)
             if response and response.text:
                 return json.loads(response.text.strip())
@@ -692,7 +692,7 @@ IMPORTANT: Preserve all citations. Do NOT add new claims.
             print(f"Pass 3 error (Gemini): {e}")
     elif provider in ("chutes", "openai"):
         return await generate_llm_assemble_research_document(query, sections, source_map, api_key, base_url, provider)
-    
+
     return {
         "title": f"Research Report: {query}",
         "abstract": "This report synthesizes information from multiple sources.",
@@ -709,11 +709,11 @@ async def generate_gemini_report(query: str, context: str, api_key: str) -> dict
         from google.genai import types
         import asyncio
         import json
-        
-        client = genai.Client(api_key=api_key)
-        model_id = "gemini-2.5-flash-preview-09-2025" 
 
-        prompt = f"""You are an advanced academic research assistant. 
+        client = genai.Client(api_key=api_key)
+        model_id = "gemini-2.5-flash-preview-09-2025"
+
+        prompt = f"""You are an advanced academic research assistant.
 Based on the provided context, write a comprehensive, professional research report on: "{query}"
 
 Context:
@@ -781,7 +781,7 @@ Do not include any conversational text outside the JSON.
 
         print(f"--- Gemini: Generating research report on '{query}'")
         response = await asyncio.to_thread(call_gemini)
-        
+
         if not response or not response.text:
             return generate_mock_report(query, context)
 
@@ -792,7 +792,7 @@ Do not include any conversational text outside the JSON.
             text = parts[1] if len(parts) > 1 else text
             if text.startswith("json"):
                 text = text[4:]
-        
+
         return json.loads(text.strip())
 
     except Exception as e:
@@ -800,9 +800,9 @@ Do not include any conversational text outside the JSON.
         return generate_mock_report(query, context)
 
 async def generate_llm_report(
-    query: str, 
-    context: str, 
-    api_key: str, 
+    query: str,
+    context: str,
+    api_key: str,
     base_url: str,
     provider: str
 ) -> dict:
@@ -810,8 +810,8 @@ async def generate_llm_report(
     try:
         import httpx
         import json
-        
-        prompt = f"""You are an advanced academic research assistant. 
+
+        prompt = f"""You are an advanced academic research assistant.
 Based on the provided context, write a comprehensive, professional research report on: "{query}"
 
 Context:
@@ -869,30 +869,30 @@ Do not include any conversational text outside the JSON.
                 },
                 timeout=120.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 content = data["choices"][0]["message"]["content"]
-                
+
                 # Strip markdown code blocks
                 if content.strip().startswith("```"):
                     content = content.split("```")[1]
                     if content.strip().startswith("json"):
                         content = content.replace("json", "", 1)
-                
+
                 return json.loads(content.strip())
             else:
                 print(f"Report generation error: {response.status_code} - {response.text}")
                 return generate_mock_report(query, context)
-                
+
     except Exception as e:
         print(f"Error generating report: {e}")
         return generate_mock_report(query, context)
 
 async def generate_llm_synthesis(
-    query: str, 
-    node_contents: List[dict], 
-    api_key: str, 
+    query: str,
+    node_contents: List[dict],
+    api_key: str,
     base_url: str,
     provider: str,
     previous_summary: Optional[str] = None
@@ -900,19 +900,19 @@ async def generate_llm_synthesis(
     """Generate synthesis using LLM API (Chutes.ai or OpenAI compatible)."""
     try:
         import httpx
-        
+
         # Build context from nodes
         context_parts = []
         for i, node in enumerate(node_contents[:5]):  # Limit to 5 sources
             title = node.get("title", "Untitled")
             content = node.get("content", "")[:1500]  # Limit content per source
             context_parts.append(f"Source {i+1} - {title}:\n{content}\n")
-        
+
         context = "\n---\n".join(context_parts)
-        
+
         if previous_summary:
             prompt = f"""You previously synthesized these sources as follows:
-            
+
 "{previous_summary}"
 
 The user now has a follow-up query/instruction: "{query}"
@@ -964,7 +964,7 @@ Synthesis:"""
                 },
                 timeout=60.0
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 return data["choices"][0]["message"]["content"]
@@ -978,12 +978,12 @@ Synthesis:"""
 def generate_mock_synthesis(query: str, node_contents: List[dict]) -> str:
     """Generate a structured mock synthesis when API is unavailable."""
     num_sources = len(node_contents)
-    
+
     if num_sources == 0:
         return "No sources available for synthesis. Please select some nodes to analyze."
-    
+
     titles = [node.get("title", "Untitled") for node in node_contents]
-    
+
     synthesis = f"""## Synthesis: {query}
 
 Based on analysis of {num_sources} source(s):
@@ -992,7 +992,7 @@ Based on analysis of {num_sources} source(s):
 {chr(10).join(f"- **{title}**" for title in titles[:5])}
 
 ### Analysis
-This synthesis analyzes the selected sources regarding "{query}". 
+This synthesis analyzes the selected sources regarding "{query}".
 
 To get AI-powered insights, set one of these environment variables:
 - `CHUTES_API_KEY` - For Chutes.ai (recommended)
@@ -1033,11 +1033,11 @@ def generate_mock_report(query: str, context: str) -> dict:
 async def generate_edge_label(source_content: str, target_content: str) -> str:
     """Generate a semantic label for an edge between two nodes."""
     provider, api_key, base_url = await get_ai_client()
-    
+
     if provider in ("chutes", "openai"):
         try:
             import httpx
-            
+
             prompt = f"""Given two pieces of content, generate a short (2-4 words) label describing the relationship between them.
 
 Content A: {source_content[:500]}
@@ -1070,13 +1070,13 @@ Relationship label (2-4 words):"""
                     },
                     timeout=30.0
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     return data["choices"][0]["message"]["content"].strip()
         except Exception as e:
             print(f"Error generating edge label: {e}")
-    
+
     return "relates to"
 
 async def generate_llm_summarize_topic_chunk(chunk_content: str, chunk_heading: str, source_ref: str, api_key: str, base_url: str, provider: str) -> dict:
@@ -1106,7 +1106,7 @@ Output format:
 """
         # Log the final prompt for debugging
         print("\n" + "="*80)
-        print(f"[generate_llm_summarize_topic_chunk] FINAL PROMPT:")
+        print("[generate_llm_summarize_topic_chunk] FINAL PROMPT:")
         print("="*80)
         print(prompt)
         print("="*80 + "\n")
@@ -1143,7 +1143,7 @@ async def generate_llm_merge_topic_sections(topic_heading: str, summaries: List[
         combined = "\n\n".join([f"Summary {i+1}: {s.get('summary', '')}" for i, s in enumerate(summaries)])
         all_citations = []
         for s in summaries: all_citations.extend(s.get("citations", []))
-        
+
         prompt = f"""Merge these summaries into a unified section for a research report.
 
 Topic: {topic_heading}
@@ -1160,7 +1160,7 @@ Output format:
 """
         # Log the final prompt for debugging
         print("\n" + "="*80)
-        print(f"[generate_llm_merge_topic_sections] FINAL PROMPT:")
+        print("[generate_llm_merge_topic_sections] FINAL PROMPT:")
         print("="*80)
         print(prompt)
         print("="*80 + "\n")
@@ -1193,7 +1193,7 @@ async def generate_llm_assemble_research_document(query: str, sections: List[dic
         import httpx
         sections_text = "\n\n".join([f"## {s.get('heading', 'Section')}\n{s.get('body', '')}" for s in sections])
         references = [f"[{k}] {v.get('title')} - {v.get('url')}" for k, v in source_map.items()]
-        
+
         prompt = f"""Assemble a final research document from these sections.
 Query: {query}
 Sections:
@@ -1211,7 +1211,7 @@ Output format:
 """
         # Log the final prompt for debugging
         print("\n" + "="*80)
-        print(f"[generate_llm_assemble_research_document] FINAL PROMPT:")
+        print("[generate_llm_assemble_research_document] FINAL PROMPT:")
         print("="*80)
         print(prompt)
         print("="*80 + "\n")
@@ -1243,12 +1243,12 @@ async def generate_embedding(text: str) -> List[float]:
     # Chutes.ai primarily focuses on LLM, for embeddings we'd use a separate service
     # For now, return mock embedding
     import hashlib
-    
+
     text_hash = hashlib.sha256(text.encode()).hexdigest()
     embedding = []
     for i in range(1536):
         idx = (i * 2) % len(text_hash)
         val = int(text_hash[idx:idx+2], 16) / 255.0
         embedding.append((val - 0.5) * 2)
-    
+
     return embedding

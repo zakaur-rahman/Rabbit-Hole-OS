@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from app.models.whiteboard import Whiteboard
 from app.api.v1.oauth import get_current_user
@@ -43,7 +43,7 @@ async def create_whiteboard(
     existing = result.scalar_one_or_none()
     if existing:
         return existing
-        
+
     new_wb = Whiteboard(
         id=whiteboard.id,
         name=whiteboard.name,
@@ -64,13 +64,13 @@ async def update_whiteboard(
     """Update whiteboard metadata."""
     result = await db.execute(select(Whiteboard).where(Whiteboard.id == whiteboard_id, Whiteboard.user_id == current_user.id))
     existing = result.scalar_one_or_none()
-    
+
     if not existing:
         raise HTTPException(status_code=404, detail="Whiteboard not found")
-        
+
     if whiteboard.name is not None:
         existing.name = whiteboard.name
-        
+
     await db.commit()
     await db.refresh(existing)
     return existing
@@ -84,10 +84,10 @@ async def delete_whiteboard(
     """Delete a whiteboard and all its nodes and edges (cascade handled by DB or manually)."""
     result = await db.execute(select(Whiteboard).where(Whiteboard.id == whiteboard_id, Whiteboard.user_id == current_user.id))
     existing = result.scalar_one_or_none()
-    
+
     if not existing:
         raise HTTPException(status_code=404, detail="Whiteboard not found")
-        
+
     await db.delete(existing)
     await db.commit()
     return {"status": "success"}

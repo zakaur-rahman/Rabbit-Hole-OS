@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from typing import Any
 
 from app.core.database import get_db
 from app.api.v1.oauth import get_current_user, User

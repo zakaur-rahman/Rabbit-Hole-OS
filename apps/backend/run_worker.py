@@ -29,7 +29,7 @@ async def check_redis():
                 # Handle db number or query params in port
                 port_part = parts[1].split('/')[0].split('?')[0]
                 port = int(port_part)
-        
+
         logger.info(f"Checking Redis connectivity to {host}:{port}...")
         r = Redis(host=host, port=port, socket_connect_timeout=2)
         await r.ping()
@@ -46,7 +46,7 @@ def main():
     backend_root = os.path.dirname(os.path.abspath(__file__))
     if backend_root not in sys.path:
         sys.path.insert(0, backend_root)
-    
+
     # Pre-flight Redis check
     if not asyncio.run(check_redis()):
         sys.exit(0) # Exit with 0 to prevent concurrently from treating this as a crash

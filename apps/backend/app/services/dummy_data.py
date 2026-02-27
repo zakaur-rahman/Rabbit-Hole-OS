@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 from app.services.document_ast import DocumentAST, Section, ParagraphBlock, ParagraphData
 
 def get_dummy_research_data(query: str = "Dummy Topic") -> Dict[str, Any]:
@@ -74,32 +74,32 @@ def get_dummy_document_ast(query: str = "Dummy Topic") -> DocumentAST:
     Returns a validated DocumentAST object with dummy data.
     """
     data = get_dummy_research_data(query)
-    
+
     # Convert raw dict sections to AST Section/ContentBlock structure
     ast_sections = []
-    
+
     for i, sec in enumerate(data["sections"]):
         # Create paragraphs from body text (split by double newline)
         paragraphs = sec["body"].split("\n\n")
         blocks = []
-        
+
         for para in paragraphs:
             if para.strip():
                 blocks.append(ParagraphBlock(
                     type="paragraph",
                     data=ParagraphData(text=para.strip(), citations=[])
                 ))
-        
+
         # Add figures as blocks if needed.
         # For now, let's just ensure basic text blocks are there.
-        
+
         ast_sections.append(Section(
             id=f"sec-{i+1}",
             title=sec["heading"],
             level=1,
             content=blocks
         ))
-        
+
     return DocumentAST(
         title=data["title"],
         abstract=data["abstract"],

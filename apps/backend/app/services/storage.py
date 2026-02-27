@@ -43,11 +43,11 @@ class S3Storage(StorageBackend):
     async def upload(self, file_content: bytes, filename: str, content_type: str = "application/pdf") -> str:
         if not self.s3_client:
             raise RuntimeError("S3 client not initialized. Install boto3.")
-        
+
         # This is blocking, should ideally run in threadpool
         import asyncio
         loop = asyncio.get_event_loop()
-        
+
         def _sync_upload():
             self.s3_client.put_object(
                 Bucket=self.bucket,
@@ -57,7 +57,7 @@ class S3Storage(StorageBackend):
                 # ACL='public-read' # Optional depending on bucket policy
             )
             return f"https://{self.bucket}.s3.{settings.AWS_REGION}.amazonaws.com/{filename}"
-            
+
         return await loop.run_in_executor(None, _sync_upload)
 
 class StorageService:
@@ -67,9 +67,9 @@ class StorageService:
     def get_backend(cls) -> StorageBackend:
         if cls._backend:
             return cls._backend
-            
+
         storage_type = settings.STORAGE_TYPE.lower()
-        
+
         if storage_type == "s3":
             logger.info("Initializing S3 Storage Backend")
             cls._backend = S3Storage()
@@ -80,7 +80,7 @@ class StorageService:
         else:
             logger.info(f"Initializing Local Storage Backend at {settings.STORAGE_LOCAL_DIR}")
             cls._backend = LocalStorage(settings.STORAGE_LOCAL_DIR)
-            
+
         return cls._backend
 
     @classmethod

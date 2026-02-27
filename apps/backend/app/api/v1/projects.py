@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime
 import uuid
 
 from app.core.database import get_db
@@ -56,7 +56,7 @@ async def create_project(
     """Create a mock project"""
     user_id = str(current_user.id)
     projects = get_user_projects(user_id)
-    
+
     new_project = {
         "id": str(uuid.uuid4()),
         "name": payload.name,
@@ -65,7 +65,7 @@ async def create_project(
         "sync_status": "synced"
     }
     projects.append(new_project)
-    
+
     return new_project
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -77,7 +77,7 @@ async def delete_project(
     """Delete a mock project"""
     user_id = str(current_user.id)
     projects = get_user_projects(user_id)
-    
+
     _mock_projects_db[user_id] = [p for p in projects if p["id"] != project_id]
     return None
 
@@ -90,10 +90,10 @@ async def sync_project(
     """Trigger mock sync"""
     user_id = str(current_user.id)
     projects = get_user_projects(user_id)
-    
+
     for p in projects:
         if p["id"] == project_id:
             p["last_synced_at"] = datetime.utcnow().isoformat() + "Z"
             return {"status": "success"}
-            
+
     raise HTTPException(status_code=404, detail="Project not found")

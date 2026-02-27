@@ -30,7 +30,7 @@ class TableData(BaseModel):
     columns: List[str]
     rows: List[List[str]]
     source_refs: List[str] = Field(default_factory=list)
-    
+
     @validator('rows')
     def validate_row_length(cls, v, values):
         if 'columns' in values:
@@ -132,7 +132,7 @@ class Section(BaseModel):
     level: Literal[1, 2, 3] = 1
     content: List[Block] = Field(default_factory=list)
     subsections: List["Section"] = Field(default_factory=list)
-    
+
     class Config:
         # Allow forward references for recursive model
         pass
@@ -167,14 +167,14 @@ class DocumentAST(BaseModel):
     abstract: str = ""
     sections: List[Section] = Field(default_factory=list)
     references: List[Reference] = Field(default_factory=list)
-    
+
     def validate_structure(self) -> List[ValidationIssue]:
         """
         Validate document structure and integrity.
         Returns a list of issues.
         """
         issues = []
-        
+
         # 1. Critical: Title Check
         if not self.title or not self.title.strip():
             issues.append(ValidationIssue(
@@ -182,7 +182,7 @@ class DocumentAST(BaseModel):
                 message="Document title is missing.",
                 location="Root"
             ))
-            
+
         # 2. Critical: Section Check
         if not self.sections:
             issues.append(ValidationIssue(
@@ -190,27 +190,27 @@ class DocumentAST(BaseModel):
                 message="Document has no sections.",
                 location="Root"
             ))
-            
+
         # 3. Check internal consistency
         ref_ids = {r.id for r in self.references}
-        
+
         for i, section in enumerate(self.sections):
             loc = f"Section {i+1} ({section.title[:20]}...)"
-            
+
             if not section.title.strip():
                 issues.append(ValidationIssue(
                     severity="critical",
                     message="Section title is missing.",
                     location=f"Section {i+1}"
                 ))
-            
+
             if not section.content and not section.subsections:
                 issues.append(ValidationIssue(
                     severity="warning",
                     message="Section is empty.",
                     location=loc
                 ))
-            
+
             # Check for orphaned citations in this section
             orphans = []
             def check_block(block: Block):
@@ -222,13 +222,13 @@ class DocumentAST(BaseModel):
                     for ref in getattr(block.data, 'source_refs', []):
                         if ref not in ref_ids:
                             orphans.append(ref)
-            
+
             for block in section.content:
                 check_block(block)
-                
+
             if orphans:
                 issues.append(ValidationIssue(
-                    severity="warning", 
+                    severity="warning",
                     message=f"Orphaned citations found: {', '.join(sorted(list(set(orphans))))}",
                     location=loc
                 ))
@@ -257,12 +257,12 @@ def _normalize_ast_data(data: dict) -> dict:
         for j, sub in enumerate(section.get("subsections", [])):
             if "id" not in sub:
                 sub["id"] = f"sec-{i+1}-{j+1}"
-    
+
     # Normalize references: map 'ref_id' -> 'id'
     for ref in data.get("references", []):
         if "id" not in ref and "ref_id" in ref:
             ref["id"] = ref.pop("ref_id")
-    
+
     return data
 
 

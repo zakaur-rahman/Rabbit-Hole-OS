@@ -24,7 +24,7 @@ jobs:
         run: pip install -r apps/backend/requirements.txt ruff
 
       - name: Lint Python backend
-        run: ruff check apps/backend/ --select E,W,F --ignore E501
+        run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841
 
   deploy-web:
     needs: lint

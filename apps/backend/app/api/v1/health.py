@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-from typing import Dict, Any
 from app.core.config import settings
 from app.core.redis_client import get_redis
 from redis.asyncio import Redis
@@ -29,7 +28,7 @@ async def deep_health(
     Use this for monitoring dashboards and alerting.
     """
     checks = {"api": "ok"}
-    
+
     # Check database
     try:
         start = time.time()
@@ -60,7 +59,7 @@ async def worker_health(redis: Redis = Depends(get_redis)):
         start = time.time()
         await redis.ping()
         redis_latency = (time.time() - start) * 1000
-        
+
         return {
             "status": "healthy",
             "redis_connected": True,

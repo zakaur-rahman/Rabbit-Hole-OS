@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, Query, Depends, Body
-from typing import List, Dict, Optional
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import List, Optional
 from app.schemas.edge import Edge as EdgeSchema, EdgeCreate
 from app.models.edge import Edge
 from app.models.node import Node
@@ -8,7 +8,7 @@ from app.models.user import User
 from app.api.v1.oauth import get_current_user
 from app.core.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ async def list_edges(
     query = select(Edge).where(Edge.whiteboard_id == whiteboard_id, Edge.user_id == current_user.id)
     result = await db.execute(query)
     edges = result.scalars().all()
-    
+
     return [EdgeSchema(
         id=e.id,
         source=e.source_id,
@@ -33,7 +33,7 @@ async def list_edges(
 
 @router.post("/", response_model=EdgeSchema)
 async def create_edge(
-    edge: EdgeCreate, 
+    edge: EdgeCreate,
     whiteboard_id: str = Query(..., description="The ID of the whiteboard"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -57,7 +57,7 @@ async def create_edge(
     source_check = await db.execute(select(Node).where(Node.id == edge.source, Node.user_id == current_user.id))
     if not source_check.scalar_one_or_none():
         raise HTTPException(status_code=400, detail=f"Source node {edge.source} not found")
-        
+
     target_check = await db.execute(select(Node).where(Node.id == edge.target, Node.user_id == current_user.id))
     if not target_check.scalar_one_or_none():
         raise HTTPException(status_code=400, detail=f"Target node {edge.target} not found")
@@ -70,7 +70,7 @@ async def create_edge(
         whiteboard_id=whiteboard_id,
         user_id=current_user.id
     )
-    
+
     # Check if exists (Upsert logic)
     existing_result = await db.execute(select(Edge).where(Edge.id == edge.id, Edge.user_id == current_user.id))
     existing_edge = existing_result.scalar_one_or_none()
@@ -84,7 +84,7 @@ async def create_edge(
         new_edge = existing_edge
     else:
         db.add(new_edge)
-    
+
     try:
         await db.commit()
         await db.refresh(new_edge)
@@ -103,7 +103,7 @@ async def create_edge(
 
 @router.delete("/{edge_id}")
 async def delete_edge(
-    edge_id: str, 
+    edge_id: str,
     whiteboard_id: Optional[str] = Query(None, description="The ID of the whiteboard"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -112,15 +112,15 @@ async def delete_edge(
     query = select(Edge).where(Edge.id == edge_id, Edge.user_id == current_user.id)
     if whiteboard_id:
         query = query.where(Edge.whiteboard_id == whiteboard_id)
-    
+
     result = await db.execute(query)
     edge = result.scalar_one_or_none()
-    
+
     if edge:
         await db.delete(edge)
         await db.commit()
         return {"status": "success"}
-    
+
     # If not found with whiteboard_id, try without it just to be sure if we can delete it
     if whiteboard_id:
         result = await db.execute(select(Edge).where(Edge.id == edge_id, Edge.user_id == current_user.id))
@@ -129,5 +129,5 @@ async def delete_edge(
             await db.delete(edge)
             await db.commit()
             return {"status": "success"}
-    
+
     raise HTTPException(status_code=404, detail="Edge not found")

@@ -17,14 +17,14 @@ def get_engine():
     if _engine is None:
         # Ensure DATABASE_URL uses asyncpg driver explicitly
         database_url = settings.DATABASE_URL.strip()
-        
+
         # Normalize and ensure asyncpg driver is used
         original_url = database_url
-        
+
         # Parse URL to extract SSL parameters
         parsed = urlparse(database_url)
         scheme = parsed.scheme.lower()
-        
+
         # Normalize scheme to use asyncpg driver
         if scheme == 'postgresql+asyncpg':
             pass
@@ -37,11 +37,11 @@ def get_engine():
                 parsed = urlparse(database_url)
         else:
             raise ValueError(f"Unsupported database URL scheme: {scheme}. Expected postgresql://, postgres://, or postgresql+asyncpg://")
-        
+
         # Extract SSL parameters from query string
         query_params = parse_qs(parsed.query)
         ssl_value = None
-        
+
         if 'sslmode' in query_params:
             ssl_mode = query_params['sslmode'][0].lower()
             if ssl_mode in ('require', 'prefer', 'allow', 'disable'):
@@ -52,11 +52,11 @@ def get_engine():
             ssl_value = query_params['ssl'][0].lower()
             if ssl_value in ('false', '0'):
                 ssl_value = False
-        
+
         # Remove SSL-related parameters from query string
-        clean_params = {k: v for k, v in query_params.items() 
+        clean_params = {k: v for k, v in query_params.items()
                        if k not in ('sslmode', 'ssl', 'channel_binding')}
-        
+
         clean_query = urlencode(clean_params, doseq=True)
         clean_url = urlunparse((
             parsed.scheme,
@@ -66,7 +66,7 @@ def get_engine():
             clean_query,
             parsed.fragment
         ))
-        
+
         # Prepare connect_args for asyncpg SSL configuration
         connect_args = {}
         if ssl_value:
@@ -79,25 +79,25 @@ def get_engine():
         else:
             # Default to require SSL for cloud databases
             connect_args['ssl'] = 'require'
-        
+
         if not clean_url.startswith('postgresql+asyncpg://'):
             raise ValueError(
                 f"Failed to normalize DATABASE_URL to use asyncpg driver. "
                 f"Original: {original_url[:50]}..."
             )
-        
+
         # Verify asyncpg is available
         try:
             import asyncpg
             logger.info("asyncpg driver available (version: %s)", getattr(asyncpg, '__version__', 'unknown'))
         except ImportError as e:
             raise ImportError("asyncpg is required but not installed. Install with: pip install asyncpg") from e
-        
+
         # Log database host (mask credentials)
         masked_host = clean_url.split('@')[1].split('/')[0] if '@' in clean_url else 'localhost'
         logger.info("Connecting to database host: %s", masked_host)
         logger.info("SSL configuration: %s", connect_args.get('ssl', 'default'))
-        
+
         # Create async engine with configurable pool sizes
         try:
             _engine = create_async_engine(

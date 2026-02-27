@@ -1,6 +1,5 @@
-from typing import Optional, Dict, Any
 from sqlalchemy import select, desc
-from app.models.job import ResearchJob, JobStatus
+from app.models.job import ResearchJob
 from app.core.database import SessionLocal
 
 class VersioningService:
@@ -12,7 +11,7 @@ class VersioningService:
             version_vals = current_version.lstrip("v").split(".")
             if len(version_vals) < 3:
                 return "v1.0.1"
-            
+
             major, minor, patch = map(int, version_vals)
             patch += 1
             return f"{prefix}{major}.{minor}.{patch}"
@@ -28,7 +27,7 @@ class VersioningService:
         parent = result.scalar_one_or_none()
         if not parent:
             return "v1.0.0"
-        
+
         return cls.increment_version(parent.document_version)
 
     @staticmethod

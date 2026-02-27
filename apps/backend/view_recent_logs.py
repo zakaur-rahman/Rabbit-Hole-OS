@@ -10,7 +10,7 @@ async def main():
             select(ResearchJob).order_by(ResearchJob.created_at.desc()).limit(3)
         )
         jobs = result.scalars().all()
-        
+
         if not jobs:
             print("No recent research jobs found.")
             return
@@ -21,7 +21,7 @@ async def main():
             print(f"QUERY: {job.query}")
             print(f"STATUS: {job.status}")
             print(f"{'-'*60}")
-            
+
             if job.output_ast:
                 print("AGENT OUTPUT (AST):")
                 print(json.dumps(job.output_ast, indent=2)[:2000] + "...")
