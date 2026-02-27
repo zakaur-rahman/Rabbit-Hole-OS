@@ -41,14 +41,16 @@ function GoogleCallbackContent() {
                     code_verifier: codeVerifier,
                     state,
                     redirect_uri: REDIRECT_URI,
-                    // We can attach basic device info here if needed
                     user_agent: navigator.userAgent
                 };
 
                 // If desktop flow, attach required triggers
                 if (desktopContext) {
-                    exchangePayload.desktop_device_id = desktopContext.device_id;
+                    exchangePayload.device_id = desktopContext.device_id;       // for session record
+                    exchangePayload.desktop_device_id = desktopContext.device_id; // for Redis one-time code
                     exchangePayload.desktop_redirect_uri = desktopContext.redirect_uri;
+                    exchangePayload.device_name = 'Cognode Desktop';
+                    exchangePayload.platform = navigator.platform || 'Desktop';
                 }
 
                 const res = await fetch(`${API_BASE_URL}/oauth/google/exchange`, {
