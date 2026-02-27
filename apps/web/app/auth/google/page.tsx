@@ -14,6 +14,7 @@ function GoogleCallbackContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
+    const [desktopSuccess, setDesktopSuccess] = useState(false);
 
     useEffect(() => {
         const handleCallback = async () => {
@@ -86,6 +87,7 @@ function GoogleCallbackContent() {
 
                     console.log('[Auth] Redirecting to desktop app via deep link');
                     window.location.href = desktopRedirectUrl;
+                    setDesktopSuccess(true); // Show success screen — browser stays on page after custom protocol redirect
                     return; // Don't navigate to dashboard
                 }
 
@@ -113,7 +115,24 @@ function GoogleCallbackContent() {
             <div className="relative bg-card/80 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 shadow-2xl z-10 overflow-hidden flex flex-col items-center min-h-[300px] justify-center text-center">
                 <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent"></div>
 
-                {error ? (
+                {desktopSuccess ? (
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <Logo className="w-10 h-10" />
+                        <h2 className="text-xl font-semibold text-foreground">Signed in successfully!</h2>
+                        <p className="text-sm text-muted-foreground">You can close this tab and return to Cognode.</p>
+                        <button
+                            onClick={() => window.close()}
+                            className="mt-2 px-4 py-2 text-sm bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-colors"
+                        >
+                            Close Tab
+                        </button>
+                    </div>
+                ) : error ? (
                     <div className="flex flex-col items-center">
                         <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mb-6">
                             <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
