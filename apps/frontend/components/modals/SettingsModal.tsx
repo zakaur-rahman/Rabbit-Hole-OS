@@ -88,6 +88,44 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
   const [selectedItem, setSelectedItem] = useState<string | null>(initialTab);
   const router = useRouter();
 
+  // Electron-aware sign-in: opens system browser instead of navigating locally
+  const handleSignIn = () => {
+    const electronApi = (window as any).electron;
+    if (electronApi?.auth?.openLogin) {
+      const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
+      localStorage.setItem('device_id', deviceId);
+      const webBaseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://cognode.tech';
+      const loginUrl = `${webBaseUrl}/login?source=desktop&device_id=${deviceId}&redirect_uri=cognode://auth/callback`;
+      electronApi.auth.openLogin(loginUrl);
+      if (electronApi.auth.onDirectTokensReceived) {
+        electronApi.auth.onDirectTokensReceived(({ access_token, refresh_token }: { access_token: string; refresh_token: string }) => {
+          localStorage.setItem('auth_token', access_token);
+          if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+          window.dispatchEvent(new Event('auth-state-changed'));
+        });
+      }
+      if (electronApi.auth.onDeepLinkAuth) {
+        electronApi.auth.onDeepLinkAuth(async ({ code }: { code: string }) => {
+          try {
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.cognode.tech';
+            const response = await fetch(`${apiBaseUrl}/api/v1/oauth/desktop/exchange`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code }),
+            });
+            if (!response.ok) throw new Error('Exchange failed');
+            const data = await response.json();
+            localStorage.setItem('auth_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+            window.dispatchEvent(new Event('auth-state-changed'));
+          } catch (err) { console.error('[Auth] Desktop exchange failed:', err); }
+        });
+      }
+    } else {
+      router.push('/sign-in?auto=false');
+    }
+  };
+
   // User state - initialize from cache if available
   const [user, setUser] = useState<UserType | null>(() => {
     if (typeof window !== 'undefined') {
@@ -238,7 +276,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
       if (err instanceof Error && (errorMessage.includes('401') || errorMessage.includes('Not authenticated') || errorMessage.includes('Invalid or expired token'))) {
         await logout();
         onClose();
-        router.push('/sign-in?auto=false');
+        handleSignIn();
       }
     } finally {
       setIsLoadingSessions(false);
@@ -255,7 +293,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
       if (currentSession) {
         await logout();
         onClose();
-        router.push('/sign-in?auto=false');
+        handleSignIn();
       }
     } catch (err) {
       console.error('Failed to revoke session:', err);
@@ -426,7 +464,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                       <button
                         onClick={() => {
                           onClose();
-                          router.push('/sign-in?auto=false');
+                          handleSignIn();
                         }}
                         className="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                       >
@@ -481,7 +519,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                     onClick={async () => {
                       await logout();
                       onClose();
-                      router.push('/sign-in?auto=false');
+                      handleSignIn();
                     }}
                     className="w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 text-red-400 hover:bg-neutral-800 hover:text-red-300 group"
                   >
@@ -515,8 +553,8 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                             </div>
                             <button
                               onClick={() => {
-                                const url = process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://cognode.app';
-                                const billingUrl = `${url}/dashboard/billing`;
+                                const url = process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://cognode.tech';
+                                const billingUrl = `${url}/dashboard`;
                                 if (isElectron()) {
                                   const electron = (window as any).electron;
                                   if (electron?.shell?.openExternal) {
