@@ -12,7 +12,40 @@ export default function AuthGuardModal() {
 
     const handleSignIn = () => {
         setAuthModal(false);
-        router.push('/sign-in');
+        const electronApi = (window as any).electron;
+        if (electronApi?.auth?.openLogin) {
+            const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
+            localStorage.setItem('device_id', deviceId);
+            const webBaseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://cognode.tech';
+            const loginUrl = `${webBaseUrl}/login?source=desktop&device_id=${deviceId}&redirect_uri=cognode://auth/callback`;
+            electronApi.auth.openLogin(loginUrl);
+            if (electronApi.auth.onDirectTokensReceived) {
+                electronApi.auth.onDirectTokensReceived(({ access_token, refresh_token }: { access_token: string; refresh_token: string }) => {
+                    localStorage.setItem('auth_token', access_token);
+                    if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+                    window.dispatchEvent(new Event('auth-state-changed'));
+                });
+            }
+            if (electronApi.auth.onDeepLinkAuth) {
+                electronApi.auth.onDeepLinkAuth(async ({ code }: { code: string }) => {
+                    try {
+                        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.cognode.tech';
+                        const res = await fetch(`${apiBaseUrl}/api/v1/oauth/desktop/exchange`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code }),
+                        });
+                        if (!res.ok) throw new Error('Exchange failed');
+                        const data = await res.json();
+                        localStorage.setItem('auth_token', data.access_token);
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                        window.dispatchEvent(new Event('auth-state-changed'));
+                    } catch (err) { console.error('[Auth] Desktop exchange failed:', err); }
+                });
+            }
+        } else {
+            router.push('/sign-in');
+        }
     };
 
     const handleClose = () => {
