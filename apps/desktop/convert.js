@@ -11,9 +11,17 @@ console.log('Converting source PNG to ICO format...');
 
 async function generate() {
     try {
+        const roundedCorners = Buffer.from(
+            '<svg><rect x="0" y="0" width="256" height="256" rx="48" ry="48"/></svg>'
+        );
+
         // Generate 256x256 PNG for the ICO
         await sharp(inputPng)
             .resize(256, 256, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+            .composite([{
+                input: roundedCorners,
+                blend: 'dest-in'
+            }])
             .png()
             .toFile(tempPng);
 
