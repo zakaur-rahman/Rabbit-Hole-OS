@@ -16,6 +16,7 @@
     "package": "npm run build:frontend && npm run build:backend && cd apps/desktop && npm run dist"
   },
   "devDependencies": {
+    "baseline-browser-mapping": "^2.10.0",
     "concurrently": "^8.2.2",
     "turbo": "^1.11.2",
     "wait-on": "^9.0.3"
