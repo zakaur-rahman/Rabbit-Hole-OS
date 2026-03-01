@@ -53,6 +53,9 @@
             "installerIcon": "build/icon.ico",
             "uninstallerIcon": "build/icon.ico",
             "installerHeaderIcon": "build/icon.ico",
+            "installerSidebar": "build/installerSidebar.png",
+            "uninstallerSidebar": "build/installerSidebar.png",
+            "installerHeader": "build/installerHeader.png",
             "license": "build/license.txt"
         }
     },
