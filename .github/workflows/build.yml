@@ -47,7 +47,12 @@ jobs:
         run: pip install -r apps/backend/requirements.txt
 
       - name: Run Linters & Typecheck (Turbo)
-        run: npx turbo run lint typecheck --filter=${{ inputs.filter }}
+        run: |
+          if [ -n "${{ inputs.filter }}" ]; then
+            npx turbo run lint typecheck --filter="${{ inputs.filter }}"
+          else
+            npx turbo run lint typecheck
+          fi
 
   test:
     name: Unit & Integration Tests
@@ -83,7 +88,12 @@ jobs:
       #   uses: shogo82148/actions-setup-redis@v1
 
       - name: Run Tests (Turbo)
-        run: npx turbo run test --filter=${{ inputs.filter }}
+        run: |
+          if [ -n "${{ inputs.filter }}" ]; then
+            npx turbo run test --filter="${{ inputs.filter }}"
+          else
+            npx turbo run test
+          fi
 
   build:
     name: Build Artifacts 
@@ -103,6 +113,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
 
-      # Utilizing exact turbo filter to only build affected packages
       - name: Build (Turbo)
-        run: npx turbo run build --filter=${{ inputs.filter }}
+        run: |
+          if [ -n "${{ inputs.filter }}" ]; then
+            npx turbo run build --filter="${{ inputs.filter }}"
+          else
+            npx turbo run build
+          fi

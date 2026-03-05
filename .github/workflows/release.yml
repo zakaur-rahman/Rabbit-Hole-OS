@@ -30,7 +30,7 @@ jobs:
     if: needs.release-please.outputs.release_created == 'true' || github.event.head_commit.author.name != 'github-actions[bot]'
     uses: ./.github/workflows/build.yml
     with:
-      filter: '...' # Build all in main to be safe
+      filter: '' # Build all in main to be safe
 
   # 3. Build & Push Docker containers tied to the Semantic Version
   docker_build:

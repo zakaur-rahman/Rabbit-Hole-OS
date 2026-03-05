@@ -17,7 +17,7 @@ jobs:
   integration:
     uses: ./.github/workflows/build.yml
     with:
-      filter: ${{ github.event_name == 'pull_request' && format('...[origin/{0}]', github.base_ref) || '...' }}
+      filter: ${{ github.event_name == 'pull_request' && format('...[origin/{0}]', github.base_ref) || '' }}
 
   # 2. Check for Docker buildability so that broken Dockerfiles fail PRs before merge.
   docker-dry-run:
