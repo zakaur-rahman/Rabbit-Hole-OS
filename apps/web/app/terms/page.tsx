@@ -16,7 +16,7 @@ export default function TermsPage() {
                             <section className="space-y-3">
                                 <h2 className="text-xl font-semibold text-foreground">1. Acceptance of Terms</h2>
                                 <p className="leading-relaxed">
-                                    By downloading, installing, or using Cognode ("the Software"), you agree to be bound by these Terms. If you do not agree, do not use the Software.
+                                    By downloading, installing, or using Cognode (&quot;the Software&quot;), you agree to be bound by these Terms. If you do not agree, do not use the Software.
                                 </p>
                             </section>
 
@@ -46,7 +46,7 @@ export default function TermsPage() {
                             <section className="space-y-3">
                                 <h2 className="text-xl font-semibold text-foreground">5. Disclaimer of Warranties</h2>
                                 <p className="leading-relaxed">
-                                    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. COGNODE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+                                    THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND. COGNODE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
                                 </p>
                             </section>
 

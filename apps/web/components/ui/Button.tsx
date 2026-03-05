@@ -40,7 +40,7 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant, size, asChild = false, ...props }, ref) => {
+    ({ className, variant, size, ...props }, ref) => {
         // Basic Slot support if we install @radix-ui/react-slot, otherwise fall back to button
         // Since I haven't installed radix-ui slot yet, I should probably stick to standard button or install it.
         // I'll stick to standard button for now to avoid extra dependency unless needed for `asChild` composition.

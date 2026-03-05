@@ -151,7 +151,7 @@ export function PlanCard({ currentPlan }: PlanCardProps) {
                     <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
                         <Sparkles className="w-8 h-8 text-primary" />
                     </div>
-                    <h3 className="text-lg font-bold text-foreground mb-2">You're a Pro!</h3>
+                    <h3 className="text-lg font-bold text-foreground mb-2">You&apos;re a Pro!</h3>
                     <p className="text-muted-foreground text-sm max-w-sm mb-6">
                         Thanks for supporting Cognode. You have access to expanded limits and premium features.
                     </p>

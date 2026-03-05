@@ -23,12 +23,15 @@ export default function DownloadPage() {
     const [os, setOs] = useState<"mac" | "win" | null>(null);
 
     useEffect(() => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        if (userAgent.indexOf("mac") !== -1) {
-            setOs("mac");
-        } else if (userAgent.indexOf("win") !== -1) {
-            setOs("win");
-        }
+        const timeout = setTimeout(() => {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            if (userAgent.indexOf("mac") !== -1) {
+                setOs("mac");
+            } else if (userAgent.indexOf("win") !== -1) {
+                setOs("win");
+            }
+        }, 0);
+        return () => clearTimeout(timeout);
     }, []);
 
     return (

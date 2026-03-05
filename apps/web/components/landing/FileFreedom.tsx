@@ -17,7 +17,7 @@ export function FileFreedom() {
                                 <span className="text-muted-foreground">Just folders and files.</span>
                             </h2>
                             <p className="text-lg text-muted-foreground leading-relaxed">
-                                Your knowledge shouldn't be held hostage. Cognode works directly on top of your local folders Use standard Markdown files that you can open with any text editor.
+                                Your knowledge shouldn&apos;t be held hostage. Cognode works directly on top of your local folders Use standard Markdown files that you can open with any text editor.
                             </p>
 
                             <ul className="space-y-4 pt-4">

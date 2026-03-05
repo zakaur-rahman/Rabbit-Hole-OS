@@ -31,7 +31,7 @@ export function Features() {
 
                     {/* Card 1: Ingestion (Span 2) */}
                     <ScrollReveal className="md:col-span-2 rounded-3xl border border-white/10 bg-zinc-900/50 overflow-hidden relative group hover:border-emerald-500/20 transition-all duration-500">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                         <div className="p-8 h-full flex flex-col justify-between relative z-10">
                             {/* Visual: Workspace Demo */}
@@ -61,7 +61,7 @@ export function Features() {
 
                                 {/* Satellite nodes */}
                                 {[0, 120, 240].map((deg, i) => (
-                                    <div key={i} className="absolute w-24 h-[1px] bg-gradient-to-r from-emerald-500/50 to-transparent origin-left z-0" style={{ transform: `rotate(${deg}deg) translateX(0px)` }} />
+                                    <div key={i} className="absolute w-24 h-px bg-linear-to-r from-emerald-500/50 to-transparent origin-left z-0" style={{ transform: `rotate(${deg}deg) translateX(0px)` }} />
                                 ))}
                                 {[0, 120, 240].map((deg, i) => (
                                     <div key={i} className="absolute w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center z-10" style={{ transform: `rotate(${deg}deg) translate(80px) rotate(-${deg}deg)` }}>
@@ -80,11 +80,11 @@ export function Features() {
                                 {/* A simple CSS Sphere representation */}
                                 <div className="w-[300px] h-[300px] rounded-full mt-[-100px] bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.2),transparent_60%)] border border-white/5 relative">
                                     {/* Grid lines */}
-                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 [transform:rotateX(60deg)_translateY(20px)]" />
-                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 [transform:rotateX(60deg)_translateY(50px)]" />
-                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 [transform:rotateX(60deg)_translateY(-20px)]" />
-                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 [transform:rotateY(60deg)]" />
-                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 [transform:rotateY(-60deg)]" />
+                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 transform-[rotateX(60deg)_translateY(20px)]" />
+                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 transform-[rotateX(60deg)_translateY(50px)]" />
+                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 transform-[rotateX(60deg)_translateY(-20px)]" />
+                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 transform-[rotateY(60deg)]" />
+                                    <div className="absolute inset-0 rounded-full border border-emerald-500/10 transform-[rotateY(-60deg)]" />
                                     <div className="absolute top-[40%] left-[60%] w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(16,185,129,1)] z-20" />
                                 </div>
                             </div>

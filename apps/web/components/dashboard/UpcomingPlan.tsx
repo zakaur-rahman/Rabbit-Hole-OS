@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, CreditCard, AlertCircle, ArrowRight } from 'lucide-react';
 import { PlanType } from '@/lib/constants';
@@ -14,8 +15,13 @@ export function UpcomingPlan({ currentPlan }: UpcomingPlanProps) {
     const amountDue = isFree ? '$0.00' : currentPlan === 'pro' ? '$12.00' : '$49.00';
     const renewalDate = 'March 15, 2026';
     const cardInfo = 'Visa ending in 4242';
-    const cardExpiryDate = new Date('2026-05-01'); // Mock expiry date
-    const expiringSoon = (cardExpiryDate.getTime() - Date.now()) < 60 * 24 * 60 * 60 * 1000; // Within 60 days
+    const cardExpiryDate = useMemo(() => new Date('2026-05-01'), []); // Mock expiry date
+
+    const [expiringSoon, setExpiringSoon] = useState(false);
+
+    useEffect(() => {
+        setExpiringSoon((cardExpiryDate.getTime() - Date.now()) < 60 * 24 * 60 * 60 * 1000);
+    }, [cardExpiryDate]);
 
     if (isFree) return null; // No upcoming automated bill for free tier
 

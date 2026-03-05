@@ -37,8 +37,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
             if (!res.ok) throw new Error('Failed to load user profile');
             const data = await res.json();
             setUser(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setIsLoading(false);
         }

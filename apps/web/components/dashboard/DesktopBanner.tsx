@@ -16,7 +16,10 @@ export function DesktopBanner({ desktopAuthCode }: DesktopBannerProps) {
         // Only show if it hasn't been dismissed in this session
         const dismissed = localStorage.getItem('desktop_banner_dismissed');
         if (!dismissed) {
-            setIsVisible(true);
+            const timeout = setTimeout(() => {
+                setIsVisible(true);
+            }, 0);
+            return () => clearTimeout(timeout);
         }
     }, []);
 

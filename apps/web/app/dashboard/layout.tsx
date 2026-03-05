@@ -1,29 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import AuthGuard from '@/components/dashboard/AuthGuard';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Topbar } from '@/components/dashboard/Topbar';
-import { DesktopBanner } from '@/components/dashboard/DesktopBanner';
 import { UserProvider } from '@/components/providers/UserContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const [desktopAuthCode, setDesktopAuthCode] = useState<string | null>(null);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-    useEffect(() => {
-        const pendingCode = localStorage.getItem('pending_desktop_auth_code');
-        if (pendingCode) {
-            setDesktopAuthCode(pendingCode);
-        }
-    }, []);
 
     return (
         <AuthGuard>
             <UserProvider>
-                {desktopAuthCode && <DesktopBanner desktopAuthCode={desktopAuthCode} />}
-
                 <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
 
                     {/* Abstract Background */}

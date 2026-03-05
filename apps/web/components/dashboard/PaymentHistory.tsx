@@ -79,7 +79,7 @@ export function PaymentHistory() {
                         <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'paid' | 'failed' | 'refunded')}
                             className="bg-secondary/50 border border-border/50 text-sm text-foreground rounded-xl pl-9 pr-8 py-2 appearance-none focus:outline-hidden focus:border-primary/50 transition-colors cursor-pointer"
                         >
                             <option value="all">All Statuses</option>

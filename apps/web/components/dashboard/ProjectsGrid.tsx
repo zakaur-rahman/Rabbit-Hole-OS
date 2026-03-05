@@ -75,7 +75,7 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
             } else {
                 throw new Error('Sync failed');
             }
-        } catch (err) {
+        } catch {
             setProjects(projects.map(p => p.id === id ? { ...p, sync_status: 'error' } : p));
         }
     };
@@ -209,7 +209,7 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
                             <Folder className="w-8 h-8" />
                         </div>
                         <h3 className="text-xl font-bold text-foreground mb-2">No Projects Found</h3>
-                        <p className="text-muted-foreground max-w-sm">You haven't created any projects yet. Click adding a new project to get started.</p>
+                        <p className="text-muted-foreground max-w-sm">You haven&apos;t created any projects yet. Click adding a new project to get started.</p>
                     </div>
                 )}
             </div>

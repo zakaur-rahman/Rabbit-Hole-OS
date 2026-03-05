@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface EncryptedTextProps {
@@ -24,55 +24,59 @@ export function EncryptedText({
 }: EncryptedTextProps) {
     const [displayText, setDisplayText] = useState("");
     const [isScrambling, setIsScrambling] = useState(true);
-    const indexRef = useRef(0);
+    const [indexPos, setIndexPos] = useState(0);
 
     useEffect(() => {
         // Reset on text change
-        indexRef.current = 0;
-        setIsScrambling(true);
-        setDisplayText("");
+        const resetTimer = setTimeout(() => {
+            setIndexPos(0);
+            setIsScrambling(true);
+            // Initial output to prevent blank flash
+            setDisplayText(
+                text.split("").map(() => CHARS[Math.floor(Math.random() * CHARS.length)]).join("")
+            );
+        }, 0);
 
-        let timer: NodeJS.Timeout;
-        let revealTimer: NodeJS.Timeout;
-
-        // Start reveal process
-        revealTimer = setInterval(() => {
-            if (indexRef.current < text.length) {
-                indexRef.current += 1;
-            } else {
-                clearInterval(revealTimer);
-                setIsScrambling(false);
-            }
+        const revealTimer = setInterval(() => {
+            setIndexPos((prev) => {
+                if (prev < text.length) {
+                    return prev + 1;
+                } else {
+                    clearInterval(revealTimer);
+                    setIsScrambling(false);
+                    return prev;
+                }
+            });
         }, revealDelayMs);
 
-        // Scramble process
-        timer = setInterval(() => {
-            // If done, stop shuffling
-            if (indexRef.current >= text.length) {
-                clearInterval(timer);
-                setDisplayText(text);
-                return;
-            }
+        const timer = setInterval(() => {
+            setIndexPos((currentIndex) => {
+                // If done, stop shuffling
+                if (currentIndex >= text.length) {
+                    clearInterval(timer);
+                    setDisplayText(text);
+                    return currentIndex;
+                }
 
-            const currentText = text
-                .split("")
-                .map((char, i) => {
-                    if (i < indexRef.current) {
-                        return text[i];
-                    }
-                    return CHARS[Math.floor(Math.random() * CHARS.length)];
-                })
-                .join("");
+                const currentText = text
+                    .split("")
+                    .map((char, i) => {
+                        if (i < currentIndex) {
+                            return text[i];
+                        }
+                        return CHARS[Math.floor(Math.random() * CHARS.length)];
+                    })
+                    .join("");
 
-            setDisplayText(currentText);
+                setDisplayText(currentText);
+                return currentIndex;
+            });
         }, intervalMs);
 
-        // Initial output to prevent blank flash
-        setDisplayText(
-            text.split("").map(() => CHARS[Math.floor(Math.random() * CHARS.length)]).join("")
-        );
+
 
         return () => {
+            clearTimeout(resetTimer);
             clearInterval(timer);
             clearInterval(revealTimer);
         };
@@ -85,8 +89,8 @@ export function EncryptedText({
 
     return (
         <span className={cn(className)}>
-            <span className={revealedClassName}>{displayText.substring(0, indexRef.current)}</span>
-            <span className={encryptedClassName}>{displayText.substring(indexRef.current)}</span>
+            <span className={revealedClassName}>{displayText.substring(0, indexPos)}</span>
+            <span className={encryptedClassName}>{displayText.substring(indexPos)}</span>
         </span>
     );
 }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { FileText, Folder, MoreHorizontal, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const files = [

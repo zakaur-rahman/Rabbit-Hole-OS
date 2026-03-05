@@ -50,7 +50,7 @@ export function Hero() {
                     className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-white mb-8 max-w-5xl z-20"
                 >
                     Turn Chaos Into <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-emerald-400 to-emerald-600">Structured Insight</span>
+                    <span className="text-transparent bg-clip-text bg-linear-to-b from-emerald-400 to-emerald-600">Structured Insight</span>
                 </motion.h1>
 
                 {/* Subhead */}
@@ -103,7 +103,7 @@ export function Hero() {
                 style={{ perspective: "1000px" }}
                 className="relative z-20 w-full max-w-6xl mx-auto px-4 perspective-1000"
             >
-                <div className="relative rounded-xl border border-white/10 bg-[#09090b] shadow-2xl overflow-hidden aspect-[16/10] group ring-1 ring-white/5">
+                <div className="relative rounded-xl border border-white/10 bg-[#09090b] shadow-2xl overflow-hidden aspect-16/10 group ring-1 ring-white/5">
                     {/* Screen Header */}
                     <div className="absolute top-0 left-0 right-0 h-10 bg-white/5 border-b border-white/5 flex items-center px-4 gap-2 z-10 backdrop-blur-md">
                         <div className="flex gap-2">
@@ -138,7 +138,7 @@ export function Hero() {
                         </div>
 
                         {/* Main Canvas Area */}
-                        <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:24px_24px] relative overflow-hidden flex items-center justify-center">
+                        <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-size-[24px_24px] relative overflow-hidden flex items-center justify-center">
                             {/* Central Node */}
                             <div className="relative z-10 flex flex-col items-center justify-center">
                                 {/* The Brain Node */}
@@ -157,7 +157,7 @@ export function Hero() {
                                             transform: `rotate(${deg}deg) translate(120px) rotate(-${deg}deg)`,
                                         }}
                                     >
-                                        <div className="absolute top-1/2 left-1/2 w-[120px] h-[1px] bg-gradient-to-l from-zinc-700/0 to-zinc-700/50 -translate-y-1/2 -translate-x-[120px] -z-10 origin-right" style={{ transform: `rotate(${deg}deg)` }} />
+                                        <div className="absolute top-1/2 left-1/2 w-[120px] h-px bg-linear-to-l from-zinc-700/0 to-zinc-700/50 -translate-y-1/2 -translate-x-[120px] -z-10 origin-right" style={{ transform: `rotate(${deg}deg)` }} />
                                     </div>
                                 ))}
                             </div>
@@ -174,7 +174,7 @@ export function Hero() {
                     </div>
 
                     {/* Reflective Sheen */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent pointer-events-none mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-linear-to-tr from-white/5 via-transparent to-transparent pointer-events-none mix-blend-overlay" />
                 </div>
 
                 {/* Ground Glow */}

@@ -42,7 +42,7 @@ export function Navbar() {
                 )}
             >
                 {/* Logo */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                     <Logo />
                 </div>
 
@@ -61,7 +61,7 @@ export function Navbar() {
                             {pathname === link.href && (
                                 <motion.div
                                     layoutId="navbar-indicator"
-                                    className="absolute -bottom-[21px] left-0 right-0 h-[1px] bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                    className="absolute -bottom-[21px] left-0 right-0 h-px bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                                 />
                             )}
                         </Link>
@@ -69,7 +69,7 @@ export function Navbar() {
                 </nav>
 
                 <div className="hidden md:flex items-center gap-4">
-                    <span className="h-5 w-[1px] bg-white/10"></span>
+                    <span className="h-5 w-px bg-white/10"></span>
                     <Link href="/download" className="text-sm font-medium text-white hover:text-emerald-400 transition-colors">
                         Get Started
                     </Link>
@@ -107,7 +107,7 @@ export function Navbar() {
                                     {link.label}
                                 </Link>
                             ))}
-                            <div className="h-[1px] bg-white/10 my-2" />
+                            <div className="h-px bg-white/10 my-2" />
                             <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
                                 <Link href="/download" onClick={() => setIsOpen(false)}>
                                     Get Started

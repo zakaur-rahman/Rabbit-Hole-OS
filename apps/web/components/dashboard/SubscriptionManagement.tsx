@@ -115,7 +115,7 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
                         <Hand className="w-5 h-5 shrink-0 mt-0.5" />
                         <div className="text-sm">
                             <p className="font-semibold mb-1">Wait! Consider Pausing Instead</p>
-                            <p className="text-orange-400/80">Need a break? Pause your subscription for 1 month instead of canceling permanently. You won't be charged, and your configuration remains intact.</p>
+                            <p className="text-orange-400/80">Need a break? Pause your subscription for 1 month instead of canceling permanently. You won&apos;t be charged, and your configuration remains intact.</p>
                         </div>
                     </div>
 

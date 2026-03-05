@@ -15,7 +15,7 @@ interface ApiOptions extends RequestInit {
 export async function apiFetch(endpoint: string, options: ApiOptions = {}): Promise<Response> {
   const { requireAuth = true, headers, ...customConfig } = options;
 
-  let token = getToken();
+  const token = getToken();
 
   const config: RequestInit = {
     ...customConfig,
