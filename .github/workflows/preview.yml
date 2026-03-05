@@ -1,0 +1,57 @@
+name: PR Preview Environments
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+# Concurrency group ensures outdated PR deployments are cancelled
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    name: Deploy to Render Preview
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # Since render.yaml exists in the repo, Render natively supports Preview Environments.
+      # This step hits the Render API to trigger the preview environment deployment for this specific PR.
+      - name: Trigger Render Preview Deployment
+        uses: fjogeleit/http-request-action@v1
+        id: render_trigger
+        with:
+          url: 'https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/preview'
+          method: 'POST'
+          bearerToken: ${{ secrets.RENDER_API_KEY }}
+          data: '{"branch": "${{ github.head_ref }}"}'
+          
+      - name: Comment PR with Preview URL
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Assuming Render's standard preview URL format based on service names
+            const prNum = context.payload.pull_request.number;
+            const previewUrl = `https://cognode-web-pr-${prNum}.onrender.com`;
+            
+            github.rest.issues.createComment({
+              issue_number: prNum,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Preview Environment Triggered!**\n\nThe preview environment is deploying to: [${previewUrl}](${previewUrl})\n\n*(Note: It may take a few minutes for the build to finish.)*`
+            })
+
+  cleanup-preview:
+    name: Cleanup Render Preview
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Destroy Render Preview Environment
+        run: |
+          echo "Render natively cleans up preview environments when a PR is closed or merged."
+          echo "If explicit deletion is needed, the Render API can be called here via curl."
+          # curl -X DELETE https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/preview -H 'Authorization: Bearer ${{ secrets.RENDER_API_KEY }}'

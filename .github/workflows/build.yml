@@ -1,87 +1,108 @@
-name: Build and Release
+name: Build and Test (Reusable)
 
 on:
-  release:
-    types: [created]
-  workflow_dispatch:
-
-concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      filter:
+        description: 'Turbo filter string (e.g., [HEAD^1])'
+        required: false
+        type: string
+        default: '...HEAD^1'
+      python-version:
+        description: 'Python Version'
+        required: false
+        type: string
+        default: '3.11'
+      node-version:
+        description: 'Node Version'
+        required: false
+        type: string
+        default: '20'
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            platform: win
-          - os: macos-latest
-            platform: mac
-
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-
+  lint-and-typecheck:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
 
-      - name: Install Frontend dependencies
-        working-directory: apps/frontend
-        run: npm install --legacy-peer-deps
-        timeout-minutes: 5
+      - name: Install Node Dependencies
+        run: npm ci --legacy-peer-deps
 
-      - name: Build Frontend
-        working-directory: apps/frontend
-        run: npx next build
-        env:
-          BUILD_TARGET: electron
-          NEXT_PUBLIC_API_BASE_URL: https://api.cognode.tech
-          NEXT_PUBLIC_WEB_URL: https://cognode.tech
-          NEXT_PUBLIC_OAUTH_REDIRECT_URI: https://cognode.tech/auth/google
-          NEXT_PUBLIC_OAUTH_REDIRECT_URI_WEB: https://cognode.tech/auth/google
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-
-      - name: Install Desktop dependencies
-        working-directory: apps/desktop
-        run: npm install
-        timeout-minutes: 10
-
-      - name: Build Electron App
-        working-directory: apps/desktop
-        run: npm run dist
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows Installer
-        if: matrix.platform == 'win'
-        uses: actions/upload-artifact@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          name: Cognode-Windows
-          path: apps/desktop/dist/*.exe
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
 
-      - name: Upload macOS Installer
-        if: matrix.platform == 'mac'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Cognode-macOS
-          path: |
-            apps/desktop/dist/*.dmg
-            apps/desktop/dist/*.zip
+      - name: Install Python Dependencies
+        run: pip install -r apps/backend/requirements.txt
 
-      - name: Upload to Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+      - name: Run Linters & Typecheck (Turbo)
+        run: npx turbo run lint typecheck --filter=${{ inputs.filter }}
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - uses: actions/checkout@v4
         with:
-          files: |
-            apps/desktop/dist/*.exe
-            apps/desktop/dist/*.dmg
-            apps/desktop/dist/*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: pip install -r apps/backend/requirements.txt
+        
+      # Example background services for integration tests
+      # - name: Start PostgreSQL
+      #   uses: ankane/setup-postgres@v1
+      # - name: Start Redis 
+      #   uses: shogo82148/actions-setup-redis@v1
+
+      - name: Run Tests (Turbo)
+        run: npx turbo run test --filter=${{ inputs.filter }}
+
+  build:
+    name: Build Artifacts 
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      # Utilizing exact turbo filter to only build affected packages
+      - name: Build (Turbo)
+        run: npx turbo run build --filter=${{ inputs.filter }}

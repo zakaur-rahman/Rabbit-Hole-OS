@@ -1,0 +1,66 @@
+name: Production Release & Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: production-deployment
+
+jobs:
+  # 1. Automated Semantic Versioning
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+
+  # 2. Build & Test on main (Only if we didn't just merge the auto-generated Release PR)
+  ci:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true' || github.event.head_commit.author.name != 'github-actions[bot]'
+    uses: ./.github/workflows/build.yml
+    with:
+      filter: '...' # Build all in main to be safe
+
+  # 3. Build & Push Docker containers tied to the Semantic Version
+  docker_build:
+    needs: [ci, release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    strategy:
+      matrix:
+        app: [web, backend]
+    uses: ./.github/workflows/docker.yml
+    with:
+      app_name: ${{ matrix.app }}
+      image_name: cognode/${{ matrix.app }}
+    secrets:
+      registry_username: ${{ github.actor }}
+      registry_token: ${{ secrets.GITHUB_TOKEN }}
+
+  # 4. Trigger Webhook to Deploy on Render
+  deploy_to_production:
+    needs: [docker_build, release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+      url: https://cognode.tech
+    steps:
+      - name: Trigger Webhook for Web Service
+        run: |
+          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_WEB }}
+      
+      - name: Trigger Webhook for Backend API
+        run: |
+          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_BACKEND }}
+
+      - name: Trigger Webhook for Backend Worker
+        run: |
+          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_WORKER }}
