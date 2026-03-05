@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
-import { UsageMeters } from '@/components/dashboard/UsageMeters';
+import { UsageMeters, UsageData } from '@/components/dashboard/UsageMeters';
 import { Loader2 } from 'lucide-react';
 
 export default function UsagePage() {
-    const [usage, setUsage] = useState<any>(null);
+    const [usage, setUsage] = useState<UsageData | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const loadUsage = async () => {
@@ -17,8 +17,8 @@ export default function UsagePage() {
             if (!res.ok) throw new Error('Failed to load usage statistics');
             const data = await res.json();
             setUsage(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         }
     };
 

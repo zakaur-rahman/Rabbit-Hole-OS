@@ -36,7 +36,7 @@ function GoogleCallbackContent() {
                 const desktopContext = desktopContextRaw ? JSON.parse(desktopContextRaw) : null;
 
                 // Exchange code for tokens
-                const exchangePayload: any = {
+                const exchangePayload: Record<string, string> = {
                     code,
                     code_verifier: codeVerifier,
                     state,
@@ -96,9 +96,9 @@ function GoogleCallbackContent() {
                 // Navigate to the Dashboard (web-only flow)
                 router.replace('/dashboard');
 
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('Callback error:', err);
-                setError(err.message || 'An unexpected error occurred during authentication.');
+                setError(err instanceof Error ? err.message : 'An unexpected error occurred during authentication.');
             }
         };
 

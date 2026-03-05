@@ -24,7 +24,7 @@ export default function AboutPage() {
                         <div className="space-y-4">
                             <h2 className="text-2xl font-bold text-primary">Research-Grade Intelligence</h2>
                             <p className="text-muted-foreground leading-relaxed">
-                                We don't just wrap a chatbot. Cognode's AI is deeply integrated into your knowledge graph, understanding the relationships between your documents to provide synthesis that is accurate, cited, and verifiable. It's not magic; it's structured intelligence.
+                                We don&apos;t just wrap a chatbot. Cognode&apos;s AI is deeply integrated into your knowledge graph, understanding the relationships between your documents to provide synthesis that is accurate, cited, and verifiable. It&apos;s not magic; it&apos;s structured intelligence.
                             </p>
                         </div>
 

@@ -56,6 +56,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle?: () => void } = {}) {
                     </div>
                     <div className="w-9 h-9 rounded-full bg-secondary overflow-hidden border border-border shrink-0 flex items-center justify-center text-secondary-foreground font-semibold">
                         {user?.avatar_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
                             // Fallback initial

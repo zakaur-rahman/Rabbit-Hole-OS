@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/Container";
-import { Button, buttonVariants } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Download } from "lucide-react";

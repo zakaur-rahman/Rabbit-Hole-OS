@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Database, FolderSync, Zap, AlertTriangle } from 'lucide-react';
 import { PlanType, PLAN_LIMITS } from '@/lib/constants';
 
-interface UsageData {
+export interface UsageData {
     nodes_count: number;
     projects_count: number;
     api_calls_month: number;

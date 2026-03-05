@@ -20,8 +20,8 @@ export default function ProjectsPage() {
             if (!res.ok) throw new Error('Failed to load projects');
             const data = await res.json();
             setProjects(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         }
     };
 

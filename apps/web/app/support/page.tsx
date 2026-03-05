@@ -45,7 +45,7 @@ export default function SupportPage() {
                             How can we help?
                         </h1>
                         <p className="text-lg text-muted-foreground">
-                            We're here to support your research workflow.
+                            We&apos;re here to support your research workflow.
                         </p>
                     </div>
 

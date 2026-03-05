@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { HeroCanvas } from "@/components/landing/HeroCanvas";

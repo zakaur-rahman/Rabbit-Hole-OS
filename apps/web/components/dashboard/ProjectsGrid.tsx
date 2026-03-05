@@ -55,8 +55,8 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
                 setIsAddModalOpen(false);
                 setNewProjectName('');
             }
-        } catch (err) {
-            console.error('Failed to create project', err);
+        } catch {
+            console.error('Failed to create project');
         } finally {
             setIsSubmitting(false);
         }

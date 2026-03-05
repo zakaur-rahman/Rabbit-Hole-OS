@@ -3,8 +3,7 @@
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { Terminal, FileText, Cpu, Globe, Share2, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Share2 } from "lucide-react";
 import { WorkspaceDemo } from "@/components/landing/WorkspaceDemo";
 
 export function Features() {
