@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { synthesisApi, SynthesisContextItem } from '@/lib/api';
 import { useGraphStore } from '@/store/graph.store';
 import { extractSynthesisMetadata } from '@/types/nodes';
+import { DocumentAST } from '@/store/ast.store';
 
 /**
  * Encapsulates all AI synthesis state + handlers previously inline in CanvasView.
@@ -22,7 +23,7 @@ export function useSynthesis() {
 
     // AST editor state
     const [showASTEditor, setShowASTEditor] = useState(false);
-    const [initialAST, setInitialAST] = useState<unknown>(null);
+    const [initialAST, setInitialAST] = useState<DocumentAST | null>(null);
 
     /** Build context items from current canvas nodes — always includes node_type + metadata */
     const buildContextItems = useCallback((): SynthesisContextItem[] => {
@@ -79,7 +80,7 @@ export function useSynthesis() {
                 activeWhiteboardId
             );
             if (response.status === 'success' || response.status === 'partial') {
-                setInitialAST(response.document);
+                setInitialAST(response.document as DocumentAST);
             }
         } catch (error) {
             console.error('Failed to load AST:', error);
@@ -139,7 +140,7 @@ export function useSynthesis() {
             // Compile PDF from AST
             setSynthesisStage('Compiling');
             setSynthesisMessage('Converting AST to LaTeX and compiling PDF...');
-            const pdfBlob = await synthesisApi.generatePdfFromAST(finalAST);
+            const pdfBlob = await synthesisApi.generatePdfFromAST(finalAST as DocumentAST);
             setPdfUrl(URL.createObjectURL(pdfBlob));
 
         } catch (error) {

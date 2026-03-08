@@ -165,6 +165,7 @@ export interface NodeSynthesisMetadata {
   price?: string;
   brand?: string;
   rating?: string;
+  [key: string]: unknown;
 }
 
 /** Extract synthesis metadata from any node's data object. */

@@ -5,7 +5,7 @@ import React from 'react';
 import { Scan, Scissors, Code, Copy, Clipboard, Trash2, BoxSelect, StickyNote, Globe, Lock, Unlock, Grid, File as FileIcon, Image as ImageIcon, Sparkles, MessageSquare } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
-import type { Edge as FlowEdge } from 'reactflow';
+import type { Node as FlowNode, Edge as FlowEdge } from 'reactflow';
 
 export interface ContextMenuState {
     x: number;
@@ -23,8 +23,8 @@ export interface EdgeContextMenuState extends ContextMenuState {
 
 interface UseContextMenuParams {
     selectNode: (id: string | null) => void;
-    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
-    addEdge: (edge: Record<string, unknown>) => Promise<void>;
+    addNode: (node: FlowNode, persist?: boolean) => Promise<void>;
+    addEdge: (edge: FlowEdge) => Promise<void>;
     activeWhiteboardId: string;
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
     onFitSelection: () => void;
@@ -56,7 +56,7 @@ export function useContextMenu({
     const [edgeContextMenu, setEdgeContextMenu] = useState<EdgeContextMenuState>({ x: 0, y: 0, visible: false });
     const [snapToGrid, setSnapToGrid] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
-    const clipboardRef = useRef<Record<string, unknown>[]>([]);
+    const clipboardRef = useRef<FlowNode[]>([]);
 
     const closeAll = useCallback(() => {
         setContextMenu(p => ({ ...p, visible: false }));
@@ -65,7 +65,7 @@ export function useContextMenu({
     }, []);
 
     // ── Node context menu ──────────────────────────────────────────────────
-    const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Record<string, unknown>) => {
+    const onNodeContextMenu = useCallback((event: React.MouseEvent, node: FlowNode) => {
         event.preventDefault();
         setPaneContextMenu(p => ({ ...p, visible: false }));
         if (!node.selected) selectNode(node.id as string);
@@ -124,7 +124,7 @@ export function useContextMenu({
                     data: { content: '', parentId: node.id },
                     parentId: node.id,
                 };
-                addNode(commentNode);
+                addNode(commentNode as FlowNode);
                 nodesApi.create({ ...commentNode, title: 'Instruction', data: { ...commentNode.data, whiteboard_id: activeWhiteboardId } });
 
                 addEdge({
@@ -158,7 +158,7 @@ export function useContextMenu({
                     style: { width: maxX - minX + p * 2, height: maxY - minY + p + 60 },
                     data: { label: 'New Group' }, zIndex: -1,
                 };
-                addNode(groupNode);
+                addNode(groupNode as FlowNode);
                 nodesApi.create({ ...groupNode, data: { ...groupNode.data, whiteboard_id: activeWhiteboardId }, title: 'Group' });
                 break;
             }
@@ -175,7 +175,7 @@ export function useContextMenu({
                 clipboardRef.current.forEach((n, i) => {
                     const newId = `${n.type}-${Date.now()}-${i}`;
                     const newNode = { ...n, id: newId, position: { x: n.position.x + offset.x, y: n.position.y + offset.y }, selected: true };
-                    addNode(newNode);
+                    addNode(newNode as FlowNode);
                     nodesApi.create({ ...newNode, title: newNode.data.title || newNode.type, data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 });
                 break;
@@ -196,17 +196,17 @@ export function useContextMenu({
         switch (action) {
             case 'add-note': {
                 const id = `note-${Date.now()}`;
-                addNode({ id, type: 'note', position: flowPos!, style: { width: 350 }, data: { title: 'New Note', content: '' } });
+                addNode({ id, type: 'note', position: flowPos!, style: { width: 350 }, data: { title: 'New Note', content: '' } } as FlowNode);
                 break;
             }
             case 'add-image': {
                 const id = `image-${Date.now()}`;
-                addNode({ id, type: 'image', position: flowPos!, style: { width: 300 }, data: { url: '' } });
+                addNode({ id, type: 'image', position: flowPos!, style: { width: 300 }, data: { url: '' } } as FlowNode);
                 break;
             }
             case 'add-pdf': {
                 const id = `pdf-${Date.now()}`;
-                addNode({ id, type: 'pdf', position: flowPos!, style: { width: 300, height: 400 }, data: { url: '' } });
+                addNode({ id, type: 'pdf', position: flowPos!, style: { width: 300, height: 400 }, data: { url: '' } } as FlowNode);
                 break;
             }
             case 'add-web':
@@ -216,14 +216,14 @@ export function useContextMenu({
             case 'create-group': {
                 const id = `group-${Date.now()}`;
                 const node = { id, type: 'group', position: flowPos!, style: { width: 400, height: 300 }, data: { label: 'New Group' }, zIndex: -1 };
-                addNode(node);
+                addNode(node as FlowNode);
                 nodesApi.create({ ...node, type: 'group', title: 'Group', data: { ...node.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
             case 'add-code': {
                 const id = `code-${Date.now()}`;
                 const node = { id, type: 'code', position: flowPos!, style: { width: 450, height: 350 }, data: { title: 'New Snippet', content: '', language: 'python' } };
-                addNode(node);
+                addNode(node as FlowNode);
                 nodesApi.create({ ...node, type: 'code', title: 'New Snippet', data: { ...node.data, whiteboard_id: activeWhiteboardId } });
                 break;
             }
@@ -235,7 +235,7 @@ export function useContextMenu({
                 clipboardRef.current.forEach((n, i) => {
                     const newId = `${n.type}-${Date.now()}-${i}`;
                     const newNode = { ...n, id: newId, position: { x: flowPos.x + (n.position.x - minX), y: flowPos.y + (n.position.y - minY) }, selected: true };
-                    addNode(newNode);
+                    addNode(newNode as FlowNode);
                     nodesApi.create({ ...newNode, title: newNode.data.title || newNode.type, data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
                 });
                 break;
@@ -258,7 +258,7 @@ export function useContextMenu({
             style: { width: 500, height: 400 },
             data: { url, title: domain, favicon: `https://www.google.com/s2/favicons?domain=${domain}&sz=32` },
         };
-        addNode(newNode);
+        addNode(newNode as FlowNode);
         nodesApi.create({ ...newNode, type: 'web', title: domain, data: { ...newNode.data, whiteboard_id: activeWhiteboardId } });
         setPendingWebPosition(null);
     }, [pendingWebPosition, addNode, activeWhiteboardId, setPendingWebPosition]);

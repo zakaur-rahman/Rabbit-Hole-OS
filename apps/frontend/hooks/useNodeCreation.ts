@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useReactFlow } from 'reactflow';
+import { useReactFlow, type Node as FlowNode } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
 interface UseNodeCreationParams {
-    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
+    addNode: (node: FlowNode, persist?: boolean) => Promise<void>;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ async function persistNode(node: {
             id: node.id,
             type: node.type,
             title: node.title,
-            data: { ...node.data, position: node.position, style: node.style, whiteboard_id: whiteboardId },
+            data: { ...node.data, position: node.position, style: node.style, whiteboard_id: whiteboardId } as any,
         });
     } catch (e) {
         console.error(`[useNodeCreation] Failed to sync ${node.type} node to backend:`, e);

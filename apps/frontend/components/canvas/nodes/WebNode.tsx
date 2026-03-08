@@ -14,11 +14,16 @@ export interface WebNodeData {
 }
 
 function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
+    interface WebviewElement extends HTMLWebViewElement {
+        reload: () => void;
+        insertCSS: (css: string) => Promise<string>;
+    }
+
     const [isLoading, setIsLoading] = useState(true);
     const [iframeKey, setIframeKey] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
-    const webviewRef = useRef<HTMLWebViewElement>(null);
+    const webviewRef = useRef<WebviewElement>(null);
 
     // Check if running in Electron (webview is available)
     const [isElectron, setIsElectron] = useState(false);

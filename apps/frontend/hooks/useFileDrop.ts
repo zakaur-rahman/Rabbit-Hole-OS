@@ -3,9 +3,10 @@
 import { useCallback } from 'react';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
+import type { Node as FlowNode } from 'reactflow';
 
 interface UseFileDropParams {
-    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
+    addNode: (node: FlowNode, persist?: boolean) => Promise<void>;
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
     activeWhiteboardId: string;
 }
@@ -37,12 +38,12 @@ export function useFileDrop({ addNode, screenToFlowPosition, activeWhiteboardId 
                 style: isImg ? { width: 300 } : { width: 300, height: 400 },
                 data: { title: file.name, url: uploaded.url, tags: ['file'], whiteboard_id: activeWhiteboardId },
             };
-            addNode(newNode);
+            addNode(newNode as FlowNode);
             await nodesApi.create({
                 id: newNode.id, type,
                 title: newNode.data.title,
                 data: { ...newNode.data, position: newNode.position, whiteboard_id: useGraphStore.getState().activeWhiteboardId },
-            });
+            } as any);
         } catch (e) {
             console.error('File upload failed:', e);
         }

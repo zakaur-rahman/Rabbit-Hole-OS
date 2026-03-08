@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import type { Edge as _FlowEdge, Connection } from 'reactflow';
+import type { Edge as _FlowEdge, Connection, Node as FlowNode } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
@@ -15,7 +15,7 @@ export interface ConnectionDropMenuState {
 
 interface UseConnectionDropParams {
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
-    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
+    addNode: (node: FlowNode, persist?: boolean) => Promise<void>;
     addEdge: (edge: _FlowEdge) => Promise<void>;
     activeWhiteboardId: string;
 }
@@ -78,7 +78,7 @@ export function useConnectionDrop({ screenToFlowPosition, addNode, addEdge, acti
         if (action === 'note') flowPos.x -= 225;
         else flowPos.x -= 100;
 
-        let newNode: Record<string, unknown> | null = null;
+        let newNode: FlowNode | null = null;
 
         switch (action) {
             case 'note':
@@ -120,10 +120,10 @@ export function useConnectionDrop({ screenToFlowPosition, addNode, addEdge, acti
         }
 
         if (newNode) {
-            await addNode(newNode, newNode.type !== 'article');
+            await addNode(newNode as FlowNode, newNode.type !== 'article');
 
             if (reconnectingEdgeRef.current) {
-                await addEdge({ ...reconnectingEdgeRef.current, target: newNode.id, targetHandle: null });
+                await addEdge({ ...reconnectingEdgeRef.current, target: newNode.id, targetHandle: null } as _FlowEdge);
             } else if (sourceNodeId) {
                 let targetHandleId = 'top-target';
                 if (sourceHandleId?.includes('right')) targetHandleId = 'left-target';

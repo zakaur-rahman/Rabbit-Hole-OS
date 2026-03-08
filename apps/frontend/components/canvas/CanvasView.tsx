@@ -222,7 +222,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 animated: true,
             };
             if (params.target) {
-                updateNodeAndPersist(params.target, { hasInstruction: true });
+                updateNodeAndPersist(params.target, { hasInstruction: true } as any);
                 updateNodeAndPersist(params.source!, { parentId: params.target, data: { ...sourceNode.data, parentId: params.target } });
             }
         }
@@ -397,7 +397,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             <ASTEditorModal
                 isOpen={showASTEditor}
                 onClose={() => setShowASTEditor(false)}
-                initialAST={initialAST}
+                initialAST={initialAST || undefined}
                 onCompile={handleCompileAST}
             />
 

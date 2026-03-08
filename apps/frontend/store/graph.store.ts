@@ -665,15 +665,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     try {
         if (isElectron()) {
             await window.electron.storage.edges.create({
-                id: styledEdge.id!,
-                source_id: styledEdge.source!,
-                target_id: styledEdge.target!,
-                label: (styledEdge as Edge & { label?: string }).label,
-                whiteboard_id: activeWhiteboardId,
-                user_id: 'local',
-                source_handle: styledEdge.sourceHandle,
-                target_handle: styledEdge.targetHandle,
-                edge_type: styledEdge.type || 'default',
+                source_handle: styledEdge.sourceHandle || undefined,
+                target_handle: styledEdge.targetHandle || undefined,
             });
         } else {
             await edgesApi.create(styledEdge, activeWhiteboardId);
@@ -819,10 +812,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                     updatePayload.height = typeof updates.style.height === 'number' ? updates.style.height : parseFloat(updates.style.height);
                 }
                 
-                if (updates.width !== undefined) updatePayload.width = updates.width;
-                if (updates.height !== undefined) updatePayload.height = updates.height;
+                if (updates.width !== undefined) updatePayload.width = updates.width || undefined;
+                if (updates.height !== undefined) updatePayload.height = updates.height || undefined;
 
-                await storage.nodes.update(id, updatePayload);
+                await storage.nodes.update(id, updatePayload as any);
             } else {
                 // Cloud API Sync
                 await nodesApi.update(id, {
@@ -834,8 +827,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                         position: updatedNode.position,
                         style: updatedNode.style,
                         parentId: updatedNode.parentId
-                    }
-                });
+                    } as any
+                } as any);
             }
         }
     } catch(e) {
@@ -937,10 +930,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                          payload.height = node.height;
                      }
                      if (node.style && (node.style.width || node.style.height)) {
-                        payload.width = parseFloat(node.style.width as string) || node.width;
-                        payload.height = parseFloat(node.style.height as string) || node.height;
+                        payload.width = (parseFloat(node.style.width as string) || node.width) || undefined;
+                        payload.height = (parseFloat(node.style.height as string) || node.height) || undefined;
                      }
-                     storage.nodes.update(change.id, payload).catch(console.error);
+                     storage.nodes.update(change.id, payload as any).catch(console.error);
                  } else {
                      // Debounce cloud position saves — avoid flooding API while dragging
                      if (_positionSaveTimers[change.id]) clearTimeout(_positionSaveTimers[change.id]);
@@ -953,8 +946,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                                      ...currentNode.data,
                                      position: currentNode.position,
                                      style: currentNode.style
-                                 }
-                             }).catch(() => {});
+                                 } as any
+                             } as any).catch(() => {});
                          }
                      }, 500);
                  }

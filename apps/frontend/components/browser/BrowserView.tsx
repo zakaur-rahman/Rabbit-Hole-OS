@@ -13,6 +13,9 @@ import { resolveUrl, extractSearchQuery, normalizeUrl, detectNodeType } from '@/
 interface WebviewElement extends HTMLWebViewElement {
     canGoBack: () => boolean;
     canGoForward: () => boolean;
+    goBack: () => void;
+    goForward: () => void;
+    reload: () => void;
     insertCSS: (css: string) => Promise<string>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     executeJavaScript: (js: string) => Promise<any>;
@@ -24,7 +27,7 @@ interface BrowserTabProps {
     isActive: boolean;
     onUpdate: (id: string, updates: Partial<Tab>) => void;
     /** Must include the whiteboardId so the parent stores refs under the correct composite key. */
-    onMount: (id: string, ref: HTMLWebViewElement, whiteboardId: string) => void;
+    onMount: (id: string, ref: WebviewElement, whiteboardId: string) => void;
     onNewTab: (url: string, parentId?: string) => void;
     activeWhiteboardId: string;
 }
@@ -43,7 +46,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
     // Forward webview ref to parent once it's available
     useEffect(() => {
         if (webviewRef.current) {
-            onMount(tab.id, webviewRef.current as unknown as HTMLWebViewElement, activeWhiteboardId);
+            onMount(tab.id, webviewRef.current, activeWhiteboardId);
         }
     });
 
@@ -376,7 +379,7 @@ export default function BrowserView() {
     // We use local state for immediate UI updates, sync store in background
     const [tabs, setTabs] = useState<Tab[]>(state.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
     const [activeTabId, setActiveTabId] = useState(state.activeTabId || '1');
-    const webviewRefs = useRef<{ [key: string]: HTMLWebViewElement }>({});
+    const webviewRefs = useRef<{ [key: string]: WebviewElement }>({});
     const isRemoteUpdate = useRef(false);
 
     // Sync from store when whiteboard changes
@@ -523,7 +526,7 @@ export default function BrowserView() {
         setTabs(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     }, []);
 
-    const handleMount = useCallback((id: string, ref: HTMLWebViewElement, whiteboardId: string) => {
+    const handleMount = useCallback((id: string, ref: WebviewElement, whiteboardId: string) => {
         webviewRefs.current[`${whiteboardId}-${id}`] = ref;
     }, []);
 
