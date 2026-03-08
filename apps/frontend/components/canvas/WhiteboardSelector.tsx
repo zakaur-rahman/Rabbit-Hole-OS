@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useGraphStore } from '@/store/graph.store';
-import { Plus, LayoutTemplate, X, Edit2 } from 'lucide-react';
+import { Plus, X, Edit2 } from 'lucide-react';
 
 export default function WhiteboardSelector() {
     const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, closeWhiteboard, openWhiteboardIds, initialize, createWhiteboard } = useGraphStore();

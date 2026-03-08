@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Download, Loader2, Sparkles } from 'lucide-react';
+import { X, Download, Sparkles } from 'lucide-react';
 
 interface ResearchPdfModalProps {
     isOpen: boolean;

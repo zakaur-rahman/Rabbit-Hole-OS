@@ -10,13 +10,18 @@ interface HoverPreviewProps {
     onClose: () => void;
 }
 
-export default function HoverPreview({ nodeId, position, onClose }: HoverPreviewProps) {
+export default function HoverPreview({ nodeId, position }: Omit<HoverPreviewProps, 'onClose'>) {
     const node = useGraphStore(state => state.nodes.find(n => n.id === nodeId));
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
+        const timer = setTimeout(() => {
+            setMounted(true);
+        }, 0);
+        return () => {
+            clearTimeout(timer);
+            setMounted(false);
+        };
     }, []);
 
     if (!node || !mounted) return null;

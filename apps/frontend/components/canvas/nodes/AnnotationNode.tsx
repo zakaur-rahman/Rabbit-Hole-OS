@@ -5,7 +5,7 @@ import { useGraphStore } from '@/store/graph.store';
 const AnnotationNode = ({ id, data, selected }: NodeProps) => {
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
-    const onResizeEnd = useCallback((_event: any, params: any) => {
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
         const { width, height } = params;
         updateNodeAndPersist(id, {
             style: { width, height }
@@ -42,8 +42,8 @@ const AnnotationNode = ({ id, data, selected }: NodeProps) => {
 
                 {/* Handles - standardized but invisible unless hovered */}
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'opacity-0'}`}>
-                    <Handle type="source" position={Position.Top} id="top" className="!bg-blue-500 !-top-1 opacity-0 hover:opacity-100" />
-                    <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-blue-500 !-bottom-1 opacity-0 hover:opacity-100" />
+                    <Handle type="source" position={Position.Top} id="top" className="bg-blue-500! -top-1! opacity-0 hover:opacity-100" />
+                    <Handle type="source" position={Position.Bottom} id="bottom" className="bg-blue-500! -bottom-1! opacity-0 hover:opacity-100" />
                 </div>
             </div>
         </>

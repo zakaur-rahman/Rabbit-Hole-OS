@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Globe } from 'lucide-react';
+import { Search, Globe } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 
 interface NewTabPageProps {
@@ -18,9 +18,14 @@ export default function NewTabPage({ onNavigate }: NewTabPageProps) {
     const nodes = useGraphStore(s => s.nodes);
 
     useEffect(() => {
-        setTime(new Date());
+        const timeout = setTimeout(() => {
+            setTime(new Date());
+        }, 0);
         const timer = setInterval(() => setTime(new Date()), 60000);
-        return () => clearInterval(timer);
+        return () => {
+            clearTimeout(timeout);
+            clearInterval(timer);
+        };
     }, []);
 
     // Last 4 unique URL-bearing nodes — most recently created first

@@ -17,7 +17,7 @@ import { AUTH_CONFIG } from './config';
 export async function exchangeDesktopCode(code: string): Promise<{
   access_token: string;
   refresh_token: string;
-  user: any;
+  user: Record<string, unknown>;
 }> {
   const response = await fetch(`${AUTH_CONFIG.API_BASE_URL}/api/v1/oauth/desktop/exchange`, {
     method: 'POST',

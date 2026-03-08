@@ -478,7 +478,7 @@ const ToolbarButton = ({ onClick, active = false, disabled = false, icon: Icon, 
     onClick: () => void;
     active?: boolean;
     disabled?: boolean;
-    icon: any;
+    icon: React.ComponentType<{ size: number }>;
     title: string;
 }) => (
     <button

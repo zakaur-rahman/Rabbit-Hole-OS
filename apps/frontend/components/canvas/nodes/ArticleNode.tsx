@@ -2,7 +2,7 @@
 
 import React, { memo, useState, useCallback } from 'react';
 import { NodeProps } from 'reactflow';
-import { FileText, ExternalLink, List, ChevronDown, ChevronUp, Loader2, Sparkles } from 'lucide-react';
+import { FileText, ChevronDown, ChevronUp, Loader2, Sparkles } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import BaseNode from './BaseNode';
 import OutlineTree, { OutlineItem } from '../OutlineTree';
@@ -71,7 +71,7 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
 
                 {/* Snippet section - visible when no outline or in preview */}
                 {(!hasOutline || isPreview) && data.snippet && (
-                    <div className="prose prose-sm prose-invert max-w-none text-neutral-200 opacity-90 leading-relaxed select-text whitespace-normal break-words">
+                    <div className="prose prose-sm prose-invert max-w-none text-neutral-200 opacity-90 leading-relaxed select-text whitespace-normal wrap-break-word">
                         <MarkdownPreview
                             source={data.snippet}
                             style={{

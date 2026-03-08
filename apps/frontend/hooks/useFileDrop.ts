@@ -5,7 +5,7 @@ import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
 interface UseFileDropParams {
-    addNode: (node: any, persist?: boolean) => Promise<void>;
+    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
     activeWhiteboardId: string;
 }

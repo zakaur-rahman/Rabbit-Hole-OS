@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Search, X, Loader2 } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Search, Loader2 } from 'lucide-react';
 import { synthesisApi, ApiNode } from '@/lib/api';
 import { useGraphStore } from '@/store/graph.store';
 
@@ -21,6 +21,11 @@ export default function SearchModal({ onClose }: SearchModalProps) {
     }, []);
 
     const [activeIndex, setActiveIndex] = useState(0);
+
+    const handleSelectResult = useCallback((node: ApiNode) => {
+        selectNode(node.id);
+        onClose();
+    }, [selectNode, onClose]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,7 +47,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose, results, activeIndex]);
+    }, [onClose, results, activeIndex, handleSelectResult]);
 
     const handleSearch = async (searchQuery: string) => {
         setQuery(searchQuery);
@@ -65,10 +70,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
         }
     };
 
-    const handleSelectResult = (node: ApiNode) => {
-        selectNode(node.id);
-        onClose();
-    };
+
 
     return (
         <div
@@ -98,7 +100,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                 <div className="max-h-[400px] overflow-y-auto">
                     {results.length === 0 && query.length >= 2 && !loading && (
                         <div className="p-8 text-center text-neutral-500">
-                            No results found for "{query}"
+                            No results found for &quot;{query}&quot;
                         </div>
                     )}
 

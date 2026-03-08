@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Cloud, CloudOff, Trash2, Plus, RefreshCw, LayoutTemplate } from 'lucide-react';
-import { useGraphStore, Whiteboard } from '@/store/graph.store';
-import { useRouter } from 'next/navigation';
+import { useGraphStore } from '@/store/graph.store';
+
 import { formatDistanceToNow } from 'date-fns';
 
 interface LibraryModalProps {
@@ -52,7 +52,9 @@ export default function LibraryModal({ isOpen, onClose }: LibraryModalProps) {
         console.log("Triggering manual sync for", id);
 
         // Use the new sync method
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((window as any).electron?.storage?.whiteboards?.sync) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (window as any).electron.storage.whiteboards.sync(id);
         } else {
             console.warn("Sync method not available (not electron or old version)");

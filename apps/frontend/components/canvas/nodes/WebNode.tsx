@@ -2,7 +2,7 @@
 
 import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { NodeProps } from 'reactflow';
-import { Globe, ExternalLink, RefreshCw, Maximize2, X } from 'lucide-react';
+import { Globe, ExternalLink, RefreshCw, Maximize2 } from 'lucide-react';
 import BaseNode from './BaseNode';
 
 export interface WebNodeData {
@@ -18,16 +18,20 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
     const [iframeKey, setIframeKey] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
-    const webviewRef = useRef<any>(null);
+    const webviewRef = useRef<HTMLWebViewElement>(null);
 
     // Check if running in Electron (webview is available)
     const [isElectron, setIsElectron] = useState(false);
 
     useEffect(() => {
-        setIsMounted(true);
+        const timeout = setTimeout(() => {
+            setIsMounted(true);
+        }, 0);
         const checkElectron = typeof navigator !== 'undefined' && /Electron/.test(navigator.userAgent);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsElectron(checkElectron);
         console.log('[WebNode] Environment check:', { isElectron: checkElectron, userAgent: navigator.userAgent });
+        return () => clearTimeout(timeout);
     }, []);
 
     // Extract domain for display
@@ -53,7 +57,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
         }
     }, [data.url]);
 
-    const toggleFullscreen = useCallback(() => {
+    const _toggleFullscreen = useCallback(() => {
         setIsFullscreen(prev => !prev);
     }, []);
 
@@ -86,6 +90,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
 
         const handleDidStartLoading = () => setIsLoading(true);
         const handleDidStopLoading = () => setIsLoading(false);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handleDidFailLoad = (e: any) => {
             if (e.errorCode && e.errorCode !== -3) {
                 console.error(`WebNode: Load failed (${e.errorCode}): ${e.errorDescription}`);
@@ -177,7 +182,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
                                         ref={webviewRef}
                                         src={data.url}
                                         className="w-full h-full nodrag"
-                                        // @ts-ignore
+                                        // @ts-expect-error - webview is an Electron-specific element
                                         allowpopups="true"
                                         useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                                     />
@@ -201,7 +206,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
 
             {/* Fullscreen overlay */}
             {isFullscreen && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 overflow-hidden rounded-2xl flex flex-col">
+                <div className="fixed inset-0 z-9999 bg-black/90 overflow-hidden rounded-2xl flex flex-col">
                     <div className="flex items-center justify-between px-4 py-3 bg-neutral-900 border-b border-neutral-800">
                         <div className="flex items-center gap-3">
                             <Globe size={18} className="text-purple-500" />
@@ -235,7 +240,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
                                 ref={webviewRef}
                                 src={data.url}
                                 className="flex-1 w-full"
-                                // @ts-ignore
+                                // @ts-expect-error - webview is an Electron-specific element
                                 allowpopups="true"
                                 useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                             />

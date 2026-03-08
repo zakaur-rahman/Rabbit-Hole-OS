@@ -1,5 +1,5 @@
-import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
-import { NodeProps, NodeResizer } from 'reactflow';
+import React, { memo, useState, useCallback, useRef } from 'react';
+import { NodeProps } from 'reactflow';
 import { FileText, Upload, Link, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import BaseNode from './BaseNode';
@@ -26,22 +26,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const updateNode = useGraphStore(state => state.updateNode);
 
-    // Width tracking for responsive PDF resizing
-    const [containerWidth, setContainerWidth] = useState(300);
-    const containerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        const observer = new ResizeObserver(entries => {
-            for (const entry of entries) {
-                setContainerWidth(entry.contentRect.width);
-            }
-        });
-
-        observer.observe(containerRef.current);
-        return () => observer.disconnect();
-    }, []);
 
     const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
         setNumPages(numPages);
@@ -90,7 +75,6 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
             hasInstruction={data.hasInstruction}
         >
             <div
-                ref={containerRef}
                 className="relative flex-1 flex flex-col h-full min-h-[300px] w-full bg-white rounded-lg overflow-hidden"
                 onWheel={(e) => e.stopPropagation()}
             >
@@ -150,7 +134,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                                     scale={3}
                                     renderTextLayer={false}
                                     renderAnnotationLayer={false}
-                                    className="shadow-lg !w-full [&_canvas]:!w-full [&_canvas]:!h-auto"
+                                    className="shadow-lg w-full! [&_canvas]:w-full! [&_canvas]:h-auto!"
                                 />
                             </Document>
                         </div>

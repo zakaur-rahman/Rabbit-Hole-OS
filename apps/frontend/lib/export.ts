@@ -1,15 +1,15 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { ApiNode } from './api';
+import type { Node, Edge } from 'reactflow';
 
-export const exportGraphToMarkdown = async (nodes: any[], edges: any[]) => {
+export const exportGraphToMarkdown = async (nodes: Node[], _edges: Edge[]) => {
     const zip = new JSZip();
     const folder = zip.folder("rabbit-hole-export");
 
     if (!folder) return;
 
     // Helper to format node content
-    const formatContent = (node: any) => {
+    const formatContent = (node: Node) => {
         let content = `# ${node.data.title || 'Untitled'}\n\n`;
         
         // Metadata
@@ -31,21 +31,12 @@ export const exportGraphToMarkdown = async (nodes: any[], edges: any[]) => {
             content += node.data.snippet;
         }
 
-        // Connections (Backlinks/Outlinks could be computed here if needed, 
-        // but simple connection list is good)
-        
         return content;
     };
 
     // Create a file for each node
     nodes.forEach((node) => {
-        // Sanitize filename
         const filename = (node.data.title || 'untitled').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.md';
-        
-        // Handle duplicate filenames
-        // (Simple handling: overwritten. Better: check existence. 
-        // For this v1, simple is okay, or maybe append ID)
-        
         const content = formatContent(node);
         folder.file(filename, content);
     });

@@ -13,6 +13,8 @@ export interface BaseNodeData {
   outline?: string[];
   /** User-selected topics for synthesis focus */
   selectedTopics?: string[];
+  /** Whether the node has a system instruction attached */
+  hasInstruction?: boolean;
 }
 
 // ─── Article / Web ───────────────────────────────────────────────────────────
@@ -167,17 +169,17 @@ export interface NodeSynthesisMetadata {
 
 /** Extract synthesis metadata from any node's data object. */
 export function extractSynthesisMetadata(data: AnyNodeData): NodeSynthesisMetadata {
-  const d = data as any;
+  const d = data as Record<string, unknown>;
   return {
-    language: d.language,
-    authors: d.authors,
-    tags: d.tags,
-    description: d.description,
-    alt: d.alt,
-    doi: d.doi,
-    journal: d.journal,
-    price: d.price,
-    brand: d.brand,
-    rating: d.rating,
+    language: typeof d.language === 'string' ? d.language : undefined,
+    authors: Array.isArray(d.authors) ? d.authors : undefined,
+    tags: Array.isArray(d.tags) ? d.tags : undefined,
+    description: typeof d.description === 'string' ? d.description : undefined,
+    alt: typeof d.alt === 'string' ? d.alt : undefined,
+    doi: typeof d.doi === 'string' ? d.doi : undefined,
+    journal: typeof d.journal === 'string' ? d.journal : undefined,
+    price: typeof d.price === 'string' ? d.price : undefined,
+    brand: typeof d.brand === 'string' ? d.brand : undefined,
+    rating: typeof d.rating === 'string' ? d.rating : undefined,
   };
 }

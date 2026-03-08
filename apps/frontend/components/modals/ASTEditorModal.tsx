@@ -7,14 +7,12 @@
  * - Live Preview (rendered output)
  */
 import React, { useState, useCallback } from 'react';
-import { useASTStore, DocumentAST, Section, Block } from '../../store/ast.store';
+import { useASTStore, DocumentAST, Section, Block, ParagraphData, ListData, QuoteData, WarningData } from '../../store/ast.store';
 import { synthesisApi, ValidationIssue } from '../../lib/api';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import LatexCodeEditor from '../ui/LatexCodeEditor';
 import {
     FileText,
-    ChevronRight,
-    ChevronDown,
     Book,
     File,
     Check,
@@ -26,9 +24,7 @@ import {
     Layout,
     Type,
     List as ListIcon,
-    Quote as QuoteIcon,
-    Settings,
-    Eye
+    Quote as QuoteIcon
 } from 'lucide-react';
 
 
@@ -375,8 +371,8 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ block, onUpdate, onRemove }) 
             case 'paragraph':
                 return (
                     <textarea
-                        value={(block.data as any).text}
-                        onChange={(e) => onUpdate({ ...block, data: { ...block.data, text: e.target.value } })}
+                        value={(block.data as ParagraphData).text}
+                        onChange={(e) => onUpdate({ ...block, data: { ...block.data, text: e.target.value } as ParagraphData })}
                         style={styles.input}
                         rows={4}
                         placeholder="Start typing your paragraph content..."
@@ -388,14 +384,14 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ block, onUpdate, onRemove }) 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <input
                                 type="checkbox"
-                                checked={(block.data as any).ordered}
-                                onChange={(e) => onUpdate({ ...block, data: { ...block.data, ordered: e.target.checked } })}
+                                checked={(block.data as ListData).ordered}
+                                onChange={(e) => onUpdate({ ...block, data: { ...block.data, ordered: e.target.checked } as ListData })}
                             />
                             <span style={{ fontSize: '12px', color: '#71717a' }}>Ordered List</span>
                         </div>
                         <textarea
-                            value={(block.data as any).items?.join('\n') || ''}
-                            onChange={(e) => onUpdate({ ...block, data: { ...block.data, items: e.target.value.split('\n') } })}
+                            value={(block.data as ListData).items?.join('\n') || ''}
+                            onChange={(e) => onUpdate({ ...block, data: { ...block.data, items: e.target.value.split('\n') } as ListData })}
                             placeholder="One item per line..."
                             style={styles.input}
                             rows={3}
@@ -406,8 +402,8 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ block, onUpdate, onRemove }) 
             case 'quote':
                 return (
                     <textarea
-                        value={(block.data as any).text}
-                        onChange={(e) => onUpdate({ ...block, data: { ...block.data, text: e.target.value } })}
+                        value={(block.data as QuoteData | WarningData).text}
+                        onChange={(e) => onUpdate({ ...block, data: { ...block.data, text: e.target.value } as QuoteData | WarningData })}
                         placeholder={`${block.type.charAt(0).toUpperCase() + block.type.slice(1)} content...`}
                         style={{ ...styles.input, backgroundColor: block.type === 'warning' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(79, 70, 229, 0.05)' }}
                         rows={2}
@@ -451,12 +447,10 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
     onClose,
     initialAST,
     onSave,
-    onCompile,
 }) => {
     const {
         document,
         selectedSectionId,
-        validationStatus,
         isDirty,
         setDocument,
         selectSection,
@@ -466,7 +460,6 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
         addBlock,
         updateTitle,
         updateAbstract,
-        validate,
         getSection,
     } = useASTStore();
 
@@ -497,7 +490,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                     // Pre-fetch LaTeX to ensure code editor is ready when toggled
                     const result = await synthesisApi.getLatexFromAST(initialAST);
                     setLatexSource(result.latex || '% No LaTeX generated');
-                } catch (err: any) {
+                } catch (err) {
                     console.error("Failed to initialize LaTeX:", err);
                     setInitError("Failed to prepare document editor. Please try again.");
                 } finally {
@@ -558,15 +551,15 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                 errors: 0
             });
             setShowValidationChecklist(false);
-        } catch (err: any) {
-            // Handle structured error
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
             try {
-                const errorData = JSON.parse(err.message);
+                const errorData = JSON.parse(errorMessage);
                 if (errorData.errors) {
                     setCompileError(errorData.errors[0]?.message || errorData.message || 'Compilation failed');
 
                     // Parse line numbers from error messages if needed for inline highlighting
-                    const parsedErrors = errorData.errors.map((e: any) => {
+                    const parsedErrors = errorData.errors.map((e: { line?: number; message: string }) => {
                         let line = e.line;
                         if (line === 0 || !line) {
                             // Try multiple patterns: Line N:, line N:, document.tex:N
@@ -585,16 +578,16 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
 
                     // If we have broken sections from isolation
                     if (errorData.broken_sections) {
-                        setBrokenSectionIds(errorData.broken_sections.map((s: any) => s.id));
+                        setBrokenSectionIds(errorData.broken_sections.map((s: { id: string }) => s.id));
                     }
                     setLastCompileStats({
                         time: ((Date.now() - startTime) / 1000).toFixed(1) + 's',
                         errors: errorData.errors.length
                     });
                 } else {
-                    setCompileError(err.message);
+                    setCompileError(errorMessage);
                 }
-            } catch (error) {
+            } catch {
                 setCompileError('Analysis failed. Manual LaTeX editing suggested.');
             }
         } finally {
@@ -627,7 +620,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                 const result = await synthesisApi.getLatexFromAST(document);
                 setLatexSource(result.latex || '');
                 setCompileError(null);
-            } catch (err) {
+            } catch (_err) {
                 alert("Failed to regenerate LaTeX");
             } finally {
                 setIsFetchingLatex(false);

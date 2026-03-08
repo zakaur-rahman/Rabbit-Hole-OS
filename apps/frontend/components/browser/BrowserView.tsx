@@ -1,12 +1,22 @@
 'use client';
 
 import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
-import { ArrowLeft, ArrowRight, RotateCw, Globe, Plus, BookmarkPlus, Share2, RefreshCw, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, Globe, Plus, X, Loader2 } from 'lucide-react';
 import { useGraphStore, Tab } from '@/store/graph.store';
+import { AnyNodeData } from '@/types/nodes';
 import NewTabPage from './NewTabPage';
 import { resolveUrl, extractSearchQuery, normalizeUrl, detectNodeType } from '@/lib/browser-utils';
 
 // URL pattern detectors for smart node typing moved to browser-utils.ts
+
+// Electron Webview Interface
+interface WebviewElement extends HTMLWebViewElement {
+    canGoBack: () => boolean;
+    canGoForward: () => boolean;
+    insertCSS: (css: string) => Promise<string>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    executeJavaScript: (js: string) => Promise<any>;
+}
 
 // --- Browser Tab Component ---
 interface BrowserTabProps {
@@ -14,13 +24,13 @@ interface BrowserTabProps {
     isActive: boolean;
     onUpdate: (id: string, updates: Partial<Tab>) => void;
     /** Must include the whiteboardId so the parent stores refs under the correct composite key. */
-    onMount: (id: string, ref: any, whiteboardId: string) => void;
+    onMount: (id: string, ref: HTMLWebViewElement, whiteboardId: string) => void;
     onNewTab: (url: string, parentId?: string) => void;
     activeWhiteboardId: string;
 }
 
 const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhiteboardId }: BrowserTabProps) => {
-    const webviewRef = useRef<any>(null);
+    const webviewRef = useRef<WebviewElement>(null);
 
     // Auto-add helper refs
     const processedUrlsRef = useRef<Set<string>>(new Set());
@@ -33,7 +43,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
     // Forward webview ref to parent once it's available
     useEffect(() => {
         if (webviewRef.current) {
-            onMount(tab.id, webviewRef.current, activeWhiteboardId);
+            onMount(tab.id, webviewRef.current as unknown as HTMLWebViewElement, activeWhiteboardId);
         }
     });
 
@@ -80,7 +90,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         const { nodes, addNode, addEdge } = useGraphStore.getState();
 
         // If URL already exists in graph, just update the tab's trace pointer and return
-        const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
+        const existingNode = nodes.find((n) => normalizeUrl(n.data?.url || '') === urlKey);
         if (existingNode) {
             lastNodeIdRef.current = existingNode.id;
             onUpdate(tab.id, { lastNodeId: existingNode.id });
@@ -108,7 +118,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             };
         }
 
-        const nodeData: any = {
+        const nodeData: AnyNodeData = {
             title: title || new URL(url).hostname,
             url,
             whiteboard_id: activeWhiteboardId,
@@ -168,13 +178,14 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
     // Webview Event Listeners
     useEffect(() => {
-        const webview = webviewRef.current;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const webview = webviewRef.current as any;
         if (!webview) return;
 
         const handleDidStartLoading = () => onUpdate(tab.id, { isLoading: true });
         const handleDidStopLoading = () => onUpdate(tab.id, { isLoading: false });
 
-        const handleNavigation = (e: any) => {
+        const handleNavigation = (e: { url: string }) => {
             const url = e.url;
             let displayInput = url;
             const searchQuery = extractSearchQuery(url);
@@ -201,7 +212,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
             }
         };
 
-        const handleTitleUpdate = (e: any) => {
+        const handleTitleUpdate = (e: { title: string }) => {
             onUpdate(tab.id, {
                 title: e.title,
                 canGoBack: webview.canGoBack(),
@@ -263,7 +274,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         };
 
         // ── console-message: picks up our __COGNODE_NAV__ signals from the injected interceptor ──
-        const handleConsoleMessage = (e: any) => {
+        const handleConsoleMessage = (e: { message: string }) => {
             const msg = e.message;
             if (typeof msg === 'string' && msg.startsWith('__COGNODE_NAV__:')) {
                 const url = msg.slice('__COGNODE_NAV__:'.length);
@@ -274,7 +285,7 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
         };
 
         // ── new-window: fallback for target="_blank" and window.open() from page JS ──
-        const handleNewWindow = (e: any) => {
+        const handleNewWindow = (e: { url: string }) => {
             if (e.url && e.url.startsWith('http')) {
                 onNewTab(e.url, lastNodeIdRef.current);
             }
@@ -282,22 +293,32 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
 
         webview.addEventListener('did-start-loading', handleDidStartLoading);
         webview.addEventListener('did-stop-loading', handleDidStopLoading);
-        webview.addEventListener('did-navigate', handleNavigation);
-        webview.addEventListener('did-navigate-in-page', handleNavigation);
-        webview.addEventListener('console-message', handleConsoleMessage);
-        webview.addEventListener('new-window', handleNewWindow);
-        webview.addEventListener('page-title-updated', handleTitleUpdate);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        webview.addEventListener('did-navigate', handleNavigation as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        webview.addEventListener('did-navigate-in-page', handleNavigation as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        webview.addEventListener('console-message', handleConsoleMessage as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        webview.addEventListener('new-window', handleNewWindow as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        webview.addEventListener('page-title-updated', handleTitleUpdate as any);
         webview.addEventListener('dom-ready', handleDomReady);
 
         return () => {
             if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
             webview.removeEventListener('did-start-loading', handleDidStartLoading);
             webview.removeEventListener('did-stop-loading', handleDidStopLoading);
-            webview.removeEventListener('did-navigate', handleNavigation);
-            webview.removeEventListener('did-navigate-in-page', handleNavigation);
-            webview.removeEventListener('console-message', handleConsoleMessage);
-            webview.removeEventListener('new-window', handleNewWindow);
-            webview.removeEventListener('page-title-updated', handleTitleUpdate);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            webview.removeEventListener('did-navigate', handleNavigation as any);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            webview.removeEventListener('did-navigate-in-page', handleNavigation as any);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            webview.removeEventListener('console-message', handleConsoleMessage as any);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            webview.removeEventListener('new-window', handleNewWindow as any);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            webview.removeEventListener('page-title-updated', handleTitleUpdate as any);
             webview.removeEventListener('dom-ready', handleDomReady);
         };
     }, [tab.id, tab.url, onUpdate, autoAddNodeToGraph, onNewTab]);
@@ -320,7 +341,6 @@ const BrowserTab = memo(({ tab, isActive, onUpdate, onMount, onNewTab, activeWhi
                 ref={webviewRef}
                 src={tab.url}
                 className="w-full h-full"
-                // @ts-ignore
                 useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             />
         </div>
@@ -331,7 +351,7 @@ BrowserTab.displayName = 'BrowserTab';
 
 // --- Main BrowserView Component ---
 export default function BrowserView() {
-    const { activeWhiteboardId, browserStates, updateBrowserState, addNode, selectedNodeId, nodeClickTs, nodes, setAuthModal } = useGraphStore();
+    const { activeWhiteboardId, browserStates, updateBrowserState, selectedNodeId, nodeClickTs, setAuthModal } = useGraphStore();
 
     // Track which whiteboards have their tabs mounted in DOM.
     // Capped at 5 to prevent unbounded memory growth from accumulated webviews.
@@ -356,7 +376,7 @@ export default function BrowserView() {
     // We use local state for immediate UI updates, sync store in background
     const [tabs, setTabs] = useState<Tab[]>(state.tabs || [{ id: '1', url: '', displayInput: '', title: 'New Tab' }]);
     const [activeTabId, setActiveTabId] = useState(state.activeTabId || '1');
-    const webviewRefs = useRef<{ [key: string]: any }>({});
+    const webviewRefs = useRef<{ [key: string]: HTMLWebViewElement }>({});
     const isRemoteUpdate = useRef(false);
 
     // Sync from store when whiteboard changes
@@ -381,6 +401,7 @@ export default function BrowserView() {
                 setActiveTabId('1');
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeWhiteboardId, browserStates]);
 
     // Sync current active whiteboard tabs back to store when local state changes
@@ -450,6 +471,7 @@ export default function BrowserView() {
             addTab(node.data.url, node.id, node.data.title);
         }
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedNodeId, nodeClickTs, addTab]); // nodeClickTs fires even when same node re-clicked
 
     // --- Browser -> Graph Sync ---
@@ -460,12 +482,14 @@ export default function BrowserView() {
         const { nodes, selectNode, selectedNodeId } = useGraphStore.getState();
         const urlKey = normalizeUrl(activeTab.url);
 
-        const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const existingNode = (nodes as any[]).find((n: any) => normalizeUrl((n.data as any)?.url || '') === urlKey);
 
         // Only update if different to avoid loops/jitters
         if (existingNode && existingNode.id !== selectedNodeId) {
             selectNode(existingNode.id);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTabId, activeTab?.url]); // Run when active tab or its URL changes
 
     // Tab Management
@@ -499,7 +523,7 @@ export default function BrowserView() {
         setTabs(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     }, []);
 
-    const handleMount = useCallback((id: string, ref: any, whiteboardId: string) => {
+    const handleMount = useCallback((id: string, ref: HTMLWebViewElement, whiteboardId: string) => {
         webviewRefs.current[`${whiteboardId}-${id}`] = ref;
     }, []);
 
@@ -534,7 +558,7 @@ export default function BrowserView() {
         });
     };
 
-    const handleManualSync = useCallback(() => {
+    const _handleManualSync = useCallback(() => {
         const tab = tabs.find(t => t.id === activeTabId);
         if (!tab || !tab.url) return;
 
@@ -546,12 +570,13 @@ export default function BrowserView() {
 
         const url = tab.url;
         const title = tab.title || (url.startsWith('http') ? new URL(url).hostname : 'New Node');
-        const urlKey = normalizeUrl(url);
 
-        const { nodes, addNode, addEdge, selectNode, updateNode } = useGraphStore.getState();
+        const { nodes, addNode, addEdge, selectNode, updateNode: _updateNode } = useGraphStore.getState();
+        const urlKey = normalizeUrl(tab.url);
 
         // 1. Check existing
-        const existingNode = nodes.find((n: any) => normalizeUrl(n.data?.url || '') === urlKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const existingNode = (nodes as any[]).find((n: any) => normalizeUrl((n.data as any)?.url || '') === urlKey);
         if (existingNode) {
             updateTab(tab.id, { lastNodeId: existingNode.id });
             selectNode(existingNode.id);
@@ -614,6 +639,7 @@ export default function BrowserView() {
         // 5. Update trace
         updateTab(tab.id, { lastNodeId: nodeId });
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tabs, activeTabId, activeWhiteboardId, updateTab]);
 
     const activeTabWebviewKey = `${activeWhiteboardId}-${activeTabId}`;

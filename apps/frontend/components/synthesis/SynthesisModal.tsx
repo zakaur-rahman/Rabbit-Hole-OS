@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useGraphStore } from '@/store/graph.store';
 import { synthesisApi } from '@/lib/api';
 import { X, Sparkles, Loader2, ArrowRight, Copy, Check, FileDown } from 'lucide-react';
+import { Node } from 'reactflow';
 
 interface SynthesisModalProps {
     onClose: () => void;
@@ -74,7 +75,7 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
                 },
             };
 
-            await addNode(newNode as any);
+            await addNode(newNode as unknown as Node);
             // Optionally close the modal or show success
             setResult('');
             setQuery('');

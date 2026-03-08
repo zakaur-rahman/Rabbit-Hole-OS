@@ -5,9 +5,10 @@ import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 import {
     FileText, Video, Code, ShoppingBag, BookOpen,
-    StickyNote, Search, ChevronRight, ChevronDown,
+    StickyNote, Search, ChevronRight,
     Folder, Ghost
 } from 'lucide-react';
+import { Node } from 'reactflow';
 
 interface FileTreeSidebarProps {
     onSelectNode: (id: string) => void;
@@ -35,7 +36,7 @@ export default function FileTreeSidebar({ onSelectNode }: FileTreeSidebarProps) 
 
     // Group nodes by type
     const groupedNodes = useMemo(() => {
-        const groups: Record<string, any[]> = {};
+        const groups: Record<string, Node[]> = {};
         nodes.forEach((node) => {
             const type = node.type || 'other';
             if (!groups[type]) groups[type] = [];
@@ -106,7 +107,7 @@ export default function FileTreeSidebar({ onSelectNode }: FileTreeSidebarProps) 
                     className="w-full flex items-center justify-center gap-2 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition-colors border border-neutral-700"
                 >
                     <StickyNote size={14} className="text-yellow-500" />
-                    Open Today's Note
+                    Open Today&apos;s Note
                 </button>
                 <div className="relative">
                     <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -160,7 +161,7 @@ export default function FileTreeSidebar({ onSelectNode }: FileTreeSidebarProps) 
                                             onClick={() => onSelectNode(node.id)}
                                             className="w-full flex items-center gap-2 p-1.5 hover:bg-neutral-800 rounded transition-colors text-left group/item"
                                         >
-                                            {typeIcons[node.type] || <FileText size={14} className="text-neutral-500" />}
+                                            {(node.type && typeIcons[node.type]) || <FileText size={14} className="text-neutral-500" />}
                                             <span className="text-sm text-neutral-400 group-hover/item:text-white truncate">
                                                 {node.data.title || 'Untitled'}
                                             </span>

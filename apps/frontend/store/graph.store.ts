@@ -1,15 +1,14 @@
 import { create } from 'zustand';
 import { 
-    Connection, 
     Edge, 
     EdgeChange, 
     Node, 
     NodeChange, 
-    addEdge as addFlowEdge, 
     applyNodeChanges, 
     applyEdgeChanges,
     MarkerType, // Import MarkerType
 } from 'reactflow';
+import { AnyNodeData } from '@/types/nodes';
 import { localStorage as storage, isElectron } from '@/lib/local-storage';
 import { nodesApi, edgesApi, whiteboardsApi } from '@/lib/api';
 
@@ -44,6 +43,43 @@ export interface BrowserState {
   isAutoSyncEnabled: boolean;
 }
 
+interface RawTab {
+    id: string;
+    url: string;
+    display_input?: string;
+    displayInput?: string;
+    title?: string;
+    is_loading?: boolean;
+    last_node_id?: string;
+    lastNodeId?: string;
+}
+
+interface RawNode {
+    id: string;
+    type?: string;
+    title: string;
+    url: string;
+    content?: string;
+    outline?: string[];
+    position_x?: number;
+    position_y?: number;
+    width?: number;
+    height?: number;
+    metadata?: string | Record<string, unknown>;
+}
+
+interface RawEdge {
+    id: string;
+    source: string;
+    target: string;
+    source_id?: string;
+    target_id?: string;
+    source_handle?: string;
+    target_handle?: string;
+    sourceHandle?: string;
+    targetHandle?: string;
+}
+
 export interface GraphState {
   nodes: Node[];
   edges: Edge[];
@@ -61,9 +97,9 @@ export interface GraphState {
   addEdge: (edge: Edge) => Promise<void>;
   removeNode: (id: string) => void;
   removeEdge: (id: string) => Promise<void>;
-  updateNode: (id: string, data: Partial<any>) => void;
-  updateNodeFull: (id: string, updates: Partial<any>) => void;
-  updateNodeData: (id: string, updater: (prevData: any) => any) => void;
+  updateNode: (id: string, data: Partial<AnyNodeData>) => void;
+  updateNodeFull: (id: string, updates: Partial<Node>) => void;
+  updateNodeData: (id: string, updater: (prevData: AnyNodeData) => AnyNodeData) => void;
   updateWhiteboard: (id: string, name: string) => void;
   createWhiteboard: (name?: string) => Promise<string>;
   removeWhiteboard: (id: string) => void;
@@ -76,7 +112,7 @@ export interface GraphState {
   getSelectedNodes: () => Node[];
   clearGraph: () => void;
   updateBrowserState: (whiteboardId: string, state: Partial<BrowserState>) => void;
-  updateNodeAndPersist: (id: string, updates: Partial<any>) => Promise<void>;
+  updateNodeAndPersist: (id: string, updates: Partial<Node>) => Promise<void>;
   authModalState: { isOpen: boolean; message: string };
   setAuthModal: (isOpen: boolean, message?: string) => void;
   fetchWhiteboards: () => Promise<void>;
@@ -149,17 +185,17 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
       // Debounced Persistence (Electron)
       if (isElectron()) {
-          const store = get() as any;
+          const store = get() as GraphState & { _saveTimeout?: NodeJS.Timeout };
           if (store._saveTimeout) clearTimeout(store._saveTimeout);
           
           store._saveTimeout = setTimeout(() => {
               const currentState = get().browserStates[whiteboardId];
               if (currentState) {
                   // Save Tabs
-                  (window as any).electron.storage.tabs.save(whiteboardId, currentState.tabs);
+                  window.electron.storage.tabs.save(whiteboardId, currentState.tabs);
                   
                   // Save UI State (Active Tab)
-                  (window as any).electron.storage.ui.save({
+                  window.electron.storage.ui.save({
                       whiteboard_id: whiteboardId,
                       active_tab_id: currentState.activeTabId,
                       viewport_x: 0, // Placeholder
@@ -193,7 +229,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 
                 Object.keys(parsed).forEach(wbId => {
                     if (parsed[wbId].tabs) {
-                        parsed[wbId].tabs.forEach((tab: any) => {
+                        parsed[wbId].tabs.forEach((tab: Tab) => {
                             // If ID is '1' OR we've seen this ID before in another whiteboard (or this one)
                             if (tab.id === '1' || seenIds.has(tab.id)) {
                                 const oldId = tab.id;
@@ -217,20 +253,23 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
         // Load tabs from Electron SQLite storage (source of truth)
         if (isElectron()) {
-            (async () => {
+            // Defer this to avoid blocking initial store setup
+            setTimeout(async () => {
                 try {
                     const activeWbId = get().activeWhiteboardId;
-                    const tabs = await (window as any).electron.storage.tabs.load(activeWbId);
-                    const uiState = await (window as any).electron.storage.ui.load(activeWbId);
+                    const tabs = await window.electron.storage.tabs.load(activeWbId);
+                    const uiState = await window.electron.storage.ui.load(activeWbId);
 
                     if (tabs && tabs.length > 0) {
-                        const mappedTabs = tabs.map((t: any) => ({
+                        const mappedTabs: Tab[] = (tabs as RawTab[]).map((t) => ({
                             id: t.id,
                             url: t.url,
                             displayInput: t.display_input || t.displayInput || t.url,
                             title: t.title || 'New Tab',
                             isLoading: false,
                             lastNodeId: t.last_node_id || t.lastNodeId,
+                            canGoBack: false, // Default values for new fields
+                            canGoForward: false, // Default values for new fields
                         }));
 
                         const activeTabId = uiState?.active_tab_id || mappedTabs[0].id;
@@ -239,8 +278,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                             browserStates: {
                                 ...state.browserStates,
                                 [activeWbId]: {
-                                    url: mappedTabs.find((t: any) => t.id === activeTabId)?.url || '',
-                                    displayInput: mappedTabs.find((t: any) => t.id === activeTabId)?.displayInput || '',
+                                    url: mappedTabs.find((t: Tab) => t.id === activeTabId)?.url || '',
+                                    displayInput: mappedTabs.find((t: Tab) => t.id === activeTabId)?.displayInput || '',
                                     tabs: mappedTabs,
                                     activeTabId: activeTabId,
                                     isAutoSyncEnabled: state.browserStates[activeWbId]?.isAutoSyncEnabled || false
@@ -252,13 +291,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 } catch (e) {
                     console.error('[Store] Failed to load tabs from Electron storage:', e);
                 }
-            })();
+            }, 0); // Defer to next tick
         }
         
         // Initial fetch from API if possible
         if (localStorage.getItem('auth_token')) {
             if (isElectron()) {
-                (window as any).electron.storage.sync.setToken(localStorage.getItem('auth_token'));
+                window.electron.storage.sync.setToken(localStorage.getItem('auth_token'));
             }
             get().fetchWhiteboards();
         }
@@ -268,7 +307,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     if (typeof window !== 'undefined' && isElectron()) {
         window.addEventListener('auth-state-changed', () => {
             const token = localStorage.getItem('auth_token');
-            (window as any).electron.storage.sync.setToken(token);
+            window.electron.storage.sync.setToken(token);
         });
     }
   },
@@ -375,26 +414,26 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Try to load state from Electron
     if (isElectron()) {
         try {
-            const tabs = await (window as any).electron.storage.tabs.load(id);
-            const uiState = await (window as any).electron.storage.ui.load(id);
+            const tabs = await window.electron.storage.tabs.load(id);
+            const uiState = await window.electron.storage.ui.load(id);
 
             if (tabs && tabs.length > 0) {
-                const mappedTabs: Tab[] = tabs.map((t: any) => ({
+                const mappedTabs: Tab[] = (tabs as RawTab[]).map((t) => ({
                     id: t.id,
                     url: t.url,
-                    displayInput: t.display_input || t.url,
+                    displayInput: t.display_input || t.displayInput || t.url,
                     title: t.title || 'New Tab',
                     isLoading: !!t.is_loading,
-                    lastNodeId: t.last_node_id,
+                    lastNodeId: t.last_node_id || t.lastNodeId,
                     canGoBack: false, 
                     canGoForward: false
                 }));
 
-                const activeTabId = uiState?.active_tab_id || mappedTabs[0].id;
+                const activeTabId = (uiState as { active_tab_id?: string })?.active_tab_id || mappedTabs[0].id;
                 
                 const browserState = {
-                    url: mappedTabs.find(t => t.id === activeTabId)?.url || '',
-                    displayInput: mappedTabs.find(t => t.id === activeTabId)?.displayInput || '',
+                    url: mappedTabs.find((t: Tab) => t.id === activeTabId)?.url || '',
+                    displayInput: mappedTabs.find((t: Tab) => t.id === activeTabId)?.displayInput || '',
                     tabs: mappedTabs,
                     activeTabId: activeTabId,
                     isAutoSyncEnabled: false
@@ -416,7 +455,6 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     
     // Save whiteboard list if it's new
     const { whiteboards } = get();
-    const exists = whiteboards.some(wb => wb.id === id);
     if (typeof window !== 'undefined') {
         localStorage.setItem('whiteboards', JSON.stringify(whiteboards));
     }
@@ -434,7 +472,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             ]);
         
         // Transform ApiNodes to ReactFlow Nodes
-        const flowNodes = apiNodes.map((n: any) => {
+        const flowNodes = (apiNodes as RawNode[]).map((n) => {
             // Parse metadata once per node (avoids triple JSON.parse)
             const meta = typeof n.metadata === 'string'
                 ? (() => { try { return JSON.parse(n.metadata); } catch { return {}; } })()
@@ -463,21 +501,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
         // Transform Edges if from Electron (SQLite uses source_id/target_id and snake_case handles)
         const flowEdges = isElectron() 
-            ? (apiEdges || []).map((e: any) => ({
+            ? (apiEdges as RawEdge[] || []).map((e) => ({
                 ...e,
                 source: e.source_id || e.source,
                 target: e.target_id || e.target,
                 sourceHandle: e.source_handle || e.sourceHandle,
                 targetHandle: e.target_handle || e.targetHandle,
             }))
-            : (apiEdges || []);
+            : (apiEdges as Edge[] || []);
         
         // Deduplicate
-        const uniqueNodes = Array.from(new Map(flowNodes.map((node: any) => [node.id, node])).values());
+        const uniqueNodes = Array.from(new Map(flowNodes.map((node) => [node.id, node])).values());
         
         // Sanitize parentIds - remove if parent doesn't exist
-        const nodeIds = new Set(uniqueNodes.map((n: any) => n.id));
-        const sanitizedNodes: any[] = uniqueNodes.map((n: any) => ({
+        const nodeIds = new Set(uniqueNodes.map((n) => n.id));
+        const sanitizedNodes: Node[] = uniqueNodes.map((n) => ({
             ...n,
             parentId: n.parentId && nodeIds.has(n.parentId) ? n.parentId : undefined
         }));
@@ -502,11 +540,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 edgesApi.list(activeWhiteboardId)
               ]);
 
-        const flowNodes = apiNodes.map((n: any) => {
+        const flowNodes = (apiNodes as RawNode[]).map((n) => {
             // Parse metadata once per node (avoids triple JSON.parse)
             const meta = typeof n.metadata === 'string'
                 ? (() => { try { return JSON.parse(n.metadata); } catch { return {}; } })()
-                : (n.metadata || {});
+                : ((n.metadata as Record<string, unknown>) || {});
             return {
                 id: n.id,
                 type: n.type || 'article',
@@ -527,20 +565,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         });
 
         const flowEdges = isElectron() 
-            ? (apiEdges || []).map((e: any) => ({
+            ? (apiEdges as RawEdge[] || []).map((e) => ({
                 ...e,
                 source: e.source_id || e.source,
                 target: e.target_id || e.target,
                 sourceHandle: e.source_handle || e.sourceHandle,
                 targetHandle: e.target_handle || e.targetHandle,
             }))
-            : (apiEdges || []);
+            : (apiEdges as Edge[] || []);
 
-        const uniqueNodes = Array.from(new Map(flowNodes.map((node: any) => [node.id, node])).values());
+        const uniqueNodes = Array.from(new Map(flowNodes.map((node) => [node.id, node])).values());
 
         // Sanitize parentIds
-        const nodeIds = new Set(uniqueNodes.map((n: any) => n.id));
-        const sanitizedNodes = uniqueNodes.map((n: any) => ({
+        const nodeIds = new Set(uniqueNodes.map((n) => n.id));
+        const sanitizedNodes: Node[] = uniqueNodes.map((n) => ({
             ...n,
             parentId: n.parentId && nodeIds.has(n.parentId) ? n.parentId : undefined
         }));
@@ -626,11 +664,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }));
     try {
         if (isElectron()) {
-            await (window as any).electron.storage.edges.create({
+            await window.electron.storage.edges.create({
                 id: styledEdge.id!,
                 source_id: styledEdge.source!,
                 target_id: styledEdge.target!,
-                label: (styledEdge as any).label,
+                label: (styledEdge as Edge & { label?: string }).label,
                 whiteboard_id: activeWhiteboardId,
                 user_id: 'local',
                 source_handle: styledEdge.sourceHandle,
@@ -700,29 +738,30 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         } else {
             await edgesApi.delete(id, activeWhiteboardId);
         }
-    } catch(e: any) {
+    } catch(e: unknown) {
         // Silently handle 404s as they can occur during rapid reconnections
-        if (!e.message?.includes('404')) {
+        const errMsg = e instanceof Error ? e.message : String(e);
+        if (!errMsg.includes('404')) {
             console.error("Failed to delete edge", e);
         }
     }
   },
 
-  updateNode: (id: string, data: Partial<any>) => set((state) => ({
+  updateNode: (id: string, data: Partial<AnyNodeData>) => set((state) => ({
     nodes: state.nodes.map(n => 
       n.id === id ? { ...n, data: { ...n.data, ...data } } : n
     ),
   })),
 
-  updateNodeFull: (id: string, updates: Partial<any>) => set((state) => ({
+  updateNodeFull: (id: string, updates: Partial<Node>) => set((state) => ({
     nodes: state.nodes.map(n => 
       n.id === id ? { ...n, ...updates } : n
     ),
   })),
 
-  updateNodeData: (id: string, updater: (prevData: any) => any) => set((state) => ({
+  updateNodeData: (id: string, updater: (prevData: AnyNodeData) => AnyNodeData) => set((state) => ({
     nodes: state.nodes.map(n => 
-      n.id === id ? { ...n, data: updater(n.data) } : n
+      n.id === id ? { ...n, data: updater(n.data as AnyNodeData) } : n
     ),
   })),
 
@@ -746,7 +785,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
-  updateNodeAndPersist: async (id: string, updates: Partial<any>) => {
+  updateNodeAndPersist: async (id: string, updates: Partial<Node>) => {
     const node = get().nodes.find(n => n.id === id);
     if (!node) return;
 
@@ -764,7 +803,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             // Local Storage Sync (Electron)
             // Local Storage Sync (Electron)
             if (isElectron()) {
-                const updatePayload: any = {
+                const updatePayload: Partial<RawNode> = {
                     title: updatedNode.data.title,
                     content: updatedNode.data.content,
                     position_x: updatedNode.position.x,
@@ -773,13 +812,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 };
 
                 // Add width/height if present in updates (resizing)
-                if (updates.style && (updates.style.width || updates.style.height)) {
-                    updatePayload.width = parseFloat(updates.style.width);
-                    updatePayload.height = parseFloat(updates.style.height);
-                } else if (updates.width || updates.height) {
-                    updatePayload.width = updates.width;
-                    updatePayload.height = updates.height;
+                if (updates.style && updates.style.width !== undefined) {
+                    updatePayload.width = typeof updates.style.width === 'number' ? updates.style.width : parseFloat(updates.style.width);
                 }
+                if (updates.style && updates.style.height !== undefined) {
+                    updatePayload.height = typeof updates.style.height === 'number' ? updates.style.height : parseFloat(updates.style.height);
+                }
+                
+                if (updates.width !== undefined) updatePayload.width = updates.width;
+                if (updates.height !== undefined) updatePayload.height = updates.height;
 
                 await storage.nodes.update(id, updatePayload);
             } else {
@@ -867,7 +908,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const nextNodes = applyNodeChanges(changes, get().nodes);
     
     // Cleanup parentIds for removed nodes
-    const removedIds = new Set(changes.filter(c => c.type === 'remove').map(c => (c as any).id));
+    const removedIds = new Set(changes
+        .filter(c => c.type === 'remove')
+        .map(c => (c as { id: string }).id)
+    );
     const finalNodes = removedIds.size > 0 
         ? nextNodes.map(n => n.parentId && removedIds.has(n.parentId) ? { ...n, parentId: undefined } : n)
         : nextNodes;
@@ -879,12 +923,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Handle position/dimension persistence
     changes.forEach(change => {
         if (change.type === 'position' || change.type === 'dimensions') {
-            if ((change as any).dragging) return; // Skip while dragging for perf
+            if ((change as NodeChange & { dragging?: boolean }).dragging) return; // Skip while dragging for perf
             
             const node = get().nodes.find(n => n.id === change.id);
             if (node) {
                  if (isElectron()) {
-                     const payload: any = {
+                     const payload: Partial<RawNode> = {
                          position_x: node.position.x,
                          position_y: node.position.y
                      };

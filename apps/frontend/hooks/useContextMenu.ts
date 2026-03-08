@@ -23,8 +23,8 @@ export interface EdgeContextMenuState extends ContextMenuState {
 
 interface UseContextMenuParams {
     selectNode: (id: string | null) => void;
-    addNode: (node: any, persist?: boolean) => Promise<void>;
-    addEdge: (edge: any) => Promise<void>;
+    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
+    addEdge: (edge: Record<string, unknown>) => Promise<void>;
     activeWhiteboardId: string;
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
     onFitSelection: () => void;
@@ -56,7 +56,7 @@ export function useContextMenu({
     const [edgeContextMenu, setEdgeContextMenu] = useState<EdgeContextMenuState>({ x: 0, y: 0, visible: false });
     const [snapToGrid, setSnapToGrid] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
-    const clipboardRef = useRef<any[]>([]);
+    const clipboardRef = useRef<Record<string, unknown>[]>([]);
 
     const closeAll = useCallback(() => {
         setContextMenu(p => ({ ...p, visible: false }));
@@ -65,10 +65,10 @@ export function useContextMenu({
     }, []);
 
     // ── Node context menu ──────────────────────────────────────────────────
-    const onNodeContextMenu = useCallback((event: React.MouseEvent, node: any) => {
+    const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Record<string, unknown>) => {
         event.preventDefault();
         setPaneContextMenu(p => ({ ...p, visible: false }));
-        if (!node.selected) selectNode(node.id);
+        if (!node.selected) selectNode(node.id as string);
         setContextMenu({ visible: true, x: event.clientX, y: event.clientY });
     }, [selectNode]);
 
@@ -80,7 +80,7 @@ export function useContextMenu({
         setPaneContextMenu({ visible: true, x: event.clientX, y: event.clientY, flowPos });
     }, [screenToFlowPosition]);
 
-    const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: any) => {
+    const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: FlowEdge) => {
         event.preventDefault();
         setContextMenu(p => ({ ...p, visible: false }));
         setPaneContextMenu(p => ({ ...p, visible: false }));
@@ -132,7 +132,7 @@ export function useContextMenu({
                     source: commentId, target: node.id,
                     type: 'default', animated: true,
                     style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
-                } as any);
+                } as FlowEdge);
 
                 store.updateNode(node.id, { hasInstruction: true });
                 nodesApi.update(node.id, { metadata: { hasInstruction: true } }).catch(() => {});

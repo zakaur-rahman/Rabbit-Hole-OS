@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
-import { HelpCircle, AlertTriangle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 
 export interface GhostNodeData {
     title: string;

@@ -6,7 +6,7 @@ import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
 interface UseNodeCreationParams {
-    addNode: (node: any, persist?: boolean) => Promise<void>;
+    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -35,9 +35,9 @@ async function persistNode(node: {
     id: string;
     type: string;
     title: string;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
     position: { x: number; y: number };
-    style?: Record<string, any>;
+    style?: Record<string, unknown>;
 }) {
     const whiteboardId = useGraphStore.getState().activeWhiteboardId;
     try {
@@ -112,7 +112,7 @@ export function useNodeCreation({ addNode }: UseNodeCreationParams) {
     }, []);
 
     // ── Template Select ──────────────────────────────────────────────────────
-    const handleTemplateSelect = useCallback(async (template: any) => {
+    const handleTemplateSelect = useCallback(async (template: { name: string; content: string; tags?: string[] }) => {
         setShowTemplateModal(false);
         const nodeId = `note-${Date.now()}`;
         const position = getViewportCenter(getViewport);

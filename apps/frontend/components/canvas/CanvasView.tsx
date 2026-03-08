@@ -15,7 +15,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
-import { useASTStore } from '@/store/ast.store';
+
 import { ASTEditorModal } from '../modals/ASTEditorModal';
 import dynamic from 'next/dynamic';
 
@@ -96,8 +96,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         addNode,
         fetchNodes,
         activeWhiteboardId,
-        whiteboards,
-        setAuthModal,
     } = useGraphStore();
 
     // ── Synthesis (PDF + AST) ────────────────────────────────────────────────
@@ -118,6 +116,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     }, [handleOpenASTEditor, setShowPdfModal]);
 
     // Compile AST → PDF from ASTEditorModal
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleCompileAST = useCallback(async (ast: any): Promise<Blob> => {
         const { synthesisApi } = await import('@/lib/api');
         setShowASTEditor(false);
@@ -166,7 +165,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     const {
         showTemplateModal, setShowTemplateModal,
         handleAddNote, handleAddGroup, handleAddText,
-        handleExport, handleTemplateSelect,
+        handleTemplateSelect,
     } = useNodeCreation({ addNode });
 
     // ── Connection drop ──────────────────────────────────────────────────────
@@ -187,7 +186,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
     // ── Hover preview ────────────────────────────────────────────────────────
     const hoverTimeoutRef = React.useRef<NodeJS.Timeout>(null);
-    const onNodeMouseEnter = useCallback((event: React.MouseEvent, node: any) => {
+    const onNodeMouseEnter = useCallback((_event: React.MouseEvent, _node: unknown) => {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         // Hover preview is currently disabled — placeholder for re-enabling
     }, []);
@@ -213,6 +212,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         didConnectRef.current = true;
         const { nodes, addEdge, updateNodeAndPersist } = useGraphStore.getState();
         const sourceNode = nodes.find(n => n.id === params.source);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let edgeParams: any = { ...params };
 
         if (sourceNode?.type === 'comment') {
@@ -234,6 +234,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     }, [didConnectRef]);
 
     // ── Node drag-stop (group auto-parenting) ────────────────────────────────
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onNodeDragStop = useCallback((_event: React.MouseEvent, node: any) => {
         if (node.type === 'group') return;
         const { nodes: allNodes, updateNodeFull: updateFull, updateNodeAndPersist: persistUpdate } = useGraphStore.getState();
@@ -276,6 +277,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     }, []); // reads fresh state via getState()
 
     // ── Node click ───────────────────────────────────────────────────────────
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onNodeClick = useCallback((_: React.MouseEvent, node: any) => {
         // Always call selectNode — nodeClickTs bumps even for same-node re-clicks,
         // so BrowserView's useEffect re-runs and switches to the correct tab.

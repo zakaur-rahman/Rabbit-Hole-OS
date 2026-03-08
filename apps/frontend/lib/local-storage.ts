@@ -1,8 +1,7 @@
 // Local storage wrapper for renderer process
 // This wraps the Electron IPC storage API for cleaner usage in frontend code
 
-// Types are now handled in apps/frontend/types/electron.ts
-
+import type { RawNode, RawEdge, RawWhiteboard, RawTab, RawUIState } from '@/types/electron';
 
 export const localStorage = {
   nodes: {
@@ -10,9 +9,9 @@ export const localStorage = {
       window.electron.storage.nodes.list(whiteboardId, userId),
     get: (id: string) => 
       window.electron.storage.nodes.get(id),
-    create: (node: any) => 
+    create: (node: Partial<RawNode>) => 
       window.electron.storage.nodes.create(node),
-    update: (id: string, updates: any) => 
+    update: (id: string, updates: Partial<RawNode>) => 
       window.electron.storage.nodes.update(id, updates),
     delete: (id: string) => 
       window.electron.storage.nodes.delete(id),
@@ -20,9 +19,9 @@ export const localStorage = {
   edges: {
     list: (whiteboardId: string, userId?: string) => 
       window.electron.storage.edges.list(whiteboardId, userId),
-    create: (edge: any) => 
+    create: (edge: Partial<RawEdge>) => 
       window.electron.storage.edges.create(edge),
-    update: (id: string, updates: any) => 
+    update: (id: string, updates: Partial<RawEdge>) => 
       window.electron.storage.edges.update(id, updates),
     delete: (id: string) => 
       window.electron.storage.edges.delete(id),
@@ -30,21 +29,21 @@ export const localStorage = {
   whiteboards: {
     list: (userId?: string) => 
       window.electron.storage.whiteboards.list(userId),
-    create: (whiteboard: any) => 
+    create: (whiteboard: Partial<RawWhiteboard>) => 
       window.electron.storage.whiteboards.create(whiteboard),
-    update: (id: string, updates: any) => 
+    update: (id: string, updates: Partial<RawWhiteboard>) => 
       window.electron.storage.whiteboards.update(id, updates),
     delete: (id: string) => 
       window.electron.storage.whiteboards.delete(id),
   },
   tabs: {
-    save: (whiteboardId: string, tabs: any[]) => 
+    save: (whiteboardId: string, tabs: RawTab[]) => 
       window.electron.storage.tabs.save(whiteboardId, tabs),
     load: (whiteboardId: string) => 
       window.electron.storage.tabs.load(whiteboardId),
   },
   ui: {
-    save: (state: any) => 
+    save: (state: RawUIState) => 
       window.electron.storage.ui.save(state),
     load: (whiteboardId: string) => 
       window.electron.storage.ui.load(whiteboardId),

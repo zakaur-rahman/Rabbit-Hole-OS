@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, ExternalLink, Trash2, Calendar, User, FileText, Code, ShoppingBag, BookOpen, Video, StickyNote } from 'lucide-react';
+import { X, ExternalLink, Trash2, FileText, Code, ShoppingBag, BookOpen, Video, StickyNote } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
-import { nodesApi } from '@/lib/api';
+import { Node, Edge } from 'reactflow';
+import { ApiNode, nodesApi } from '@/lib/api';
 
 interface NodeDetailsPanelProps {
     nodeIds: string[];
@@ -21,7 +22,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 
 export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, onActivate }: NodeDetailsPanelProps) {
     const { nodes, setNodes, edges, setEdges, selectNode } = useGraphStore();
-    const [relatedNodes, setRelatedNodes] = useState<any[]>([]);
+    const [relatedNodes, setRelatedNodes] = useState<ApiNode[]>([]);
     const [loading, setLoading] = useState(false);
 
     const activeNode = nodes.find(n => n.id === activeNodeId) || nodes.find(n => n.id === nodeIds[0]);
@@ -36,8 +37,8 @@ export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, onAct
         try {
             const related = await nodesApi.getRelated(id);
             setRelatedNodes(related);
-        } catch (e: any) {
-            if (e.message?.includes('404')) {
+        } catch (e: unknown) {
+            if (e instanceof Error && e.message?.includes('404')) {
                 setRelatedNodes([]);
                 return;
             }
@@ -50,8 +51,8 @@ export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, onAct
         setLoading(true);
         try {
             await nodesApi.delete(activeNodeId);
-            setNodes(nodes.filter((n: any) => n.id !== activeNodeId));
-            setEdges(edges.filter((e: any) => e.source !== activeNodeId && e.target !== activeNodeId));
+            setNodes(nodes.filter((n: Node) => n.id !== activeNodeId));
+            setEdges(edges.filter((e: Edge) => e.source !== activeNodeId && e.target !== activeNodeId));
             onClose(activeNodeId);
         } catch (e) {
             console.error('Error deleting node:', e);
@@ -159,7 +160,7 @@ export default function NodeDetailsPanel({ nodeIds, activeNodeId, onClose, onAct
                                 Related ({relatedNodes.length})
                             </label>
                             <div className="space-y-1">
-                                {relatedNodes.map((related: any) => (
+                                {relatedNodes.map((related: { id: string; title: string }) => (
                                     <button
                                         key={related.id}
                                         onClick={() => selectNode(related.id)}

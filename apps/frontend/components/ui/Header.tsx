@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, Settings, User, Rabbit, LayoutTemplate } from 'lucide-react';
+import { Search, Bell, Settings, User } from 'lucide-react';
 import { CognodeLogo } from '../icons/cognode-logo';
 import SettingsModal from '../modals/SettingsModal';
 import LibraryModal from '../modals/LibraryModal';
@@ -63,7 +63,8 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
     const handleSignInClick = () => {
         // In Electron, open the web login page in the system browser
         // instead of navigating to a local /sign-in page that can't render in file:// mode
-        const electronApi = (window as any).electron;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const electronApi = window.electron as any; // Cast to any temporarily to bypass complex interface mismatch if global augmentation fails
         if (electronApi?.auth?.openLogin) {
             const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
             localStorage.setItem('device_id', deviceId);
@@ -119,6 +120,13 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
             >
                 {/* Logo & Brand */}
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={onToggleSidebar}
+                        className="p-1 px-2 hover:bg-neutral-800 rounded text-neutral-500 hover:text-neutral-300 transition-colors mr-1"
+                        aria-label="Toggle Sidebar"
+                    >
+                        <Search size={16} />
+                    </button>
                     <div className="w-6 p-[2px] h-6 rounded-lg bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
                         <CognodeLogo />
                     </div>

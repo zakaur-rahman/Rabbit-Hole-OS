@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState, useEffect, useMemo, useCallback } from 'react';
-import ReactFlow, { ReactFlowProvider, Background, ConnectionMode, useReactFlow, MarkerType, Handle, Position } from 'reactflow';
+import ReactFlow, { ReactFlowProvider, Background, ConnectionMode, MarkerType, Handle, Position } from 'reactflow';
 import { NodeProps } from 'reactflow';
 import { Layout, ArrowRightCircle, Network } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
@@ -36,10 +36,10 @@ const MiniCanvasNode = ({ data }: { data?: { color?: string } }) => {
             <Network size={12} className={`${iconColor} opacity-40`} />
 
             {/* Standard Handles for nested connectivity in preview */}
-            <Handle type="target" position={Position.Top} id="top" className="!opacity-0" />
-            <Handle type="source" position={Position.Bottom} id="bottom" className="!opacity-0" />
-            <Handle type="target" position={Position.Left} id="left" className="!opacity-0" />
-            <Handle type="source" position={Position.Right} id="right" className="!opacity-0" />
+            <Handle type="target" position={Position.Top} id="top" className="opacity-0!" />
+            <Handle type="source" position={Position.Bottom} id="bottom" className="opacity-0!" />
+            <Handle type="target" position={Position.Left} id="left" className="opacity-0!" />
+            <Handle type="source" position={Position.Right} id="right" className="opacity-0!" />
         </div>
     );
 };
@@ -60,8 +60,10 @@ const internalNodeTypes = {
     default: NoteNode // Fallback
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CanvasPreview({ nodes, edges, loading, width, height, accentColor = 'indigo-500' }: { nodes: any[], edges: any[], loading: boolean, width?: number, height?: number, accentColor?: string }) {
     const iconColor = `text-${accentColor.replace('500', '400')}`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reactFlowInstance = React.useRef<any>(null);
 
     // Re-fit view when nodes or dimensions change
@@ -74,6 +76,7 @@ function CanvasPreview({ nodes, edges, loading, width, height, accentColor = 'in
         }
     }, [nodes.length, width, height]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onInit = useCallback((instance: any) => {
         reactFlowInstance.current = instance;
         // Initial fit with a slight delay
@@ -134,9 +137,11 @@ function CanvasPreview({ nodes, edges, loading, width, height, accentColor = 'in
 }
 
 function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const initialDims = props as any;
     const { setWhiteboard } = useGraphStore();
     const [childNodes, setChildNodes] = useState<ApiNode[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [childEdges, setChildEdges] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -150,6 +155,7 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
     });
 
     // Handle real-time resize to trigger fitView
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleResize = useCallback((_: any, params: { width: number; height: number }) => {
         setDims({ width: params.width, height: params.height });
     }, []);
@@ -175,7 +181,9 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
 
     useEffect(() => {
         if (data.referencedCanvasId) {
-            setLoading(true);
+            const timeout = setTimeout(() => {
+                setLoading(true);
+            }, 0);
             Promise.all([
                 nodesApi.list(data.referencedCanvasId),
                 edgesApi.list(data.referencedCanvasId)
@@ -185,6 +193,7 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
             })
                 .catch(console.error)
                 .finally(() => setLoading(false));
+            return () => clearTimeout(timeout);
         }
     }, [data.referencedCanvasId]);
 
@@ -200,7 +209,8 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
                 title: node.title,
                 snippet: node.snippet,
                 content: node.content,
-                color: node.metadata?.color || node.data?.color, // Ensure color is passed down
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                color: (node.metadata as any)?.color || (node.data as any)?.color, // Ensure color is passed down
                 isPreview: true // Flag to tell nodes they are in preview mode
             },
             style: node.metadata?.style || { width: 300, height: 200 }
@@ -272,7 +282,7 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
         >
             <div className="flex-1 p-2 flex flex-col gap-4  nodrag overflow-hidden">
                 {/* Internal ReactFlow View */}
-                <div className={`flex-1 bg-neutral-950/95 rounded-2xl border-[1px] border-${effectiveAccentColor}/30 relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(var(--accent-rgb),0.05)] ring-1 ring-white/10 min-h-[280px]`}>
+                <div className={`flex-1 bg-neutral-950/95 rounded-2xl border border-${effectiveAccentColor}/30 relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(var(--accent-rgb),0.05)] ring-1 ring-white/10 min-h-[280px]`}>
                     <div className="absolute inset-0 z-0">
                         <ReactFlowProvider>
                             <CanvasPreview
@@ -287,12 +297,12 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
                     </div>
 
                     {/* Vignette Overlay for Depth - Slightly transparent to avoid obscuring */}
-                    <div className={`absolute inset-0 bg-gradient-to-tr from-${effectiveAccentColor}/[0.04] via-transparent to-transparent pointer-events-none z-10`} />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none z-10" />
+                    <div className={`absolute inset-0 bg-linear-to-tr from-${effectiveAccentColor}/[0.04] via-transparent to-transparent pointer-events-none z-10`} />
+                    <div className="absolute inset-0 bg-linear-to-b from-black/10 via-transparent to-black/20 pointer-events-none z-10" />
                     <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.7)] pointer-events-none z-10" />
 
                     {/* Glass Reflection */}
-                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none z-10" />
+                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-linear-to-b from-white/3 to-transparent pointer-events-none z-10" />
                 </div>
             </div>
         </BaseNode>

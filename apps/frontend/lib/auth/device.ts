@@ -48,7 +48,7 @@ export function getDeviceName(): string {
   else if (ua.indexOf('Firefox') !== -1) browser = 'Firefox';
   
   // Detect Electron
-  const isElectron = !!(window as any).electron;
+  const isElectron = typeof window !== 'undefined' && !!window.electron;
   const suffix = isElectron ? ' (Desktop)' : ' (Web)';
   
   return `${browser} on ${os}${suffix}`;

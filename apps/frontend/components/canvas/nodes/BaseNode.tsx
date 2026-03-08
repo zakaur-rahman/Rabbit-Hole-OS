@@ -5,7 +5,6 @@ import { Handle, Position, NodeResizer } from 'reactflow';
 import { LucideIcon, MessageSquare } from 'lucide-react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
-import { nodesApi } from '@/lib/api';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
@@ -25,7 +24,7 @@ interface BaseNodeProps {
     className?: string;
     onTitleChange?: (title: string) => void;
     headerRight?: React.ReactNode;
-    onResize?: (event: any, params: { width: number; height: number }) => void;
+    onResize?: (event: unknown, params: { width: number; height: number }) => void;
     hasInstruction?: boolean;
 }
 
@@ -69,6 +68,7 @@ function BaseNode({
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
     const effectiveAccentColor = nodeData?.color || accentColor;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onResizeEnd = useCallback((event: any, params: any) => {
         const { width, height } = params;
         const node = useGraphStore.getState().nodes.find((n) => n.id === id);

@@ -72,7 +72,7 @@ export const detectNodeType = (url: string): string => {
     } catch {
         hostname = url.toLowerCase();
     }
-    const lowerUrl = url.toLowerCase();
+    const _lowerUrl = url.toLowerCase();
 
     // Shopping sites — hostname-only to avoid path false-positives
     const shoppingDomains = ['amazon.', 'ebay.', 'etsy.', 'aliexpress.', 'walmart.', 'shopify.', 'shop.'];

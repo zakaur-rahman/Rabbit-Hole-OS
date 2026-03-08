@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  X, User, Shield, Settings as SettingsIcon, ChevronRight, Mail, Calendar, AlertCircle,
-  Trash2, Monitor, Smartphone, Tablet, CheckCircle2, Infinity, ArrowRight,
-  Box, Cloud, Wrench, FileText, Layers, Globe, ChevronsRight, ExternalLink,
-  RotateCcw, Keyboard, Code, Download, LogOut, MapPin, Apple, Laptop
+  X, User, Shield, Settings as SettingsIcon, Mail, Calendar, AlertCircle,
+  Trash2, Monitor, Smartphone, Tablet, CheckCircle2,
+  Box, FileText, Globe, ExternalLink,
+  LogOut, MapPin, Apple, Laptop as _Laptop
 } from 'lucide-react';
 import { getCurrentUser, getSessions, revokeSession, revokeAllSessions, User as UserType, Session } from '@/lib/auth/api';
 import { logout } from '@/lib/auth/logout';
@@ -31,20 +31,7 @@ interface SettingsItem {
   color?: string;
 }
 
-interface SettingContentItem {
-  id: string;
-  title: string;
-  description: string;
-  action?: {
-    label: string;
-    icon?: React.ComponentType<{ size?: number; className?: string }>;
-    onClick?: () => void;
-  };
-  toggle?: {
-    enabled: boolean;
-    onChange: (enabled: boolean) => void;
-  };
-}
+
 
 const settingsSections: SettingsSection[] = [
   {
@@ -90,6 +77,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
 
   // Electron-aware sign-in: opens system browser instead of navigating locally
   const handleSignIn = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const electronApi = (window as any).electron;
     if (electronApi?.auth?.openLogin) {
       const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
@@ -196,6 +184,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Listen for auth state changes (login/logout) to update user cache
@@ -229,6 +218,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
         loadSessions();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, selectedItem]);
 
   // Load user and cache it
@@ -322,7 +312,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
     const deviceId = session.device_id?.toLowerCase() || '';
 
     if (platform.includes('mac') || platform.includes('apple')) return <Apple size={20} className="text-neutral-300" />;
-    if (platform.includes('win')) return <Laptop size={20} className="text-neutral-300" />;
+    if (platform.includes('win')) return <_Laptop size={20} className="text-neutral-300" />;
 
     if (deviceId.includes('mobile') || deviceId.includes('iphone') || deviceId.includes('android')) {
       return <Smartphone size={20} className="text-neutral-300" />;
@@ -555,6 +545,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                                 const url = process.env.NEXT_PUBLIC_WEB_BASE_URL || 'https://cognode.tech';
                                 const billingUrl = `${url}/dashboard`;
                                 if (isElectron()) {
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                   const electron = (window as any).electron;
                                   if (electron?.shell?.openExternal) {
                                     electron.shell.openExternal(billingUrl);
@@ -778,7 +769,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                           <Shield size={48} className="text-neutral-600 mx-auto mb-4" />
                           <h3 className="text-lg font-semibold text-white mb-2">No Active Sessions</h3>
                           <p className="text-neutral-400 text-sm">
-                            You don't have any active sessions at the moment.
+                            You don&apos;t have any active sessions at the moment.
                           </p>
                         </div>
                       ) : (

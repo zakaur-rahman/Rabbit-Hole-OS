@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NodeToolbar, Position } from 'reactflow';
-import { Trash2, Palette, Scan, Copy, Edit2, Image as ImageIcon } from 'lucide-react';
+import { Trash2, Palette } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 

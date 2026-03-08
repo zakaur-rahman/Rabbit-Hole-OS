@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Lock, X, LogIn, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGraphStore } from '@/store/graph.store';
@@ -12,6 +12,7 @@ export default function AuthGuardModal() {
 
     const handleSignIn = () => {
         setAuthModal(false);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const electronApi = (window as any).electron;
         if (electronApi?.auth?.openLogin) {
             const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();

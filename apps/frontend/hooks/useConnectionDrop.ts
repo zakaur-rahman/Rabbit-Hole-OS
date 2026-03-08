@@ -1,8 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import type { Edge as FlowEdge, Connection } from 'reactflow';
-import { reconnectEdge } from 'reactflow';
+import type { Edge as _FlowEdge, Connection } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
@@ -16,8 +15,8 @@ export interface ConnectionDropMenuState {
 
 interface UseConnectionDropParams {
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
-    addNode: (node: any, persist?: boolean) => Promise<void>;
-    addEdge: (edge: any) => Promise<void>;
+    addNode: (node: Record<string, unknown>, persist?: boolean) => Promise<void>;
+    addEdge: (edge: _FlowEdge) => Promise<void>;
     activeWhiteboardId: string;
 }
 
@@ -27,27 +26,27 @@ export function useConnectionDrop({ screenToFlowPosition, addNode, addEdge, acti
     });
 
     const connectionStartRef = useRef<{ nodeId: string | null; handleId: string | null }>({ nodeId: null, handleId: null });
-    const reconnectingEdgeRef = useRef<FlowEdge | null>(null);
+    const reconnectingEdgeRef = useRef<_FlowEdge | null>(null);
     const didConnectRef = useRef(false);
 
-    const onConnectStart = useCallback((_: any, params: { nodeId: string | null; handleId: string | null }) => {
+    const onConnectStart = useCallback((_: unknown, params: { nodeId: string | null; handleId: string | null }) => {
         connectionStartRef.current = params;
         didConnectRef.current = false;
     }, []);
 
-    const onReconnectStart = useCallback((_event: React.MouseEvent, edge: FlowEdge) => {
+    const onReconnectStart = useCallback((_event: React.MouseEvent, edge: _FlowEdge) => {
         reconnectingEdgeRef.current = edge;
         didConnectRef.current = false;
     }, []);
 
-    const onReconnect = useCallback((oldEdge: FlowEdge, newConnection: Connection) => {
+    const onReconnect = useCallback((oldEdge: _FlowEdge, newConnection: Connection) => {
         if (!newConnection.source || !newConnection.target) return;
         didConnectRef.current = true;
         const { addEdge: storeAddEdge } = useGraphStore.getState();
         const newEdge = {
             ...oldEdge, ...newConnection,
             id: `e${newConnection.source}-${newConnection.sourceHandle || ''}-${newConnection.target}-${newConnection.targetHandle || ''}`,
-        } as FlowEdge;
+        } as _FlowEdge;
         storeAddEdge(newEdge);
         if (newEdge.id !== oldEdge.id) useGraphStore.getState().removeEdge(oldEdge.id);
     }, []);
@@ -79,7 +78,7 @@ export function useConnectionDrop({ screenToFlowPosition, addNode, addEdge, acti
         if (action === 'note') flowPos.x -= 225;
         else flowPos.x -= 100;
 
-        let newNode: any = null;
+        let newNode: Record<string, unknown> | null = null;
 
         switch (action) {
             case 'note':
@@ -138,7 +137,7 @@ export function useConnectionDrop({ screenToFlowPosition, addNode, addEdge, acti
                         source: nodeId, target: sourceNodeId,
                         type: 'default', animated: true,
                         style: { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' },
-                    } as any);
+                    } as _FlowEdge);
                     useGraphStore.getState().updateNode(sourceNodeId!, { hasInstruction: true });
                     nodesApi.update(sourceNodeId!, { metadata: { hasInstruction: true } }).catch(() => {});
                 } else {
@@ -146,7 +145,7 @@ export function useConnectionDrop({ screenToFlowPosition, addNode, addEdge, acti
                         id: `e${sourceNodeId}-${sourceHandleId || ''}-${nodeId}-${targetHandleId}`,
                         source: sourceNodeId, sourceHandle: sourceHandleId,
                         target: nodeId, targetHandle: targetHandleId,
-                    } as FlowEdge);
+                    } as _FlowEdge);
                 }
             }
         }

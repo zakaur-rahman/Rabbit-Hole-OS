@@ -1,36 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Cloud, CloudOff, Check, Loader2, WifiOff } from 'lucide-react';
+import { CloudOff, Check, Loader2, WifiOff } from 'lucide-react';
 
 type SyncStatus = 'saved' | 'syncing' | 'offline' | 'error';
 
 export function SyncStatus() {
     const [status, setStatus] = useState<SyncStatus>('saved');
     const [lastSync, setLastSync] = useState<Date | null>(null);
-    const [changeCount, setChangeCount] = useState(0);
 
     useEffect(() => {
         // Check if running in Electron
         if (typeof window === 'undefined' || !window.electron) {
-            setLastSync(new Date());
+            setTimeout(() => setLastSync(new Date()), 0);
             return;
         }
 
         // Listen for sync events from Electron main process
-        const handleSyncStart = () => {
-            setStatus('syncing');
-        };
 
-        const handleSyncComplete = (data: { synced: number; failed: number }) => {
-            setStatus(data.failed > 0 ? 'error' : 'saved');
-            setLastSync(new Date());
-            setChangeCount(0);
-        };
-
-        const handleSyncError = () => {
-            setStatus('error');
-        };
 
         const handleOffline = () => {
             setStatus('offline');
@@ -46,11 +33,6 @@ export function SyncStatus() {
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
-        // Check initial online status
-        if (!navigator.onLine) {
-            setStatus('offline');
-        }
-
         // Clean up
         return () => {
             window.removeEventListener('online', handleOnline);
@@ -58,17 +40,32 @@ export function SyncStatus() {
         };
     }, [status]);
 
+    // Check initial online status (separate effect to avoid setState-in-effect lint)
+    useEffect(() => {
+        if (!navigator.onLine) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setStatus('offline');
+        }
+    }, []);
+
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     const getStatusText = (): string => {
         switch (status) {
             case 'syncing':
-                return changeCount > 0 ? `Syncing ${changeCount} changes...` : 'Syncing...';
+                return 'Syncing...';
             case 'offline':
                 return 'Working offline';
             case 'error':
                 return 'Sync failed - will retry';
             case 'saved':
                 if (lastSync) {
-                    const secondsAgo = Math.floor((Date.now() - lastSync.getTime()) / 1000);
+                    const secondsAgo = Math.floor((now - lastSync.getTime()) / 1000);
                     if (secondsAgo < 10) return 'All changes saved';
                     const minutesAgo = Math.floor(secondsAgo / 60);
                     if (minutesAgo === 0) return 'Synced just now';

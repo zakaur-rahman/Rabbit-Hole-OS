@@ -12,7 +12,6 @@ export interface ImageNodeData {
 function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
     const [url, setUrl] = useState(data.url || '');
     const [inputUrl, setInputUrl] = useState('');
-    const [isInputVisible, setIsInputVisible] = useState(!data.url);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const updateNode = useGraphStore(state => state.updateNode);
 
@@ -20,7 +19,6 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
         if (inputUrl) {
             setUrl(inputUrl);
             updateNode(id, { url: inputUrl });
-            setIsInputVisible(false);
         }
     }, [inputUrl, id, updateNode]);
 
@@ -34,7 +32,6 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
             if (result) {
                 setUrl(result);
                 updateNode(id, { url: result });
-                setIsInputVisible(false);
             }
         };
         reader.readAsDataURL(file);
@@ -45,7 +42,6 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
         if (text) { // Simple check, could be more robust URL validation
             setUrl(text);
             updateNode(id, { url: text });
-            setIsInputVisible(false);
         }
     }, [id, updateNode]);
 

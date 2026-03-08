@@ -22,7 +22,7 @@ export function useSynthesis() {
 
     // AST editor state
     const [showASTEditor, setShowASTEditor] = useState(false);
-    const [initialAST, setInitialAST] = useState<any>(null);
+    const [initialAST, setInitialAST] = useState<unknown>(null);
 
     /** Build context items from current canvas nodes — always includes node_type + metadata */
     const buildContextItems = useCallback((): SynthesisContextItem[] => {
@@ -88,7 +88,7 @@ export function useSynthesis() {
     }, [buildContextItems, setAuthModal]);
 
     /** Run full streaming synthesis → PDF */
-    const handleSynthesis = useCallback(async (useDummyDataArg: any = false) => {
+    const handleSynthesis = useCallback(async (useDummyDataArg: boolean = false) => {
         const useDummyData = useDummyDataArg === true;
 
         if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
@@ -116,7 +116,7 @@ export function useSynthesis() {
             }
 
             // Streaming multi-agent synthesis
-            let finalAST: any = null;
+            let finalAST: unknown = null;
             await synthesisApi.streamResearchAST(
                 'Synthesized Research Report',
                 contextItems,

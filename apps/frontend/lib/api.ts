@@ -1,5 +1,6 @@
 const API_BASE = 'http://127.0.0.1:8000/api/v1';
 import { Edge } from 'reactflow';
+import { AnyNodeData } from '@/types/nodes';
 
 // Generic fetch wrapper with error handling
 async function apiFetch<T>(
@@ -51,10 +52,10 @@ export interface ApiNode {
     author?: string;
     date?: string;
     description?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
-  data?: any;
-  outline?: any[];
+  data?: AnyNodeData;
+  outline?: string[];
 }
 
 // Nodes API
@@ -121,9 +122,9 @@ export interface SynthesisContextItem {
   /** ReactFlow node type, e.g. "article" | "code" | "image" | "note" | "pdf" | "academic" | "product" | "canvas" | "group" */
   node_type?: string;
   /** Type-specific metadata (language, authors, alt, description, tags, etc.) */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   selected_topics: string[];
-  outline: any[];
+  outline: string[];
   system_instruction?: string;
 }
 
@@ -147,7 +148,7 @@ export const synthesisApi = {
       body: JSON.stringify({ query, limit: 10 }),
     }),
 
-  validateAST: async (document: any): Promise<{ valid: boolean; issues: ValidationIssue[] }> =>
+  validateAST: async (document: unknown): Promise<{ valid: boolean; issues: ValidationIssue[] }> =>
     apiFetch('/synthesis/validate-ast', {
       method: "POST",
       body: JSON.stringify(document),
@@ -212,7 +213,7 @@ export const synthesisApi = {
     use_dummy_data: boolean = false,
     edges: Edge[] = [],
     whiteboardId?: string
-  ): Promise<{ status: string; document: any }> => {
+  ): Promise<{ status: string; document: unknown }> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast`, {
       method: "POST",
@@ -230,7 +231,7 @@ export const synthesisApi = {
     query: string,
     context_items: SynthesisContextItem[],
     edges: Edge[] = [],
-    onUpdate: (step: { stage: string; status: string; message?: string; document?: any; error?: string }) => void,
+    onUpdate: (step: { stage: string; status: string; message?: string; document?: unknown; error?: string }) => void,
     whiteboardId?: string
   ): Promise<void> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -292,7 +293,7 @@ export const synthesisApi = {
     return response.blob();
   },
 
-  generatePdfFromAST: async (document: any, strict_mode: boolean = true): Promise<Blob> => {
+  generatePdfFromAST: async (document: unknown, strict_mode: boolean = true): Promise<Blob> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-pdf-from-ast`, {
       method: "POST",
@@ -330,7 +331,7 @@ export const synthesisApi = {
     return response.json();
   },
 
-  getLatexFromAST: async (ast: any) => {
+  getLatexFromAST: async (ast: unknown) => {
     const response = await fetch(`${API_BASE}/synthesis/research-ast-to-latex`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

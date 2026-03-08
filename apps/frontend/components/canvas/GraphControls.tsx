@@ -3,7 +3,7 @@
 import React from 'react';
 import { useReactFlow } from 'reactflow';
 import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, MousePointer2, Download, Network, FilePen, LayoutTemplate } from 'lucide-react';
-import { useGraphStore } from '@/store/graph.store';
+
 
 interface GraphControlsProps {
     onSynthesis?: () => void;

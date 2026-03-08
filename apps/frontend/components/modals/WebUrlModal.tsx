@@ -22,29 +22,32 @@ export default function WebUrlModal({ isOpen, onClose, onSubmit }: WebUrlModalPr
     }, [isOpen]);
 
     useEffect(() => {
-        if (!url) {
-            setIsValid(null);
-            setPreview(null);
-            return;
-        }
-
-        try {
-            // Add https if missing
-            let urlToCheck = url;
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                urlToCheck = 'https://' + url;
+        const timeoutId = setTimeout(() => {
+            if (!url) {
+                setIsValid(null);
+                setPreview(null);
+                return;
             }
 
-            const parsed = new URL(urlToCheck);
-            setIsValid(true);
-            setPreview({
-                domain: parsed.hostname.replace('www.', ''),
-                favicon: `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=32`
-            });
-        } catch {
-            setIsValid(false);
-            setPreview(null);
-        }
+            try {
+                // Add https if missing
+                let urlToCheck = url;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    urlToCheck = 'https://' + url;
+                }
+
+                const parsed = new URL(urlToCheck);
+                setIsValid(true);
+                setPreview({
+                    domain: parsed.hostname.replace('www.', ''),
+                    favicon: `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=32`
+                });
+            } catch {
+                setIsValid(false);
+                setPreview(null);
+            }
+        }, 0);
+        return () => clearTimeout(timeoutId);
     }, [url]);
 
     const handleSubmit = useCallback(() => {
@@ -110,10 +113,10 @@ export default function WebUrlModal({ isOpen, onClose, onSubmit }: WebUrlModalPr
                             onKeyDown={handleKeyDown}
                             placeholder="Enter URL (e.g., wikipedia.org)"
                             className={`w-full px-4 py-3 pr-12 rounded-xl bg-neutral-800 border-2 text-white placeholder-neutral-500 outline-none transition-colors ${isValid === null
-                                    ? 'border-neutral-700 focus:border-purple-500'
-                                    : isValid
-                                        ? 'border-green-500/50'
-                                        : 'border-red-500/50'
+                                ? 'border-neutral-700 focus:border-purple-500'
+                                : isValid
+                                    ? 'border-green-500/50'
+                                    : 'border-red-500/50'
                                 }`}
                         />
                         <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -137,7 +140,7 @@ export default function WebUrlModal({ isOpen, onClose, onSubmit }: WebUrlModalPr
                                 <p className="text-sm text-white font-medium truncate">{preview.domain}</p>
                                 <p className="text-xs text-neutral-500 truncate">{url}</p>
                             </div>
-                            <ExternalLink size={14} className="text-neutral-500 flex-shrink-0" />
+                            <ExternalLink size={14} className="text-neutral-500 shrink-0" />
                         </div>
                     )}
 
@@ -159,8 +162,8 @@ export default function WebUrlModal({ isOpen, onClose, onSubmit }: WebUrlModalPr
                         onClick={handleSubmit}
                         disabled={!isValid}
                         className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isValid
-                                ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/25'
-                                : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
+                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/25'
+                            : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
                             }`}
                     >
                         <Globe size={14} />
