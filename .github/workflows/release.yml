@@ -59,12 +59,8 @@ jobs:
     steps:
       - name: Trigger Webhook for Web Service
         run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_WEB }}
+          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}
       
       - name: Trigger Webhook for Backend API
         run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_BACKEND }}
-
-      - name: Trigger Webhook for Backend Worker
-        run: |
-          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_WORKER }}
+          curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
