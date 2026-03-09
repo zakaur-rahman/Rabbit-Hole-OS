@@ -43,6 +43,7 @@ export function useFileDrop({ addNode, screenToFlowPosition, activeWhiteboardId 
                 id: newNode.id, type,
                 title: newNode.data.title,
                 data: { ...newNode.data, position: newNode.position, whiteboard_id: useGraphStore.getState().activeWhiteboardId },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
         } catch (e) {
             console.error('File upload failed:', e);

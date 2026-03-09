@@ -815,6 +815,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 if (updates.width !== undefined) updatePayload.width = updates.width || undefined;
                 if (updates.height !== undefined) updatePayload.height = updates.height || undefined;
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await storage.nodes.update(id, updatePayload as any);
             } else {
                 // Cloud API Sync
@@ -827,7 +828,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                         position: updatedNode.position,
                         style: updatedNode.style,
                         parentId: updatedNode.parentId
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     } as any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
             }
         }
@@ -933,6 +936,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                         payload.width = (parseFloat(node.style.width as string) || node.width) || undefined;
                         payload.height = (parseFloat(node.style.height as string) || node.height) || undefined;
                      }
+                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                      storage.nodes.update(change.id, payload as any).catch(console.error);
                  } else {
                      // Debounce cloud position saves — avoid flooding API while dragging
@@ -946,7 +950,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                                      ...currentNode.data,
                                      position: currentNode.position,
                                      style: currentNode.style
+                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                  } as any
+                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                              } as any).catch(() => {});
                          }
                      }, 500);

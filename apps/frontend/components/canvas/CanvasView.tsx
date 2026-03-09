@@ -222,6 +222,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 animated: true,
             };
             if (params.target) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 updateNodeAndPersist(params.target, { hasInstruction: true } as any);
                 updateNodeAndPersist(params.source!, { parentId: params.target, data: { ...sourceNode.data, parentId: params.target } });
             }

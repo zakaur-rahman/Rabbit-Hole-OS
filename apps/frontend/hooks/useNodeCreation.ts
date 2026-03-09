@@ -45,6 +45,7 @@ async function persistNode(node: {
             id: node.id,
             type: node.type,
             title: node.title,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data: { ...node.data, position: node.position, style: node.style, whiteboard_id: whiteboardId } as any,
         });
     } catch (e) {
