@@ -14,14 +14,13 @@ verify_*.py
 **/.env.*
 **/.env.local
 
-# Desktop/Frontend source not needed, but keep package.json for workspace resolution
+# Desktop source not needed, but keep package.json for workspace resolution
 apps/desktop
-apps/frontend
 !apps/desktop/package.json
-!apps/frontend/package.json
 
 # Build artifacts
 apps/web/.next
+apps/frontend/.next
 apps/backend/dist
 **/node_modules
 
