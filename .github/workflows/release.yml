@@ -24,6 +24,7 @@ jobs:
         id: release
         with:
           release-type: simple
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
   # 2. Build & Test on main (Only if we didn't just merge the auto-generated Release PR)
   ci:
@@ -54,7 +55,7 @@ jobs:
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     environment:
-      name: Production
+      name: production
       url: https://cognode.tech
     steps:
       - name: Trigger Webhook for Web Service
