@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   X, User, Shield, Settings as SettingsIcon, Mail, Calendar, AlertCircle,
   Trash2, Monitor, Smartphone, Tablet, CheckCircle2,
-  Box, FileText, Globe, ExternalLink,
+  Box, FileText, Globe, ExternalLink, Download,
   LogOut, MapPin, Apple, Laptop as _Laptop
 } from 'lucide-react';
 import { getCurrentUser, getSessions, revokeSession, revokeAllSessions, User as UserType, Session } from '@/lib/auth/api';
@@ -60,6 +60,12 @@ const settingsSections: SettingsSection[] = [
         title: 'Active Sessions',
         icon: Shield,
         color: 'text-green-400',
+      },
+      {
+        id: 'updates',
+        title: 'Updates',
+        icon: Download,
+        color: 'text-neutral-400',
       },
       {
         id: 'docs',
@@ -145,6 +151,10 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
   // General settings state
   const [syncLayouts, setSyncLayouts] = useState(true);
 
+  // Updates state
+  const [appVersion, setAppVersion] = useState<string>('Unknown');
+  const [updateChannel, setUpdateChannel] = useState<'stable' | 'beta' | 'nightly'>('stable');
+
   // Close on ESC key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -210,6 +220,18 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
     window.addEventListener('auth-state-changed', handleAuthChange);
     return () => window.removeEventListener('auth-state-changed', handleAuthChange);
   }, []);
+
+  // Sync update state from Electron
+  useEffect(() => {
+    if (isOpen && selectedItem === 'updates') {
+      if (typeof window !== 'undefined' && window.electron?.updater) {
+         window.electron.ipcRenderer.invoke('app:version').then((v) => setAppVersion(v as string));
+         window.electron.updater.getState().then(state => {
+            if (state.updateInfo?.channel) setUpdateChannel(state.updateInfo.channel);
+         });
+      }
+    }
+  }, [isOpen, selectedItem]);
 
   // Load data when selection changes
   useEffect(() => {
@@ -723,6 +745,69 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                         <span>Open Docs</span>
                         <ExternalLink size={14} />
                       </button>
+                    </div>
+                  )}
+
+                  {/* Updates Content */}
+                  {selectedItem === 'updates' && (
+                    <div className="space-y-8">
+                       <div>
+                         <h4 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">Software Update</h4>
+                         <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6">
+                            <div className="flex items-center gap-4 mb-6">
+                               <div className="w-16 h-16 bg-neutral-700 rounded-2xl flex items-center justify-center">
+                                  <Download className="text-white" size={28} />
+                               </div>
+                               <div>
+                                  <h5 className="text-lg font-bold text-white">Cognode Desktop</h5>
+                                  <p className="text-sm text-neutral-400">Version {appVersion}</p>
+                               </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                               <button 
+                                 onClick={() => {
+                                   if (window.electron?.updater) {
+                                      window.electron.updater.check();
+                                   } else {
+                                      alert("Updates are only supported in the Desktop application.");
+                                   }
+                                 }}
+                                 className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                               >
+                                 Check for Updates
+                               </button>
+                            </div>
+                         </div>
+                       </div>
+                       
+                       <div>
+                          <h4 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">Update Preferences</h4>
+                          <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 flex items-center justify-between">
+                            <div className="flex-1">
+                              <h5 className="text-sm font-medium text-white mb-1">Release Channel</h5>
+                              <p className="text-xs text-neutral-400">Choose which updates to receive.</p>
+                            </div>
+                            <select
+                              value={updateChannel}
+                              onChange={(e) => {
+                                 const val = e.target.value as 'stable' | 'beta' | 'nightly';
+                                 setUpdateChannel(val);
+                                 if (window.electron?.updater) {
+                                    window.electron.updater.setChannel(val);
+                                 }
+                              }}
+                              className="bg-neutral-700 text-white text-sm rounded-lg px-3 py-2 border border-neutral-600 outline-none w-32"
+                            >
+                               <option value="stable">Stable</option>
+                               <option value="beta">Beta</option>
+                               <option value="nightly">Nightly</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-neutral-500 mt-3 pl-1">
+                            Beta and Nightly channels may contain bugs and experimental features. Use them at your own risk.
+                          </p>
+                       </div>
                     </div>
                   )}
 
