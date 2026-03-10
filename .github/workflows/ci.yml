@@ -24,6 +24,8 @@ jobs:
     name: Docker Dry Run
     needs: integration
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     strategy:
       matrix:
         app: [web, backend, frontend]
