@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.0.0...v1.1.0) (2026-03-10)
+
+
+### Features
+
+* **ci:** add automated desktop build and release pipeline for windows ([#5](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/5)) ([fb64b30](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/fb64b30d858415d3984e29f106a46f5dbe4a05c0))
+
 ## 1.0.0 (2026-03-10)
 
 
