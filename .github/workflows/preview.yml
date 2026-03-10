@@ -47,6 +47,7 @@ jobs:
           url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_WEB }}/preview'
           method: 'POST'
           bearerToken: ${{ env.RENDER_API_KEY }}
+          timeout: 15000
           contentType: 'application/json'
           data: '{"imagePath": "ghcr.io/${{ github.repository_owner }}/web:pr-${{ github.event.pull_request.number }}"}'
 
@@ -58,6 +59,7 @@ jobs:
           url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_BACKEND }}/preview'
           method: 'POST'
           bearerToken: ${{ env.RENDER_API_KEY }}
+          timeout: 15000
           contentType: 'application/json'
           data: '{"imagePath": "ghcr.io/${{ github.repository_owner }}/backend:pr-${{ github.event.pull_request.number }}"}'
           
