@@ -69,8 +69,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const prNum = context.payload.pull_request.number;
-            const webPreviewUrl = `https://web-cognode-pr-${prNum}.onrender.com`;
-            const backendPreviewUrl = `https://backend-cognode-pr-${prNum}.onrender.com`;
+            
+            // fjogeleit/http-request-action stores the parsed JSON response in the steps output
+            const webResponse = ${{ steps.render_trigger_web.outputs.response }};
+            const backendResponse = ${{ steps.render_trigger_backend.outputs.response }};
+            
+            // Extract the generated URL from Render's API response
+            const webPreviewUrl = webResponse?.preview?.service?.serviceDetails?.url || `https://frontend-cognode-pr-${prNum}.onrender.com`;
+            const backendPreviewUrl = backendResponse?.preview?.service?.serviceDetails?.url || `https://backend-cognode-pr-${prNum}.onrender.com`;
             
             github.rest.issues.createComment({
               issue_number: prNum,
