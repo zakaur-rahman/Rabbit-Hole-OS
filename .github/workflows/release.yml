@@ -68,3 +68,51 @@ jobs:
       - name: Trigger Webhook for Backend API
         run: |
           curl -X POST -H 'Content-Type: application/json' -d '{"image_tag": "${{ needs.release-please.outputs.tag_name }}"}' ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+
+  # 5. Build & Package Desktop App
+  desktop_build:
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Python dependencies
+        run: pip install -r apps/backend/requirements.txt && pip install pyinstaller
+
+      - name: Build and Package Desktop App
+        run: npm run package
+        env:
+          BUILD_TARGET: electron
+          NEXT_PUBLIC_API_BASE_URL: https://api.cognode.tech
+          NEXT_PUBLIC_WEB_URL: https://cognode.tech
+          NEXT_PUBLIC_OAUTH_REDIRECT_URI: https://cognode.tech/auth/google
+          NEXT_PUBLIC_OAUTH_REDIRECT_URI_WEB: https://cognode.tech/auth/google
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: apps/desktop/dist/*.exe
