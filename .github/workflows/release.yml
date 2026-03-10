@@ -47,7 +47,7 @@ jobs:
     uses: ./.github/workflows/docker.yml
     with:
       app_name: ${{ matrix.app }}
-      image_name: cognode/${{ matrix.app }}
+      image_name: ${{ github.repository_owner }}/${{ matrix.app }}
     secrets:
       registry_username: ${{ github.actor }}
       registry_token: ${{ secrets.GITHUB_TOKEN }}
