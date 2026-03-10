@@ -12,6 +12,9 @@ concurrency:
 jobs:
   build-and-push:
     if: github.event.action != 'closed'
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         app: [web, backend]
