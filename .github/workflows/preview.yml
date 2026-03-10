@@ -15,37 +15,47 @@ jobs:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     env:
-      RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+      RENDER_SERVICE_ID_WEB: ${{ secrets.RENDER_SERVICE_ID_WEB }}
+      RENDER_SERVICE_ID_BACKEND: ${{ secrets.RENDER_SERVICE_ID_BACKEND }}
       RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
       
-      # Since render.yaml exists in the repo, Render natively supports Preview Environments.
-      # This step hits the Render API to trigger the preview environment deployment for this specific PR.
-      - name: Trigger Render Preview Deployment
+      # Trigger Web Service Preview
+      - name: Trigger Web Preview Deployment
         uses: fjogeleit/http-request-action@v1
-        id: render_trigger
+        id: render_trigger_web
         with:
-          url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID }}/preview'
+          url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_WEB }}/preview'
+          method: 'POST'
+          bearerToken: ${{ env.RENDER_API_KEY }}
+          data: '{"branch": "${{ github.head_ref }}"}'
+
+      # Trigger Backend Service Preview
+      - name: Trigger Backend Preview Deployment
+        uses: fjogeleit/http-request-action@v1
+        id: render_trigger_backend
+        with:
+          url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_BACKEND }}/preview'
           method: 'POST'
           bearerToken: ${{ env.RENDER_API_KEY }}
           data: '{"branch": "${{ github.head_ref }}"}'
           
-      - name: Comment PR with Preview URL
+      - name: Comment PR with Preview URLs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // Assuming Render's standard preview URL format based on service names
             const prNum = context.payload.pull_request.number;
-            const previewUrl = `https://cognode-web-pr-${prNum}.onrender.com`;
+            const webPreviewUrl = `https://web-cognode-pr-${prNum}.onrender.com`;
+            const backendPreviewUrl = `https://backend-cognode-pr-${prNum}.onrender.com`;
             
             github.rest.issues.createComment({
               issue_number: prNum,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 **Preview Environment Triggered!**\n\nThe preview environment is deploying to: [${previewUrl}](${previewUrl})\n\n*(Note: It may take a few minutes for the build to finish.)*`
+              body: `🚀 **Preview Environments Triggered!**\n\nThe preview environments are deploying to:\n- **Web:** [${webPreviewUrl}](${webPreviewUrl})\n- **Backend:** [${backendPreviewUrl}](${backendPreviewUrl})\n\n*(Note: It may take a few minutes for the builds to finish.)*`
             })
 
   cleanup-preview:
