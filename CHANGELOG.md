@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.1.0...v1.2.0) (2026-03-10)
+
+
+### Features
+
+* **desktop:** implement production grade update engine ([#7](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/7)) ([79f1d80](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/79f1d80945c87ba32d08f6b329979aa5db502fcb))
+
 ## [1.1.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.0.0...v1.1.0) (2026-03-10)
 
 
