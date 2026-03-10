@@ -47,6 +47,8 @@ jobs:
           url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_WEB }}/preview'
           method: 'POST'
           bearerToken: ${{ env.RENDER_API_KEY }}
+          contentType: 'application/json'
+          data: '{"imagePath": "ghcr.io/${{ github.repository_owner }}/web:pr-${{ github.event.pull_request.number }}"}'
 
       # Trigger Backend Service Preview
       - name: Trigger Backend Preview Deployment
@@ -56,6 +58,8 @@ jobs:
           url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_BACKEND }}/preview'
           method: 'POST'
           bearerToken: ${{ env.RENDER_API_KEY }}
+          contentType: 'application/json'
+          data: '{"imagePath": "ghcr.io/${{ github.repository_owner }}/backend:pr-${{ github.event.pull_request.number }}"}'
           
       - name: Comment PR with Preview URLs
         uses: actions/github-script@v7
