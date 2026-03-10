@@ -1,3 +1,5 @@
+import { UpdateState, UpdateChannel } from './updateTypes';
+
 export interface RawNode {
   id: string;
   type: string;
@@ -56,10 +58,24 @@ export interface ElectronAPI {
     invoke: (channel: string, data?: unknown) => Promise<unknown>;
   };
   platform: string;
+  shell: {
+    openExternal: (url: string) => Promise<void>;
+  };
   auth: {
     openLogin: (loginUrl: string) => Promise<void>;
     onDeepLinkAuth: (callback: (data: { code: string }) => void) => () => void;
     onDirectTokensReceived: (callback: (data: { access_token: string; refresh_token: string }) => void) => () => void;
+  };
+  updater: {
+    getState: () => Promise<UpdateState>;
+    check: () => Promise<void>;
+    download: () => Promise<void>;
+    pause: () => Promise<void>;
+    resume: () => Promise<void>;
+    cancel: () => Promise<void>;
+    install: () => Promise<void>;
+    setChannel: (channel: UpdateChannel) => Promise<void>;
+    onStateChanged: (callback: (state: UpdateState) => void) => () => void;
   };
   storage: {
     nodes: {

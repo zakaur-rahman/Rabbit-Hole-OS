@@ -8,6 +8,7 @@ import { initializeSchema } from './database/schema';
 import { LocalStorageService } from './services/local-storage';
 import { registerStorageHandlers } from './ipc/storage-handler';
 import { SyncService } from './services/sync-service';
+import { UpdateEngine } from './updater/updateEngine';
 
 // Prevent multiple instances (Windows/Linux)
 const gotTheLock = app.requestSingleInstanceLock();
@@ -69,6 +70,7 @@ let backendProcess: ChildProcess | null = null;
 let database: SQLiteDatabase | null = null;
 let storageService: LocalStorageService | null = null;
 let syncService: SyncService | null = null;
+const updateEngine = new UpdateEngine();
 
 function startBackend() {
     const storageDir = isDev 
@@ -175,7 +177,10 @@ function createWindow() {
   mainWindow.on('closed', () => {
     console.log('[Lifecycle] MainWindow closed');
     mainWindow = null;
+    updateEngine.setMainWindow(null);
   });
+
+  updateEngine.setMainWindow(mainWindow);
 
   // Open external links in default browser? 
   // Or handle them in-app. For a "Browser OS", we likely want to handle them in new tabs.
@@ -373,6 +378,9 @@ app.on('ready', () => {
     
     startBackend();
     createWindow();
+
+    // Start auto update sequence check
+    updateEngine.startAutoCheck(6); // Every 6 hours
 });
 
 // Handle second instance (focus window + deep link on Windows/Linux)
@@ -446,6 +454,16 @@ app.on('activate', () => {
 
 // IPC Handlers
 ipcMain.handle('app:version', () => app.getVersion());
+
+// Updater IPC Hooks
+ipcMain.handle('updater:get-state', () => updateEngine.getState());
+ipcMain.handle('updater:check', () => updateEngine.checkForUpdates(true));
+ipcMain.handle('updater:download', () => updateEngine.downloadUpdate());
+ipcMain.handle('updater:pause', () => updateEngine.pauseDownload());
+ipcMain.handle('updater:resume', () => updateEngine.resumeDownload());
+ipcMain.handle('updater:cancel', () => updateEngine.cancelDownload());
+ipcMain.handle('updater:install', () => updateEngine.installUpdate());
+ipcMain.handle('updater:set-channel', (event, channel) => updateEngine.setChannel(channel));
 
 // Auth IPC Handler — opens system browser to the web login page
 ipcMain.handle('auth:open-login', async (event, loginUrl: string) => {
