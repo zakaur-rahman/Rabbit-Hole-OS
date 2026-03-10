@@ -38,6 +38,9 @@ jobs:
   docker_build:
     needs: [ci, release-please]
     if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         app: [web, backend]
