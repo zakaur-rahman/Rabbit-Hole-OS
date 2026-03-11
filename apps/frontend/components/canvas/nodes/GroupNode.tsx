@@ -46,11 +46,11 @@ function GroupNode({ id, data, selected }: NodeProps) {
                 onMouseLeave={handleMouseLeave}
                 className={`
                     relative w-full h-full min-w-[300px] min-h-[200px]
-                    rounded-2xl border transition-all duration-200
-                    bg-[#0d0f0e]
+                    rounded-[18px] border transition-all duration-300
+                    bg-[#111311]
                     ${selected
-                        ? `border-[#43ff9e] shadow-xl shadow-[#43ff9e]/10`
-                        : `border-[#43ff9e]/30 hover:border-[#43ff9e]/50`
+                        ? `border-[#72b191] shadow-[0_0_20px_rgba(114,177,145,0.05)]`
+                        : `border-[#72b191]/20 hover:border-[#72b191]/40`
                     }
                 `}
             >
@@ -59,21 +59,21 @@ function GroupNode({ id, data, selected }: NodeProps) {
                     isVisible={selected}
                     minWidth={200}
                     minHeight={150}
-                    lineClassName="border-[#43ff9e]"
-                    handleClassName="h-2.5 w-2.5 bg-[#0d0f0e] border border-[#43ff9e] rounded-sm"
+                    lineClassName="border-[#72b191]/50"
+                    handleClassName="h-2 w-2 bg-[#111311] border border-[#72b191] rounded-sm"
                 />
 
                 {/* Header Section */}
-                <div className="flex items-center justify-between px-4 pt-4 pb-3">
+                <div className="flex items-center justify-between px-5 pt-5 pb-4">
                     <div className="flex items-center gap-2">
                         <div className={`
-                            px-3 py-1 rounded-lg border text-[11px] font-bold tracking-[0.1em] uppercase font-mono
+                            px-3 py-1.5 rounded-[10px] border text-[11px] font-bold tracking-[0.12em] uppercase font-mono transition-colors
                             ${selected 
-                                ? 'bg-[#43ff9e]/10 border-[#43ff9e]/60 text-[#43ff9e]' 
-                                : 'bg-transparent border-[#43ff9e]/30 text-[#43ff9e]/70'}
+                                ? 'bg-[#72b191]/10 border-[#72b191]/40 text-[#72b191]' 
+                                : 'bg-[#1a201c]/40 border-[#72b191]/20 text-[#72b191]/60'}
                         `}>
                             <input
-                                className="bg-transparent border-none outline-none w-28 text-center cursor-text placeholder-[#43ff9e]/40"
+                                className="bg-transparent border-none outline-none w-28 text-center cursor-text placeholder-[#72b191]/30"
                                 value={label}
                                 onChange={(e) => setLabel(e.target.value)}
                                 placeholder="SECTION"
@@ -81,19 +81,19 @@ function GroupNode({ id, data, selected }: NodeProps) {
                         </div>
                     </div>
                     {/* Status Dot */}
-                    <div className="w-2 h-2 rounded-full bg-[#43ff9e] opacity-80 shadow-[0_0_10px_#43ff9e]" />
+                    <div className="w-2 h-2 rounded-full bg-[#72b191] opacity-70 shadow-[0_0_12px_#72b191]" />
                 </div>
 
-                {/* Divider */}
-                <div className="h-[1px] w-full bg-[#43ff9e]/20" />
+                {/* Divider Line */}
+                <div className="h-[1px] w-full bg-[#72b191]/10 mx-auto" />
 
                 {/* Body Content */}
-                <div className="absolute inset-0 top-[60px] flex flex-col items-center justify-center gap-4 pointer-events-none">
-                    <div className="relative flex items-center justify-center opacity-30">
-                        <Circle size={44} strokeWidth={1} className="text-[#43ff9e]" />
-                        <Plus size={22} strokeWidth={1} className="absolute text-[#43ff9e]" />
+                <div className="absolute inset-0 top-[65px] flex flex-col items-center justify-center gap-5 pointer-events-none">
+                    <div className="relative flex items-center justify-center opacity-25">
+                        <Circle size={46} strokeWidth={1} className="text-[#72b191]" />
+                        <Plus size={22} strokeWidth={1} className="absolute text-[#72b191]" />
                     </div>
-                    <span className="text-[#43ff9e] text-[13px] italic font-mono opacity-30 tracking-widest">
+                    <span className="text-[#72b191] text-[13px] italic font-mono opacity-30 tracking-wider">
                         Drop nodes here to group
                     </span>
                 </div>
@@ -101,10 +101,10 @@ function GroupNode({ id, data, selected }: NodeProps) {
             {/* Handles with high z-index to ensure they are interactive */}
             {(isHovered || selected) && (
                 <>
-                    <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="top" />
-                    <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="right" />
-                    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="bottom" />
-                    <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="left" />
+                    <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="top" />
+                    <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="right" />
+                    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="bottom" />
+                    <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="left" />
                 </>
             )}
         </>
