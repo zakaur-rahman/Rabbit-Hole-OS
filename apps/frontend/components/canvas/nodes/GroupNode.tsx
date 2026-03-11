@@ -49,8 +49,8 @@ function GroupNode({ id, data, selected }: NodeProps) {
                     rounded-[18px] border transition-all duration-300
                     bg-[#111311]
                     ${selected
-                        ? `border-[#72b191] shadow-[0_0_20px_rgba(114,177,145,0.05)]`
-                        : `border-[#72b191]/20 hover:border-[#72b191]/40`
+                        ? `border-[${accentColor === 'green-500' ? '#72b191' : accentColor}] shadow-[0_0_20px_rgba(114,177,145,0.05)]`
+                        : `border-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/20 hover:border-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/40`
                     }
                 `}
             >
@@ -59,8 +59,8 @@ function GroupNode({ id, data, selected }: NodeProps) {
                     isVisible={selected}
                     minWidth={200}
                     minHeight={150}
-                    lineClassName="border-[#72b191]/50"
-                    handleClassName="h-2 w-2 bg-[#111311] border border-[#72b191] rounded-sm"
+                    lineClassName={`border-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/50`}
+                    handleClassName={`h-2 w-2 bg-[#111311] border border-[${accentColor === 'green-500' ? '#72b191' : accentColor}] rounded-sm`}
                 />
 
                 {/* Header Section */}
@@ -69,8 +69,8 @@ function GroupNode({ id, data, selected }: NodeProps) {
                         <div className={`
                             px-3 py-1.5 rounded-[10px] border text-[11px] font-bold tracking-[0.12em] uppercase font-mono transition-colors
                             ${selected 
-                                ? 'bg-[#72b191]/10 border-[#72b191]/40 text-[#72b191]' 
-                                : 'bg-[#1a201c]/40 border-[#72b191]/20 text-[#72b191]/60'}
+                                ? `bg-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/10 border-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/40 text-[${accentColor === 'green-500' ? '#72b191' : accentColor}]` 
+                                : `bg-[#1a201c]/40 border-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/20 text-[${accentColor === 'green-500' ? '#72b191' : accentColor}]/60`}
                         `}>
                             <input
                                 className="bg-transparent border-none outline-none w-28 text-center cursor-text placeholder-[#72b191]/30"
