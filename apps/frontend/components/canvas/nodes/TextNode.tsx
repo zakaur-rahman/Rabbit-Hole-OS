@@ -54,8 +54,8 @@ function TextNode({ id, data, selected }: NodeProps) {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 className={`
-                    relative w-full h-full min-w-[272px]
-                    rounded-[10px] bg-[#161a1e] border transition-all duration-200
+                    relative w-full h-full min-w-[280px] min-h-[160px]
+                    rounded-[10px] bg-[#191817] border transition-all duration-200
                     ${selected
                         ? `border-[#4f9eff]/50 shadow-[0_0_0_1px_rgba(79,158,255,0.18),0_8px_32px_rgba(0,0,0,0.5)]`
                         : `border-white/5 hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`

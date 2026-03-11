@@ -68,8 +68,8 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 className={`
-                    relative w-full h-full min-w-[272px]
-                    rounded-[10px] bg-[#161a1e] border transition-all duration-200
+                    relative w-full h-full min-w-[350px]
+                    rounded-[10px] bg-[#191817] border transition-all duration-200
                     ${selected
                         ? `border-[#f5a623]/50 shadow-[0_0_0_1px_rgba(245,166,35,0.18),0_8px_32px_rgba(0,0,0,0.5)]`
                         : `border-white/5 hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`
@@ -118,7 +118,7 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                                 autoFocus
                             />
                         ) : (
-                            <div className="font-mono text-[11.5px] font-light text-[#d4d8de]/50 leading-[1.7] whitespace-normal break-words">
+                            <div className="font-mono text-[11.5px] font-light text-[#d4d8de]/50 leading-[1.7] whitespace-normal wrap-break-word">
                                 {content ? (
                                     <div dangerouslySetInnerHTML={{ __html: content }} />
                                 ) : (
