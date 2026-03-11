@@ -89,11 +89,11 @@ function GroupNode({ id, data, selected }: NodeProps) {
 
                 {/* Body Content */}
                 <div className="absolute inset-0 top-[65px] flex flex-col items-center justify-center gap-5 pointer-events-none">
-                    <div className="relative flex items-center justify-center opacity-25">
-                        <Circle size={46} strokeWidth={1} className="text-[#72b191]" />
-                        <Plus size={22} strokeWidth={1} className="absolute text-[#72b191]" />
+                    <div className="relative flex items-center justify-center opacity-40">
+                        <Circle size={46} strokeWidth={1} className="text-[#525252]" />
+                        <Plus size={22} strokeWidth={1} className="absolute text-[#525252]" />
                     </div>
-                    <span className="text-[#72b191] text-[13px] italic font-mono opacity-30 tracking-wider">
+                    <span className="text-[#525252] text-[13px] italic font-mono opacity-50 tracking-wider">
                         Drop nodes here to group
                     </span>
                 </div>
@@ -101,10 +101,10 @@ function GroupNode({ id, data, selected }: NodeProps) {
             {/* Handles with high z-index to ensure they are interactive */}
             {(isHovered || selected) && (
                 <>
-                    <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="top" />
-                    <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="right" />
-                    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="bottom" />
-                    <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-[#72b191] !border-2 !border-neutral-900 !z-50" id="left" />
+                    <Handle type="target" position={Position.Top} className="!w-2 !h-2 bg-[#72b191]! !border-2 !border-neutral-900 !z-50" id="top" />
+                    <Handle type="source" position={Position.Right} className="!w-2 !h-2 bg-[#72b191]! !border-2 !border-neutral-900 !z-50" id="right" />
+                    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 bg-[#72b191]! !border-2 !border-neutral-900 !z-50" id="bottom" />
+                    <Handle type="target" position={Position.Left} className="!w-2 !h-2 bg-[#72b191]! !border-2 !border-neutral-900 !z-50" id="left" />
                 </>
             )}
         </>
