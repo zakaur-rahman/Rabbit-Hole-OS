@@ -1,8 +1,8 @@
-import React, { memo, useState, useEffect } from 'react';
-import { NodeProps } from 'reactflow';
+import React, { memo, useState, useEffect, useRef } from 'react';
+import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { FileEdit } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
-import BaseNode from './BaseNode';
+import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import TiptapEditor from '../TiptapEditor';
 
 export interface NoteNodeData {
@@ -11,15 +11,30 @@ export interface NoteNodeData {
     tags?: string[];
 }
 
-function NoteNode({ data, selected, id }: NodeProps<NoteNodeData & { isPreview?: boolean, color?: string }>) {
+function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?: boolean, color?: string }>) {
     const isPreview = data.isPreview;
-    const accentColor = data.color || "yellow-500";
-    const iconColor = accentColor === 'yellow-500' ? 'text-yellow-400' : `text-${accentColor.replace('500', '400')}`;
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(data.content || '');
     const [title, setTitle] = useState(data.title || '');
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     const syncLinks = useGraphStore(state => state.syncLinks);
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
 
     // Debounced sync
     useEffect(() => {
@@ -41,62 +56,103 @@ function NoteNode({ data, selected, id }: NodeProps<NoteNodeData & { isPreview?:
     };
 
     return (
-        <BaseNode
-            id={id}
-            selected={selected}
-            title={title}
-            onTitleChange={isPreview ? undefined : setTitle}
-            subtitle="NOTE"
-            accentColor={accentColor}
-            icon={FileEdit}
-            iconColor={iconColor}
-            minWidth={300}
-            minHeight={150}
-            showResizer={!isPreview}
-        >
+        <>
+            <NodeResizer
+                minWidth={272}
+                minHeight={150}
+                isVisible={selected}
+                lineClassName="border-[#f5a623]/50"
+                handleClassName="h-2 w-2 bg-[#0e1012] border border-[#f5a623] rounded-sm"
+            />
             <div
-                className={`flex-1 ${isPreview ? '' : 'cursor-text'} nodrag relative h-auto flex flex-col`}
-                onClick={onNoteClick}
-                onDoubleClick={() => !isPreview && setIsEditing(true)}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`
+                    relative w-full h-full min-w-[272px]
+                    rounded-[10px] bg-[#161a1e] border transition-all duration-200
+                    ${selected
+                        ? `border-[#f5a623]/50 shadow-[0_0_0_1px_rgba(245,166,35,0.18),0_8px_32px_rgba(0,0,0,0.5)]`
+                        : `border-white/5 hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`
+                    }
+                `}
             >
-                {isEditing && !isPreview ? (
-                    <TiptapEditor
-                        content={content}
-                        onChange={setContent}
-                        onBlur={() => setIsEditing(false)}
-                        autoFocus
-                    />
-                ) : (
-                    <div className={`${isPreview ? 'p-3' : 'p-5'} prose prose-sm prose-invert max-w-none text-neutral-200 opacity-90 leading-relaxed flex-1 h-auto whitespace-normal break-words`}>
-                        {content ? (
-                            <div
-                                dangerouslySetInnerHTML={{ __html: content }}
-                                className="h-full"
-                                style={{ fontSize: isPreview ? '12px' : '13px', lineHeight: '1.7' }}
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
+
+                {/* Header Section */}
+                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
+                    <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <path d="M2.5 1.5H8l3 3v7.5H2.5V1.5z" stroke="#f5a623" strokeOpacity="0.6" strokeWidth="1.2"/>
+                            <path d="M8 1.5V4.5H11" stroke="#f5a623" strokeOpacity="0.35" strokeWidth="1.2"/>
+                            <path d="M4.5 7h4M4.5 9h2.5" stroke="#f5a623" strokeOpacity="0.3" strokeWidth="1" strokeLinecap="round"/>
+                        </svg>
+                    </div>
+                    <div className="flex-1 font-mono text-[12.5px] font-medium text-[#d4d8de] tracking-tight truncate">
+                        <input
+                            className="bg-transparent border-none outline-none w-full cursor-text placeholder-[#d4d8de]/20"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="New Note"
+                        />
+                    </div>
+                    <div className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border border-[#f5a623]/22 bg-[#f5a623]/08 text-[#f5a623] shadow-[0_0_0_1px_rgba(245,166,35,0.08)] leading-snug">
+                        Note
+                    </div>
+                </div>
+
+                {/* Body Section */}
+                <div className="p-3">
+                    <div className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.08em] uppercase mb-[9px]">
+                        NOTE · {new Date().toISOString().split('T')[0]}
+                    </div>
+                    <div
+                        className={`flex-1 ${isPreview ? '' : 'cursor-text'} nodrag relative min-h-[58px] flex flex-col`}
+                        onClick={onNoteClick}
+                        onDoubleClick={() => !isPreview && setIsEditing(true)}
+                    >
+                        {isEditing && !isPreview ? (
+                            <TiptapEditor
+                                content={content}
+                                onChange={setContent}
+                                onBlur={() => setIsEditing(false)}
+                                autoFocus
                             />
                         ) : (
-                            !isPreview && (
-                                <p className="text-[13px] text-neutral-600 font-medium italic opacity-50">
-                                    Double click to start writing...
-                                </p>
-                            )
+                            <div className="font-mono text-[11.5px] font-light text-[#d4d8de]/50 leading-[1.7] whitespace-normal break-words">
+                                {content ? (
+                                    <div dangerouslySetInnerHTML={{ __html: content }} />
+                                ) : (
+                                    <span className="italic text-[#d4d8de]/20">Double click to start writing...</span>
+                                )}
+                            </div>
                         )}
                     </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between mt-[10px] pt-[9px] border-t border-white/5">
+                        <span className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.06em]">Modified just now</span>
+                        <div className="flex gap-[5px]">
+                            <button className="w-[22px] h-[22px] rounded-[5px] border border-white/5 bg-transparent flex items-center justify-center cursor-pointer text-[#d4d8de]/20 hover:border-white/10 hover:text-[#d4d8de]/50 hover:bg-white/5 transition-all outline-none">
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1h3.5l4.5 4.5L5.5 9 1 4.5V1z" stroke="currentColor" strokeWidth="1.1"/><circle cx="3.2" cy="3.2" r="0.7" fill="currentColor"/></svg>
+                            </button>
+                            <button className="w-[22px] h-[22px] rounded-[5px] border border-white/5 bg-transparent flex items-center justify-center cursor-pointer text-[#d4d8de]/20 hover:border-white/10 hover:text-[#d4d8de]/50 hover:bg-white/5 transition-all outline-none">
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="2" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="8" cy="5" r="1" fill="currentColor"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Handles - standardized Cognode style */}
+                {(isHovered || selected) && (
+                    <>
+                        <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="top" />
+                        <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="right" />
+                        <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="bottom" />
+                        <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="left" />
+                    </>
                 )}
             </div>
-
-            {
-                data.tags && data.tags.length > 0 && !isPreview && (
-                    <div className="flex flex-wrap gap-1 p-2 bg-black/20 border-t border-white/5">
-                        {data.tags.map((tag: string) => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/5 text-neutral-400 rounded-md font-medium">
-                                #{tag}
-                            </span>
-                        ))}
-                    </div>
-                )
-            }
-        </BaseNode >
+        </>
     );
 }
 
