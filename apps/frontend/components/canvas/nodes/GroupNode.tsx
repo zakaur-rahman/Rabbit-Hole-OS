@@ -99,10 +99,14 @@ function GroupNode({ id, data, selected }: NodeProps) {
                 </div>
             </div>
             {/* Handles with high z-index to ensure they are interactive */}
-            <Handle type="target" position={Position.Top} className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !z-50`} id="top" />
-            <Handle type="source" position={Position.Right} className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !z-50`} id="right" />
-            <Handle type="source" position={Position.Bottom} className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !z-50`} id="bottom" />
-            <Handle type="target" position={Position.Left} className={`!w-2 !h-2 !bg-${accentColor} !border-2 !border-neutral-900 !z-50`} id="left" />
+            {(isHovered || selected) && (
+                <>
+                    <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="top" />
+                    <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="right" />
+                    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="bottom" />
+                    <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-[#43ff9e] !border-2 !border-neutral-900 !z-50" id="left" />
+                </>
+            )}
         </>
     );
 }
