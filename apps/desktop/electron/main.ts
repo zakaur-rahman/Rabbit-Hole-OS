@@ -113,7 +113,7 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    frame: true, // Use default frame for Windows compatibility
+    frame: false, // Completely hide native frame since we use custom DOM controls
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -121,12 +121,6 @@ function createWindow() {
       webviewTag: true,
     },
     backgroundColor: '#0a0a0a',
-    titleBarStyle: 'hidden',
-    titleBarOverlay: { 
-        color: '#00000000',
-        symbolColor: '#ffffff', 
-        height: 56
-    },
     autoHideMenuBar: true,
   });
   
@@ -350,7 +344,7 @@ app.on('ready', () => {
     
     // Initialize sync service
     syncService = new SyncService(storageService, {
-      apiBaseUrl: 'http://127.0.0.1:8000',
+      apiBaseUrl: 'https://api.cognode.tech',
       syncIntervalMs: 5 * 60 * 1000, // 5 minutes
     });
     
@@ -484,4 +478,43 @@ ipcMain.on('node:create', (event, data) => {
   // Ideally, the Renderer calls the Backend API directly via fetch/axios.
   // Electron just might handle OS-level things or proxying if CORS is strictly an issue.
   // Since we set CORS to * in FastAPI, Renderer can talk to Backend directly.
+});
+
+// Window Controls IPC Handlers
+ipcMain.handle('window:minimize', () => {
+  if (mainWindow) {
+    mainWindow.minimize();
+  }
+});
+
+ipcMain.handle('window:maximize', () => {
+  if (mainWindow) {
+    if (!mainWindow.isMaximized()) {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.handle('window:unmaximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    }
+  }
+});
+
+ipcMain.handle('window:close', () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
+
+// Optionally, we can also bind the maximize/unmaximize events from the window to send to renderer
+app.on('browser-window-created', (_, win) => {
+  win.on('maximize', () => {
+    win.webContents.send('window:maximized');
+  });
+  win.on('unmaximize', () => {
+    win.webContents.send('window:unmaximized');
+  });
 });

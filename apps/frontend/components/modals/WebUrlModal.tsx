@@ -73,104 +73,143 @@ export default function WebUrlModal({ isOpen, onClose, onSubmit }: WebUrlModalPr
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                onClick={onClose}
-            />
+    const handleClear = () => {
+        setUrl('');
+        inputRef.current?.focus();
+    };
 
-            {/* Modal */}
-            <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+    const handleQuickAdd = (domain: string) => {
+        setUrl(domain);
+        inputRef.current?.focus();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0908]/70 backdrop-blur-md">
+            {/* Backdrop click to close */}
+            <div className="absolute inset-0" onClick={onClose} />
+
+            <div 
+                className="relative w-[440px] bg-[var(--surface)] rounded-[14px] overflow-hidden"
+                style={{
+                    border: '1px solid var(--border2)',
+                    boxShadow: '0 0 0 1px rgba(255,255,255,0.03) inset, 0 32px 80px rgba(0,0,0,0.75), 0 8px 24px rgba(0,0,0,0.5)',
+                    animation: 'popIn 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards'
+                }}
+            >
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/20">
-                            <Globe size={20} className="text-purple-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-white">Add Web Page</h2>
-                            <p className="text-xs text-neutral-500">Embed any webpage in your canvas</p>
-                        </div>
+                <div 
+                    className="flex items-center gap-[14px] px-5 pt-5 pb-[18px] border-b border-[var(--border)] relative"
+                    style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
+                >
+                    <div className="w-[38px] h-[38px] rounded-[9px] bg-[var(--amber-bg)] flex items-center justify-center text-[18px] shrink-0 border border-[rgba(232,160,32,0.2)]">
+                        🌐
                     </div>
-                    <button
+                    <div>
+                        <div className="text-[15px] font-bold text-[var(--text)] tracking-[0.01em] mb-[3px]">Add Web Page</div>
+                        <div className="font-mono text-[10px] text-[var(--muted)] tracking-[0.06em]">Embed any webpage in your canvas</div>
+                    </div>
+                    <button 
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+                        className="absolute top-4 right-4 w-[26px] h-[26px] rounded-[6px] border border-[var(--border)] bg-[var(--raised)] text-[var(--sub)] flex items-center justify-center text-[14px] cursor-pointer transition-all hover:bg-[rgba(224,85,85,0.12)] hover:border-[rgba(224,85,85,0.3)] hover:text-[var(--red)] leading-none pb-[2px]"
                     >
-                        <X size={18} />
+                        ×
                     </button>
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                    <div className="relative">
+                {/* Body */}
+                <div className="px-5 pt-[22px] pb-[20px]">
+                    <div className="flex items-center gap-[7px] text-[10px] font-semibold tracking-[0.14em] uppercase text-[var(--muted)] font-mono mb-2">
+                        <div className="w-[3px] h-[3px] rounded-full bg-[var(--amber)]"></div>
+                        Page URL
+                    </div>
+
+                    <div className="relative mb-[10px]">
+                        <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-[15px] transition-colors pointer-events-none ${url.trim().length > 0 ? 'text-[var(--amber)]' : 'text-[var(--muted)]'}`}>
+                            ⌕
+                        </span>
                         <input
                             ref={inputRef}
                             type="text"
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Enter URL (e.g., wikipedia.org)"
-                            className={`w-full px-4 py-3 pr-12 rounded-xl bg-neutral-800 border-2 text-white placeholder-neutral-500 outline-none transition-colors ${isValid === null
-                                ? 'border-neutral-700 focus:border-purple-500'
-                                : isValid
-                                    ? 'border-green-500/50'
-                                    : 'border-red-500/50'
-                                }`}
+                            placeholder="e.g. en.wikipedia.org/wiki/India"
+                            spellCheck={false}
+                            autoComplete="off"
+                            className="w-full h-[44px] bg-[var(--bg)] border-[1.5px] border-[var(--border2)] rounded-[8px] pl-[40px] pr-[34px] font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--amber)]"
+                            style={{ caretColor: 'var(--amber)' }}
                         />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            {isValid === true && <Check size={18} className="text-green-500" />}
-                            {isValid === false && <AlertCircle size={18} className="text-red-500" />}
-                        </div>
+                        {url.length > 0 && (
+                            <button 
+                                onClick={handleClear}
+                                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[20px] h-[20px] rounded-[4px] border-none bg-[var(--raised)] text-[var(--sub)] flex items-center justify-center text-[12px] cursor-pointer transition-all hover:bg-[var(--border2)] hover:text-[var(--text)] pb-[1px]"
+                            >
+                                ×
+                            </button>
+                        )}
                     </div>
 
-                    {/* Preview */}
-                    {preview && (
-                        <div className="mt-4 p-4 rounded-xl bg-neutral-800/50 border border-neutral-700 flex items-center gap-3">
-                            <img
-                                src={preview.favicon}
-                                alt=""
-                                className="w-8 h-8 rounded"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                            />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm text-white font-medium truncate">{preview.domain}</p>
-                                <p className="text-xs text-neutral-500 truncate">{url}</p>
-                            </div>
-                            <ExternalLink size={14} className="text-neutral-500 shrink-0" />
-                        </div>
-                    )}
+                    <div className="flex items-center gap-[6px] font-mono text-[10px] text-[var(--muted)] px-[2px]">
+                        <span className="text-[11px]">⚠</span>
+                        Some sites (like Twitter/X, Facebook) may block embedding.
+                    </div>
 
-                    {/* Warning for common blocked sites */}
-                    <p className="mt-4 text-xs text-neutral-500 text-center">
-                        Note: Some sites (like Twitter/X, Facebook) may block embedding.
-                    </p>
+                    <div className="flex items-center gap-[7px] text-[10px] font-semibold tracking-[0.14em] uppercase text-[var(--muted)] font-mono mt-[18px] mb-[10px]">
+                        <div className="w-[3px] h-[3px] rounded-full bg-[var(--border2)]"></div>
+                        Quick add
+                    </div>
+
+                    <div className="flex gap-[6px] flex-wrap">
+                        {/* Quick suggestions */}
+                        {[
+                            { name: 'Wikipedia', icon: '📖', url: 'en.wikipedia.org' },
+                            { name: 'GitHub', icon: '⬡', url: 'github.com' },
+                            { name: 'arXiv', icon: '📄', url: 'arxiv.org' },
+                            { name: 'Notion', icon: '◈', url: 'notion.so' },
+                            { name: 'YouTube', icon: '▶', url: 'youtube.com' }
+                        ].map((item) => (
+                            <button
+                                key={item.name}
+                                onClick={() => handleQuickAdd(item.url)}
+                                className="flex items-center gap-[6px] bg-[var(--raised)] border border-[var(--border)] rounded-[6px] px-[10px] py-[5px] text-[11px] font-medium text-[var(--sub)] cursor-pointer transition-all hover:bg-[var(--amber-bg)] hover:border-[rgba(232,160,32,0.25)] hover:text-[var(--amber)]"
+                            >
+                                <span className="text-[13px]">{item.icon}</span> {item.name}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end gap-3 px-6 py-4 border-t border-neutral-800 bg-neutral-900/50">
-                    <button
+                <div 
+                    className="flex items-center justify-end gap-2 px-5 pt-[14px] pb-[18px] border-t border-[var(--border)]"
+                    style={{ background: 'linear-gradient(135deg, rgba(22,20,18,0.5) 0%, var(--raised) 100%)' }}
+                >
+                    <button 
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors text-sm font-medium"
+                        className="h-[36px] px-[18px] bg-transparent border border-[var(--border)] rounded-[7px] text-[var(--sub)] font-sans text-[12px] font-semibold cursor-pointer transition-all hover:bg-[var(--raised)] hover:border-[var(--border2)] hover:text-[var(--text)]"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={!isValid}
-                        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isValid
-                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/25'
-                            : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
-                            }`}
+                        disabled={!url.trim()}
+                        className={`h-[36px] px-[20px] rounded-[7px] font-sans text-[12px] font-bold flex items-center gap-[7px] transition-all tracking-[0.02em] ${
+                            url.trim() && isValid
+                                ? 'bg-[var(--amber)] text-[var(--bg)] border-none cursor-pointer hover:bg-[var(--amber2)] shadow-[0_2px_12px_rgba(232,160,32,0.25)] hover:shadow-[0_2px_20px_rgba(232,160,32,0.35)] hover:-translate-y-[1px] active:translate-y-0'
+                                : 'bg-[var(--raised)] text-[var(--muted)] border border-[var(--border)] cursor-not-allowed shadow-none'
+                        }`}
                     >
-                        <Globe size={14} />
-                        Add Page
+                        <span className="text-[14px]">🌐</span> Add Page
                     </button>
                 </div>
             </div>
+            {/* PopIn Keyframes */}
+            <style jsx global>{`
+                @keyframes popIn {
+                    from { opacity: 0; transform: scale(0.94) translateY(8px); }
+                    to   { opacity: 1; transform: scale(1)    translateY(0);   }
+                }
+            `}</style>
         </div>
     );
 }

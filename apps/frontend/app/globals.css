@@ -67,6 +67,16 @@
   }
 }
 
+@layer utilities {
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+  .no-drag-region {
+    -webkit-app-region: no-drag;
+  }
+}
+
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -157,4 +167,4 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
+}

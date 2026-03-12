@@ -184,9 +184,12 @@ export class LocalStorageService {
     }
   }
 
-  updateNode(id: string, updates: Partial<NodeRow>): NodeRow {
+  updateNode(id: string, updates: Partial<NodeRow>): NodeRow | undefined {
     const current = this.getNode(id);
-    if (!current) throw new Error(`Node ${id} not found`);
+    if (!current) {
+        console.warn(`[Storage] Node ${id} not found for update. This may be a race condition during creation.`);
+        return undefined;
+    }
     
     const now = Date.now();
     const newVersion = current.local_version + 1;

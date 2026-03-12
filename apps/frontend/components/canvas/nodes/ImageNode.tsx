@@ -46,74 +46,127 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
     }, [id, updateNode]);
 
     return (
-        <BaseNode
-            id={id}
-            selected={selected}
-            title="Image"
-            subtitle="MEDIA"
-            accentColor="purple-500"
-            icon={ImageIcon}
-            iconColor="text-purple-400"
-            minWidth={200}
-            minHeight={200}
+        <div 
+            className={`relative w-[280px] bg-[var(--surface)] rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-2 ring-[var(--blue)] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)]'}`}
+            style={{ border: `1px solid ${selected ? 'var(--blue)' : 'rgba(91,143,212,0.3)'}` }}
         >
-            <div className="relative flex-1 flex flex-col h-auto min-h-[150px] w-full">
+            {/* Connection Dots */}
+            <div className={`absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-[var(--blue)] border-[var(--blue)] shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-[var(--border2)] border-[var(--border)] group-hover:bg-[var(--blue)] group-hover:border-[var(--blue)] group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
+            <div className={`absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-[var(--blue)] border-[var(--blue)] shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-[var(--border2)] border-[var(--border)] group-hover:bg-[var(--blue)] group-hover:border-[var(--blue)] group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
+
+            {/* Hidden ReactFlow handles to maintain connectivity */}
+            <div className="absolute inset-0 pointer-events-none opacity-0">
+                <BaseNode
+                    id={id}
+                    selected={selected}
+                    title="Hidden Image"
+                    subtitle="MEDIA"
+                    accentColor="blue-500"
+                    icon={ImageIcon}
+                    iconColor="text-blue-400"
+                    hasInstruction={false}
+                >
+                    <div />
+                </BaseNode>
+            </div>
+
+            {/* Header */}
+            <div 
+                className="px-[13px] py-[12px] pb-[11px] flex items-center gap-[10px] border-b border-[var(--border)] relative z-10"
+                style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
+            >
+                <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 bg-[var(--blue-dim)] border border-[rgba(91,143,212,0.2)]">
+                    🖼
+                </div>
+                <div className="flex-1">
+                    <div className="text-[13px] font-bold text-[var(--text)] tracking-[0.01em] mb-[2px] leading-tight">Image</div>
+                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase text-[var(--blue)] leading-tight">MEDIA</div>
+                </div>
+                <button className="w-[22px] h-[22px] rounded-[5px] bg-transparent border border-transparent text-[var(--muted)] flex items-center justify-center text-[14px] cursor-pointer transition-all tracking-[1px] hover:bg-[var(--raised)] hover:border-[var(--border)] hover:text-[var(--sub)] leading-none pb-[6px]">
+                    ...
+                </button>
+            </div>
+
+            {/* Preview Area */}
+            <div className="h-[140px] relative overflow-hidden flex items-center justify-center bg-[#111010] z-10">
+                {!url && (
+                    <div 
+                        className="absolute inset-0" 
+                        style={{ background: 'linear-gradient(135deg, rgba(91,143,212,0.04) 0%, transparent 60%), repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(91,143,212,0.03) 12px, rgba(91,143,212,0.03) 13px)' }}
+                    />
+                )}
                 {url ? (
                     <img
                         src={url}
                         alt="Node content"
-                        className="w-full h-auto object-contain rounded-lg pointer-events-none"
+                        className="w-full h-full object-contain pointer-events-none relative z-10"
                     />
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center p-2 gap-2 text-neutral-400">
-                        <div className="flex flex-col gap-2 w-full">
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={inputUrl}
-                                    onChange={(e) => setInputUrl(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                                    onPaste={handlePaste}
-                                    placeholder="Paste image URL..."
-                                    className="flex-1 bg-black/20 border border-white/10 rounded px-2 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500/50"
-                                    onClick={(e) => e.stopPropagation()} // Prevent node drag when clicking input
-                                />
-                                <button
-                                    onClick={handleUrlSubmit}
-                                    className="p-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded transition-colors"
-                                >
-                                    <Link size={14} />
-                                </button>
-                            </div>
-
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-white/5"></div>
-                                </div>
-                                <div className="relative flex justify-center text-[10px] uppercase">
-                                    <span className="bg-neutral-900 px-2 text-neutral-500">Or</span>
-                                </div>
-                            </div>
-
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileSelect}
-                                accept="image/*"
-                                className="hidden"
-                            />
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded flex items-center justify-center gap-2 text-xs font-medium transition-colors"
-                            >
-                                <Upload size={14} />
-                                <span>Upload</span>
-                            </button>
-                        </div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-[10px] z-10">
+                        <span className="text-[32px] opacity-10">🖼</span>
+                        <span className="font-mono text-[10px] text-[var(--muted)] italic tracking-[0.06em]">No image loaded</span>
                     </div>
                 )}
             </div>
-        </BaseNode>
+
+            {/* Input Area */}
+            {!url && (
+                <div className="px-[13px] py-[12px] border-t border-[var(--border)] flex flex-col gap-[8px] relative z-20 bg-[var(--surface)]">
+                    <div className="flex items-center gap-[6px]">
+                        <input
+                            type="text"
+                            value={inputUrl}
+                            onChange={(e) => setInputUrl(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                            onPaste={handlePaste}
+                            placeholder="Paste image URL..."
+                            className="flex-1 h-[34px] bg-(--bg) border border-(--border2) rounded-[10px] px-[10px] font-mono text-[10px] text-(--sub) outline-none transition-all placeholder:text-(--muted) focus:border-(--blue) focus:shadow-[0_0_0_2px_rgba(91,143,212,0.1)]"
+                            style={{ caretColor: 'var(--amber)' }}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                            onClick={handleUrlSubmit}
+                            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[15px] cursor-pointer shrink-0 transition-all bg-(--blue-dim) text-(--blue) border border-[rgba(91,143,212,0.2)] hover:bg-(--blue) hover:text-white hover:border-(--blue) hover:shadow-[0_0_12px_rgba(91,143,212,0.3)]"
+                        >
+                            🔗
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-[10px] font-mono text-[9px] text-(--muted) tracking-[0.12em] before:content-[''] before:flex-1 before:h-[1px] before:bg-(--border) after:content-[''] after:flex-1 after:h-[1px] after:bg-(--border)">
+                        or
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*"
+                        className="hidden"
+                    />
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full h-[36px] rounded-[10px] border border-dashed border-[var(--border2)] bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-[var(--sub)] hover:bg-[var(--blue-dim)] hover:border-[var(--blue)] hover:text-[var(--blue)]"
+                    >
+                        <span className="text-[14px]">↑</span> Upload Image
+                    </button>
+                </div>
+            )}
+
+            {/* Footer */}
+            <div 
+                className="px-[13px] py-[7px] border-t border-[var(--border)] flex items-center justify-between relative z-10"
+                style={{ background: 'linear-gradient(135deg, rgba(22,20,18,0.5) 0%, var(--raised) 100%)' }}
+            >
+                <span className="font-mono text-[9px] text-[var(--muted)] tracking-[0.06em]">
+                    {url ? (new URL(url).hostname || 'Local Image') : 'Supports JPG · PNG · WebP · SVG'}
+                </span>
+                <div className="flex gap-[3px]">
+                    <div className={`w-[4px] h-[4px] rounded-full transition-colors duration-200 ${selected ? 'bg-[var(--blue)]' : 'bg-[var(--muted)] group-hover:bg-[var(--blue)]'}`} />
+                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 ${selected ? 'bg-[var(--blue)] opacity-60' : 'bg-[var(--muted)] group-hover:bg-[var(--blue)] group-hover:opacity-60'}`} />
+                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 ${selected ? 'bg-[var(--blue)] opacity-30' : 'bg-[var(--muted)] group-hover:bg-[var(--blue)] group-hover:opacity-30'}`} />
+                </div>
+            </div>
+        </div>
     );
 }
 

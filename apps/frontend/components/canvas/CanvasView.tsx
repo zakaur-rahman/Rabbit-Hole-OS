@@ -425,6 +425,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
                 <GraphControls
                     onSynthesis={handleSynthesis}
+                    onChatSynthesis={() => setShowSynthesis(true)}
                     onASTEditor={handleOpenASTEditor}
                     onAddNote={handleAddNote}
                     onAddGroup={handleAddGroup}
