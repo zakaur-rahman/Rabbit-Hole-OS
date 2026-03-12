@@ -50,6 +50,7 @@ import CanvasImportModal from '../modals/CanvasImportModal';
 import WebUrlModal from '../modals/WebUrlModal';
 import CanvasOverlay from './CanvasOverlay';
 import ConnectionDropMenu from './ConnectionDropMenu';
+import { SyncStatus } from '../ui/SyncStatus';
 
 // Hooks
 import { useContextMenu } from '@/hooks/useContextMenu';
@@ -308,77 +309,117 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <div
-            className="w-full h-full bg-neutral-950 relative"
+            className="flex flex-col w-full h-full bg-[var(--bg)] relative"
             onDragOver={onDragOver}
             onDrop={onDropReal}
         >
-            <CanvasOverlay nodeCount={nodes.length} />
-            {isEmpty && <EmptyGraphState />}
-            <WhiteboardSelector />
+            {/* Graph Toolbar */}
+            <div className="h-[44px] bg-[var(--surface)] border-b border-[var(--border)] flex items-center px-4 gap-3 shrink-0 z-50">
+                <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--sub)]">Knowledge Graph</span>
+                
+                <WhiteboardSelector />
 
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                isValidConnection={isValidConnection}
-                onReconnect={onReconnect}
-                edgesUpdatable={!readOnly}
-                onReconnectStart={onReconnectStart}
-                onConnectStart={onConnectStart}
-                onConnectEnd={onConnectEnd}
-                onNodeClick={onNodeClick}
-                onNodeDoubleClick={(_, node) => onNodeOpen?.(node.id)}
-                onNodeContextMenu={onNodeContextMenu}
-                onEdgeContextMenu={onEdgeContextMenu}
-                onPaneClick={onPaneClick}
-                onPaneContextMenu={onPaneContextMenu}
-                onNodeMouseEnter={onNodeMouseEnter}
-                onNodeMouseLeave={onNodeMouseLeave}
-                onNodeDragStop={onNodeDragStop}
-                nodeTypes={useMemo(() => nodeTypes, [])}
-                edgeTypes={useMemo(() => edgeTypes, [])}
-                defaultEdgeOptions={defaultEdgeOptions}
-                selectionMode={SelectionMode.Partial}
-                selectionOnDrag
-                panOnScroll
-                panOnDrag={[1, 2]}
-                selectNodesOnDrag
-                fitView
-                snapToGrid={snapToGrid}
-                nodesDraggable={!readOnly}
-                nodesConnectable={!readOnly}
-                elementsSelectable={!readOnly}
-                edgesFocusable={!readOnly}
-                deleteKeyCode={deleteKeyCode}
-                connectionMode={ConnectionMode.Loose}
-                connectionLineStyle={useMemo(() => ({
-                    stroke: '#9ca3af',
-                    strokeWidth: 2,
-                    strokeDasharray: 'none',
-                    opacity: connectionDropMenu.visible ? 0 : 1,
-                }), [connectionDropMenu.visible])}
-                className={`bg-neutral-950 ${readOnly ? 'cursor-not-allowed' : ''}`}
-            >
-                <Background color="#1a1a1a" gap={20} size={2} />
+                <div className="ml-auto flex items-center gap-1.5 font-mono text-[10px] text-[var(--sub)]">
+                    <div className="w-[6px] h-[6px] rounded-full bg-[var(--amber)]"></div>
+                    {nodes.length} NODES
+                </div>
+            </div>
+
+            <div className="flex-1 relative w-full h-full overflow-hidden" style={{
+                background: `
+                    radial-gradient(ellipse at 30% 40%, rgba(232,160,32,0.04) 0%, transparent 55%),
+                    radial-gradient(ellipse at 70% 65%, rgba(107,159,212,0.03) 0%, transparent 45%),
+                    var(--bg)`
+            }}>
+                <div className="absolute inset-0 pointer-events-none" style={{
+                    backgroundImage: `
+                        linear-gradient(rgba(46,43,40,0.4) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(46,43,40,0.4) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '40px 40px'
+                }}>
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                        backgroundImage: `
+                            linear-gradient(rgba(46,43,40,0.2) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(46,43,40,0.2) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '8px 8px'
+                    }} />
+                </div>
+                {/* CanvasOverlay removed */}
+                {isEmpty && <EmptyGraphState />}
+
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    isValidConnection={isValidConnection}
+                    onReconnect={onReconnect}
+                    edgesUpdatable={!readOnly}
+                    onReconnectStart={onReconnectStart}
+                    onConnectStart={onConnectStart}
+                    onConnectEnd={onConnectEnd}
+                    onNodeClick={onNodeClick}
+                    onNodeDoubleClick={(_, node) => onNodeOpen?.(node.id)}
+                    onNodeContextMenu={onNodeContextMenu}
+                    onEdgeContextMenu={onEdgeContextMenu}
+                    onPaneClick={onPaneClick}
+                    onPaneContextMenu={onPaneContextMenu}
+                    onNodeMouseEnter={onNodeMouseEnter}
+                    onNodeMouseLeave={onNodeMouseLeave}
+                    onNodeDragStop={onNodeDragStop}
+                    nodeTypes={useMemo(() => nodeTypes, [])}
+                    edgeTypes={useMemo(() => edgeTypes, [])}
+                    defaultEdgeOptions={defaultEdgeOptions}
+                    selectionMode={SelectionMode.Partial}
+                    selectionOnDrag
+                    panOnScroll
+                    panOnDrag={[1, 2]}
+                    selectNodesOnDrag
+                    fitView
+                    snapToGrid={snapToGrid}
+                    nodesDraggable={!readOnly}
+                    nodesConnectable={!readOnly}
+                    elementsSelectable={!readOnly}
+                    edgesFocusable={!readOnly}
+                    deleteKeyCode={deleteKeyCode}
+                    connectionMode={ConnectionMode.Loose}
+                    connectionLineStyle={useMemo(() => ({
+                        stroke: '#9ca3af',
+                        strokeWidth: 2,
+                        strokeDasharray: 'none',
+                        opacity: connectionDropMenu.visible ? 0 : 1,
+                    }), [connectionDropMenu.visible])}
+                    className={`bg-transparent ${readOnly ? 'cursor-not-allowed' : ''}`}
+                >
 
                 {!isEmpty && (
                     <MiniMap
-                        className="bg-neutral-900! border-neutral-800!"
-                        maskColor="rgba(0,0,0,0.8)"
+                        className="bg-[var(--surface)]! border-[var(--border)]! rounded-[var(--r2)]!"
+                        style={{
+                            right: 56,
+                            bottom: 12,
+                            width: 120,
+                            height: 80,
+                        }}
+                        maskColor="rgba(17,16,16,0.85)"
                         nodeColor={(node) => {
                             switch (node.type) {
-                                case 'synthesis': return '#22c55e';
-                                case 'video': return '#ef4444';
-                                case 'code': return '#f97316';
-                                case 'product': return '#a855f7';
-                                case 'academic': return '#3b82f6';
-                                case 'ghost': return '#6b7280';
-                                case 'note': return '#eab308';
-                                default: return '#22c55e';
+                                case 'synthesis': return '#4caf7d';
+                                case 'video': return '#e05555';
+                                case 'code': return '#e8a020';
+                                case 'product': return '#6b9fd4';
+                                case 'academic': return '#6b9fd4';
+                                case 'ghost': return '#4a4540';
+                                case 'note': return '#e8a020';
+                                default: return '#e8a020';
                             }
                         }}
+                        nodeStrokeWidth={0}
+                        pannable
+                        zoomable={false}
                     />
                 )}
 
@@ -477,6 +518,10 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onAction={handleConnectionDropAction}
                 onClose={closeConnectionDropMenu}
             />
+            </div>
+
+            {/* Sync Status Badge */}
+            <SyncStatus />
         </div>
     );
 }

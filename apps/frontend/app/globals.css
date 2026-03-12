@@ -149,3 +149,12 @@ body {
 .react-flow__resize-control.line {
   border: 4px solid transparent !important;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -152,20 +152,6 @@ export default function NewTabPage({ onNavigate }: NewTabPageProps) {
                 </div>
             </div>
 
-            {/* SYNC STATUS WIDGET (Decorative) */}
-            <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2 animate-in fade-in slide-in-from-right-4 duration-1000 delay-500">
-                <div className="flex items-center gap-2.5 bg-[#161412]/80 backdrop-blur-xl border border-[#3a3530] rounded-xl py-2.5 px-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] cursor-pointer hover:border-amber-500/40 transition-all hover:shadow-[0_4px_24px_rgba(232,160,32,0.12)]">
-                    <div className="text-[#e8a020] text-sm">✎</div>
-                    <div className="flex flex-col items-start translate-y-[1px]">
-                        <span className="font-mono text-[9px] text-[#44403a] uppercase tracking-wider leading-none mb-1">Today&apos;s Note</span>
-                        <span className="text-[11px] font-semibold text-[#7a7068] leading-none">Draft exploration...</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 bg-[#161412]/70 backdrop-blur-md border border-[#2a2622] rounded-full py-1.5 px-3 text-[9px] font-mono text-[#44403a]">
-                    <div className="w-1 h-1 rounded-full bg-[#4caf7d] animate-pulse" />
-                    SYNCED 1m AGO
-                </div>
-            </div>
 
             {/* WATERMARK */}
             <div className="fixed bottom-5 left-5 z-50 flex items-center gap-2.5 animate-in fade-in slide-in-from-left-4 duration-1000 delay-500">

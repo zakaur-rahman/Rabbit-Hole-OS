@@ -50,72 +50,73 @@ export default function WhiteboardSelector() {
 
     if (!mounted) {
         return (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px] h-9">
-                <div className="flex items-center gap-1 overflow-x-auto flex-1 px-3">
-                    <span className="text-xs font-medium text-neutral-500">Main Brain</span>
-                </div>
+            <div className="flex items-center gap-2 bg-[var(--raised)] border border-[var(--border2)] rounded-[var(--r)] px-3 py-1.5 cursor-pointer ml-2 h-[28px]">
+                <span className="text-[14px]">🧠</span>
+                <span className="text-[12px] font-semibold text-[var(--text)]">Loading...</span>
             </div>
         );
     }
 
-    // Filter whiteboards to show only open ones
-    const openWhiteboards = whiteboards.filter(wb => openWhiteboardIds?.includes(wb.id));
+    const openWhiteboards = whiteboards.filter(wb => openWhiteboardIds?.includes(wb.id) && wb.id !== activeWhiteboardId);
+    const activeObj = whiteboards.find(wb => wb.id === activeWhiteboardId);
 
     return (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-full pl-1.5 pr-1 py-1 flex items-center shadow-lg max-w-[400px]">
-            {/* Scrollable list of whiteboards */}
-            <div className="flex items-center gap-1 overflow-x-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+        <div className="flex items-center h-[32px] gap-0">
+            {/* Active Whiteboard (Main or Selected) */}
+            <div 
+                onClick={() => setWhiteboard(activeWhiteboardId)}
+                className="flex items-center gap-2 bg-[var(--bg)] border-x border-t border-[var(--border)] rounded-t-[5px] px-3 h-[32px] cursor-pointer z-10 relative -bottom-[1px]"
+            >
+                <span className="text-[14px]">🧠</span>
+                <span className="text-[12px] font-bold text-[var(--text)] tracking-tight truncate max-w-[120px]">
+                    {activeObj?.name || 'Main Brain'}
+                </span>
+            </div>
+
+            {/* Other Open Whiteboards */}
+            <div className="flex items-center gap-0 overflow-x-auto no-scrollbar shrink-0">
                 {openWhiteboards.map(wb => (
-                    editingId === wb.id ? (
-                        <input
-                            key={wb.id}
-                            autoFocus
-                            value={tempName}
-                            onChange={(e) => setTempName(e.target.value)}
-                            onBlur={() => saveRename(wb.id)}
-                            onKeyDown={(e) => handleKeyDown(e, wb.id)}
-                            className="bg-neutral-800 text-white shadow-sm px-3 py-1.5 rounded-full text-xs font-medium border-none outline-none min-w-[60px] max-w-[120px]"
-                        />
-                    ) : (
-                        <div key={wb.id} className="relative group">
-                            <button
-                                onClick={() => setWhiteboard(wb.id)}
-                                onDoubleClick={() => startEditing(wb.id, wb.name)}
-                                title="Double click to rename"
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 pr-2 ${activeWhiteboardId === wb.id
-                                    ? 'bg-neutral-800 text-white shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/50'
-                                    } ${wb.id !== 'main' ? 'group-hover:pr-6' : ''}`}
-                            >
-                                {wb.name}
-                            </button>
-                            <Edit2 size={10} className="absolute left-1/2 -top-1 -translate-x-1/2 text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                            {wb.id !== 'main' && (
+                    <div key={wb.id} className="relative group">
+                        {editingId === wb.id ? (
+                            <input
+                                autoFocus
+                                value={tempName}
+                                onChange={(e) => setTempName(e.target.value)}
+                                onBlur={() => saveRename(wb.id)}
+                                onKeyDown={(e) => handleKeyDown(e, wb.id)}
+                                className="bg-[var(--surface)] text-[var(--text)] border-x border-t border-[var(--amber)] px-3 h-[32px] rounded-t-[5px] text-[11px] font-medium outline-none min-w-[80px] max-w-[150px] relative -bottom-[1px]"
+                            />
+                        ) : (
+                            <div className="flex items-center group">
                                 <button
-                                    onClick={(e) => handleClose(e, wb.id)}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-neutral-400 hover:text-red-400 hover:bg-neutral-700/50 opacity-0 group-hover:opacity-100 transition-all scale-90"
-                                    title="Close Tab"
+                                    onClick={() => setWhiteboard(wb.id)}
+                                    onDoubleClick={() => startEditing(wb.id, wb.name)}
+                                    className="h-[32px] px-4 bg-[var(--surface)] text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] border-t border-r border-[var(--border)] first:border-l first:rounded-tl-[5px] transition-all whitespace-nowrap text-[11px] font-medium flex items-center gap-2 pr-6"
                                 >
-                                    <X size={10} />
+                                    {wb.name}
                                 </button>
-                            )}
-                        </div>
-                    )
+                                {wb.id !== 'main' && (
+                                    <button
+                                        onClick={(e) => handleClose(e, wb.id)}
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-[var(--muted)] hover:text-[var(--red)] hover:bg-[var(--red)]/10 opacity-0 group-hover:opacity-100 transition-all scale-75"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 ))}
             </div>
 
-            {/* Fixed Divider & Add Button */}
-            <div className="flex items-center pl-1 shrink-0">
-                <div className="w-px h-4 bg-neutral-800 mx-1" />
-
-                <button
-                    onClick={handleCreate}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-                    title="New Whiteboard"
-                >
-                    <Plus size={14} />
-                </button>
-            </div>
+            {/* Create New Button */}
+            <button
+                onClick={handleCreate}
+                className="ml-2 w-[24px] h-[24px] border border-dashed border-[var(--border2)] rounded-[4px] bg-transparent text-[var(--sub)] hover:border-[var(--amber)] hover:text-[var(--amber)] hover:bg-[var(--amber-bg)] flex items-center justify-center transition-all shrink-0"
+                title="New Whiteboard"
+            >
+                <Plus size={14} />
+            </button>
         </div>
     );
 }

@@ -62,7 +62,7 @@ export default function AuthGuardModal() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-100 bg-neutral-950/80 backdrop-blur-[2px]"
+                        className="fixed inset-0 z-100 bg-black/60 backdrop-blur-[2px]"
                         onClick={handleClose}
                     />
 
@@ -73,48 +73,46 @@ export default function AuthGuardModal() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+                            className="relative w-full max-w-[360px] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col items-center pt-8 pb-4"
                         >
                             {/* Header Section */}
-                            <div className="pt-8 px-6 text-center">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 mb-4">
-                                    <Lock size={20} className="text-green-500" />
-                                </div>
-
-                                <h2 className="text-xl font-semibold text-white tracking-tight leading-tight mb-2">Secure Your Knowledge</h2>
-                                <p className="text-neutral-500 text-[13px] leading-relaxed mb-6 px-2">
-                                    {authModalState.message || "This feature requires an account to save your progress and access AI capabilities."}
-                                </p>
+                            <div className="flex items-center justify-center w-12 h-12 rounded-[14px] bg-[rgba(76,175,125,0.05)] border border-[var(--green)] mb-5">
+                                <Lock size={20} className="text-[var(--green)]" strokeWidth={1.5} />
                             </div>
 
+                            <h2 className="text-[20px] font-bold text-[#f0f0f0] tracking-tight mb-2">Secure Your Knowledge</h2>
+                            <p className="text-[#888] text-[13px] font-medium leading-relaxed text-center px-8 mb-8">
+                                {authModalState.message || "Auto-sync requires an account to save your browsing path and sync it across devices."}
+                            </p>
+
                             {/* Actions */}
-                            <div className="px-6 pb-8 space-y-3">
+                            <div className="w-full px-6 flex flex-col gap-3">
                                 <button
                                     onClick={handleSignIn}
-                                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 text-neutral-950 rounded-lg font-semibold text-sm transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center justify-center gap-2 h-11 bg-[var(--green)] hover:brightness-110 text-[#111] rounded-[6px] font-bold text-[14px] transition-all active:scale-[0.98]"
                                 >
-                                    <LogIn size={16} />
+                                    <LogIn size={18} strokeWidth={2} />
                                     Sign In to Continue
                                 </button>
 
                                 <button
                                     onClick={handleClose}
-                                    className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg font-medium text-sm transition-colors border border-neutral-700"
+                                    className="w-full h-11 bg-[var(--raised)] border border-[var(--border2)] hover:bg-[var(--border)] text-[#f0f0f0] rounded-[6px] font-bold text-[14px] transition-colors"
                                 >
                                     Not Now
                                 </button>
                             </div>
 
                             {/* Trust Footer */}
-                            <div className="py-3.5 px-6 bg-neutral-950/50 flex items-center justify-center gap-2 border-t border-neutral-800">
-                                <ShieldCheck size={12} className="text-green-500/50" />
-                                <span className="text-[10px] text-neutral-600 uppercase tracking-widest font-bold">Your data, your control</span>
+                            <div className="w-full mt-6 pt-4 border-t border-[var(--border)] flex items-center justify-center gap-2">
+                                <ShieldCheck size={14} className="text-[var(--green)] opacity-70" />
+                                <span className="text-[10px] text-[#666] uppercase tracking-[0.1em] font-bold">Your data, your control</span>
                             </div>
 
                             {/* Close Button */}
                             <button
                                 onClick={handleClose}
-                                className="absolute top-3 right-3 p-1.5 text-neutral-600 hover:text-neutral-300 rounded-md transition-all"
+                                className="absolute top-3 right-3 p-1.5 text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] rounded-[var(--r)] transition-all"
                             >
                                 <X size={16} />
                             </button>
