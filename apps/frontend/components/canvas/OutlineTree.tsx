@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, CheckSquare, Square, MinusSquare } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export interface OutlineItem {
     id: string;

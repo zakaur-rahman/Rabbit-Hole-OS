@@ -2,12 +2,9 @@ import { memo, useState, useEffect, useRef } from 'react';
 import { NodeProps, NodeResizer, Position, Handle } from 'reactflow';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import { useGraphStore } from '@/store/graph.store';
-import { Plus, Circle } from 'lucide-react';
 
 function GroupNode({ id, data, selected }: NodeProps) {
     // Subscribe to color
-    const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
-    const accentColor = nodeData?.color || 'green-500';
     const [label, setLabel] = useState(data.label || 'NEW SECTION');
     const [isHovered, setIsHovered] = useState(false);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);

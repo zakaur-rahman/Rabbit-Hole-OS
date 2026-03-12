@@ -14,11 +14,9 @@ interface GraphControlsProps {
     onAddText?: () => void;
     onTemplate?: () => void;
     onExport?: () => void;
-    onFitSelection?: () => void;
-    onImportCanvas?: () => void;
 }
 
-export default function GraphControls({ onSynthesis, onChatSynthesis, onASTEditor, onAddNote, onAddGroup, onAddText, onTemplate, onExport, onFitSelection, onImportCanvas }: GraphControlsProps) {
+export default function GraphControls({ onSynthesis, onChatSynthesis, onASTEditor, onAddNote, onAddGroup, onAddText, onTemplate, onExport }: GraphControlsProps) {
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     const btnBase = "w-[36px] h-[36px] flex items-center justify-center text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] transition-colors cursor-pointer";

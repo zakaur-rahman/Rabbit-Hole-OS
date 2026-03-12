@@ -26,8 +26,6 @@ function TextNode({ id, data, selected }: NodeProps) {
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
     // Subscribe to color
-    const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
-    const accentColor = nodeData?.color === 'indigo-500' ? '#4f9eff' : (nodeData?.color || '#4f9eff');
 
     // Debounced sync
     useEffect(() => {

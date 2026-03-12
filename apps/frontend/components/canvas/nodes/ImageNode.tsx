@@ -1,6 +1,6 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
 import { NodeProps } from 'reactflow';
-import { Image as ImageIcon, Upload, Link } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';
 
@@ -47,12 +47,12 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
 
     return (
         <div 
-            className={`relative w-[280px] bg-[var(--surface)] rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-2 ring-[var(--blue)] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)]'}`}
+            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-2 ring-(--blue) shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)]'}`}
             style={{ border: `1px solid ${selected ? 'var(--blue)' : 'rgba(91,143,212,0.3)'}` }}
         >
             {/* Connection Dots */}
-            <div className={`absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-[var(--blue)] border-[var(--blue)] shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-[var(--border2)] border-[var(--border)] group-hover:bg-[var(--blue)] group-hover:border-[var(--blue)] group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
-            <div className={`absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-[var(--blue)] border-[var(--blue)] shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-[var(--border2)] border-[var(--border)] group-hover:bg-[var(--blue)] group-hover:border-[var(--blue)] group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
+            <div className={`absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--blue) border-(--blue) shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--blue) group-hover:border-(--blue) group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
+            <div className={`absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--blue) border-(--blue) shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--blue) group-hover:border-(--blue) group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
 
             {/* Hidden ReactFlow handles to maintain connectivity */}
             <div className="absolute inset-0 pointer-events-none opacity-0">
@@ -72,17 +72,17 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
 
             {/* Header */}
             <div 
-                className="px-[13px] py-[12px] pb-[11px] flex items-center gap-[10px] border-b border-[var(--border)] relative z-10"
+                className="px-[13px] py-[12px] pb-[11px] flex items-center gap-[10px] border-b border-(--border) relative z-10"
                 style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
             >
-                <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 bg-[var(--blue-dim)] border border-[rgba(91,143,212,0.2)]">
+                <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 bg-(--blue-dim) border border-[rgba(91,143,212,0.2)]">
                     🖼
                 </div>
                 <div className="flex-1">
-                    <div className="text-[13px] font-bold text-[var(--text)] tracking-[0.01em] mb-[2px] leading-tight">Image</div>
-                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase text-[var(--blue)] leading-tight">MEDIA</div>
+                    <div className="text-[13px] font-bold text-(--text) tracking-[0.01em] mb-[2px] leading-tight">Image</div>
+                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase text-(--blue) leading-tight">MEDIA</div>
                 </div>
-                <button className="w-[22px] h-[22px] rounded-[5px] bg-transparent border border-transparent text-[var(--muted)] flex items-center justify-center text-[14px] cursor-pointer transition-all tracking-[1px] hover:bg-[var(--raised)] hover:border-[var(--border)] hover:text-[var(--sub)] leading-none pb-[6px]">
+                <button className="w-[22px] h-[22px] rounded-[5px] bg-transparent border border-transparent text-(--muted) flex items-center justify-center text-[14px] cursor-pointer transition-all tracking-[1px] hover:bg-(--raised) hover:border-(--border) hover:text-(--sub) leading-none pb-[6px]">
                     ...
                 </button>
             </div>
@@ -104,14 +104,14 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                 ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-[10px] z-10">
                         <span className="text-[32px] opacity-10">🖼</span>
-                        <span className="font-mono text-[10px] text-[var(--muted)] italic tracking-[0.06em]">No image loaded</span>
+                        <span className="font-mono text-[10px] text-(--muted) italic tracking-[0.06em]">No image loaded</span>
                     </div>
                 )}
             </div>
 
             {/* Input Area */}
             {!url && (
-                <div className="px-[13px] py-[12px] border-t border-[var(--border)] flex flex-col gap-[8px] relative z-20 bg-[var(--surface)]">
+                <div className="px-[13px] py-[12px] border-t border-(--border) flex flex-col gap-[8px] relative z-20 bg-(--surface)">
                     <div className="flex items-center gap-[6px]">
                         <input
                             type="text"
@@ -132,7 +132,7 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-[10px] font-mono text-[9px] text-(--muted) tracking-[0.12em] before:content-[''] before:flex-1 before:h-[1px] before:bg-(--border) after:content-[''] after:flex-1 after:h-[1px] after:bg-(--border)">
+                    <div className="flex items-center gap-[10px] font-mono text-[9px] text-(--muted) tracking-[0.12em] before:content-[''] before:flex-1 before:h-px before:bg-(--border) after:content-[''] after:flex-1 after:h-px after:bg-(--border)">
                         or
                     </div>
 
@@ -145,7 +145,7 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                     />
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full h-[36px] rounded-[10px] border border-dashed border-[var(--border2)] bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-[var(--sub)] hover:bg-[var(--blue-dim)] hover:border-[var(--blue)] hover:text-[var(--blue)]"
+                        className="w-full h-[36px] rounded-[10px] border border-dashed border-(--border2) bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-(--sub) hover:bg-(--blue-dim) hover:border-(--blue) hover:text-(--blue)"
                     >
                         <span className="text-[14px]">↑</span> Upload Image
                     </button>
@@ -154,16 +154,16 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
 
             {/* Footer */}
             <div 
-                className="px-[13px] py-[7px] border-t border-[var(--border)] flex items-center justify-between relative z-10"
+                className="px-[13px] py-[7px] border-t border-(--border) flex items-center justify-between relative z-10"
                 style={{ background: 'linear-gradient(135deg, rgba(22,20,18,0.5) 0%, var(--raised) 100%)' }}
             >
-                <span className="font-mono text-[9px] text-[var(--muted)] tracking-[0.06em]">
+                <span className="font-mono text-[9px] text-(--muted) tracking-[0.06em]">
                     {url ? (new URL(url).hostname || 'Local Image') : 'Supports JPG · PNG · WebP · SVG'}
                 </span>
                 <div className="flex gap-[3px]">
-                    <div className={`w-[4px] h-[4px] rounded-full transition-colors duration-200 ${selected ? 'bg-[var(--blue)]' : 'bg-[var(--muted)] group-hover:bg-[var(--blue)]'}`} />
-                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 ${selected ? 'bg-[var(--blue)] opacity-60' : 'bg-[var(--muted)] group-hover:bg-[var(--blue)] group-hover:opacity-60'}`} />
-                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 ${selected ? 'bg-[var(--blue)] opacity-30' : 'bg-[var(--muted)] group-hover:bg-[var(--blue)] group-hover:opacity-30'}`} />
+                    <div className={`w-[4px] h-[4px] rounded-full transition-colors duration-200 ${selected ? 'bg-(--blue)' : 'bg-(--muted) group-hover:bg-(--blue)'}`} />
+                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 ${selected ? 'bg-(--blue) opacity-60' : 'bg-(--muted) group-hover:bg-(--blue) group-hover:opacity-60'}`} />
+                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 ${selected ? 'bg-(--blue) opacity-30' : 'bg-(--muted) group-hover:bg-(--blue) group-hover:opacity-30'}`} />
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
 import { NodeProps } from 'reactflow';
-import { FileText, Upload, Link, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';

@@ -159,7 +159,7 @@ function SignInContent() {
       className="relative z-10 w-[380px] bg-(--surface)/80 backdrop-blur-xl border border-(--border2) rounded-[18px] overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_32px_80px_rgba(0,0,0,0.75),0_8px_24px_rgba(0,0,0,0.5)]"
     >
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-(--amber) to-transparent z-20" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-(--amber) to-transparent z-20" />
 
       {/* Close button */}
       <button
@@ -170,7 +170,7 @@ function SignInContent() {
       </button>
 
       {/* Top Content */}
-      <div className="pt-[44px] px-[32px] pb-[28px] flex flex-col items-center gap-[20px] bg-gradient-to-b from-(--raised)/80 to-transparent border-b border-(--border)">
+      <div className="pt-[44px] px-[32px] pb-[28px] flex flex-col items-center gap-[20px] bg-linear-to-b from-(--raised)/80 to-transparent border-b border-(--border)">
         {/* App Icon */}
         <motion.div
           animate={{ y: [0, -4, 0] }}
@@ -179,14 +179,14 @@ function SignInContent() {
         >
           {/* Custom Mark */}
           <div className="w-[32px] h-[32px] relative">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-b-[24px] border-b-[rgba(10,9,8,0.7)]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-14 border-l-transparent border-r-14 border-r-transparent border-b-24 border-b-[rgba(10,9,8,0.7)]" />
             <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-[8px] h-[8px] rounded-full bg-[rgba(10,9,8,0.5)] border-[1.5px] border-white/30" />
           </div>
         </motion.div>
 
         <div className="text-center">
-          <h1 className="text-[22px] font-[800] tracking-tight text-(--text) mb-[6px]">Welcome to Cognode</h1>
-          <p className="text-[12px] font-[400] text-(--sub) leading-relaxed max-w-[240px] mx-auto">
+          <h1 className="text-[22px] font-extrabold tracking-tight text-(--text) mb-[6px]">Welcome to Cognode</h1>
+          <p className="text-[12px] font-normal text-(--sub) leading-relaxed max-w-[240px] mx-auto">
             {isDesktopSource
               ? 'Securely connect your desktop application to continue.'
               : 'Sign in to access your AI research workspace'}
@@ -218,7 +218,7 @@ function SignInContent() {
               <motion.div
                 animate={{ left: ['-60%', '160%'] }}
                 transition={{ duration: 2, ease: 'linear', repeat: Infinity }}
-                className="absolute top-0 w-[60%] h-full bg-gradient-to-r from-transparent via-(--amber)/[0.06] to-transparent pointer-events-none"
+                className="absolute top-0 w-[60%] h-full bg-linear-to-r from-transparent via-(--amber)/6 to-transparent pointer-events-none"
               />
               <div className="w-[16px] h-[16px] rounded-full border-2 border-(--border2) border-t-(--amber) animate-spin shrink-0" />
               <span className="font-mono text-[12px] text-(--sub) font-semibold select-none">Awaiting browser...</span>
@@ -230,7 +230,7 @@ function SignInContent() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleGoogleSignIn}
-              className="w-full h-[46px] bg-(--amber) border-none rounded-[10px] flex items-center justify-center gap-[10px] text-[13px] font-[700] text-(--bg) cursor-pointer tracking-wide shadow-[0_4px_20px_rgba(232,160,32,0.3)] transition-all hover:bg-(--amber2) hover:shadow-[0_4px_28px_rgba(232,160,32,0.45)] hover:-translate-y-px active:translate-y-0"
+              className="w-full h-[46px] bg-(--amber) border-none rounded-[10px] flex items-center justify-center gap-[10px] text-[13px] font-bold text-(--bg) cursor-pointer tracking-wide shadow-[0_4px_20px_rgba(232,160,32,0.3)] transition-all hover:bg-(--amber2) hover:shadow-[0_4px_28px_rgba(232,160,32,0.45)] hover:-translate-y-px active:translate-y-0"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -245,14 +245,14 @@ function SignInContent() {
 
         <button
           onClick={isLoading ? handleCancel : handleExit}
-          className="w-full h-[42px] bg-transparent border border-(--border) rounded-[10px] flex items-center justify-center text-[12px] font-[600] text-(--sub) cursor-pointer transition-all hover:bg-(--raised) hover:border-(--border2) hover:text-(--text)"
+          className="w-full h-[42px] bg-transparent border border-(--border) rounded-[10px] flex items-center justify-center text-[12px] font-semibold text-(--sub) cursor-pointer transition-all hover:bg-(--raised) hover:border-(--border2) hover:text-(--text)"
         >
           {isLoading ? 'Cancel Request' : 'Exit Sign In'}
         </button>
       </div>
 
       {/* Footer */}
-      <div className="p-[14px_24px_18px] border-t border-(--border) text-center bg-gradient-to-b from-transparent to-[#12100e]/50">
+      <div className="p-[14px_24px_18px] border-t border-(--border) text-center bg-linear-to-b from-transparent to-[#12100e]/50">
         <p className="font-mono text-[10px] text-(--muted) leading-relaxed tracking-tight">
           By continuing, you agree to Cognode&apos;s{' '}
           <a href="#" className="text-(--amber) font-medium hover:text-(--amber2) transition-colors">Terms</a>
@@ -275,7 +275,7 @@ export default function SignInPage() {
         <div className="absolute -bottom-20 -right-20 w-[360px] h-[360px] rounded-full bg-[radial-gradient(circle,rgba(76,175,125,0.03)_0%,transparent_70%)]" />
         
         {/* Horizon Line */}
-        <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-(--amber)/[0.07] to-transparent" />
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-linear-to-r from-transparent via-(--amber)/7 to-transparent" />
         
         {/* Grain */}
         <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 

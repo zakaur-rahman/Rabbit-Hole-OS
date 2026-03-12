@@ -48,7 +48,6 @@ import TemplateModal from '../modals/TemplateModal';
 import ContextMenu from '../ui/ContextMenu';
 import CanvasImportModal from '../modals/CanvasImportModal';
 import WebUrlModal from '../modals/WebUrlModal';
-import CanvasOverlay from './CanvasOverlay';
 import ConnectionDropMenu from './ConnectionDropMenu';
 import { SyncStatus } from '../ui/SyncStatus';
 
@@ -309,18 +308,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
     // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <div
-            className="flex flex-col w-full h-full bg-[var(--bg)] relative"
+            className="flex flex-col w-full h-full bg-(--bg) relative"
             onDragOver={onDragOver}
             onDrop={onDropReal}
         >
             {/* Graph Toolbar */}
-            <div className="h-[44px] bg-[var(--surface)] border-b border-[var(--border)] flex items-center px-4 gap-3 shrink-0 z-50">
-                <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--sub)]">Knowledge Graph</span>
+            <div className="h-[44px] bg-(--surface) border-b border-(--border) flex items-center px-4 gap-3 shrink-0 z-50">
+                <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-(--sub)">Knowledge Graph</span>
                 
                 <WhiteboardSelector />
 
-                <div className="ml-auto flex items-center gap-1.5 font-mono text-[10px] text-[var(--sub)]">
-                    <div className="w-[6px] h-[6px] rounded-full bg-[var(--amber)]"></div>
+                <div className="ml-auto flex items-center gap-1.5 font-mono text-[10px] text-(--sub)">
+                    <div className="w-[6px] h-[6px] rounded-full bg-(--amber)"></div>
                     {nodes.length} NODES
                 </div>
             </div>
@@ -397,7 +396,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
                 {!isEmpty && (
                     <MiniMap
-                        className="bg-[var(--surface)]! border-[var(--border)]! rounded-[var(--r2)]!"
+                        className="bg-(--surface)! border-(--border)! rounded-(--r2)!"
                         style={{
                             right: 56,
                             bottom: 12,
@@ -431,8 +430,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     onAddGroup={handleAddGroup}
                     onAddText={handleAddText}
                     onTemplate={() => setShowTemplateModal(true)}
-                    onFitSelection={onFitSelection}
-                    onImportCanvas={() => setShowImportModal(true)}
                 />
             </ReactFlow>
 

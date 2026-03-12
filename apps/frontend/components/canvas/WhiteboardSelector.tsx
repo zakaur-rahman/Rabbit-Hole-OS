@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useGraphStore } from '@/store/graph.store';
-import { Plus, X, Edit2 } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 export default function WhiteboardSelector() {
     const { whiteboards, activeWhiteboardId, setWhiteboard, updateWhiteboard, closeWhiteboard, openWhiteboardIds, initialize, createWhiteboard } = useGraphStore();
@@ -50,9 +50,9 @@ export default function WhiteboardSelector() {
 
     if (!mounted) {
         return (
-            <div className="flex items-center gap-2 bg-[var(--raised)] border border-[var(--border2)] rounded-[var(--r)] px-3 py-1.5 cursor-pointer ml-2 h-[28px]">
+            <div className="flex items-center gap-2 bg-(--raised) border border-(--border2) rounded-(--r) px-3 py-1.5 cursor-pointer ml-2 h-[28px]">
                 <span className="text-[14px]">🧠</span>
-                <span className="text-[12px] font-semibold text-[var(--text)]">Loading...</span>
+                <span className="text-[12px] font-semibold text-(--text)">Loading...</span>
             </div>
         );
     }
@@ -65,10 +65,10 @@ export default function WhiteboardSelector() {
             {/* Active Whiteboard (Main or Selected) */}
             <div 
                 onClick={() => setWhiteboard(activeWhiteboardId)}
-                className="flex items-center gap-2 bg-[var(--bg)] border-x border-t border-[var(--border)] rounded-t-[5px] px-3 h-[32px] cursor-pointer z-10 relative -bottom-[1px]"
+                className="flex items-center gap-2 bg-(--bg) border-x border-t border-(--border) rounded-t-[5px] px-3 h-[32px] cursor-pointer z-10 relative -bottom-px"
             >
                 <span className="text-[14px]">🧠</span>
-                <span className="text-[12px] font-bold text-[var(--text)] tracking-tight truncate max-w-[120px]">
+                <span className="text-[12px] font-bold text-(--text) tracking-tight truncate max-w-[120px]">
                     {activeObj?.name || 'Main Brain'}
                 </span>
             </div>
@@ -84,21 +84,21 @@ export default function WhiteboardSelector() {
                                 onChange={(e) => setTempName(e.target.value)}
                                 onBlur={() => saveRename(wb.id)}
                                 onKeyDown={(e) => handleKeyDown(e, wb.id)}
-                                className="bg-[var(--surface)] text-[var(--text)] border-x border-t border-[var(--amber)] px-3 h-[32px] rounded-t-[5px] text-[11px] font-medium outline-none min-w-[80px] max-w-[150px] relative -bottom-[1px]"
+                                className="bg-(--surface) text-(--text) border-x border-t border-(--amber) px-3 h-[32px] rounded-t-[5px] text-[11px] font-medium outline-none min-w-[80px] max-w-[150px] relative -bottom-px"
                             />
                         ) : (
                             <div className="flex items-center group">
                                 <button
                                     onClick={() => setWhiteboard(wb.id)}
                                     onDoubleClick={() => startEditing(wb.id, wb.name)}
-                                    className="h-[32px] px-4 bg-[var(--surface)] text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] border-t border-r border-[var(--border)] first:border-l first:rounded-tl-[5px] transition-all whitespace-nowrap text-[11px] font-medium flex items-center gap-2 pr-6"
+                                    className="h-[32px] px-4 bg-(--surface) text-(--sub) hover:text-(--text) hover:bg-(--raised) border-t border-r border-(--border) first:border-l first:rounded-tl-[5px] transition-all whitespace-nowrap text-[11px] font-medium flex items-center gap-2 pr-6"
                                 >
                                     {wb.name}
                                 </button>
                                 {wb.id !== 'main' && (
                                     <button
                                         onClick={(e) => handleClose(e, wb.id)}
-                                        className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-[var(--muted)] hover:text-[var(--red)] hover:bg-[var(--red)]/10 opacity-0 group-hover:opacity-100 transition-all scale-75"
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-(--muted) hover:text-(--red) hover:bg-(--red)/10 opacity-0 group-hover:opacity-100 transition-all scale-75"
                                     >
                                         <X size={12} />
                                     </button>
@@ -112,7 +112,7 @@ export default function WhiteboardSelector() {
             {/* Create New Button */}
             <button
                 onClick={handleCreate}
-                className="ml-2 w-[24px] h-[24px] border border-dashed border-[var(--border2)] rounded-[4px] bg-transparent text-[var(--sub)] hover:border-[var(--amber)] hover:text-[var(--amber)] hover:bg-[var(--amber-bg)] flex items-center justify-center transition-all shrink-0"
+                className="ml-2 w-[24px] h-[24px] border border-dashed border-(--border2) rounded-[4px] bg-transparent text-(--sub) hover:border-(--amber) hover:text-(--amber) hover:bg-(--amber-bg) flex items-center justify-center transition-all shrink-0"
                 title="New Whiteboard"
             >
                 <Plus size={14} />
