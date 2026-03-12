@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.2.0...v1.3.0) (2026-03-12)
+
+
+### Features
+
+* **frontend:** resolve lint warnings and migrate to tailwind 4 ([#11](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/11)) ([c28e5b0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/c28e5b0450c8217a7dc5bfddd877190810532184))
+
 ## [1.2.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.1.0...v1.2.0) (2026-03-10)
 
 
