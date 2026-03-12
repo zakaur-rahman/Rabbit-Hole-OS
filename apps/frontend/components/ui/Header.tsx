@@ -79,7 +79,7 @@ export default function Header({ onSearch, onToggleSidebar }: HeaderProps) {
             if (electronApi.auth.onDeepLinkAuth) {
                 electronApi.auth.onDeepLinkAuth(async ({ code }: { code: string }) => {
                     try {
-                        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+                        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.cognode.tech';
                         const response = await fetch(`${apiBaseUrl}/api/v1/oauth/desktop/exchange`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },

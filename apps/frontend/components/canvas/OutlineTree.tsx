@@ -59,54 +59,62 @@ function OutlineNode({ item, level, selectedIds, expandedIds, onToggleExpand, on
     const isSelected = selectionState === 'full';
     const isIndeterminate = selectionState === 'partial';
 
-    // The image shows quite aggressive indentation
-    const paddingLeft = level * (compact ? 16 : 24);
-
     return (
         <div className="flex flex-col">
             <div
-                className={`group flex items-center gap-3 py-2 px-3 rounded-xl transition-all duration-200 cursor-pointer mb-0.5 ${isSelected || isIndeterminate
-                    ? 'bg-blue-500/10 ring-1 ring-blue-500/15'
-                    : 'hover:bg-neutral-800/50'
-                    }`}
-                style={{ marginLeft: `${paddingLeft}px` }}
+                className={`group flex items-center gap-3 py-2 px-3.5 transition-all duration-200 cursor-pointer relative ${
+                    isSelected || isIndeterminate
+                    ? 'bg-(--amber)/5' 
+                    : 'hover:bg-(--amber)/2'
+                }`}
                 onClick={() => onToggleSelect(item.id, item)}
             >
-                <div className="flex items-center gap-1 min-w-[20px]">
-                    {hasChildren && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleExpand(item.id);
-                            }}
-                            className="p-1 hover:bg-neutral-700/50 rounded-md transition-colors text-neutral-500 hover:text-neutral-300"
-                        >
-                            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        </button>
-                    )}
-                </div>
+                {/* Hover accent line */}
+                <div className={`absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-(--amber) rounded-r transition-all duration-200 ${
+                    isSelected || isIndeterminate ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-100'
+                }`} />
 
-                <div className="flex-1 flex items-center gap-2 overflow-hidden">
-                    <span className={`font-medium text-xs whitespace-nowrap ${isSelected || isIndeterminate ? 'text-blue-400' : 'text-neutral-500'
-                        }`}>
+                <div className="flex items-center gap-1 min-w-[10px]">
+                    <span className="font-mono text-[9px] text-(--muted) w-3 shrink-0 text-right">
                         {item.number}
                     </span>
-                    <span className={`text-[13px] font-medium leading-tight ${isSelected || isIndeterminate ? 'text-white' : 'text-neutral-300 group-hover:text-neutral-200'
-                        } ${compact ? 'truncate' : ''}`}>
+                </div>
+
+                <div className="flex-1 flex items-center gap-2 overflow-hidden ml-1">
+                    <span className={`text-[13px] font-semibold tracking-tight transition-colors ${
+                        isSelected || isIndeterminate ? 'text-(--text)' : 'text-(--sub) group-hover:text-(--text)'
+                    } ${compact ? 'truncate' : ''}`}>
                         {item.title}
                     </span>
                 </div>
 
                 <div className="shrink-0 flex items-center">
-                    {isSelected ? (
-                        <CheckSquare size={18} className="text-blue-500 fill-blue-500/10" strokeWidth={2.5} />
-                    ) : isIndeterminate ? (
-                        <MinusSquare size={18} className="text-blue-400 fill-blue-400/10" strokeWidth={2.5} />
-                    ) : (
-                        <Square size={18} className="text-neutral-700 group-hover:text-neutral-500 transition-colors" strokeWidth={2} />
-                    )}
+                    <div className={`w-4 h-4 rounded border-1.5 flex items-center justify-center text-[9px] transition-all duration-200 ${
+                        isSelected 
+                        ? 'bg-(--amber) border-(--amber) text-(--bg) shadow-[0_0_8px_rgba(232,160,32,0.35)]' 
+                        : isIndeterminate
+                        ? 'bg-(--amber)/20 border-(--amber) text-(--amber)'
+                        : 'bg-(--bg) border-(--border2) group-hover:border-(--amber) text-transparent'
+                    }`}>
+                        {isSelected ? '✓' : isIndeterminate ? '—' : '✓'}
+                    </div>
                 </div>
+                
+                {hasChildren && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleExpand(item.id);
+                        }}
+                        className="ml-1 p-0.5 hover:bg-(--raised) rounded transition-colors text-(--muted) hover:text-(--sub)"
+                    >
+                        {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    </button>
+                )}
             </div>
+
+            {/* Divider */}
+            <div className="mx-3.5 h-px bg-(--border)/50 opacity-50" />
 
             {hasChildren && isExpanded && (
                 <div className="flex flex-col">
@@ -129,19 +137,13 @@ function OutlineNode({ item, level, selectedIds, expandedIds, onToggleExpand, on
 }
 
 export default function OutlineTree({ items, selectedIds, onSelectionChange, compact = false }: OutlineTreeProps) {
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
-        // Start with all items collapsed
-        return new Set();
-    });
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
     const handleToggleExpand = useCallback((id: string) => {
         setExpandedIds(prev => {
             const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
             return next;
         });
     }, []);
@@ -152,10 +154,8 @@ export default function OutlineTree({ items, selectedIds, onSelectionChange, com
         const currentState = getSelectionState(item, selectedIds);
 
         if (currentState === 'full') {
-            // Deselect self and all descendants
             allIds.forEach(id => nextSelected.delete(id));
         } else {
-            // Select self and all descendants
             allIds.forEach(id => nextSelected.add(id));
         }
 
@@ -164,14 +164,14 @@ export default function OutlineTree({ items, selectedIds, onSelectionChange, com
 
     if (!items || items.length === 0) {
         return (
-            <div className="text-neutral-500 text-xs italic p-2 bg-neutral-900/50 rounded-xl border border-neutral-800">
-                No structure extracted yet
+            <div className="text-(--muted) text-[10px] font-mono uppercase tracking-widest p-4 text-center">
+                Awaiting Extraction
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col gap-0.5 select-none w-full">
+        <div className="flex flex-col select-none w-full">
             {items.map(item => (
                 <OutlineNode
                     key={item.id}

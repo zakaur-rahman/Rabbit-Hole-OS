@@ -8,16 +8,16 @@ export const AUTH_CONFIG = {
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
   
   // Web login URL — where the sign-in page lives (used by Electron to open system browser)
-  WEB_BASE_URL: process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3001',
+  WEB_BASE_URL: process.env.NEXT_PUBLIC_WEB_URL || 'https://cognode.tech',
   
   // OAuth redirect URI — Google redirects here after consent (web callback page)
-  REDIRECT_URI: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI || 'http://localhost:3001/auth/google',
+  REDIRECT_URI: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI || 'https://cognode.tech/auth/google',
 
   // Deep link protocol for desktop app
   DESKTOP_PROTOCOL: 'cognode',
   
   // API endpoints
-  API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
+  API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.cognode.tech',
   
   // OAuth scopes
   SCOPES: ['openid', 'profile', 'email'],
