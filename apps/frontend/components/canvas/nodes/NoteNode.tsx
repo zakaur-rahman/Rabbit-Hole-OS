@@ -1,6 +1,5 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
-import { FileEdit } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import TiptapEditor from '../TiptapEditor';

@@ -6,7 +6,6 @@ type SyncStatus = 'saved' | 'syncing' | 'offline' | 'error' | 'unauthenticated';
 
 export function SyncStatus() {
     const [status, setStatus] = useState<SyncStatus>('saved');
-    const [lastSync, setLastSync] = useState<Date | null>(null);
 
     useEffect(() => {
         // Initial auth check
@@ -43,12 +42,7 @@ export function SyncStatus() {
         };
     }, []);
 
-    const [now, setNow] = useState(() => Date.now());
 
-    useEffect(() => {
-        const interval = setInterval(() => setNow(Date.now()), 10000);
-        return () => clearInterval(interval);
-    }, []);
 
     const getStatusText = (): string => {
         switch (status) {
@@ -61,16 +55,6 @@ export function SyncStatus() {
             case 'error':
                 return 'Sync failed — will retry';
             case 'saved':
-                if (lastSync) {
-                    const secondsAgo = Math.floor((now - lastSync.getTime()) / 1000);
-                    if (secondsAgo < 10) return 'All changes saved';
-                    const minutesAgo = Math.floor(secondsAgo / 60);
-                    if (minutesAgo === 0) return 'Synced just now';
-                    if (minutesAgo === 1) return 'Synced 1 min ago';
-                    if (minutesAgo < 60) return `Synced ${minutesAgo} mins ago`;
-                    const hoursAgo = Math.floor(minutesAgo / 60);
-                    return `Synced ${hoursAgo}h ago`;
-                }
                 return 'All changes saved locally';
             default:
                 return 'All changes saved locally';
@@ -80,17 +64,17 @@ export function SyncStatus() {
     const getDotColor = (): string => {
         switch (status) {
             case 'syncing':
-                return 'bg-[var(--blue)]';
+                return 'bg-(--blue)';
             case 'offline':
-                return 'bg-[var(--muted)]';
+                return 'bg-(--muted)';
             case 'unauthenticated':
-                return 'bg-[var(--amber)]';
+                return 'bg-(--amber)';
             case 'error':
-                return 'bg-[var(--red)]';
+                return 'bg-(--red)';
             case 'saved':
-                return 'bg-[var(--green)]';
+                return 'bg-(--green)';
             default:
-                return 'bg-[var(--green)]';
+                return 'bg-(--green)';
         }
     };
 

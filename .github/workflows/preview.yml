@@ -65,14 +65,17 @@ jobs:
           
       - name: Comment PR with Preview URLs
         uses: actions/github-script@v7
+        env:
+          WEB_RESPONSE: ${{ steps.render_trigger_web.outputs.response }}
+          BACKEND_RESPONSE: ${{ steps.render_trigger_backend.outputs.response }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const prNum = context.payload.pull_request.number;
             
-            // fjogeleit/http-request-action stores the parsed JSON response in the steps output
-            const webResponse = ${{ steps.render_trigger_web.outputs.response }};
-            const backendResponse = ${{ steps.render_trigger_backend.outputs.response }};
+            // Access responses from environment variables to avoid direct context access issues
+            const webResponse = JSON.parse(process.env.WEB_RESPONSE || '{}');
+            const backendResponse = JSON.parse(process.env.BACKEND_RESPONSE || '{}');
             
             // Extract the generated URL from Render's API response
             const webPreviewUrl = webResponse?.preview?.service?.serviceDetails?.url || `https://frontend-cognode-pr-${prNum}.onrender.com`;

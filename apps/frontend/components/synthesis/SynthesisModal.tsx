@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGraphStore } from '@/store/graph.store';
 import { synthesisApi } from '@/lib/api';
-import { X, Sparkles, Loader2, ArrowRight, Copy, Check, FileDown, Target, Link2, Search, Share2 } from 'lucide-react';
+import { Sparkles, Loader2, ArrowRight, Copy, Check, FileDown, Target, Link2, Search, Share2 } from 'lucide-react';
 import { Node } from 'reactflow';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,7 +28,6 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
     const [saving, setSaving] = useState(false);
     const [progress, setProgress] = useState(0);
     const [activeStepIndex, setActiveStepIndex] = useState(0);
-    const [isExiting, setIsExiting] = useState(false);
 
     // Get all selected nodes
     const selectedNodes = nodes.filter(n => n.selected);
@@ -279,7 +278,7 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
                                         </div>
                                         <div className="w-full h-1 bg-(--raised) rounded-full overflow-hidden border border-(--border)/30">
                                             <motion.div 
-                                                className="h-full bg-gradient-to-r from-(--amber2) to-(--amber) shadow-[0_0_8px_rgba(232,160,32,0.4)]"
+                                                className="h-full bg-linear-to-r from-(--amber2) to-(--amber) shadow-[0_0_8px_rgba(232,160,32,0.4)]"
                                                 animate={{ width: `${progress}%` }}
                                                 transition={{ duration: 0.3 }}
                                             />
