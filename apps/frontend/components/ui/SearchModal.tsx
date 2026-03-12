@@ -78,28 +78,28 @@ export default function SearchModal({ onClose }: SearchModalProps) {
             onClick={onClose}
         >
             <div
-                className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden"
+                className="w-full max-w-2xl bg-[var(--surface)] border border-[var(--border)] rounded-[var(--r2)] shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Search Input */}
-                <div className="flex items-center gap-3 p-4 border-b border-neutral-800">
-                    <Search size={20} className="text-neutral-500" />
+                <div className="flex items-center gap-3 p-4 border-b border-[var(--border)]">
+                    <Search size={20} className="text-[var(--muted)]" />
                     <input
                         ref={inputRef}
                         type="text"
                         placeholder="Search Cognode..."
                         value={query}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="flex-1 bg-transparent text-lg text-white placeholder-neutral-500 outline-none"
+                        className="flex-1 bg-transparent text-[16px] text-[var(--text)] placeholder:text-[var(--muted)] outline-none"
                     />
-                    {loading && <Loader2 size={20} className="text-neutral-500 animate-spin" />}
-                    <kbd className="px-2 py-1 text-xs font-medium text-neutral-500 bg-neutral-800 rounded">ESC</kbd>
+                    {loading && <Loader2 size={20} className="text-[var(--muted)] animate-spin" />}
+                    <kbd className="px-2 py-1 text-[10px] font-bold text-[var(--sub)] bg-[var(--raised)] border border-[var(--border)] rounded-[3px]">ESC</kbd>
                 </div>
 
                 {/* Results */}
                 <div className="max-h-[400px] overflow-y-auto">
                     {results.length === 0 && query.length >= 2 && !loading && (
-                        <div className="p-8 text-center text-neutral-500">
+                        <div className="p-8 text-center text-[var(--muted)] text-[13px] font-medium">
                             No results found for &quot;{query}&quot;
                         </div>
                     )}
@@ -109,21 +109,21 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                             key={node.id}
                             onClick={() => handleSelectResult(node)}
                             onMouseEnter={() => setActiveIndex(index)}
-                            className={`w-full p-4 flex items-start gap-3 transition-colors text-left border-l-2 ${index === activeIndex
-                                ? 'bg-neutral-800 border-green-500'
-                                : 'hover:bg-neutral-800 border-transparent'
+                            className={`w-full p-4 flex items-start gap-3 transition-colors text-left border-l-[3px] ${index === activeIndex
+                                ? 'bg-[var(--raised)] border-[var(--green)]'
+                                : 'hover:bg-[var(--raised)] border-transparent'
                                 }`}
                         >
-                            <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center shrink-0">
-                                <span className="text-xs font-medium text-neutral-400 uppercase">
+                            <div className="w-10 h-10 rounded-[var(--r)] bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                                <span className="text-[12px] font-bold text-[var(--sub)] uppercase">
                                     {node.type.charAt(0)}
                                 </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-medium text-white truncate">{node.title}</h4>
-                                <p className="text-xs text-neutral-500 truncate mt-0.5">{node.snippet}</p>
+                                <h4 className="text-[13px] font-semibold text-[var(--text)] truncate">{node.title}</h4>
+                                <p className="text-[11px] font-medium text-[var(--sub)] truncate mt-0.5">{node.snippet}</p>
                             </div>
-                            <span className="text-[10px] text-neutral-600 uppercase tracking-wider shrink-0">
+                            <span className="text-[9px] font-bold text-[var(--muted)] uppercase tracking-wider shrink-0 mt-1">
                                 {node.type}
                             </span>
                         </button>
@@ -131,7 +131,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                 </div>
 
                 {/* Footer Hints */}
-                <div className="p-3 border-t border-neutral-800 flex items-center gap-4 text-xs text-neutral-500">
+                <div className="p-3 border-t border-[var(--border)] bg-[var(--bg)] flex items-center gap-4 text-[11px] font-medium text-[var(--muted)]">
                     <span>↑↓ Navigate</span>
                     <span>↵ Select</span>
                     <span>ESC Close</span>

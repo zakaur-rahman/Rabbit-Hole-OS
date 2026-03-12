@@ -380,27 +380,35 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     const id = `board-${Date.now()}`;
     const newWb = { id, name };
-    
+
+    // Optimistic Update
+    set(state => ({
+        whiteboards: [...state.whiteboards, newWb],
+        openWhiteboardIds: [...state.openWhiteboardIds, id],
+    }));
+
     try {
-        if (isElectron()) {
-            await storage.whiteboards.create({
-                ...newWb,
-                user_id: localStorage.getItem('user_id') || 'local'
-            });
+        const hasAuth = !!localStorage.getItem('auth_token');
+        if (hasAuth || isElectron()) {
+            if (isElectron()) {
+                await storage.whiteboards.create({
+                    ...newWb,
+                    user_id: localStorage.getItem('user_id') || 'local'
+                });
+            } else {
+                await whiteboardsApi.create(newWb);
+            }
         } else {
-            await whiteboardsApi.create(newWb);
+            console.warn('[Store] Skipping whiteboard creation API call (Unauthenticated)');
         }
         
-        set(state => ({
-            whiteboards: [...state.whiteboards, newWb],
-            openWhiteboardIds: [...state.openWhiteboardIds, id],
-        }));
-
         await get().setWhiteboard(id);
         return id;
     } catch (e) {
         console.error("Failed to create whiteboard", e);
-        throw e;
+        // We still keep the local one created optimistically for seamless DX
+        await get().setWhiteboard(id);
+        return id;
     }
   },
 
@@ -768,10 +776,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     // Persistence
     try {
-        if (isElectron()) {
-            await storage.whiteboards.update(id, { name });
+        const hasAuth = !!localStorage.getItem('auth_token');
+        if (hasAuth || isElectron()) {
+            if (isElectron()) {
+                await storage.whiteboards.update(id, { name });
+            } else {
+                await whiteboardsApi.update(id, { name });
+            }
         } else {
-            await whiteboardsApi.update(id, { name });
+            console.warn('[Store] Skipping whiteboard renaming API call (Unauthenticated)');
         }
     } catch (e) {
         console.error("Failed to persist whiteboard renaming", e);

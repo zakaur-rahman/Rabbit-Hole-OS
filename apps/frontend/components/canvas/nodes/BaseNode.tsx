@@ -88,7 +88,7 @@ function BaseNode({
                     minHeight={minHeight}
                     isVisible={true}
                     lineClassName={`border-${effectiveAccentColor}`}
-                    handleClassName={`h-3 w-3 bg-neutral-900 border-2 border-${effectiveAccentColor} rounded`}
+                    handleClassName={`h-3 w-3 bg-[var(--bg)] border-2 border-${effectiveAccentColor} rounded`}
                     onResize={onResize}
                     onResizeEnd={onResizeEnd}
                 />
@@ -98,7 +98,7 @@ function BaseNode({
                 onMouseLeave={handleMouseLeave}
                 className={`
                     group relative flex flex-col h-full w-full
-                    bg-neutral-900/60 backdrop-blur-xl border rounded-2xl
+                    bg-[var(--surface)] backdrop-blur-xl border rounded-[var(--r2)]
                     transition-all duration-300 shadow-2xl
                     antialiased
                     ${selected
@@ -118,9 +118,9 @@ function BaseNode({
                 <div className={`absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 p-3.5 bg-neutral-950/20 border-b border-white/5 rounded-t-2xl">
+                <div className="flex items-center gap-2.5 p-3.5 bg-[var(--bg)] border-b border-[var(--border)] rounded-t-[var(--r2)]">
                     {Icon && (
-                        <div className={`p-1.5 rounded-lg bg-neutral-800/50 shadow-inner shrink-0 flex items-center justify-center`}>
+                        <div className={`p-1.5 rounded-[var(--r)] bg-[var(--raised)] shadow-inner shrink-0 flex items-center justify-center`}>
                             {typeof Icon === 'string' ? (
                                 <img src={Icon} alt="" className="w-3.5 h-3.5 object-contain" />
                             ) : (
@@ -131,18 +131,18 @@ function BaseNode({
                     <div className="flex-1 min-w-0">
                         {onTitleChange ? (
                             <input
-                                className="bg-transparent border-none outline-none text-sm font-bold text-white placeholder-neutral-600 w-full p-0 focus:ring-0"
+                                className="bg-transparent border-none outline-none text-[13px] font-bold text-[var(--text)] placeholder:text-[var(--muted)] w-full p-0 focus:ring-0"
                                 value={title}
                                 onChange={(e) => onTitleChange(e.target.value)}
                                 placeholder="Untitled"
                             />
                         ) : (
-                            <h3 className="text-[13px] font-bold text-white truncate leading-tight tracking-tight nodrag cursor-text select-text">
+                            <h3 className="text-[13px] font-bold text-[var(--text)] truncate leading-tight tracking-tight nodrag cursor-text select-text">
                                 {title || 'Untitled'}
                             </h3>
                         )}
                         {subtitle && (
-                            <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5 nodrag cursor-text select-text">
+                            <p className="text-[9px] text-[var(--muted)] font-bold uppercase tracking-widest mt-0.5 nodrag cursor-text select-text">
                                 {subtitle}
                             </p>
                         )}
@@ -162,13 +162,13 @@ function BaseNode({
                 </div>
 
                 {/* Body */}
-                <div className={`flex-1 flex flex-col min-h-0 relative wrap-break-word ${!footer ? 'rounded-b-2xl' : ''} overflow-hidden`}>
+                <div className={`flex-1 flex flex-col min-h-0 relative wrap-break-word ${!footer ? 'rounded-b-[var(--r2)]' : ''} overflow-hidden`}>
                     {children}
                 </div>
 
                 {/* Footer */}
                 {footer && (
-                    <div className="p-2 border-t border-white/5 bg-neutral-950/10 rounded-b-2xl">
+                    <div className="p-2 border-t border-[var(--border)] bg-[var(--bg)] rounded-b-[var(--r2)]">
                         {footer}
                     </div>
                 )}
@@ -176,16 +176,16 @@ function BaseNode({
                 {/* Handles - Standarized for all-to-all routing */}
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'group-hover:opacity-100 opacity-0'}`}>
                     {/* Top */}
-                    <Handle type="target" position={Position.Top} id="top-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -top-1! left-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="target" position={Position.Top} id="top-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-[var(--bg)]! -top-1! left-1/2! transition-transform hover:scale-150`} />
 
                     {/* Bottom */}
-                    <Handle type="source" position={Position.Bottom} id="bottom-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-[var(--bg)]! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
 
                     {/* Left */}
-                    <Handle type="target" position={Position.Left} id="left-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -left-1! top-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="target" position={Position.Left} id="left-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-[var(--bg)]! -left-1! top-1/2! transition-transform hover:scale-150`} />
 
                     {/* Right */}
-                    <Handle type="source" position={Position.Right} id="right-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-neutral-900! -right-1! top-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Right} id="right-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-[var(--bg)]! -right-1! top-1/2! transition-transform hover:scale-150`} />
                 </div>
             </div>
         </>
