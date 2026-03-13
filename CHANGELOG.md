@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.4.0...v1.5.0) (2026-03-13)
+
+
+### Features
+
+* **settings:** add about tab with app info, links, and credits ([#15](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/15)) ([d1da44b](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/d1da44b1d51d28a7692ea0e821ea939fda02c110))
+
+
+### Bug Fixes
+
+* **desktop:** implement custom app:// protocol to resolve Next.js subset static assets correctly on nested routes ([#17](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/17)) ([18bbf3b](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/18bbf3bb31602c9e8e33ef91dcc1c9631e834a8d))
+
 ## [1.4.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.3.0...v1.4.0) (2026-03-12)
 
 
