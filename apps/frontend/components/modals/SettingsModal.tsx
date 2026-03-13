@@ -5,7 +5,7 @@ import {
   X, User, Shield, Settings as SettingsIcon, Mail, Calendar, AlertCircle,
   Trash2, Monitor, Smartphone, Tablet, CheckCircle2,
   Box, FileText, Globe, ExternalLink, Download,
-  LogOut, MapPin, Apple, Laptop as _Laptop
+  LogOut, MapPin, Apple, Laptop as _Laptop, Info, Heart, Github
 } from 'lucide-react';
 import { getCurrentUser, getSessions, revokeSession, revokeAllSessions, User as UserType, Session } from '@/lib/auth/api';
 import { logout } from '@/lib/auth/logout';
@@ -71,6 +71,12 @@ const settingsSections: SettingsSection[] = [
         id: 'docs',
         title: 'Docs',
         icon: FileText,
+        color: 'text-neutral-400',
+      },
+      {
+        id: 'about',
+        title: 'About',
+        icon: Info,
         color: 'text-neutral-400',
       },
     ],
@@ -801,6 +807,129 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                   )}
 
                   {/* Sessions Content */}
+                  {/* About Content */}
+                  {selectedItem === 'about' && (
+                    <div className="flex flex-col gap-6">
+                      {/* App Identity */}
+                      <div className="bg-(--surface) border border-(--border) rounded-(--r) p-6">
+                        <div className="flex items-center gap-5 mb-6">
+                          <div className="w-16 h-16 bg-(--amber-bg) border border-[rgba(232,160,32,0.2)] rounded-(--r2) flex items-center justify-center shadow-[0_0_20px_-6px_rgba(232,160,32,0.2)]">
+                            <span className="text-[28px]">🧠</span>
+                          </div>
+                          <div>
+                            <h3 className="text-[20px] font-bold text-(--text) tracking-tight">Cognode</h3>
+                            <p className="text-[12px] font-medium text-(--sub) mt-0.5">Your AI-Powered Research OS</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-start gap-3 p-3 bg-(--raised) rounded-(--r) border border-(--border)">
+                            <Download size={14} className="text-(--sub) mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-[10px] font-bold text-(--sub) uppercase tracking-wider mb-0.5">Version</p>
+                              <p className="text-[13px] font-semibold text-(--text) font-mono">{appVersion}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3 p-3 bg-(--raised) rounded-(--r) border border-(--border)">
+                            <Globe size={14} className="text-(--sub) mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-[10px] font-bold text-(--sub) uppercase tracking-wider mb-0.5">Platform</p>
+                              <p className="text-[13px] font-semibold text-(--text)">{typeof navigator !== 'undefined' ? (navigator.platform?.includes('Win') ? 'Windows' : navigator.platform?.includes('Mac') ? 'macOS' : 'Linux') : 'Web'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Links */}
+                      <div className="flex flex-col gap-3">
+                        <div className="text-[12px] font-bold text-(--text) uppercase tracking-wider mb-1">Quick Links</div>
+                        <div className="flex flex-col border border-(--border) rounded-(--r) bg-(--surface) overflow-hidden">
+                          <button
+                            onClick={() => {
+                              const url = 'https://cognode.tech';
+                              if (isElectron()) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const electron = (window as any).electron;
+                                if (electron?.shell?.openExternal) { electron.shell.openExternal(url); return; }
+                              }
+                              window.open(url, '_blank');
+                            }}
+                            className="flex items-center justify-between p-3 hover:bg-(--raised) transition-colors border-b border-(--border) group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Globe size={15} className="text-(--sub) group-hover:text-(--text)" />
+                              <span className="text-[13px] font-semibold text-(--text)">Website</span>
+                            </div>
+                            <ExternalLink size={13} className="text-(--sub)" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const url = 'https://github.com/zakaur-rahman/Rabbit-Hole-OS';
+                              if (isElectron()) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const electron = (window as any).electron;
+                                if (electron?.shell?.openExternal) { electron.shell.openExternal(url); return; }
+                              }
+                              window.open(url, '_blank');
+                            }}
+                            className="flex items-center justify-between p-3 hover:bg-(--raised) transition-colors border-b border-(--border) group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Github size={15} className="text-(--sub) group-hover:text-(--text)" />
+                              <span className="text-[13px] font-semibold text-(--text)">GitHub Repository</span>
+                            </div>
+                            <ExternalLink size={13} className="text-(--sub)" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const url = 'https://cognode.tech/changelog';
+                              if (isElectron()) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const electron = (window as any).electron;
+                                if (electron?.shell?.openExternal) { electron.shell.openExternal(url); return; }
+                              }
+                              window.open(url, '_blank');
+                            }}
+                            className="flex items-center justify-between p-3 hover:bg-(--raised) transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText size={15} className="text-(--sub) group-hover:text-(--text)" />
+                              <span className="text-[13px] font-semibold text-(--text)">Changelog</span>
+                            </div>
+                            <ExternalLink size={13} className="text-(--sub)" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Tech Stack */}
+                      <div className="flex flex-col gap-3">
+                        <div className="text-[12px] font-bold text-(--text) uppercase tracking-wider mb-1">Built With</div>
+                        <div className="flex flex-wrap gap-2">
+                          {['Next.js', 'React', 'Electron', 'TypeScript', 'Tailwind CSS', 'React Flow', 'FastAPI', 'SQLite'].map((tech) => (
+                            <span
+                              key={tech}
+                              className="px-2.5 py-1 text-[11px] font-semibold text-(--sub) bg-(--surface) border border-(--border) rounded-full hover:border-(--border2) hover:text-(--text) transition-colors"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-4 bg-(--surface) border border-(--border) rounded-(--r) text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-(--sub)">
+                          <span>Made with</span>
+                          <Heart size={12} className="text-red-400 fill-red-400" />
+                          <span>by the Cognode team</span>
+                        </div>
+                        <p className="text-[10px] font-medium text-(--muted) mt-1.5">
+                          © {new Date().getFullYear()} Cognode. All rights reserved.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedItem === 'sessions' && (
                     <div className="flex flex-col gap-6">
                       {sessionsError && (
