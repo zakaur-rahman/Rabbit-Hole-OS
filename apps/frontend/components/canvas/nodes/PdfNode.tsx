@@ -63,7 +63,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
 
     return (
         <div 
-            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-2 ring-(--red) shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(212,91,91,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(212,91,91,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(212,91,91,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(212,91,91,0.1)]'}`}
+            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-1 ring-(--red) shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(212,91,91,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(212,91,91,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(212,91,91,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(212,91,91,0.1)]'}`}
             style={{ border: `1px solid ${selected ? 'var(--red)' : 'rgba(212,91,91,0.3)'}` }}
         >
             {/* Connection Dots */}
