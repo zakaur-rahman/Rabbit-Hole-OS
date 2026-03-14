@@ -67,6 +67,7 @@ default_origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "http://127.0.0.1:8000",
+    "app://-",
 ]
 env_origins = os.getenv("ALLOWED_ORIGINS", "")
 origins = [o.strip() for o in env_origins.split(",") if o.strip()] if env_origins else default_origins
