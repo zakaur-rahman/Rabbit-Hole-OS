@@ -12,12 +12,12 @@ export interface ProductNodeData {
     rating?: number;
     thumbnail?: string;
     inStock?: boolean;
+    color?: string;
 }
 
-function ProductNode({ data, selected, id }: NodeProps<ProductNodeData & { isPreview?: boolean, color?: string }>) {
+function ProductNode({ data, selected, id }: NodeProps<ProductNodeData & { isPreview?: boolean }>) {
     const isPreview = data.isPreview;
-    const accentColor = data.color || "purple-500";
-    const iconColor = accentColor === 'purple-500' ? 'text-purple-400' : `text-${accentColor.replace('500', '400')}`;
+
     let subtitle = 'Product';
     try {
         if (data.url) {
@@ -32,19 +32,18 @@ function ProductNode({ data, selected, id }: NodeProps<ProductNodeData & { isPre
             title={data.title}
             subtitle={subtitle}
             icon={ShoppingBag}
-            iconColor={iconColor}
-            accentColor={accentColor}
+            accentColor={data.color || 'purple'}
             minHeight={120}
             showResizer={!isPreview}
         >
             <div className="flex-1 flex flex-col min-h-0 relative">
                 {/* Thumbnail */}
-                <div className={`relative ${isPreview ? 'h-24' : 'h-28'} bg-neutral-800/50 flex items-center justify-center overflow-hidden`}>
+                <div className={`relative ${isPreview ? 'h-24' : 'h-28'} bg-(--raised)/50 flex items-center justify-center overflow-hidden`}>
                     {data.thumbnail ? (
                         <img src={data.thumbnail} alt={data.title} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
-                            <ShoppingBag size={isPreview ? 24 : 32} className="text-neutral-600 opacity-50" />
+                        <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-(--raised) to-(--bg)">
+                            <ShoppingBag size={isPreview ? 24 : 32} className="text-(--node-text) opacity-10" />
                         </div>
                     )}
 
@@ -58,10 +57,10 @@ function ProductNode({ data, selected, id }: NodeProps<ProductNodeData & { isPre
                 </div>
 
                 {/* Details */}
-                <div className={`${isPreview ? 'p-2' : 'p-3'} bg-neutral-950/20`}>
+                <div className={`${isPreview ? 'p-2' : 'p-3'} bg-(--bg)/20`}>
                     <div className="flex items-center justify-between gap-2">
                         {data.price && (
-                            <p className="text-green-400 font-bold text-sm tracking-tight">{data.price}</p>
+                            <p className="text-(--node-accent) font-bold text-sm tracking-tight">{data.price}</p>
                         )}
                         {data.rating && (
                             <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/10 rounded border border-yellow-500/10">
