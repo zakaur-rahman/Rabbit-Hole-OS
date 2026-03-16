@@ -78,6 +78,11 @@ interface RawEdge {
     target_handle?: string;
     sourceHandle?: string;
     targetHandle?: string;
+    whiteboard_id?: string;
+    user_id?: string;
+    edge_type?: string;
+    animated?: number;
+    style?: string;
 }
 
 export interface GraphState {
@@ -509,12 +514,19 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
         // Transform Edges if from Electron (SQLite uses source_id/target_id and snake_case handles)
         const flowEdges = isElectron() 
-            ? (apiEdges as RawEdge[] || []).map((e) => ({
-                ...e,
-                source: e.source_id || e.source,
-                target: e.target_id || e.target,
-                sourceHandle: e.source_handle || e.sourceHandle,
-                targetHandle: e.target_handle || e.targetHandle,
+            ? (apiEdges as RawEdge[] || []).map((e): Edge => ({
+                id: e.id,
+                source: e.source_id || e.source || '',
+                target: e.target_id || e.target || '',
+                sourceHandle: e.source_handle || e.sourceHandle || null,
+                targetHandle: e.target_handle || e.targetHandle || null,
+                type: e.edge_type || 'simplebezier',
+                animated: Boolean(e.animated),
+                style: typeof e.style === 'string' ? JSON.parse(e.style) : e.style,
+                markerEnd: {
+                    type: MarkerType.Arrow,
+                    color: '#9ca3af',
+                },
             }))
             : (apiEdges as Edge[] || []);
         
@@ -573,12 +585,19 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         });
 
         const flowEdges = isElectron() 
-            ? (apiEdges as RawEdge[] || []).map((e) => ({
-                ...e,
-                source: e.source_id || e.source,
-                target: e.target_id || e.target,
-                sourceHandle: e.source_handle || e.sourceHandle,
-                targetHandle: e.target_handle || e.targetHandle,
+            ? (apiEdges as RawEdge[] || []).map((e): Edge => ({
+                id: e.id,
+                source: e.source_id || e.source || '',
+                target: e.target_id || e.target || '',
+                sourceHandle: e.source_handle || e.sourceHandle || null,
+                targetHandle: e.target_handle || e.targetHandle || null,
+                type: e.edge_type || 'simplebezier',
+                animated: Boolean(e.animated),
+                style: typeof e.style === 'string' ? JSON.parse(e.style) : e.style,
+                markerEnd: {
+                    type: MarkerType.Arrow,
+                    color: '#9ca3af',
+                },
             }))
             : (apiEdges as Edge[] || []);
 
@@ -673,6 +692,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     try {
         if (isElectron()) {
             await window.electron.storage.edges.create({
+                id: styledEdge.id,
+                source_id: styledEdge.source,
+                target_id: styledEdge.target,
+                whiteboard_id: activeWhiteboardId,
+                user_id: 'local',
+                edge_type: styledEdge.type || 'default',
+                animated: styledEdge.animated ? 1 : 0,
+                style: styledEdge.style ? JSON.stringify(styledEdge.style) : undefined,
                 source_handle: styledEdge.sourceHandle || undefined,
                 target_handle: styledEdge.targetHandle || undefined,
             });

@@ -22,6 +22,10 @@ export interface RawEdge {
   source_handle?: string;
   target_handle?: string;
   whiteboard_id: string;
+  user_id: string;
+  edge_type?: string;
+  animated?: number;
+  style?: string;
   created_at?: number;
 }
 

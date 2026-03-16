@@ -8,11 +8,10 @@ export interface CommentNodeData {
     title?: string;
     content: string;
     parentId?: string;
+    color?: string;
 }
 
 function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
-    const accentColor = "amber-500";
-    const iconColor = "text-amber-400";
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(data.content || '');
     const [title, setTitle] = useState(data.title || 'Instruction');
@@ -49,12 +48,10 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
             title={title}
             onTitleChange={setTitle}
             subtitle="SYSTEM INSTRUCTION"
-            accentColor={accentColor}
+            accentColor={data.color || 'amber'}
             icon={AlertCircle}
-            iconColor={iconColor}
             minWidth={250}
             minHeight={150}
-            className="border-amber-500/30 bg-amber-950/20"
         >
             <div
                 className="flex-1 cursor-text nodrag relative h-auto flex flex-col"
@@ -64,7 +61,7 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
                 {isEditing ? (
                     <textarea
                         ref={textareaRef}
-                        className="w-full h-full p-4 bg-transparent text-amber-100/90 text-[13px] leading-relaxed resize-none focus:outline-none placeholder:text-amber-500/30"
+                        className="w-full h-full p-4 bg-transparent text-(--node-text)/90 text-[13px] leading-relaxed resize-none focus:outline-none placeholder:text-(--node-primary)/30"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         onBlur={() => setIsEditing(false)}
@@ -72,18 +69,18 @@ function CommentNode({ data, selected, id }: NodeProps<CommentNodeData>) {
                         spellCheck={false}
                     />
                 ) : (
-                    <div className="p-4 text-amber-100/90 leading-relaxed flex-1 h-auto whitespace-pre-wrap wrap-break-word text-[13px]">
+                    <div className="p-4 text-(--node-text)/90 leading-relaxed flex-1 h-auto whitespace-pre-wrap wrap-break-word text-[13px]">
                         {content ? (
                             content
                         ) : (
-                            <p className="text-amber-500/50 font-medium italic">
+                            <p className="text-(--node-primary)/50 font-medium italic">
                                 Double click to add system instructions...
                             </p>
                         )}
                     </div>
                 )}
             </div>
-            <div className="px-3 py-1.5 bg-amber-950/40 border-t border-amber-500/20 text-[10px] text-amber-500/70 font-medium flex items-center justify-center gap-1.5">
+            <div className="px-3 py-1.5 bg-(--node-primary)/10 border-t border-(--node-primary)/20 text-[10px] text-(--node-primary)/70 font-medium flex items-center justify-center gap-1.5">
                 <MessageSquare size={10} />
                 <span>Controls AI Behavior for Parent Node</span>
             </div>
