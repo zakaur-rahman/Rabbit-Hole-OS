@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, Database, Clock, RefreshCw, Trash2, Plus, Loader2, AlertTriangle } from 'lucide-react';
+import { Folder, Plus, Loader2, X } from 'lucide-react';
 import { PlanType } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
+import { ProjectCard } from './ProjectCard';
+import { DashboardCard } from './DashboardCard';
 
 export interface ProjectData {
     id: string;
@@ -24,19 +26,19 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [removingId, setRemovingId] = useState<string | null>(null);
 
     // Time formatting helper
     const getRelativeTime = (isoString: string) => {
         const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-        const daysDifference = Math.round((new Date(isoString).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const diffMs = new Date(isoString).getTime() - new Date().getTime();
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-        if (daysDifference === 0) {
-            const hoursDiff = Math.round((new Date(isoString).getTime() - new Date().getTime()) / (1000 * 60 * 60));
-            if (hoursDiff === 0) return 'Just now';
-            return rtf.format(hoursDiff, 'hour');
+        if (diffDays === 0) {
+            const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+            if (diffHours === 0) return 'Just now';
+            return rtf.format(diffHours, 'hour');
         }
-        return rtf.format(daysDifference, 'day');
+        return rtf.format(diffDays, 'day');
     };
 
     const handleCreateProject = async (e: React.FormEvent) => {
@@ -63,7 +65,6 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
     };
 
     const handleSync = async (id: string) => {
-        // Optimistic UI update
         setProjects(projects.map(p => p.id === id ? { ...p, sync_status: 'syncing' } : p));
 
         try {
@@ -71,7 +72,7 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
             if (res.ok) {
                 setTimeout(() => {
                     setProjects(projects.map(p => p.id === id ? { ...p, sync_status: 'synced', last_synced_at: new Date().toISOString() } : p));
-                }, 1500); // Artificial delay to ensure user sees the spinner
+                }, 1500);
             } else {
                 throw new Error('Sync failed');
             }
@@ -83,7 +84,6 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to permanently delete this project?')) return;
 
-        setRemovingId(id);
         try {
             const res = await apiFetch(`/projects/${id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -91,175 +91,144 @@ export function ProjectsGrid({ initialProjects, plan }: ProjectsGridProps) {
             }
         } catch (err) {
             console.error('Failed to delete', err);
-        } finally {
-            setRemovingId(null);
         }
     };
 
     const isFreePlan = plan === 'free';
 
     return (
-        <>
-            <div className="flex justify-between items-center mb-8">
+        <div className="space-y-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">My Projects</h1>
-                    <p className="text-muted-foreground">Manage and synchronize your knowledge graphs across devices.</p>
+                    <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-amber mb-3 block">
+                        Project Management
+                    </span>
+                    <h1 className="text-4xl font-serif font-black text-white tracking-tight leading-none mb-2">My Projects</h1>
+                    <p className="text-neutral-500 text-[13px] font-mono leading-relaxed">Manage and synchronize your knowledge graphs across devices.</p>
                 </div>
 
-                {/* Add Project Button / Tooltip */}
-                <div className="relative group">
+                <div className="relative group/btn">
                     <button
                         onClick={() => setIsAddModalOpen(true)}
                         disabled={isFreePlan}
-                        className={`flex items-center gap-2 font-medium px-4 py-2.5 rounded-xl transition-all shadow-sm
-              ${isFreePlan
-                                ? 'bg-secondary text-muted-foreground cursor-not-allowed opacity-70'
-                                : 'bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                        className={`flex items-center gap-2 text-[12px] font-mono uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-sm relative z-10
+                            ${isFreePlan
+                                ? 'bg-neutral-900 text-neutral-600 cursor-not-allowed border border-white/5'
+                                : 'bg-white text-black hover:bg-neutral-200 hover:shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95'
                             }
-            `}
+                        `}
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4" />
                         <span>New Project</span>
                     </button>
 
                     {isFreePlan && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-foreground text-background text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 w-max shadow-xl">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-4 py-2 bg-neutral-900 text-neutral-300 text-[10px] font-mono uppercase tracking-widest rounded-lg opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 border border-white/10 shadow-xl">
                             Upgrade to Pro to add more projects
-                            {/* Tooltip triangle */}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground"></div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900"></div>
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <AnimatePresence>
-                    {projects.map((project) => (
+                <AnimatePresence mode="popLayout">
+                    {projects.map((project, i) => (
                         <motion.div
                             key={project.id}
                             layout
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95, filter: 'blur(8px)' }}
-                            transition={{ duration: 0.2 }}
-                            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6 relative group overflow-hidden flex flex-col h-full"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                            transition={{ duration: 0.4, delay: i * 0.05 }}
+                            className="h-full"
                         >
-                            {/* Ambient Hover Glow */}
-                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" />
-
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-secondary rounded-xl text-primary">
-                                        <Folder className="w-5 h-5" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-foreground truncate max-w-[150px]">{project.name}</h3>
-                                </div>
-
-                                {/* Status Badge */}
-                                <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-xs border
-                  ${project.sync_status === 'synced' ? 'bg-primary/10 text-primary border-primary/20' : ''}
-                  ${project.sync_status === 'syncing' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : ''}
-                  ${project.sync_status === 'error' ? 'bg-destructive/10 text-destructive border-destructive/20' : ''}
-                `}>
-                                    {project.sync_status === 'synced' && <><div className="w-1.5 h-1.5 rounded-full bg-primary" /> Synced</>}
-                                    {project.sync_status === 'syncing' && <><RefreshCw className="w-3 h-3 animate-spin" /> Syncing</>}
-                                    {project.sync_status === 'error' && <><AlertTriangle className="w-3 h-3" /> Error</>}
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 mb-6 flex-1">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Database className="w-4 h-4" />
-                                    <span>{project.node_count.toLocaleString()} nodes</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock className="w-4 h-4" />
-                                    <span>{getRelativeTime(project.last_synced_at)}</span>
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="pt-4 border-t border-border/50 flex items-center justify-between mt-auto">
-                                <button
-                                    onClick={() => handleSync(project.id)}
-                                    disabled={project.sync_status === 'syncing'}
-                                    className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                                >
-                                    <RefreshCw className={`w-4 h-4 ${project.sync_status === 'syncing' ? 'animate-spin' : ''}`} />
-                                    Sync Now
-                                </button>
-
-                                <button
-                                    onClick={() => handleDelete(project.id)}
-                                    disabled={removingId === project.id}
-                                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors disabled:opacity-50"
-                                    aria-label="Delete project"
-                                >
-                                    {removingId === project.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                </button>
-                            </div>
+                            <ProjectCard
+                                name={project.name}
+                                nodeCount={project.node_count}
+                                lastSync={getRelativeTime(project.last_synced_at)}
+                                status={project.sync_status}
+                                onSync={() => handleSync(project.id)}
+                                onDelete={() => handleDelete(project.id)}
+                            />
                         </motion.div>
                     ))}
                 </AnimatePresence>
 
                 {/* Empty State */}
                 {projects.length === 0 && (
-                    <div className="col-span-full py-16 flex flex-col items-center justify-center text-center bg-card/20 border border-dashed border-border rounded-3xl">
-                        <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 text-muted-foreground">
-                            <Folder className="w-8 h-8" />
-                        </div>
-                        <h3 className="text-xl font-bold text-foreground mb-2">No Projects Found</h3>
-                        <p className="text-muted-foreground max-w-sm">You haven&apos;t created any projects yet. Click adding a new project to get started.</p>
+                    <div className="col-span-full py-20">
+                        <DashboardCard hover={false} className="flex flex-col items-center justify-center text-center py-16 border-dashed border-white/10">
+                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 text-neutral-500">
+                                <Folder className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-serif font-bold text-white mb-2">No Projects Found</h3>
+                            <p className="text-neutral-500 font-mono text-[13px] max-w-sm">You haven&apos;t created any knowledge architecture yet. Begin by initializing your first project.</p>
+                        </DashboardCard>
                     </div>
                 )}
             </div>
 
             {/* Add Project Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-card w-full max-w-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
-                    >
-                        <div className="p-6 border-b border-border/50">
-                            <h2 className="text-xl font-bold text-foreground">Create New Project</h2>
-                        </div>
-
-                        <form onSubmit={handleCreateProject} className="p-6">
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">Project Name</label>
-                                <input
-                                    type="text"
-                                    value={newProjectName}
-                                    onChange={e => setNewProjectName(e.target.value)}
-                                    placeholder="e.g. Thesis Research"
-                                    autoFocus
-                                    required
-                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                                />
-                            </div>
-
-                            <div className="flex gap-3 justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddModalOpen(false)}
-                                    className="px-5 py-2.5 rounded-xl font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting || !newProjectName.trim()}
-                                    className="px-5 py-2.5 rounded-xl font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Project'}
+            <AnimatePresence>
+                {isAddModalOpen && (
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-6">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsAddModalOpen(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
+                        
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-neutral-950 w-full max-w-md rounded-2xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden relative z-10"
+                        >
+                            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                                <h2 className="text-2xl font-serif font-black text-white">Initialize Project</h2>
+                                <button onClick={() => setIsAddModalOpen(false)} className="text-neutral-500 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
-        </>
+
+                            <form onSubmit={handleCreateProject} className="p-8 space-y-8">
+                                <div className="space-y-3">
+                                    <label className="block text-[11px] font-mono uppercase tracking-[0.2em] text-neutral-500">Project Name</label>
+                                    <input
+                                        type="text"
+                                        value={newProjectName}
+                                        onChange={e => setNewProjectName(e.target.value)}
+                                        placeholder="e.g. Cognitive Network"
+                                        autoFocus
+                                        required
+                                        className="w-full bg-white/5 border border-white/5 rounded-xl px-5 py-3.5 text-white font-mono placeholder:text-neutral-700 focus:outline-none focus:border-amber/30 focus:bg-white/8 transition-all"
+                                    />
+                                </div>
+
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddModalOpen(false)}
+                                        className="flex-1 py-3.5 rounded-xl font-mono text-[12px] uppercase tracking-widest text-neutral-500 hover:text-white hover:bg-white/5 transition-all"
+                                    >
+                                        Abort
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting || !newProjectName.trim()}
+                                        className="flex-2 py-3.5 rounded-xl font-mono text-[12px] uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Project'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 }

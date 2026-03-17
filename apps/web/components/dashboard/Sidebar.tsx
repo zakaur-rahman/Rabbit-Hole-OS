@@ -29,14 +29,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
     };
 
     return (
-        <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-xl h-screen sticky top-0 flex flex-col items-stretch pt-6 pb-4">
+        <aside className="w-68 border-r border-dashboard-border bg-dashboard-sidebar backdrop-blur-3xl h-screen sticky top-0 flex flex-col items-stretch pt-8 pb-6 z-50">
             {/* Branding */}
-            <div className="px-6 mb-8">
-                <Logo />
+            <div className="px-7 mb-10 group">
+                <Logo variant="dark" />
             </div>
 
             {/* Navigation Links */}
-            <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto custom-scrollbar">
                 {navItems.map((item) => {
                     const isActive = item.href === '/dashboard'
                         ? pathname === '/dashboard'
@@ -48,18 +48,19 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
                             href={item.href}
                             onClick={onNavigate}
                             className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative
-                ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'}
-              `}
+                                flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-[13px] font-mono tracking-tight transition-all relative group
+                                ${isActive ? 'text-white' : 'text-neutral-450 hover:text-neutral-200 hover:bg-white/5'}
+                            `}
                         >
-                            <item.icon className="w-5 h-5" />
-                            <span>{item.name}</span>
+                            <item.icon className={`w-4.5 h-4.5 transition-transform duration-300 ${isActive ? 'text-amber' : 'text-neutral-500 group-hover:scale-110'}`} />
+                            <span className="relative z-10">{item.name}</span>
+                            
                             {isActive && (
                                 <motion.div
                                     layoutId="sidebar-active-indicator"
-                                    className="absolute inset-0 bg-primary/10 rounded-xl"
+                                    className="absolute inset-0 bg-white/5 border border-white/5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.02)]"
                                     initial={false}
-                                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                    transition={{ type: 'spring', stiffness: 350, damping: 35 }}
                                 />
                             )}
                         </Link>
@@ -68,13 +69,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
             </nav>
 
             {/* Bottom Actions */}
-            <div className="px-4 mt-auto">
+            <div className="px-3 mt-auto pt-6 border-t border-dashboard-border/50">
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-[13px] font-mono tracking-tight text-neutral-500 border border-white/5 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all group"
                 >
-                    <LogOut className="w-5 h-5" />
-                    <span>Log Out</span>
+                    <LogOut className="w-4.5 h-4.5 group-hover:rotate-12 transition-transform" />
+                    <span>End Session</span>
                 </button>
             </div>
         </aside>

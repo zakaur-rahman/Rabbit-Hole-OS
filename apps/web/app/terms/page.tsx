@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { CognodeLogo } from "@/components/ui/CognodeLogo";
 
 export default function TermsPage() {
     return (
@@ -10,11 +11,9 @@ export default function TermsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="flex items-center gap-3 mb-6"
+                    className="flex items-center gap-4 mb-6"
                 >
-                    <div className="w-10 h-10 border-[1.5px] border-ink grid place-items-center">
-                        <div className="w-3 h-3 bg-amber rounded-full" />
-                    </div>
+                    <CognodeLogo className="w-10 h-10 text-ink" />
                     <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-amber font-bold">Legal</span>
                 </motion.div>
                 

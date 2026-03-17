@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Calendar, Download, RefreshCcw, DollarSign, Filter, Search } from 'lucide-react';
+import { DashboardCard } from './DashboardCard';
+import { cn } from '@/lib/utils';
 
 // Mock Data Type
 interface Transaction {
@@ -47,97 +48,101 @@ export function PaymentHistory() {
 
     const StatusBadge = ({ status }: { status: Transaction['status'] }) => {
         const styles = {
-            paid: 'bg-primary/10 text-primary border-primary/20',
-            failed: 'bg-destructive/10 text-destructive border-destructive/20',
-            refunded: 'bg-muted text-muted-foreground border-border'
+            paid: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+            failed: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
+            refunded: 'bg-neutral-800 text-neutral-400 border-white/5'
         };
         return (
-            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border capitalize ${styles[status]}`}>
+            <span className={cn(
+                "px-2 py-0.5 text-[10px] font-mono font-bold rounded-full border uppercase tracking-tighter",
+                styles[status]
+            )}>
                 {status}
             </span>
         );
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 mt-8"
-        >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <DashboardCard delay={0.3} className="mt-8 p-0 overflow-hidden">
+            <div className="p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-primary" />
-                        Billing History
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">View past transactions and download invoices.</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <DollarSign className="w-4 h-4 text-amber" />
+                        <h3 className="text-xl font-serif font-black text-white">Payment Protocol</h3>
+                    </div>
+                    <p className="text-[12px] font-mono text-neutral-500">Historical synchronization of financial transactions.</p>
                 </div>
 
-                <div className="flex gap-2">
-                    <div className="relative">
-                        <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-none">
+                        <Filter className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'paid' | 'failed' | 'refunded')}
-                            className="bg-secondary/50 border border-border/50 text-sm text-foreground rounded-xl pl-9 pr-8 py-2 appearance-none focus:outline-hidden focus:border-primary/50 transition-colors cursor-pointer"
+                            className="bg-neutral-900 border border-white/5 text-[11px] font-mono text-neutral-300 rounded-lg pl-10 pr-8 py-2.5 appearance-none focus:outline-none focus:border-amber/30 transition-all cursor-pointer w-full"
                         >
-                            <option value="all">All Statuses</option>
-                            <option value="paid">Paid</option>
-                            <option value="failed">Failed</option>
-                            <option value="refunded">Refunded</option>
+                            <option value="all">ALL PROTOCOLS</option>
+                            <option value="paid">PAID</option>
+                            <option value="failed">FAILED</option>
+                            <option value="refunded">REFUNDED</option>
                         </select>
                     </div>
                     <button
                         onClick={handleRefresh}
-                        className="p-2 border border-border/50 bg-secondary/50 hover:bg-white/10 rounded-xl text-muted-foreground transition-colors"
-                        title="Refresh History"
+                        className="p-2.5 bg-neutral-900 border border-white/5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-all"
                     >
-                        <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <RefreshCcw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
                     </button>
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-border/50 bg-secondary/20">
-                <table className="w-full text-left border-collapse min-w-[600px]">
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                        <tr className="border-b border-border/50 text-xs uppercase tracking-wider text-muted-foreground bg-secondary/50">
-                            <th className="p-4 font-medium">Date</th>
-                            <th className="p-4 font-medium">Amount</th>
-                            <th className="p-4 font-medium">Plan</th>
-                            <th className="p-4 font-medium">Status</th>
-                            <th className="p-4 font-medium">Method</th>
-                            <th className="p-4 font-medium text-right">Actions</th>
+                        <tr className="bg-white/2">
+                            <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Initialization</th>
+                            <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Amount</th>
+                            <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Plan</th>
+                            <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Status</th>
+                            <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Method</th>
+                            <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest text-right">Invoices</th>
                         </tr>
                     </thead>
-                    <tbody className="text-sm divide-y divide-border/30">
+                    <tbody className="divide-y divide-white/5">
                         {filteredTransactions.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                    <Search className="w-8 h-8 opacity-20 mx-auto mb-3" />
-                                    No transactions found for the selected filter.
+                                <td colSpan={6} className="p-20 text-center">
+                                    <Search className="w-8 h-8 text-neutral-800 mx-auto mb-4" />
+                                    <p className="text-[13px] font-mono text-neutral-600">No matching protocols found.</p>
                                 </td>
                             </tr>
                         ) : (
                             filteredTransactions.map((tx) => (
-                                <tr key={tx.id} className="hover:bg-white/2 transition-colors group">
-                                    <td className="p-4 text-foreground flex items-center gap-2">
-                                        <Calendar className="w-4 h-4 text-muted-foreground opacity-50" />
-                                        {formatDate(tx.date)}
+                                <tr key={tx.id} className="group hover:bg-white/2 transition-colors">
+                                    <td className="p-5">
+                                        <div className="flex items-center gap-2 text-[13px] font-mono text-neutral-400">
+                                            <Calendar className="w-3.5 h-3.5 text-neutral-600" />
+                                            {formatDate(tx.date)}
+                                        </div>
                                     </td>
-                                    <td className="p-4 font-medium text-foreground">${tx.amount.toFixed(2)}</td>
-                                    <td className="p-4 text-muted-foreground">{tx.plan}</td>
-                                    <td className="p-4"><StatusBadge status={tx.status} /></td>
-                                    <td className="p-4 text-muted-foreground">{tx.method}</td>
-                                    <td className="p-4 text-right space-x-2">
-                                        {tx.status === 'failed' && (
-                                            <button className="text-xs px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors">
-                                                Retry
-                                            </button>
-                                        )}
-                                        <a href={tx.invoiceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center p-1.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity rounded-lg hover:bg-white/5">
-                                            <Download className="w-4 h-4" />
-                                        </a>
+                                    <td className="p-5 text-[13px] font-mono font-bold text-white">${tx.amount.toFixed(2)}</td>
+                                    <td className="p-5 text-[13px] font-mono text-neutral-400 capitalize">{tx.plan}</td>
+                                    <td className="p-5"><StatusBadge status={tx.status} /></td>
+                                    <td className="p-5 text-[13px] font-mono text-neutral-500">{tx.method}</td>
+                                    <td className="p-5 text-right">
+                                        <div className="flex items-center justify-end gap-2 px-4">
+                                            {tx.status === 'failed' && (
+                                                <button className="text-[10px] font-mono font-bold px-3 py-1 bg-amber text-black rounded hover:bg-neutral-200 transition-colors uppercase tracking-tight">
+                                                    Retry
+                                                </button>
+                                            )}
+                                            <a 
+                                                href={tx.invoiceUrl} 
+                                                className="p-2 text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -146,14 +151,15 @@ export function PaymentHistory() {
                 </table>
             </div>
 
-            {/* Pagination Mock */}
-            <div className="flex justify-between items-center mt-4 text-xs text-muted-foreground">
-                <p>Showing {filteredTransactions.length} results</p>
+            <div className="p-5 border-t border-white/5 bg-white/2 flex justify-between items-center">
+                <p className="font-mono text-[10px] text-neutral-600 uppercase tracking-widest">
+                    Execution Log: {filteredTransactions.length} items
+                </p>
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 rounded-lg border border-border/50 opacity-50 cursor-not-allowed">Previous</button>
-                    <button className="px-3 py-1.5 rounded-lg border border-border/50 hover:bg-white/5 transition-colors">Next</button>
+                    <button className="px-3 py-1.5 font-mono text-[10px] text-neutral-600 border border-white/5 rounded-md opacity-50 cursor-not-allowed uppercase tracking-widest">Previous</button>
+                    <button className="px-3 py-1.5 font-mono text-[10px] text-neutral-400 border border-white/10 rounded-md hover:bg-white/5 transition-all uppercase tracking-widest">Next</button>
                 </div>
             </div>
-        </motion.div>
+        </DashboardCard>
     );
 }

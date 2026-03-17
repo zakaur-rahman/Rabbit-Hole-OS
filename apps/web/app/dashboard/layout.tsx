@@ -13,15 +13,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <AuthGuard>
             <UserProvider>
-                <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
+                <div className="flex min-h-screen bg-dashboard-bg text-neutral-200 font-mono selection:bg-amber/20 cursor-default">
 
-                    {/* Abstract Background */}
+                    {/* Subtle Ambient Glow */}
                     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-emerald-900/10 rounded-full blur-[120px]" />
-                        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px]" />
+                        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-amber/5 rounded-full blur-[120px]" />
+                        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/5 rounded-full blur-[100px]" />
                     </div>
 
-                    {/* Desktop Sidebar */}
+                    {/* Desktop Sidebar (Linear Style) */}
                     <div className="relative z-20 shrink-0 hidden md:block">
                         <Sidebar />
                     </div>
@@ -54,8 +54,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="flex-1 flex flex-col relative z-10 w-full min-w-0">
                         <Topbar onMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
 
-                        <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
-                            <div className="max-w-6xl mx-auto w-full">
+                        <main className="flex-1 p-8 sm:p-12 lg:p-16 overflow-y-auto custom-scrollbar">
+                            <div className="max-w-[1200px] mx-auto w-full">
                                 {children}
                             </div>
                         </main>

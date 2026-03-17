@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api';
 import { UsageMeters, UsageData } from '@/components/dashboard/UsageMeters';
 import { Loader2 } from 'lucide-react';
@@ -46,10 +47,32 @@ export default function UsagePage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-12 pb-12">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Plan Usage</h1>
-                <p className="text-muted-foreground">Monitor your resource consumption relative to your current plan tier.</p>
+                <motion.span 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="text-[11px] font-mono uppercase tracking-[0.2em] text-amber mb-3 block"
+                >
+                    Infrastructure Metrics
+                </motion.span>
+                <motion.h1 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="text-4xl md:text-5xl font-serif font-black text-white tracking-tight leading-none mb-4"
+                >
+                    Plan Usage
+                </motion.h1>
+                <motion.p 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="text-neutral-500 text-[14px] font-mono max-w-lg leading-relaxed"
+                >
+                    Monitor your resource architecture and consumption metrics relative to your current protocol tier.
+                </motion.p>
             </div>
 
             <UsageMeters usage={usage} />

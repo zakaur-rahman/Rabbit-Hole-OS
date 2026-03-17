@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "./Logo";
 
 const footerLinks = {
     product: [
@@ -23,12 +24,7 @@ export function Footer() {
         <>
             <footer className="border-t border-rule bg-cream py-11 px-6 md:px-12 grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-11">
                 <div className="flex flex-col gap-3">
-                    <Link href="/" className="flex items-center gap-3 no-underline color-ink">
-                        <div className="w-[26px] h-[26px] border-[1.5px] border-ink grid place-items-center">
-                            <div className="w-2 h-2 bg-amber rounded-full" />
-                        </div>
-                        <span className="font-serif text-[17px] font-bold tracking-tight">Cognode</span>
-                    </Link>
+                    <Logo />
                     <p className="text-mid text-[11px] leading-[1.8] max-w-[250px] font-mono">
                         Turn connected knowledge into structured insight. The AI-powered desktop app for modern research.
                     </p>
