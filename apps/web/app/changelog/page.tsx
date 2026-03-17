@@ -10,6 +10,7 @@ export default async function ChangelogPage({
 }) {
   const resolvedParams = await searchParams;
   const version = resolvedParams.version || 'latest';
+  let displayVersion = version;
   
   // Fetch from GitHub Releases API
   let markdown = '';
@@ -36,6 +37,7 @@ export default async function ChangelogPage({
         month: 'long',
         day: 'numeric'
       });
+      if (version === 'latest') displayVersion = (data.tag_name || '').replace(/^v/, '');
     } else {
       // API Failed - Try Local Fallback
       if (res.status === 404 && version !== 'latest') {
@@ -73,11 +75,15 @@ export default async function ChangelogPage({
         if (targetRelease) {
           const lines = targetRelease.split('\n');
           const titleLine = lines[0];
-          const nameMatch = titleLine.match(/\[?(.*?)\]?\s*\((.*?)\)/);
+          // Match version (G1) and date (G2), skipping the optional comparison link
+          const nameMatch = titleLine.match(/\[?([\d\.]+)\]?(?:\s*\([^)]+\))?\s*\(([^)]+)\)/);
           
-          releaseName = nameMatch ? `v${nameMatch[1]}` : `v${version}`;
+          const foundVersion = nameMatch ? nameMatch[1] : version;
+          releaseName = `v${foundVersion}`;
           releaseDate = nameMatch ? nameMatch[2] : 'Released Recently';
-          markdown = lines.slice(titleLine.startsWith('(') ? 2 : 1).join('\n').trim();
+          markdown = lines.slice(1).join('\n').trim();
+          
+          displayVersion = foundVersion;
         } else {
           hasError = true;
         }
@@ -90,19 +96,19 @@ export default async function ChangelogPage({
   }
 
   const renderMarkdown = (text: string) => {
-    const sections = text.split(/(?=^##\s)/m);
+    const sections = text.split(/(?=^###?\s)/m);
     
     return sections.map((section, idx) => {
        const lines = section.trim().split('\n');
        if (lines.length === 0) return null;
        
-       const headerMatch = lines[0].match(/^##\s*(.*)$/);
+       const headerMatch = lines[0].match(/^###?\s*(.*)$/);
        const isHeader = !!headerMatch;
        
        return (
          <div key={idx} className={isHeader ? "mt-10" : "mt-2"}>
             {isHeader && (
-               <h3 className="font-serif text-[24px] font-bold text-ink mb-6 border-b border-rule pb-2 tracking-tight">
+               <h3 className="font-serif text-[20px] font-bold text-ink mb-6 border-b border-rule pb-2 tracking-tight">
                  {headerMatch[1]}
                </h3>
             )}
@@ -113,7 +119,9 @@ export default async function ChangelogPage({
                   
                   const bulletMatch = item.match(/^[-*+]\s+(.*)$/);
                   if (bulletMatch) {
-                     const content = bulletMatch[1].replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>');
+                     const content = bulletMatch[1]
+                        .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>')
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-amber hover:underline no-underline">$1</a>');
                      
                      return (
                         <li key={lIdx} className="flex items-start gap-4 text-mid text-[13px] font-mono leading-relaxed">
@@ -123,7 +131,16 @@ export default async function ChangelogPage({
                      );
                   }
                   
-                  return <p key={lIdx} className="text-mid text-[13px] font-mono mb-4 leading-relaxed">{item.replace(/^#+\s/, '')}</p>;
+                  const paragraphContent = item
+                    .replace(/^#+\s/, '')
+                    .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>')
+                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-amber hover:underline no-underline">$1</a>');
+
+                  return (
+                    <p key={lIdx} className="text-mid text-[13px] font-mono mb-4 leading-relaxed">
+                        <span dangerouslySetInnerHTML={{ __html: paragraphContent }} />
+                    </p>
+                  );
                })}
             </ul>
          </div>
@@ -171,7 +188,7 @@ export default async function ChangelogPage({
                    </h2>
                    <div className="flex items-center gap-6">
                       <span className="text-amber text-[11px] font-bold tracking-[0.14em] uppercase font-mono">
-                         Build v{version.replace(/^v/, '')}
+                         Build v{displayVersion.replace(/^v/, '')}
                       </span>
                       <span className="text-mid text-[11px] tracking-[0.08em] font-mono">
                          {releaseDate}
