@@ -16,6 +16,7 @@ export function AdaptiveCursor() {
     const elasticY = useSpring(mouseY, springConfig);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
         const handleMouseMove = (e: MouseEvent) => {
             mouseX.set(e.clientX);
