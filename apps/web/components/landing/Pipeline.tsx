@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const steps = [
-    { title: "Ingest", desc: "Drag & drop raw files." },
-    { title: "Connect", desc: "Build semantic links." },
-    { title: "Synthesize", desc: "Generate deep insights." },
-    { title: "Publish", desc: "Export to any format." }
+    { title: "Capture", desc: "Browse the web and snap sources directly into your graph." },
+    { title: "Structure", desc: "Organize nodes and define relationships to guide AI reasoning." },
+    { title: "Synthesize", desc: "7 autonomous agents collaborate to build your research paper." },
+    { title: "Publish", desc: "Compile to professional, academic-grade PDF via LaTeX." }
 ];
 
 export function Pipeline() {
@@ -29,9 +29,15 @@ export function Pipeline() {
         <section id="pipeline" className="px-12 py-32 bg-cream relative z-10 border-b border-rule">
             <div className={cn("text-center mb-24 opacity-0 translate-y-6 transition-all duration-800", vis && "opacity-100 translate-y-0")}>
                 <span className="text-[10px] tracking-[0.2em] uppercase text-amber mb-4 block font-mono">The Workflow</span>
-                <h2 className="font-serif text-[clamp(36px,5vw,70px)] font-black tracking-tighter">
+                <h2 className="font-serif text-[clamp(36px,5vw,70px)] font-black tracking-tighter mb-8">
                     A Simple <em className="italic font-normal">Pipeline</em>
                 </h2>
+                <a 
+                    href="/how-it-works" 
+                    className="text-ink text-[10px] tracking-[0.15em] uppercase no-underline font-mono border-b border-rule pb-0.5 hover:text-amber hover:border-amber transition-colors"
+                >
+                    Deep dive into building logic →
+                </a>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
@@ -47,7 +53,7 @@ export function Pipeline() {
                         </div>
                         {i < 3 && (
                             <div className={cn(
-                                "hidden md:block absolute top-1/2 -right-4 translate-x-1/2 -translate-y-1/2 z-20 opacity-0 transition-all duration-700 delay-[800ms]",
+                                "hidden md:block absolute top-1/2 -right-4 translate-x-1/2 -translate-y-1/2 z-20 opacity-0 transition-all duration-700 delay-800",
                                 vis && "opacity-100"
                             )}>
                                 <span className="text-amber text-[24px]">→</span>

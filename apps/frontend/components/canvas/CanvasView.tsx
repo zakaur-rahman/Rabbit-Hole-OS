@@ -3,7 +3,6 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import ReactFlow, {
     useReactFlow,
-    Background,
     MiniMap,
     Connection,
     Edge as FlowEdge,

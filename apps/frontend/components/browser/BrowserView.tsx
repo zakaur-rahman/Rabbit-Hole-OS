@@ -649,9 +649,9 @@ export default function BrowserView() {
     const activeWebview = webviewRefs.current[activeTabWebviewKey];
 
     return (
-        <div className="flex flex-col h-full bg-[var(--bg)] border-r border-[var(--border)] overflow-hidden">
+        <div className="flex flex-col h-full bg-(--bg) border-r border-(--border) overflow-hidden">
             {/* Tab Bar */}
-            <div className="h-[36px] bg-[var(--surface)] border-b border-[var(--border)] flex items-center px-3 gap-[6px] overflow-x-auto no-scrollbar shrink-0 z-50">
+            <div className="h-[36px] bg-(--surface) border-b border-(--border) flex items-center px-3 gap-[6px] overflow-x-auto no-scrollbar shrink-0 z-50">
                 {tabs.map(tab => (
                     <div
                         key={tab.id}
@@ -659,13 +659,13 @@ export default function BrowserView() {
                         className={`
                             h-[26px] px-3.5 border border-b-0 rounded-t-[5px] font-sans text-[11px] font-medium cursor-pointer whitespace-nowrap flex items-center gap-2 max-w-[160px] overflow-hidden transition-all group select-none relative top-[5px]
                             ${tab.id === activeTabId
-                                ? 'bg-[var(--bg)] border-[var(--border2)] text-[var(--text)]'
-                                : 'bg-[var(--raised)] border-[var(--border)] text-[var(--sub)] hover:text-[var(--text)]'
+                                ? 'bg-(--bg) border-(--border2) text-(--text)'
+                                : 'bg-(--raised) border-(--border) text-(--sub) hover:text-(--text)'
                             }
                         `}
                     >
                         {tab.isLoading ? (
-                            <Loader2 size={11} className="animate-spin text-[var(--amber)] shrink-0" />
+                            <Loader2 size={11} className="animate-spin text-(--amber) shrink-0" />
                         ) : null}
 
                         <span className="truncate flex-1">
@@ -674,7 +674,7 @@ export default function BrowserView() {
 
                         <button
                             onClick={(e) => closeTab(tab.id, e)}
-                            className={`ml-1 border-none bg-transparent hover:text-[var(--red)] transition-all ${tab.id === activeTabId ? 'opacity-80 hover:opacity-100' : 'opacity-0 group-hover:opacity-60 hover:opacity-100'} text-[var(--sub)] text-[13px]`}
+                            className={`ml-1 border-none bg-transparent hover:text-(--red) transition-all ${tab.id === activeTabId ? 'opacity-80 hover:opacity-100' : 'opacity-0 group-hover:opacity-60 hover:opacity-100'} text-(--sub) text-[13px]`}
                         >
                             <X size={11} />
                         </button>
@@ -683,31 +683,31 @@ export default function BrowserView() {
 
                 <button
                     onClick={() => addTab()}
-                    className="h-[24px] w-[24px] relative top-[5px] border border-dashed border-[var(--border2)] rounded-[5px] bg-transparent text-[var(--muted)] cursor-pointer grid place-items-center text-[15px] shrink-0 transition-all hover:border-[var(--amber)] hover:text-[var(--amber)]"
+                    className="h-[24px] w-[24px] relative top-[5px] border border-dashed border-(--border2) rounded-[5px] bg-transparent text-(--muted) cursor-pointer grid place-items-center text-[15px] shrink-0 transition-all hover:border-(--amber) hover:text-(--amber)"
                 >
                     <Plus size={14} />
                 </button>
             </div>
 
             {/* Navigation Bar (Toolbar) */}
-            <div className="h-[40px] bg-[var(--bg)] border-b border-[var(--border)] flex items-center px-3 gap-2 shrink-0 relative z-40">
+            <div className="h-[40px] bg-(--bg) border-b border-(--border) flex items-center px-3 gap-2 shrink-0 relative z-40">
                 <div className="flex gap-[3px]">
                     <button
-                        className="w-6 h-6 border-none bg-transparent text-[var(--sub)] cursor-pointer rounded-[3px] grid place-items-center transition-all hover:bg-[var(--raised)] hover:text-[var(--text)] disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-6 h-6 border-none bg-transparent text-(--sub) cursor-pointer rounded-[3px] grid place-items-center transition-all hover:bg-(--raised) hover:text-(--text) disabled:opacity-30 disabled:cursor-not-allowed"
                         onClick={() => activeWebview?.goBack()}
                         disabled={!activeTab.url || !activeTab.canGoBack}
                     >
                         <ArrowLeft size={14} />
                     </button>
                     <button
-                        className="w-6 h-6 border-none bg-transparent text-[var(--sub)] cursor-pointer rounded-[3px] grid place-items-center transition-all hover:bg-[var(--raised)] hover:text-[var(--text)] disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-6 h-6 border-none bg-transparent text-(--sub) cursor-pointer rounded-[3px] grid place-items-center transition-all hover:bg-(--raised) hover:text-(--text) disabled:opacity-30 disabled:cursor-not-allowed"
                         onClick={() => activeWebview?.goForward()}
                         disabled={!activeTab.url || !activeTab.canGoForward}
                     >
                         <ArrowRight size={14} />
                     </button>
                     <button
-                        className="w-6 h-6 border-none bg-transparent text-[var(--sub)] cursor-pointer rounded-[3px] grid place-items-center transition-all hover:bg-[var(--raised)] hover:text-[var(--text)]"
+                        className="w-6 h-6 border-none bg-transparent text-(--sub) cursor-pointer rounded-[3px] grid place-items-center transition-all hover:bg-(--raised) hover:text-(--text)"
                         onClick={() => {
                             if (activeTab.url) activeWebview?.reload();
                             else updateTab(activeTabId, { url: '' });
@@ -717,10 +717,10 @@ export default function BrowserView() {
                     </button>
                 </div>
 
-                <div className="flex-1 bg-[var(--raised)] border border-[var(--border)] rounded-[var(--r)] h-[26px] flex items-center px-2.5 gap-1.5 focus-within:border-[var(--border2)] transition-colors">
-                    <Globe size={11} className="text-[var(--sub)] shrink-0" />
+                <div className="flex-1 bg-(--raised) border border-(--border) rounded-(--r) h-[26px] flex items-center px-2.5 gap-1.5 focus-within:border-(--border2) transition-colors">
+                    <Globe size={11} className="text-(--sub) shrink-0" />
                     <input
-                        className="flex-1 bg-transparent border-none outline-none font-mono text-[10px] text-[var(--sub)] placeholder:text-[var(--muted)]"
+                        className="flex-1 bg-transparent border-none outline-none font-mono text-[10px] text-(--sub) placeholder:text-(--muted)"
                         value={activeTab.displayInput}
                         onChange={(e) => updateTab(activeTabId, { displayInput: e.target.value })}
                         onKeyDown={handleKeyDown}
@@ -730,10 +730,10 @@ export default function BrowserView() {
 
                 <div 
                     onClick={handleToggleAutoSync}
-                    className="flex items-center gap-[5px] bg-[var(--amber-bg)] border border-[rgba(232,160,32,0.2)] rounded-[var(--r)] px-2.5 py-[3px] text-[10px] font-semibold text-[var(--amber)] tracking-[0.05em] cursor-pointer select-none transition-colors hover:bg-[rgba(232,160,32,0.12)]"
+                    className="flex items-center gap-[5px] bg-(--amber-bg) border border-[rgba(232,160,32,0.2)] rounded-(--r) px-2.5 py-[3px] text-[10px] font-semibold text-(--amber) tracking-[0.05em] cursor-pointer select-none transition-colors hover:bg-[rgba(232,160,32,0.12)]"
                     style={{ opacity: state.isAutoSyncEnabled ? 1 : 0.5 }}
                 >
-                    <div className={`w-[5px] h-[5px] rounded-full bg-[var(--amber)] ${state.isAutoSyncEnabled ? 'animate-pulse' : ''}`}></div>
+                    <div className={`w-[5px] h-[5px] rounded-full bg-(--amber) ${state.isAutoSyncEnabled ? 'animate-pulse' : ''}`}></div>
                     AUTO-SYNC
                 </div>
             </div>

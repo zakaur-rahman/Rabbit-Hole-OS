@@ -1,9 +1,7 @@
 "use client";
 
-import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
-import { Button } from "@/components/ui/Button";
-import { CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -35,109 +33,150 @@ export default function DownloadPage() {
     }, []);
 
     return (
-        <div className="pt-18 pb-20 min-h-screen bg-[#020617] text-white">
-            <Section>
-                <Container>
-                    <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-white">
-                            Ready to Upgrade Your Mind?
-                        </h1>
-                        <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                            Join thousands of researchers and developers who trust Cognode for their most critical work.
-                        </p>
-                    </div>
+        <div className="pt-32 pb-24 bg-paper text-ink min-h-screen relative overflow-hidden">
+            {/* Background design elements */}
+            <div className="absolute top-0 right-0 w-96 h-96 border-b border-l border-rule/50 pointer-events-none translate-x-32 -translate-y-32 rotate-45" />
+            
+            <div className="px-8 md:px-12 max-w-6xl mx-auto relative z-10">
+                <header className="text-center mb-24">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="flex items-center justify-center gap-3 mb-6"
+                    >
+                        <div className="w-10 h-10 border-[1.5px] border-ink grid place-items-center">
+                            <div className="w-3 h-3 bg-amber rounded-full" />
+                        </div>
+                        <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-amber font-bold">Release v1.0.4</span>
+                    </motion.div>
+                    
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="font-serif text-5xl md:text-7xl mb-12 tracking-tighter"
+                    >
+                        Ready to Upgrade <br /> Your <em className="italic font-normal text-amber">Mind?</em>
+                    </motion.h1>
+                    
+                    <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-mid text-[18px] max-w-2xl mx-auto leading-relaxed font-mono"
+                    >
+                        Join a dedicated community of researchers and founders who trust Cognode for their most critical knowledge work.
+                    </motion.p>
+                </header>
 
-                    <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                        {/* macOS Card */}
-                        <div className={cn(
-                            "relative p-10 rounded-3xl border bg-zinc-900/50 backdrop-blur-xl flex flex-col items-center text-center space-y-8 transition-all duration-300 group",
-                            os === "mac"
-                                ? "border-emerald-500/50 shadow-[0_0_50px_-20px_rgba(16,185,129,0.3)] bg-zinc-900/80"
-                                : "border-white/10 hover:border-white/20"
-                        )}>
-                            {os === "mac" && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Recommended for you
-                                </div>
-                            )}
-
-                            <div className="w-24 h-24 rounded-full bg-black/50 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform duration-300">
-                                <AppleLogo className="w-10 h-10 text-white" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+                    {/* macOS */}
+                    <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className={cn(
+                            "relative p-12 bg-white border border-rule flex flex-col items-center text-center transition-all duration-300 group",
+                            os === "mac" ? "shadow-[16px_16px_0_var(--faint)] ring-2 ring-amber/20" : "shadow-[8px_8px_0_var(--faint)] hover:shadow-[12px_12px_0_var(--faint)]"
+                        )}
+                    >
+                        {os === "mac" && (
+                            <div className="absolute -top-4 bg-amber text-ink text-[10px] font-mono tracking-widest uppercase px-4 py-1 border border-ink shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+                                Recommended
                             </div>
+                        )}
 
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold text-white">macOS</h2>
-                                <div className="space-y-1">
-                                    <p className="text-zinc-400">macOS 12.0 (Monterey) or later</p>
-                                    <p className="text-zinc-500 text-sm">Universal (Apple Silicon & Intel)</p>
-                                </div>
-                            </div>
-
-                            <Button
-                                className={cn(
-                                    "w-full h-14 text-lg rounded-full transition-all duration-300",
-                                    os === "mac"
-                                        ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                                        : "bg-zinc-800 hover:bg-zinc-700 text-white"
-                                )}
-                            >
-                                Download for Mac (.dmg)
-                            </Button>
+                        <div className="w-20 h-20 border border-rule bg-cream grid place-items-center mb-10 group-hover:bg-amber transition-colors duration-500">
+                            <AppleLogo className="w-8 h-8 text-ink" />
                         </div>
 
-                        {/* Windows Card */}
-                        <div className={cn(
-                            "relative p-10 rounded-3xl border bg-zinc-900/50 backdrop-blur-xl flex flex-col items-center text-center space-y-8 transition-all duration-300 group",
-                            os === "win"
-                                ? "border-emerald-500/50 shadow-[0_0_50px_-20px_rgba(16,185,129,0.3)] bg-zinc-900/80"
-                                : "border-white/10 hover:border-white/20"
+                        <h2 className="font-serif text-3xl font-bold mb-4">macOS</h2>
+                        <div className="font-mono text-[12px] text-mid mb-12 space-y-2">
+                            <p>Monterey 12.0 or later</p>
+                            <p className="opacity-50 tracking-tighter">Universal (Silicon & Intel)</p>
+                        </div>
+
+                        <button className={cn(
+                            "w-full py-4 px-8 font-mono text-[12px] tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-3",
+                            os === "mac" 
+                                ? "bg-ink text-paper hover:bg-amber hover:text-ink" 
+                                : "bg-cream text-ink border border-rule hover:border-ink"
                         )}>
-                            {os === "win" && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Recommended for you
-                                </div>
-                            )}
+                            Download .dmg
+                            <ArrowRight className="w-4 h-4" />
+                        </button>
+                    </motion.div>
 
-                            <div className="w-24 h-24 rounded-full bg-black/50 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform duration-300">
-                                <WindowsLogo className="w-10 h-10 text-white" />
+                    {/* Windows */}
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className={cn(
+                            "relative p-12 bg-white border border-rule flex flex-col items-center text-center transition-all duration-300 group",
+                            os === "win" ? "shadow-[16px_16px_0_var(--faint)] ring-2 ring-amber/20" : "shadow-[8px_8px_0_var(--faint)] hover:shadow-[12px_12px_0_var(--faint)]"
+                        )}
+                    >
+                        {os === "win" && (
+                            <div className="absolute -top-4 bg-amber text-ink text-[10px] font-mono tracking-widest uppercase px-4 py-1 border border-ink shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+                                Recommended
                             </div>
+                        )}
 
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold text-white">Windows</h2>
-                                <div className="space-y-1">
-                                    <p className="text-zinc-400">Windows 10 or 11 (64-bit)</p>
-                                    <p className="text-zinc-500 text-sm">x64 Architecture</p>
-                                </div>
-                            </div>
+                        <div className="w-20 h-20 border border-rule bg-cream grid place-items-center mb-10 group-hover:bg-amber transition-colors duration-500">
+                            <WindowsLogo className="w-8 h-8 text-ink" />
+                        </div>
 
-                            <Button
-                                className={cn(
-                                    "w-full h-14 text-lg rounded-full transition-all duration-300",
-                                    os === "win"
-                                        ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                                        : "bg-zinc-800 hover:bg-zinc-700 text-white"
-                                )}
-                            >
-                                Download for Windows (.exe)
-                            </Button>
+                        <h2 className="font-serif text-3xl font-bold mb-4">Windows</h2>
+                        <div className="font-mono text-[12px] text-mid mb-12 space-y-2">
+                            <p>Windows 10 or 11</p>
+                            <p className="opacity-50 tracking-tighter">x64 Architecture</p>
+                        </div>
+
+                        <button className={cn(
+                            "w-full py-4 px-8 font-mono text-[12px] tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-3",
+                            os === "win" 
+                                ? "bg-ink text-paper hover:bg-amber hover:text-ink" 
+                                : "bg-cream text-ink border border-rule hover:border-ink"
+                        )}>
+                            Download .exe
+                            <ArrowRight className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                </div>
+
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="mt-32 pt-20 border-t border-rule"
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+                        <div>
+                            <span className="font-mono text-[10px] uppercase text-amber block mb-4">Hardware</span>
+                            <p className="font-mono text-[12px] text-mid leading-loose">
+                                8GB RAM minimum. <br />
+                                2GB free disk space.
+                            </p>
+                        </div>
+                        <div>
+                            <span className="font-mono text-[10px] uppercase text-amber block mb-4">Privacy</span>
+                            <p className="font-mono text-[12px] text-mid leading-loose">
+                                Local-first processing. <br />
+                                Deterministic data isolation.
+                            </p>
+                        </div>
+                        <div>
+                            <span className="font-mono text-[10px] uppercase text-amber block mb-4">Beta</span>
+                            <p className="font-mono text-[12px] text-mid leading-loose">
+                                Linux support in preview. <br />
+                                <a href="/support" className="border-b border-rule hover:border-amber transition-colors">Join waitlist</a>
+                            </p>
                         </div>
                     </div>
-
-                    <div className="mt-20 max-w-2xl mx-auto text-center space-y-6">
-                        <h3 className="font-medium text-zinc-500 uppercase tracking-widest text-xs">System Requirements</h3>
-                        <ul className="text-zinc-400 space-y-3 text-sm">
-                            <li>• 8GB RAM minimum (16GB recommended for large graphs)</li>
-                            <li>• 2GB free disk space</li>
-                            <li>• Internet connection required only for initial setup and updates</li>
-                        </ul>
-                        <p className="pt-8 text-xs text-zinc-600">
-                            Linux support is currently in beta. <a href="#" className="underline hover:text-emerald-400 transition-colors">Join the preview list.</a>
-                        </p>
-                    </div>
-                </Container>
-            </Section>
+                </motion.div>
+            </div>
         </div>
     );
 }

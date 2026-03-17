@@ -1,65 +1,90 @@
-import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
+"use client";
+
+import { motion } from "framer-motion";
 
 export default function TermsPage() {
     return (
-        <div className="pt-24 pb-12">
-            <Section>
-                <Container>
-                    <div className="max-w-3xl mx-auto space-y-8">
-                        <div className="border-b border-border pb-8">
-                            <h1 className="text-3xl font-bold tracking-tight mb-4">Terms of Service</h1>
-                            <p className="text-muted-foreground">Effective Date: January 1, 2026</p>
-                        </div>
-
-                        <div className="space-y-6 text-foreground/90">
-                            <section className="space-y-3">
-                                <h2 className="text-xl font-semibold text-foreground">1. Acceptance of Terms</h2>
-                                <p className="leading-relaxed">
-                                    By downloading, installing, or using Cognode (&quot;the Software&quot;), you agree to be bound by these Terms. If you do not agree, do not use the Software.
-                                </p>
-                            </section>
-
-                            <section className="space-y-3">
-                                <h2 className="text-xl font-semibold text-foreground">2. License Grant</h2>
-                                <p className="leading-relaxed">
-                                    Cognode grants you a limited, non-exclusive, non-transferable, revocable license to use the Software for personal or commercial purposes, subject to your subscription plan.
-                                </p>
-                            </section>
-
-                            <section className="space-y-3">
-                                <h2 className="text-xl font-semibold text-foreground">3. Restrictions</h2>
-                                <ul className="list-disc pl-5 space-y-2 leading-relaxed">
-                                    <li>You may not reverse engineer, decompile, or disassemble the Software.</li>
-                                    <li>You may not sell, resell, rent, or lease the Software to third parties.</li>
-                                    <li>You may not remove or alter any proprietary notices or labels on the Software.</li>
-                                </ul>
-                            </section>
-
-                            <section className="space-y-3">
-                                <h2 className="text-xl font-semibold text-foreground">4. Intellectual Property</h2>
-                                <p className="leading-relaxed">
-                                    The Software, including its code, documentation, appearance, structure, and organization, is the exclusive property of Cognode Inc.
-                                </p>
-                            </section>
-
-                            <section className="space-y-3">
-                                <h2 className="text-xl font-semibold text-foreground">5. Disclaimer of Warranties</h2>
-                                <p className="leading-relaxed">
-                                    THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND. COGNODE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-                                </p>
-                            </section>
-
-                            <section className="space-y-3">
-                                <h2 className="text-xl font-semibold text-foreground">6. Termination</h2>
-                                <p className="leading-relaxed">
-                                    We may terminate or suspend your access immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
-                                </p>
-                            </section>
-                        </div>
+        <div className="pt-32 pb-24 px-8 md:px-12 max-w-4xl mx-auto">
+            <header className="mb-16">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="flex items-center gap-3 mb-6"
+                >
+                    <div className="w-10 h-10 border-[1.5px] border-ink grid place-items-center">
+                        <div className="w-3 h-3 bg-amber rounded-full" />
                     </div>
-                </Container>
-            </Section>
+                    <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-amber font-bold">Legal</span>
+                </motion.div>
+                
+                <motion.h1 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="font-serif text-5xl mb-8 leading-tight"
+                >
+                    Terms of Service
+                </motion.h1>
+                <p className="font-mono text-[12px] text-mid">Last Updated: March 17, 2026</p>
+            </header>
+
+            <section className="font-mono text-[14px] text-ink leading-loose space-y-12">
+                <div>
+                    <h2 className="font-serif text-2xl mb-4 border-b border-rule pb-2">1. Acceptance of Terms</h2>
+                    <p>
+                        By accessing or using Cognode, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use our service. These terms apply to all users of the Cognode platform, including the desktop application and web services.
+                    </p>
+                </div>
+
+                <div>
+                    <h2 className="font-serif text-2xl mb-4 border-b border-rule pb-2">2. Use of Service</h2>
+                    <p>
+                        Cognode provides an AI-native research operating system. You are granted a non-exclusive, non-transferable, revocable license to use the service for personal or professional research purposes. You agree not to:
+                    </p>
+                    <ul className="list-disc pl-6 mt-4 space-y-2">
+                        <li>Use the service for any illegal or unauthorized purpose.</li>
+                        <li>Attempt to reverse engineer or extract the source code of the application.</li>
+                        <li>Use automated systems (bots, scrapers) to access the service without authorization.</li>
+                        <li>Interfere with or disrupt the integrity or performance of the service.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 className="font-serif text-2xl mb-4 border-b border-rule pb-2">3. User Content & Intellectual Property</h2>
+                    <p>
+                        You retain ownership of all data, notes, and documents you create on the Cognode platform. By using our synthesis services, you grant Cognode a limited license to process your content through our AI agent pipeline solely for the purpose of providing the service to you.
+                    </p>
+                    <p className="mt-4">
+                        We do not claim ownership of your research findings or synthesized papers. However, the Cognode software, brand, and proprietary agent architectures are the intellectual property of Cognode.
+                    </p>
+                </div>
+
+                <div>
+                    <h2 className="font-serif text-2xl mb-4 border-b border-rule pb-2">4. AI & Synthesis Disclaimer</h2>
+                    <p>
+                        Cognode utilizes third-party AI models (including Gemini and others) to perform synthesis and data extraction. While we implement a multi-agent review process to minimize hallucinations and errors, we do not guarantee the absolute accuracy or factual correctness of AI-generated content. Users are responsible for verifying all citations and claims before publication.
+                    </p>
+                </div>
+
+                <div>
+                    <h2 className="font-serif text-2xl mb-4 border-b border-rule pb-2">5. Limitation of Liability</h2>
+                    <p>
+                        Cognode and its creators shall not be liable for any indirect, incidental, special, or consequential damages resulting from the use or inability to use the service, including but not limited to loss of data or research integrity.
+                    </p>
+                </div>
+
+                <div>
+                    <h2 className="font-serif text-2xl mb-4 border-b border-rule pb-2">6. Termination</h2>
+                    <p>
+                        We reserve the right to terminate or suspend your access to the service at our sole discretion, without notice, for conduct that we believe violates these Terms or is harmful to other users or the service.
+                    </p>
+                </div>
+
+                <div className="pt-12 mt-12 border-t border-rule text-mid text-[12px]">
+                    <p>© 2026 Cognode Laboratory. For legal inquiries, contact support@cognode.io</p>
+                </div>
+            </section>
         </div>
     );
 }

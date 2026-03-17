@@ -46,7 +46,7 @@ export default async function ChangelogPage({
         hasError = true;
       }
     }
-  } catch (e) {
+    } catch {
     hasError = true;
   }
 

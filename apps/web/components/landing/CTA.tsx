@@ -34,7 +34,7 @@ export function CTA() {
                     >
                         Download v1.0
                     </Link>
-                    <span className="text-mid text-[10px] tracking-[0.1em] uppercase font-mono">
+                    <span className="text-mid text-[10px] tracking-widest uppercase font-mono">
                         Available for macOS & Windows — Build: 2024.1
                     </span>
                 </div>

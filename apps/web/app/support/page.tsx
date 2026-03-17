@@ -9,7 +9,7 @@ const supportOptions = [
         title: "Documentation",
         description: "Read the full user guide and API reference.",
         icon: BookOpen,
-        href: "#", // Placeholder
+        href: "/how-it-works",
         cta: "Read Docs",
     },
     {
