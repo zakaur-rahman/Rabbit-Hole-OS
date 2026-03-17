@@ -1,5 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
+import fs from 'fs';
+import path from 'path';
 
 export default async function ChangelogPage({
   searchParams,
@@ -8,6 +10,7 @@ export default async function ChangelogPage({
 }) {
   const resolvedParams = await searchParams;
   const version = resolvedParams.version || 'latest';
+  let displayVersion = version;
   
   // Fetch from GitHub Releases API
   let markdown = '';
@@ -20,7 +23,10 @@ export default async function ChangelogPage({
       ? 'https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/latest'
       : `https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/v${version.replace(/^v/, '')}`;
       
-    const res = await fetch(apiUrl, { next: { revalidate: 3600 } });
+    const res = await fetch(apiUrl, { 
+      next: { revalidate: 3600 },
+      headers: { 'User-Agent': 'Cognode/1.0' } // Good practice for GitHub API
+    });
     
     if (res.ok) {
       const data = await res.json();
@@ -31,7 +37,9 @@ export default async function ChangelogPage({
         month: 'long',
         day: 'numeric'
       });
+      if (version === 'latest') displayVersion = (data.tag_name || '').replace(/^v/, '');
     } else {
+      // API Failed - Try Local Fallback
       if (res.status === 404 && version !== 'latest') {
         const fbRes = await fetch(`https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/${version.replace(/^v/, '')}`, { next: { revalidate: 3600 }});
         if (fbRes.ok) {
@@ -40,30 +48,67 @@ export default async function ChangelogPage({
            releaseName = data.name || data.tag_name;
            releaseDate = new Date(data.published_at).toLocaleDateString();
         } else {
-           hasError = true;
+           throw new Error('Fallback failed');
+        }
+      } else {
+        throw new Error('API Error');
+      }
+    }
+  } catch {
+    // FINAL FALLBACK: Read local CHANGELOG.md
+    try {
+      const changelogPath = path.join(process.cwd(), '../../CHANGELOG.md');
+      if (fs.existsSync(changelogPath)) {
+        const content = fs.readFileSync(changelogPath, 'utf8');
+        // Extract latest version or specific one
+        const sections = content.split(/^##\s+/m);
+        // First section is header, skip it
+        const releases = sections.slice(1);
+        
+        let targetRelease = null;
+        if (version === 'latest') {
+          targetRelease = releases[0];
+        } else {
+          targetRelease = releases.find(r => r.startsWith(`[${version}]`) || r.startsWith(version));
+        }
+
+        if (targetRelease) {
+          const lines = targetRelease.split('\n');
+          const titleLine = lines[0];
+          // Match version (G1) and date (G2), skipping the optional comparison link
+          const nameMatch = titleLine.match(/\[?([\d\.]+)\]?(?:\s*\([^)]+\))?\s*\(([^)]+)\)/);
+          
+          const foundVersion = nameMatch ? nameMatch[1] : version;
+          releaseName = `v${foundVersion}`;
+          releaseDate = nameMatch ? nameMatch[2] : 'Released Recently';
+          markdown = lines.slice(1).join('\n').trim();
+          
+          displayVersion = foundVersion;
+        } else {
+          hasError = true;
         }
       } else {
         hasError = true;
       }
-    }
     } catch {
-    hasError = true;
+      hasError = true;
+    }
   }
 
   const renderMarkdown = (text: string) => {
-    const sections = text.split(/(?=^##\s)/m);
+    const sections = text.split(/(?=^###?\s)/m);
     
     return sections.map((section, idx) => {
        const lines = section.trim().split('\n');
        if (lines.length === 0) return null;
        
-       const headerMatch = lines[0].match(/^##\s*(.*)$/);
+       const headerMatch = lines[0].match(/^###?\s*(.*)$/);
        const isHeader = !!headerMatch;
        
        return (
          <div key={idx} className={isHeader ? "mt-10" : "mt-2"}>
             {isHeader && (
-               <h3 className="font-serif text-[24px] font-bold text-ink mb-6 border-b border-rule pb-2 tracking-tight">
+               <h3 className="font-serif text-[20px] font-bold text-ink mb-6 border-b border-rule pb-2 tracking-tight">
                  {headerMatch[1]}
                </h3>
             )}
@@ -74,7 +119,9 @@ export default async function ChangelogPage({
                   
                   const bulletMatch = item.match(/^[-*+]\s+(.*)$/);
                   if (bulletMatch) {
-                     const content = bulletMatch[1].replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>');
+                     const content = bulletMatch[1]
+                        .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>')
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-amber hover:underline no-underline">$1</a>');
                      
                      return (
                         <li key={lIdx} className="flex items-start gap-4 text-mid text-[13px] font-mono leading-relaxed">
@@ -84,7 +131,16 @@ export default async function ChangelogPage({
                      );
                   }
                   
-                  return <p key={lIdx} className="text-mid text-[13px] font-mono mb-4 leading-relaxed">{item.replace(/^#+\s/, '')}</p>;
+                  const paragraphContent = item
+                    .replace(/^#+\s/, '')
+                    .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>')
+                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-amber hover:underline no-underline">$1</a>');
+
+                  return (
+                    <p key={lIdx} className="text-mid text-[13px] font-mono mb-4 leading-relaxed">
+                        <span dangerouslySetInnerHTML={{ __html: paragraphContent }} />
+                    </p>
+                  );
                })}
             </ul>
          </div>
@@ -97,7 +153,7 @@ export default async function ChangelogPage({
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-[40%] h-screen border-l border-rule/30 opacity-20 pointer-events-none" />
       
-      <div className="max-w-3xl relative z-10">
+      <div className="max-w-3xl mx-auto relative z-10">
         <Link 
             href="/" 
             className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-mid no-underline mb-12 group font-mono"
@@ -106,12 +162,13 @@ export default async function ChangelogPage({
             Back to Home
         </Link>
 
-        <header className="mb-16">
-          <div className="text-[10px] tracking-[0.2em] uppercase text-amber mb-4 flex items-center gap-3 font-mono">
+        <header className="mb-16 text-center">
+          <div className="text-[10px] tracking-[0.2em] uppercase text-amber mb-4 flex items-center justify-center gap-3 font-mono">
               <div className="w-8 h-px bg-amber" />
               Updates
+              <div className="w-8 h-px bg-amber" />
           </div>
-          <h1 className="font-serif text-[clamp(40px,6vw,70px)] font-black leading-none tracking-tighter">
+          <h1 className="font-serif text-[clamp(40px,6vw,70px)] font-black leading-none tracking-tighter mx-auto max-w-2xl">
               Changelog
           </h1>
         </header>
@@ -132,7 +189,7 @@ export default async function ChangelogPage({
                    </h2>
                    <div className="flex items-center gap-6">
                       <span className="text-amber text-[11px] font-bold tracking-[0.14em] uppercase font-mono">
-                         Build v{version.replace(/^v/, '')}
+                         Build v{displayVersion.replace(/^v/, '')}
                       </span>
                       <span className="text-mid text-[11px] tracking-[0.08em] font-mono">
                          {releaseDate}

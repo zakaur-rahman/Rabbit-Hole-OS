@@ -19,7 +19,7 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
     return (
         <>
             <Navbar />
-            <main className="flex-1 w-full">
+            <main className="flex-1 w-full relative">
                 {children}
             </main>
             <Footer />

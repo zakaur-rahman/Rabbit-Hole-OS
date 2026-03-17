@@ -32,24 +32,24 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
+  background: var(--paper);
 }
 
 body {
-  background: #f5f0e8; /* Fallback for heavy flickering */
-  background: var(--paper);
+  background: #f5f0e8;
   color: var(--ink);
   font-family: var(--font-mono), monospace;
   font-weight: 300;
   font-size: 13px;
   line-height: 1.7;
   overflow-x: hidden;
-  cursor: crosshair;
+  cursor: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 a, button {
-  cursor: crosshair;
+  cursor: none;
 }
 
 /* ── UTILITIES ── */
@@ -92,4 +92,46 @@ a, button {
 @keyframes nodePulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.3); opacity: 0.6; }
-}
+}
+
+/* ── PREMIUM CURSOR ── */
+
+.adaptive-cursor-dot {
+  position: fixed;
+  top: -4px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: white;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 9999;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.adaptive-cursor-ring {
+  position: fixed;
+  top: -16px;
+  left: -16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 9998;
+  transition: all 0.25s ease;
+}
+
+/* hover interactions */
+
+.cursor-hover .adaptive-cursor-ring {
+  transform: scale(1.6);
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cursor-hover .adaptive-cursor-dot {
+  transform: scale(1.5);
+}
