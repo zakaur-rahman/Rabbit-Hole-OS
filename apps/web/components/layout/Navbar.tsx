@@ -1,19 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-    { href: "#features", label: "Features" },
-    { href: "#pipeline", label: "How It Works" },
-    { href: "#privacy", label: "Privacy" },
+    { href: "/features", label: "Features" },
+    { href: "/how-it-works", label: "How It Works" },
+    { href: "/privacy", label: "Privacy" },
 ];
 
 export function Navbar() {
-    const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -27,7 +24,7 @@ export function Navbar() {
     return (
         <nav 
             className={cn(
-                "fixed top-0 left-0 right-0 z-[200] flex items-center justify-between transition-all duration-300 border-b border-rule",
+                "fixed top-0 left-0 right-0 z-200 flex items-center justify-between transition-all duration-300 border-b border-rule",
                 scrolled ? "py-4 px-6 md:px-12 bg-paper/90 backdrop-blur-xl" : "py-6 px-8 md:px-12 bg-paper/94 backdrop-blur-md"
             )}
         >
@@ -52,7 +49,7 @@ export function Navbar() {
                 <li>
                     <Link 
                         href="/changelog"
-                        className="no-underline text-mid text-[11px] tracking-[0.12em] uppercase transition-colors hover:text-ink font-mono"
+                        className="no-underline text-mid text-[11px] tracking-[0.12em] uppercase transition-colors hover:text-ink font-mono border border-rule px-4 py-2 hover:border-ink"
                     >
                         Changelog
                     </Link>

@@ -46,7 +46,7 @@ export default async function ChangelogPage({
         hasError = true;
       }
     }
-  } catch (e) {
+    } catch {
     hasError = true;
   }
 
@@ -146,7 +146,7 @@ export default async function ChangelogPage({
              </div>
 
              <div className="bg-cream px-10 py-6 border-t border-rule text-right">
-                <span className="text-[10px] text-mid tracking-[0.1em] uppercase font-mono">Cognode — Built for connected thought</span>
+                <span className="text-[10px] text-mid tracking-widest uppercase font-mono">Cognode — Built for connected thought</span>
              </div>
           </div>
         )}

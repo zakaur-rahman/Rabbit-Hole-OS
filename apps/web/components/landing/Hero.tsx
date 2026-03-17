@@ -23,14 +23,14 @@ export function Hero() {
                     v1.0 — Local-First Intelligence
                 </div>
                 
-                <h1 className={cn("font-serif text-[clamp(48px,6.5vw,90px)] font-black leading-[1.0] tracking-tighter mb-8 opacity-0 translate-y-5 transition-all duration-700 delay-200", vis && "opacity-100 translate-y-0")}>
-                    Build <em className="italic text-amber font-normal">Ideas</em><br />
-                    as Connected<br />
-                    Nodes
+                <h1 className={cn("font-serif text-[clamp(48px,6.5vw,90px)] font-black leading-none tracking-tighter mb-8 opacity-0 translate-y-5 transition-all duration-700 delay-200", vis && "opacity-100 translate-y-0")}>
+                    From <em className="italic text-amber font-normal">Rabbit Hole</em><br />
+                    to Research<br />
+                    Paper
                 </h1>
                 
                 <p className={cn("text-[13px] text-mid max-w-[380px] border-l-2 border-amber pl-[18px] leading-[1.9] mb-11 opacity-0 translate-y-4 transition-all duration-700 delay-350", vis && "opacity-100 translate-y-0")}>
-                    Cognode lets you visually structure ideas, connect concepts, and execute workflows. No cloud required. No lock-in.
+                    Cognode is an AI-native research operating system. Visually structure ideas, connect nodes, and synthesize complex insights into publication-ready documents.
                 </p>
                 
                 <div className={cn("flex items-center gap-[22px] opacity-0 translate-y-3 transition-all duration-700 delay-500", vis && "opacity-100 translate-y-0")}>
@@ -42,7 +42,7 @@ export function Hero() {
                         <span className="text-[13px] transition-transform group-hover:translate-x-1 group-hover:-translate-y-1">↗</span>
                     </Link>
                     <Link 
-                        href="#features" 
+                        href="/how-it-works" 
                         className="text-mid text-[11px] tracking-[0.12em] uppercase no-underline border-b border-rule pb-0.5 transition-colors hover:text-ink hover:border-ink font-mono"
                     >
                         Documentation
@@ -67,10 +67,10 @@ export function Hero() {
                             <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-200" x1="240" y1="130" x2="360" y2="80" />
                             <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-400" x1="240" y1="130" x2="160" y2="210" />
                             <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-600" x1="240" y1="130" x2="330" y2="200" />
-                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-[800ms]" x1="120" y1="70" x2="65" y2="155" />
-                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-[1000ms]" x1="360" y1="80" x2="415" y2="155" />
-                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-[1200ms]" x1="160" y1="210" x2="88" y2="258" />
-                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-[1400ms]" x1="330" y1="200" x2="398" y2="252" />
+                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-800" x1="120" y1="70" x2="65" y2="155" />
+                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-1000" x1="360" y1="80" x2="415" y2="155" />
+                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-1200" x1="160" y1="210" x2="88" y2="258" />
+                            <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-1400" x1="330" y1="200" x2="398" y2="252" />
                         </g>
                         
                         <g fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--mid)">
@@ -89,9 +89,9 @@ export function Hero() {
                         <circle cx="240" cy="130" r="6" fill="var(--amber)" className="animate-[pulse_2.5s_ease-in-out_infinite]" />
                         
                         <circle cx="120" cy="70" r="6" fill="var(--paper)" stroke="var(--rule)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-500" />
-                        <circle cx="360" cy="80" r="6" fill="var(--paper)" stroke="var(--rule)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-[1000ms]" />
-                        <circle cx="160" cy="210" r="6" fill="var(--paper)" stroke="var(--rule)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-[1500ms]" />
-                        <circle cx="330" cy="200" r="7" fill="var(--paper)" stroke="var(--amber)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-[2000ms]" />
+                        <circle cx="360" cy="80" r="6" fill="var(--paper)" stroke="var(--rule)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-1000" />
+                        <circle cx="160" cy="210" r="6" fill="var(--paper)" stroke="var(--rule)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-1500" />
+                        <circle cx="330" cy="200" r="7" fill="var(--paper)" stroke="var(--amber)" strokeWidth="1.5" className="animate-[pulse_2.5s_ease-in-out_infinite] delay-2000" />
                         
                         <circle cx="65" cy="155" r="4.5" fill="var(--cream)" stroke="var(--rule)" strokeWidth="1" />
                         <circle cx="415" cy="155" r="4.5" fill="var(--cream)" stroke="var(--rule)" strokeWidth="1" />

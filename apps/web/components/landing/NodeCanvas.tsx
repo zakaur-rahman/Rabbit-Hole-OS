@@ -12,8 +12,17 @@ export function NodeCanvas() {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        interface CanvasNode {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            r: number;
+            pulse: number;
+        }
+
         let W: number, H: number;
-        const NODES: any[] = [];
+        const NODES: CanvasNode[] = [];
 
         const resize = () => {
             const parent = canvas.parentElement;

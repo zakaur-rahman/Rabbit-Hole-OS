@@ -22,13 +22,19 @@ export function Privacy() {
         <section id="privacy" className="px-12 py-32 bg-paper relative z-10 border-b border-rule grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
             <div className={cn("opacity-0 -translate-x-8 transition-all duration-800", vis && "opacity-100 translate-x-0")}>
                 <span className="text-[10px] tracking-[0.2em] uppercase text-amber mb-6 block font-mono">Data Integrity</span>
-                <h2 className="font-serif text-[clamp(36px,5vw,60px)] font-black leading-[1.0] tracking-tighter mb-8">
+                <h2 className="font-serif text-[clamp(36px,5vw,60px)] font-black leading-none tracking-tighter mb-8">
                     Your Thoughts,<br />
                     Stay <em className="italic font-normal">Yours</em>
                 </h2>
-                <p className="text-mid text-[14px] leading-[1.9] max-w-[420px] font-mono">
+                <p className="text-mid text-[14px] leading-[1.9] max-w-[420px] font-mono mb-8">
                     Cognode is built on the principle of local-first software. We never see your data, and we don&apos;t want to. No trackers, no telemetry, no cloud lock-in. Just your files, on your machine.
                 </p>
+                <a 
+                    href="/privacy" 
+                    className="text-amber text-[10px] tracking-[0.15em] uppercase no-underline font-mono border-b border-amber pb-0.5 hover:text-ink hover:border-ink transition-colors"
+                >
+                    Review our full Security Protocol
+                </a>
             </div>
 
             <div className={cn("border border-rule bg-cream p-12 shadow-[12px_12px_0_var(--faint)] opacity-0 translate-x-8 transition-all duration-800", vis && "opacity-100 translate-x-0")}>
