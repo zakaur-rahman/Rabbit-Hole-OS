@@ -1,6 +1,6 @@
 import React from 'react';
+import Link from 'next/link';
 
-// For Next.js App Router, page components can be async to fetch data server-side
 export default async function ChangelogPage({
   searchParams,
 }: {
@@ -50,9 +50,7 @@ export default async function ChangelogPage({
     hasError = true;
   }
 
-  // Basic markdown structural parser tailored for GitHub standard releases
   const renderMarkdown = (text: string) => {
-    // 1. Split into sections by Headers (e.g. ## Features)
     const sections = text.split(/(?=^##\s)/m);
     
     return sections.map((section, idx) => {
@@ -63,32 +61,30 @@ export default async function ChangelogPage({
        const isHeader = !!headerMatch;
        
        return (
-         <div key={idx} className={isHeader ? "mt-8" : "mt-2"}>
+         <div key={idx} className={isHeader ? "mt-10" : "mt-2"}>
             {isHeader && (
-               <h3 className="text-xl font-semibold text-white mb-4 border-b border-gray-800 pb-2">
+               <h3 className="font-serif text-[24px] font-bold text-ink mb-6 border-b border-rule pb-2 tracking-tight">
                  {headerMatch[1]}
                </h3>
             )}
-            <ul className="space-y-3">
+            <ul className="list-none m-0 p-0 space-y-4">
                {(isHeader ? lines.slice(1) : lines).map((line, lIdx) => {
                   const item = line.trim();
                   if (!item) return null;
                   
-                  // Handle bullet points
                   const bulletMatch = item.match(/^[-*+]\s+(.*)$/);
                   if (bulletMatch) {
-                     // Very simple bold parsing via regex (**text**) 
-                     const content = bulletMatch[1].replace(/\*\*(.*?)\*\*/g, '<span class="font-semibold text-gray-200">$1</span>');
+                     const content = bulletMatch[1].replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-ink">$1</span>');
                      
                      return (
-                        <li key={lIdx} className="flex items-start gap-3 text-gray-400">
-                           <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                        <li key={lIdx} className="flex items-start gap-4 text-mid text-[13px] font-mono leading-relaxed">
+                           <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber shrink-0" />
                            <span dangerouslySetInnerHTML={{ __html: content }} />
                         </li>
                      );
                   }
                   
-                  return <p key={lIdx} className="text-gray-400 mb-2">{item.replace(/^#+\s/, '')}</p>;
+                  return <p key={lIdx} className="text-mid text-[13px] font-mono mb-4 leading-relaxed">{item.replace(/^#+\s/, '')}</p>;
                })}
             </ul>
          </div>
@@ -97,42 +93,60 @@ export default async function ChangelogPage({
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">Changelog</h1>
-          <p className="text-gray-400 text-lg">
-            What&apos;s new in Cognode Desktop.
-          </p>
+    <div className="min-h-screen bg-paper text-ink pt-32 pb-20 px-6 md:px-12 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-[40%] h-screen border-l border-rule/30 opacity-20 pointer-events-none" />
+      
+      <div className="max-w-3xl relative z-10">
+        <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-mid no-underline mb-12 group font-mono"
+        >
+            <span className="transition-transform group-hover:-translate-x-1">←</span>
+            Back to Home
+        </Link>
+
+        <header className="mb-16">
+          <div className="text-[10px] tracking-[0.2em] uppercase text-amber mb-4 flex items-center gap-3 font-mono">
+              <div className="w-8 h-px bg-amber" />
+              Updates
+          </div>
+          <h1 className="font-serif text-[clamp(40px,6vw,70px)] font-black leading-none tracking-tighter">
+              Changelog
+          </h1>
         </header>
 
         {hasError ? (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 text-center">
-            <h2 className="text-red-400 text-lg font-medium mb-2">Release Notes Not Found</h2>
-            <p className="text-gray-400">
+          <div className="border border-rule bg-cream p-12 shadow-[12px_12px_0_var(--faint)]">
+            <h2 className="font-serif text-[24px] font-bold text-ink mb-4">Release Notes Not Found</h2>
+            <p className="text-mid text-[13px] font-mono leading-relaxed">
               We couldn&apos;t find the release notes for version {version}.
             </p>
           </div>
         ) : (
-          <div className="bg-[#121212] border border-[#2a2a2a] rounded-2xl overflow-hidden shadow-2xl">
-             <div className="bg-[#1a1a1a] px-8 py-6 border-b border-[#2a2a2a] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="border border-rule bg-white shadow-[12px_12px_0_var(--faint)] overflow-hidden">
+             <div className="bg-cream px-10 py-8 border-b border-rule flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                   <h2 className="text-2xl font-bold text-white mb-1">
+                   <h2 className="font-serif text-[32px] font-bold text-ink mb-2 tracking-tight">
                      {releaseName}
                    </h2>
-                   <div className="flex items-center gap-3">
-                      <span className="bg-blue-500/10 text-blue-400 px-2.5 py-0.5 rounded-full text-xs font-medium border border-blue-500/20">
-                         v{version.replace(/^v/, '')}
+                   <div className="flex items-center gap-6">
+                      <span className="text-amber text-[11px] font-bold tracking-[0.14em] uppercase font-mono">
+                         Build v{version.replace(/^v/, '')}
                       </span>
-                      <span className="text-gray-500 text-sm">
+                      <span className="text-mid text-[11px] tracking-[0.08em] font-mono">
                          {releaseDate}
                       </span>
                    </div>
                 </div>
              </div>
              
-             <div className="p-8">
+             <div className="p-10">
                 {renderMarkdown(markdown)}
+             </div>
+
+             <div className="bg-cream px-10 py-6 border-t border-rule text-right">
+                <span className="text-[10px] text-mid tracking-[0.1em] uppercase font-mono">Cognode — Built for connected thought</span>
              </div>
           </div>
         )}

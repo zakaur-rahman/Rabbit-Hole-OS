@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientLayoutWrapper } from "@/components/layout/ClientLayoutWrapper";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
+  variable: "--font-serif",
   subsets: ["latin"],
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmMono = DM_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ['300', '400', '500'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Cognode - Turn Connected Knowledge Into Structured Insight",
-  description: "AI-powered knowledge graph and research synthesis desktop application.",
+  title: "Cognode — Built for connected thought",
+  description: "Visually structure ideas, connect concepts, and execute workflows locally.",
 };
 
 export default function RootLayout({
@@ -24,10 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-background text-foreground`}
-      >
+    <html lang="en" suppressHydrationWarning className={`${playfair.variable} ${dmMono.variable}`}>
+      <body className="antialiased min-h-screen">
         <ClientLayoutWrapper>
           {children}
         </ClientLayoutWrapper>
