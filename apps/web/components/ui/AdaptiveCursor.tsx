@@ -13,6 +13,22 @@ export function AdaptiveCursor() {
   const y = useSpring(mouseY, springConfig);
 
   useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'adaptive-cursor-style';
+    style.innerHTML = `
+      body, html, a, button, * {
+        cursor: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      const existing = document.getElementById('adaptive-cursor-style');
+      if (existing) existing.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     const move = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);

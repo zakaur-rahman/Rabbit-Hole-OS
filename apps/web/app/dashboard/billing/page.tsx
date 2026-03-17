@@ -6,7 +6,7 @@ import { SubscriptionManagement } from '@/components/dashboard/SubscriptionManag
 import { PaymentHistory } from '@/components/dashboard/PaymentHistory';
 import { PlanType } from '@/lib/constants';
 import { useUser } from '@/components/providers/UserContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 
 export default function BillingPage() {
     const { user, isLoading, error, reload } = useUser();
@@ -14,11 +14,16 @@ export default function BillingPage() {
 
     if (error) {
         return (
-            <div className="p-6 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl flex flex-col items-center gap-4 max-w-md mx-auto mt-16">
-                <p className="text-sm text-center">{error}</p>
-                <button onClick={reload} className="px-4 py-2 text-sm font-medium bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 rounded-lg transition-colors">
-                    Try Again
-                </button>
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="p-8 text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded-3xl flex flex-col items-center gap-4 max-w-md mx-auto">
+                    <p className="text-[13px] font-mono text-center uppercase tracking-widest leading-relaxed">{error}</p>
+                    <button 
+                        onClick={reload} 
+                        className="px-6 py-2.5 text-[11px] font-mono font-bold uppercase tracking-widest bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl transition-all"
+                    >
+                        Retry Protocol
+                    </button>
+                </div>
             </div>
         );
     }
@@ -26,41 +31,57 @@ export default function BillingPage() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <Loader2 className="w-8 h-8 text-amber animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Billing & Plans</h1>
-                <p className="text-muted-foreground">Manage your subscription, view current limits, and upgrade your account.</p>
-            </div>
+        <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
+            <header className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber/10 border border-amber/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
+                    <span className="text-[10px] font-mono font-bold text-amber uppercase tracking-[0.2em]">Financial Node</span>
+                </div>
+                <h1 className="text-5xl font-serif font-black text-white tracking-tight">Billing & Plans</h1>
+                <p className="text-[14px] font-mono text-neutral-500 max-w-2xl leading-relaxed">
+                    Manage your synchronization protocols, view operational limits, and scale your cognitive infrastructure.
+                </p>
+            </header>
 
-            {/* Top Level: Upcoming Bill & Current Plan details */}
             <div className="space-y-8">
                 <UpcomingPlan currentPlan={plan} />
-                <PlanCard currentPlan={plan} />
+                
+                <section className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-px flex-1 bg-white/5" />
+                        <h2 className="text-[10px] font-mono font-bold text-neutral-600 uppercase tracking-[0.3em]">Subscription Tiers</h2>
+                        <div className="h-px flex-1 bg-white/5" />
+                    </div>
+                    <PlanCard currentPlan={plan} />
+                </section>
             </div>
 
-            {/* Mid Level: Invoice History */}
             <PaymentHistory />
 
-            {/* Bottom Level: Destructive / Lifecycle Actions */}
             <SubscriptionManagement currentPlan={plan} />
 
-            {/* Email Preferences */}
-            <div className="bg-card/20 border border-border/30 rounded-3xl p-6 flex justify-between items-center mt-6">
-                <div>
-                    <p className="font-medium text-foreground">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive receipts and billing updates directly to your inbox.</p>
+            {/* Notification Protocol */}
+            <div className="group relative overflow-hidden bg-neutral-900/50 border border-white/5 rounded-4xl p-8 flex flex-col md:flex-row justify-between items-center gap-8 transition-all hover:border-white/10">
+                <div className="flex items-center gap-6">
+                    <div className="w-14 h-14 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center text-neutral-400 group-hover:text-white transition-colors">
+                        <Mail className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-xl font-serif font-bold text-white mb-1">Communication Protocol</p>
+                        <p className="text-[13px] font-mono text-neutral-500">Receive synchronization receipts and billing updates directly to your terminal.</p>
+                    </div>
                 </div>
                 <button
                     onClick={() => window.open('/dashboard/billing#preferences', '_self')}
-                    className="text-sm font-medium border border-border bg-secondary hover:bg-white/5 transition-colors px-4 py-2 rounded-lg"
+                    className="shrink-0 px-8 py-3.5 bg-white/5 border border-white/10 text-white rounded-xl font-mono text-[11px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-[0.98] transition-all"
                 >
-                    Manage Preferences
+                    Update Dispatch Rules
                 </button>
             </div>
         </div>

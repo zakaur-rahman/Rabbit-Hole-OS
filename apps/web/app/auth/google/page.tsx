@@ -4,8 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { setTokens } from '@/lib/auth';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Logo } from '@/components/layout/Logo';
+import { NodeCanvas } from '@/components/landing/NodeCanvas';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 const REDIRECT_URI = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI || 'http://localhost:3000/auth/google';
@@ -107,58 +108,87 @@ function GoogleCallbackContent() {
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.98, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="w-full max-w-md relative z-10"
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-[480px] relative z-10"
         >
-            <div className="absolute -inset-0.5 bg-linear-to-br from-primary/30 to-emerald-700/30 rounded-[32px] blur-2xl opacity-50 z-0"></div>
-
-            <div className="relative bg-card/80 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 shadow-2xl z-10 overflow-hidden flex flex-col items-center min-h-[300px] justify-center text-center">
-                <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent"></div>
+            <div className="relative bg-white border border-rule/50 rounded-none p-12 shadow-[20px_20px_0_var(--faint)] z-10 overflow-hidden flex flex-col items-center min-h-[400px] justify-center text-center">
+                {/* Decorative Amber Accent */}
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-amber"></div>
 
                 {desktopSuccess ? (
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
-                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                    <div className="flex flex-col items-center gap-6">
+                        <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1 }} 
+                            className="w-20 h-20 bg-paper rounded-full flex items-center justify-center border border-rule/30"
+                        >
+                            <CheckCircle2 className="w-10 h-10 text-amber" strokeWidth={1.5} />
+                        </motion.div>
+                        
+                        <div className="space-y-3">
+                            <h2 className="font-serif text-2xl font-black text-ink">Success</h2>
+                            <p className="text-mid text-[12px] font-mono leading-relaxed max-w-[280px]">
+                                Your node is now linked. You can close this tab and return to the Cognode app.
+                            </p>
                         </div>
-                        <Logo className="w-10 h-10" />
-                        <h2 className="text-xl font-semibold text-foreground">Signed in successfully!</h2>
-                        <p className="text-sm text-muted-foreground">You can close this tab and return to Cognode.</p>
+
                         <button
                             onClick={() => window.close()}
-                            className="mt-2 px-4 py-2 text-sm bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-colors"
+                            className="mt-6 px-8 py-3.5 bg-ink text-paper font-mono text-[10px] tracking-[0.2em] uppercase hover:bg-amber hover:text-ink transition-all"
                         >
-                            Close Tab
+                            Securely End Session
                         </button>
                     </div>
                 ) : error ? (
-                    <div className="flex flex-col items-center">
-                        <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mb-6">
-                            <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                    <div className="flex flex-col items-center gap-6">
+                        <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1 }} 
+                            className="w-20 h-20 bg-paper rounded-full flex items-center justify-center border border-rule/30"
+                        >
+                            <XCircle className="w-10 h-10 text-mid" strokeWidth={1.5} />
+                        </motion.div>
+
+                        <div className="space-y-3">
+                            <h1 className="font-serif text-2xl font-black text-ink">Authentication Failed</h1>
+                            <p className="text-mid text-[12px] font-mono leading-relaxed px-4">{error}</p>
                         </div>
-                        <h1 className="text-xl font-bold text-foreground mb-2">Authentication Failed</h1>
-                        <p className="text-muted-foreground text-sm mb-6">{error}</p>
+                        
                         <button
                             onClick={() => router.push('/login')}
-                            className="bg-foreground text-background font-medium py-3 px-6 rounded-2xl w-full hover:bg-neutral-200 transition-colors"
+                            className="mt-6 w-full px-8 py-3.5 bg-ink text-paper font-mono text-[10px] tracking-[0.2em] uppercase hover:bg-amber hover:text-ink transition-all"
                         >
-                            Try Again
+                            Return to Entry
                         </button>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center">
-                        <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
-                            <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
-                            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            <Logo className="w-8 h-8 opacity-50 animate-pulse" />
+                    <div className="flex flex-col items-center gap-8">
+                        <div className="relative w-24 h-24 flex items-center justify-center">
+                            <div className="absolute inset-0 border-[1px] border-rule/20 rounded-full scale-110"></div>
+                            <div className="absolute inset-0 border-t-[1px] border-amber rounded-full animate-spin"></div>
+                            <Logo className="opacity-40 grayscale group-hover:grayscale-0" />
                         </div>
-                        <h1 className="text-xl font-bold text-foreground mb-2">Verifying Identity</h1>
-                        <p className="text-muted-foreground text-sm">Securely encrypting your session and exchanging keys...</p>
+                        
+                        <div className="space-y-3">
+                            <h1 className="font-serif text-2xl font-black text-ink tracking-tight">Verifying Node Identity</h1>
+                            <p className="text-mid text-[11px] font-mono tracking-wide">
+                                SECURELY ENCRYPTING SESSION &<br/>
+                                EXCHANGING SYNTHESIS KEYS...
+                            </p>
+                        </div>
+                        
+                        <div className="flex gap-1.5">
+                            {[0, 1, 2].map((i) => (
+                                <motion.div 
+                                    key={i}
+                                    animate={{ opacity: [0.3, 1, 0.3] }}
+                                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                                    className="w-1.5 h-1.5 bg-amber rounded-full"
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -168,19 +198,17 @@ function GoogleCallbackContent() {
 
 export default function AuthGoogleCallbackPage() {
     return (
-        <div className="min-h-[calc(100vh-80px)] bg-background flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-[150px]" />
-            </div>
-
+        <main className="min-h-screen bg-paper flex items-center justify-center p-6 relative overflow-hidden">
+            <NodeCanvas />
+            
             <Suspense fallback={
-                <div className="w-full max-w-md relative flex justify-center py-20 z-10">
-                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <div className="w-full max-w-md relative flex flex-col items-center justify-center py-20 z-10 gap-6">
+                    <Loader2 className="w-12 h-12 text-amber animate-spin" />
+                    <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-mid">Negotiating Protocol...</p>
                 </div>
             }>
                 <GoogleCallbackContent />
             </Suspense>
-        </div>
+        </main>
     );
 }
