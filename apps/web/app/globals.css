@@ -31,9 +31,11 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
+  background: #f5f0e8; /* Fallback for heavy flickering */
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-mono), monospace;

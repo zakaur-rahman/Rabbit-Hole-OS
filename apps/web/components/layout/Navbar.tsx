@@ -28,7 +28,7 @@ export function Navbar() {
                 scrolled ? "py-4 px-6 md:px-12 bg-paper/90 backdrop-blur-xl" : "py-6 px-8 md:px-12 bg-paper/94 backdrop-blur-md"
             )}
         >
-            <Link href="/" className="flex items-center gap-3 no-underline color-ink group">
+            <Link href="/" className="flex items-center gap-3 no-underline text-ink group">
                 <div className="w-[26px] h-[26px] border-[1.5px] border-ink grid place-items-center transition-transform group-hover:scale-105">
                     <div className="w-2 h-2 bg-amber rounded-full" />
                 </div>
@@ -49,7 +49,7 @@ export function Navbar() {
                 <li>
                     <Link 
                         href="/changelog"
-                        className="no-underline text-mid text-[11px] tracking-[0.12em] uppercase transition-colors hover:text-ink font-mono border border-rule px-4 py-2 hover:border-ink"
+                        className="no-underline text-ink text-[11px] tracking-[0.12em] uppercase font-mono border border-rule/50 px-4 py-2 hover:border-amber transition-all"
                     >
                         Changelog
                     </Link>
