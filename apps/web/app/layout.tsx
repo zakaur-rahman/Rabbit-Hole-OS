@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EB_Garamond, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientLayoutWrapper } from "@/components/layout/ClientLayoutWrapper";
+import { AdaptiveCursor } from "@/components/ui/AdaptiveCursor";
 
 const ebGaramond = EB_Garamond({
   variable: "--font-serif",
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${ebGaramond.variable} ${dmMono.variable}`}>
       <body className="antialiased min-h-screen selection:bg-amber/20 selection:text-ink">
+        <AdaptiveCursor />
         <ClientLayoutWrapper>
           {children}
         </ClientLayoutWrapper>

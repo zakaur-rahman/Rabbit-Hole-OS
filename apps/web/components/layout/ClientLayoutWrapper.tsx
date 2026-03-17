@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AdaptiveCursor } from "@/components/layout/AdaptiveCursor";
 
 export function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -20,11 +19,10 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
     return (
         <>
             <Navbar />
-            <main className="flex-1 w-full">
+            <main className="flex-1 w-full relative">
                 {children}
             </main>
             <Footer />
-            <AdaptiveCursor />
         </>
     );
 }
