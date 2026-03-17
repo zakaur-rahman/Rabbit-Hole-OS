@@ -19,12 +19,12 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
 
     return (
         <>
-            <AdaptiveCursor />
             <Navbar />
             <main className="flex-1 w-full">
                 {children}
             </main>
             <Footer />
+            <AdaptiveCursor />
         </>
     );
 }

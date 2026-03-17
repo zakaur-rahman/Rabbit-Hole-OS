@@ -29,7 +29,7 @@ export function AdaptiveCursor() {
     if (!mounted) return null;
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-9999">
+        <div className="fixed inset-0 pointer-events-none z-9999 overflow-hidden">
             {/* The primary blending dot */}
             <motion.div
                 style={{
@@ -37,8 +37,9 @@ export function AdaptiveCursor() {
                     y: elasticY,
                     left: -6,
                     top: -6,
+                    willChange: "transform",
                 }}
-                className="w-3 h-3 rounded-full bg-white mix-blend-difference"
+                className="w-3 h-3 rounded-full bg-white mix-blend-difference fixed"
             />
             
             {/* Outer ring for precision */}
@@ -48,15 +49,16 @@ export function AdaptiveCursor() {
                     y: mouseY,
                     left: -15,
                     top: -15,
+                    willChange: "transform",
                 }}
-                className="w-[30px] h-[30px] rounded-full border border-white/20 mix-blend-difference"
+                className="w-[30px] h-[30px] rounded-full border border-white/30 mix-blend-difference fixed"
                 animate={{
-                    scale: [1, 1.1, 1],
+                    scale: [1, 1.15, 1],
                 }}
                 transition={{
                     duration: 3,
                     repeat: Infinity,
-                    ease: "linear"
+                    ease: "easeInOut"
                 }}
             />
         </div>
