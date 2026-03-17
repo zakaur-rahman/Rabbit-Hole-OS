@@ -43,13 +43,13 @@ body {
   font-size: 13px;
   line-height: 1.7;
   overflow-x: hidden;
-  cursor: crosshair;
+  cursor: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 a, button {
-  cursor: crosshair;
+  cursor: none;
 }
 
 /* ── UTILITIES ── */
