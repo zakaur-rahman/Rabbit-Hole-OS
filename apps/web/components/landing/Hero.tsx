@@ -73,7 +73,7 @@ export function Hero() {
                             <line className="animate-[drawEdge_1.8s_ease_forwards] stroke-dasharray-[300] stroke-dashoffset-[300] delay-[1400ms]" x1="330" y1="200" x2="398" y2="252" />
                         </g>
                         
-                        <g font-family="var(--font-mono)" fontSize="8.5" fill="var(--mid)">
+                        <g fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--mid)">
                             <text x="82" y="58">action_potentials.md</text>
                             <text x="330" y="68">transformers.md</text>
                             <text x="28" y="150">synaptic_plasticity.md</text>
