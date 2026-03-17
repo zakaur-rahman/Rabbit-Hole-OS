@@ -1,5 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
+import fs from 'fs';
+import path from 'path';
 
 export default async function ChangelogPage({
   searchParams,
@@ -20,7 +22,10 @@ export default async function ChangelogPage({
       ? 'https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/latest'
       : `https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/v${version.replace(/^v/, '')}`;
       
-    const res = await fetch(apiUrl, { next: { revalidate: 3600 } });
+    const res = await fetch(apiUrl, { 
+      next: { revalidate: 3600 },
+      headers: { 'User-Agent': 'Cognode/1.0' } // Good practice for GitHub API
+    });
     
     if (res.ok) {
       const data = await res.json();
@@ -32,6 +37,7 @@ export default async function ChangelogPage({
         day: 'numeric'
       });
     } else {
+      // API Failed - Try Local Fallback
       if (res.status === 404 && version !== 'latest') {
         const fbRes = await fetch(`https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/${version.replace(/^v/, '')}`, { next: { revalidate: 3600 }});
         if (fbRes.ok) {
@@ -40,14 +46,47 @@ export default async function ChangelogPage({
            releaseName = data.name || data.tag_name;
            releaseDate = new Date(data.published_at).toLocaleDateString();
         } else {
-           hasError = true;
+           throw new Error('Fallback failed');
+        }
+      } else {
+        throw new Error('API Error');
+      }
+    }
+  } catch {
+    // FINAL FALLBACK: Read local CHANGELOG.md
+    try {
+      const changelogPath = path.join(process.cwd(), '../../CHANGELOG.md');
+      if (fs.existsSync(changelogPath)) {
+        const content = fs.readFileSync(changelogPath, 'utf8');
+        // Extract latest version or specific one
+        const sections = content.split(/^##\s+/m);
+        // First section is header, skip it
+        const releases = sections.slice(1);
+        
+        let targetRelease = null;
+        if (version === 'latest') {
+          targetRelease = releases[0];
+        } else {
+          targetRelease = releases.find(r => r.startsWith(`[${version}]`) || r.startsWith(version));
+        }
+
+        if (targetRelease) {
+          const lines = targetRelease.split('\n');
+          const titleLine = lines[0];
+          const nameMatch = titleLine.match(/\[?(.*?)\]?\s*\((.*?)\)/);
+          
+          releaseName = nameMatch ? `v${nameMatch[1]}` : `v${version}`;
+          releaseDate = nameMatch ? nameMatch[2] : 'Released Recently';
+          markdown = lines.slice(titleLine.startsWith('(') ? 2 : 1).join('\n').trim();
+        } else {
+          hasError = true;
         }
       } else {
         hasError = true;
       }
-    }
     } catch {
-    hasError = true;
+      hasError = true;
+    }
   }
 
   const renderMarkdown = (text: string) => {
