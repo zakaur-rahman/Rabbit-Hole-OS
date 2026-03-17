@@ -49,7 +49,7 @@ export function Navbar() {
                 <li>
                     <Link 
                         href="/changelog"
-                        className="no-underline text-ink text-[11px] tracking-[0.12em] uppercase font-mono border border-rule/50 px-4 py-2 hover:border-amber transition-all"
+                        className="no-underline text-mid text-[11px] tracking-[0.12em] uppercase transition-colors hover:text-ink font-mono border border-rule px-4 py-2 hover:border-ink"
                     >
                         Changelog
                     </Link>
