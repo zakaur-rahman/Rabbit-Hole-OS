@@ -1,19 +1,13 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CognodeLogo } from "@/components/ui/CognodeLogo";
 
 export function Logo({ className }: { className?: string }) {
     return (
-        <Link href="/" className={`flex items-center gap-2 group ${className || ''}`}>
-            <div className="relative h-8 w-8 overflow-hidden rounded-lg">
-                <Image
-                    src="/logo.jpg"
-                    alt="Cognode Logo"
-                    fill
-                    className="object-cover"
-                    priority
-                />
+        <Link href="/" className={`flex items-center gap-3 group no-underline ${className || ''}`}>
+            <div className="relative h-7 w-7 flex items-center justify-center transition-transform group-hover:scale-105">
+                <CognodeLogo className="w-full h-full text-amber" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">Cognode</span>
+            <span className="font-serif text-[19px] font-bold tracking-tight text-ink">Cognode</span>
         </Link>
     );
 }

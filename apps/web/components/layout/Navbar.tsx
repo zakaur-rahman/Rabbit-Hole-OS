@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { Logo } from "./Logo";
 
 const navLinks = [
     { href: "/features", label: "Features" },
@@ -28,12 +26,7 @@ export function Navbar() {
                 scrolled ? "py-4 px-6 md:px-12 bg-paper/90 backdrop-blur-xl" : "py-6 px-8 md:px-12 bg-paper/94 backdrop-blur-md"
             )}
         >
-            <Link href="/" className="flex items-center gap-3 no-underline text-ink group">
-                <div className="w-[26px] h-[26px] border-[1.5px] border-ink grid place-items-center transition-transform group-hover:scale-105">
-                    <div className="w-2 h-2 bg-amber rounded-full" />
-                </div>
-                <span className="font-serif text-[17px] font-bold tracking-tight">Cognode</span>
-            </Link>
+            <Logo />
 
             <ul className="hidden md:flex items-center gap-9 list-none m-0 p-0">
                 {navLinks.map((link) => (
