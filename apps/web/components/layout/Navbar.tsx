@@ -28,7 +28,7 @@ export function Navbar() {
                 scrolled ? "py-4 px-6 md:px-12 bg-paper/90 backdrop-blur-xl" : "py-6 px-8 md:px-12 bg-paper/94 backdrop-blur-md"
             )}
         >
-            <Link href="/" className="flex items-center gap-3 no-underline color-ink group">
+            <Link href="/" className="flex items-center gap-3 no-underline text-ink group">
                 <div className="w-[26px] h-[26px] border-[1.5px] border-ink grid place-items-center transition-transform group-hover:scale-105">
                     <div className="w-2 h-2 bg-amber rounded-full" />
                 </div>

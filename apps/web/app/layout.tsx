@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Mono } from "next/font/google";
+import { EB_Garamond, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientLayoutWrapper } from "@/components/layout/ClientLayoutWrapper";
 
-const playfair = Playfair_Display({
+const ebGaramond = EB_Garamond({
   variable: "--font-serif",
   subsets: ["latin"],
   display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 const dmMono = DM_Mono({
@@ -27,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${playfair.variable} ${dmMono.variable}`}>
-      <body className="antialiased min-h-screen">
+    <html lang="en" suppressHydrationWarning className={`${ebGaramond.variable} ${dmMono.variable}`}>
+      <body className="antialiased min-h-screen selection:bg-amber/20 selection:text-ink">
         <ClientLayoutWrapper>
           {children}
         </ClientLayoutWrapper>
