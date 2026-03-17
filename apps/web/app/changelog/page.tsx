@@ -153,7 +153,7 @@ export default async function ChangelogPage({
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-[40%] h-screen border-l border-rule/30 opacity-20 pointer-events-none" />
       
-      <div className="max-w-3xl relative z-10">
+      <div className="max-w-3xl mx-auto relative z-10">
         <Link 
             href="/" 
             className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-mid no-underline mb-12 group font-mono"
@@ -162,12 +162,13 @@ export default async function ChangelogPage({
             Back to Home
         </Link>
 
-        <header className="mb-16">
-          <div className="text-[10px] tracking-[0.2em] uppercase text-amber mb-4 flex items-center gap-3 font-mono">
+        <header className="mb-16 text-center">
+          <div className="text-[10px] tracking-[0.2em] uppercase text-amber mb-4 flex items-center justify-center gap-3 font-mono">
               <div className="w-8 h-px bg-amber" />
               Updates
+              <div className="w-8 h-px bg-amber" />
           </div>
-          <h1 className="font-serif text-[clamp(40px,6vw,70px)] font-black leading-none tracking-tighter">
+          <h1 className="font-serif text-[clamp(40px,6vw,70px)] font-black leading-none tracking-tighter mx-auto max-w-2xl">
               Changelog
           </h1>
         </header>
