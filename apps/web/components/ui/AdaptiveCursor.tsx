@@ -7,7 +7,7 @@ export function AdaptiveCursor() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const springConfig = { damping: 30, stiffness: 280 };
+  const springConfig = { damping: 30, stiffness: 350 };
 
   const x = useSpring(mouseX, springConfig);
   const y = useSpring(mouseY, springConfig);
@@ -24,27 +24,27 @@ export function AdaptiveCursor() {
 
   useEffect(() => {
     const updateHoverables = () => {
-        const hoverables = document.querySelectorAll("a, button, [role='button']");
+      const hoverables = document.querySelectorAll("a, button, [role='button']");
 
-        const enter = () => {
-            document.body.classList.add("cursor-hover");
-        };
+      const enter = () => {
+        document.body.classList.add("cursor-hover");
+      };
 
-        const leave = () => {
-            document.body.classList.remove("cursor-hover");
-        };
+      const leave = () => {
+        document.body.classList.remove("cursor-hover");
+      };
 
+      hoverables.forEach((el) => {
+        el.addEventListener("mouseenter", enter);
+        el.addEventListener("mouseleave", leave);
+      });
+
+      return () => {
         hoverables.forEach((el) => {
-            el.addEventListener("mouseenter", enter);
-            el.addEventListener("mouseleave", leave);
+          el.removeEventListener("mouseenter", enter);
+          el.removeEventListener("mouseleave", leave);
         });
-
-        return () => {
-            hoverables.forEach((el) => {
-                el.removeEventListener("mouseenter", enter);
-                el.removeEventListener("mouseleave", leave);
-            });
-        };
+      };
     };
 
     // Initial run
@@ -52,15 +52,15 @@ export function AdaptiveCursor() {
 
     // Re-bind on dynamic changes (simplistic approach for now)
     const observer = new MutationObserver(() => {
-        cleanup();
-        updateHoverables();
+      cleanup();
+      updateHoverables();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-        cleanup();
-        observer.disconnect();
+      cleanup();
+      observer.disconnect();
     };
   }, []);
 

@@ -103,10 +103,11 @@ a, button {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--ink);
+  background: white;
+  mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9999;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .adaptive-cursor-ring {
@@ -116,7 +117,8 @@ a, button {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid rgba(13, 13, 11, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9998;
   transition: all 0.25s ease;
@@ -126,10 +128,10 @@ a, button {
 
 .cursor-hover .adaptive-cursor-ring {
   transform: scale(1.6);
-  border-color: var(--amber);
-  background: rgba(200, 134, 10, 0.05);
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .cursor-hover .adaptive-cursor-dot {
-  background: var(--amber);
+  transform: scale(1.5);
 }
