@@ -70,7 +70,7 @@ export function Features() {
                     <div 
                         key={i} 
                         className={cn(
-                            "border border-rule bg-white p-10 flex flex-col justify-between min-h-[300px] shadow-[8px_8px_0_var(--faint)] hover:shadow-[12px_12px_0_var(--faint)] hover:-translate-y-1 opacity-0 translate-y-8 transition-all duration-800",
+                            "border border-rule bg-white p-10 flex flex-col justify-between min-h-[300px] shadow-[8px_8px_0_var(--faint)] transition-all hover:shadow-[12px_12px_0_var(--faint)] hover:-translate-y-1 opacity-0 translate-y-8 transition-all duration-800 delay-[calc(i*100ms)]",
                             f.className,
                             vis && "opacity-100 translate-y-0"
                         )}
