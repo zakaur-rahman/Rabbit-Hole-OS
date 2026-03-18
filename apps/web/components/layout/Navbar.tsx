@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "../theme/ThemeToggle";
 
 const navLinks = [
     { href: "/features", label: "Features" },
@@ -49,6 +50,9 @@ export function Navbar() {
                     >
                         Changelog
                     </Link>
+                </li>
+                <li>
+                    <ThemeToggle />
                 </li>
                 <li>
                     <Link 
