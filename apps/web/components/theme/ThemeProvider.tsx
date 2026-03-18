@@ -20,9 +20,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
-    
+
     const initialTheme = savedTheme || systemTheme;
-    setTheme(initialTheme);
+    
+    // Resolve hydration by setting theme asynchronously
+    setTimeout(() => {
+      setTheme(initialTheme);
+    }, 0);
+
     document.documentElement.setAttribute("data-theme", initialTheme);
   }, []);
 

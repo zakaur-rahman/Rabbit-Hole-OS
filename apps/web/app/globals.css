@@ -204,14 +204,14 @@ body {
   transition: opacity 0.35s, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.t-sun { opacity: 1; transform: rotate(0deg) scale(1); }
-.t-moon { opacity: 0; transform: rotate(-60deg) scale(0.6); }
+.t-sun { opacity: 0; transform: rotate(60deg) scale(0.6); }
+.t-moon { opacity: 1; transform: rotate(0deg) scale(1); }
 
-[data-theme="dark"] .t-sun { opacity: 0; transform: rotate(60deg) scale(0.6); }
-[data-theme="dark"] .t-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+[data-theme="dark"] .t-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+[data-theme="dark"] .t-moon { opacity: 0; transform: rotate(-60deg) scale(0.6); }
 
 @keyframes sun-spin { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1); } }
-.theme-toggle:hover .toggle-knob .t-sun { animation: sun-spin 3s linear infinite; }
+[data-theme="dark"] .theme-toggle:hover .toggle-knob .t-sun { animation: sun-spin 3s linear infinite; }
 
 /* Node animations used in SVG Hero */
 @keyframes pulse {
