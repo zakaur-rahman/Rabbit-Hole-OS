@@ -36,13 +36,13 @@ export function UsageMeters({ usage }: { usage: UsageData }) {
     return (
         <div className="space-y-10">
             {hasWarning && (
-                <DashboardCard hover={false} className="border-rose-500/20 bg-rose-500/5 p-5">
+                <DashboardCard hover={false} className="border-amber/30 bg-amber/5 p-5">
                     <div className="flex items-start gap-4">
-                        <div className="p-2 rounded-lg bg-rose-500/10 text-rose-500">
+                        <div className="p-2 rounded-lg bg-amber/10 text-amber">
                             <AlertTriangle className="w-5 h-5" />
                         </div>
                         <div className="space-y-1">
-                            <h4 className="text-[13px] font-mono font-bold text-white uppercase tracking-widest">Resource Warning</h4>
+                            <h4 className="text-[13px] font-mono font-bold text-ink uppercase tracking-widest">Resource Warning</h4>
                             <p className="text-[12px] font-mono text-neutral-400 leading-relaxed">
                                 You are approaching your plan limits. <a href="/dashboard/billing" className="text-amber hover:underline underline-offset-4">Upgrade your tier</a> to ensure uninterrupted knowledge synthesis and protocol execution.
                             </p>
@@ -91,14 +91,14 @@ export function UsageMeters({ usage }: { usage: UsageData }) {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="space-y-2 text-center md:text-left">
                         <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-[0.2em]">Current Active Tier</span>
-                        <h3 className="text-3xl font-serif font-black text-white capitalize">{usage.plan} Enterprise</h3>
+                        <h3 className="text-3xl font-serif font-black text-ink capitalize">{usage.plan} Enterprise</h3>
                         <p className="text-[13px] font-mono text-neutral-500 max-w-md">
                             Your architecture is currently operating under the {usage.plan} protocol. Tier upgrades provide increased node density and priority protocol execution.
                         </p>
                     </div>
                     <a 
                         href="/dashboard/billing"
-                        className="px-8 py-3.5 rounded-xl bg-white text-black font-mono text-[12px] uppercase tracking-widest font-bold hover:bg-neutral-200 transition-all active:scale-95 shrink-0"
+                        className="px-8 py-3.5 rounded-xl bg-ink text-paper font-mono text-[12px] uppercase tracking-widest font-bold hover:opacity-80 transition-all active:scale-95 shrink-0"
                     >
                         Review Tiers
                     </a>

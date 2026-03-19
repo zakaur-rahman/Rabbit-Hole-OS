@@ -37,7 +37,7 @@ export function MetricCard({
     return (
         <DashboardCard delay={delay}>
             <div className="flex items-start justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 group-hover:bg-amber/10 group-hover:border-amber/20 group-hover:text-amber transition-all duration-300">
+                <div className="p-2.5 rounded-xl bg-ink/5 border border-ink/5 group-hover:bg-amber/10 group-hover:border-amber/20 group-hover:text-amber transition-all duration-300">
                     <Icon className="w-5 h-5 text-neutral-400 group-hover:text-amber transition-colors" />
                 </div>
                 {trend && (
@@ -56,7 +56,7 @@ export function MetricCard({
                     {title}
                 </h3>
                 <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-serif font-black text-white tracking-tight">
+                    <span className="text-3xl font-serif font-black text-ink tracking-tight">
                         {value}
                     </span>
                     {progress && (
@@ -78,7 +78,7 @@ export function MetricCard({
                         <span>Utilization</span>
                         <span>{Math.round(progressPercent)}%</span>
                     </div>
-                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-ink/5 rounded-full overflow-hidden">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}

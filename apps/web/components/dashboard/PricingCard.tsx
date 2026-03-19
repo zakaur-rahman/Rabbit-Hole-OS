@@ -32,7 +32,7 @@ export function PricingCard({
             delay={delay} 
             className={cn(
                 "relative flex flex-col h-full",
-                isHighlighted && "border-white/20 shadow-[0_0_50px_rgba(255,255,255,0.05)]"
+                isHighlighted && "border-ink/20 shadow-[0_0_50px_rgba(100,100,100,0.05)]"
             )}
         >
             {isHighlighted && (
@@ -43,12 +43,12 @@ export function PricingCard({
                 <div>
                     <span className={cn(
                         "text-[10px] font-mono tracking-[0.2em] uppercase px-2.5 py-1 rounded-md mb-3 block w-fit",
-                        isHighlighted ? "bg-amber/10 text-amber border border-amber/20" : "bg-white/5 text-neutral-500 border border-white/5"
+                        isHighlighted ? "bg-amber/10 text-amber border border-amber/20" : "bg-ink/5 text-neutral-500 border border-ink/5"
                     )}>
                         {tier}
                     </span>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-serif font-black text-white">{price}</span>
+                        <span className="text-4xl font-serif font-black text-ink">{price}</span>
                         <span className="text-[12px] font-mono text-neutral-500">/mo</span>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ export function PricingCard({
                     <li key={i} className="flex items-start gap-3 group/item">
                         <div className={cn(
                             "mt-1 p-0.5 rounded-full transition-colors",
-                            isHighlighted ? "bg-amber/20 text-amber" : "bg-white/10 text-neutral-600"
+                            isHighlighted ? "bg-amber/20 text-amber" : "bg-ink/10 text-neutral-600"
                         )}>
                             <Check className="w-3 h-3" />
                         </div>
@@ -83,10 +83,10 @@ export function PricingCard({
                 className={cn(
                     "w-full py-4 rounded-xl font-mono text-[12px] uppercase tracking-widest font-bold transition-all relative overflow-hidden group/btn px-4",
                     isCurrent 
-                        ? "bg-neutral-900 text-neutral-500 border border-white/5 cursor-default"
+                        ? "bg-ink/5 text-neutral-500 border border-ink/5 cursor-default"
                         : isHighlighted
-                            ? "bg-white text-black hover:bg-neutral-200 active:scale-[0.98] shadow-lg shadow-white/5"
-                            : "bg-white/5 text-white border border-white/10 hover:bg-white/10 active:scale-[0.98]"
+                            ? "bg-ink text-paper hover:opacity-80 active:scale-[0.98] shadow-lg shadow-ink/5"
+                            : "bg-ink/5 text-ink border border-ink/10 hover:bg-ink/10 active:scale-[0.98]"
                 )}
             >
                 <div className="relative z-10 flex items-center justify-center gap-2">

@@ -58,7 +58,7 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
 
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-8">
                 <div className="space-y-2">
-                    <h3 className="text-xl font-serif font-black text-white">
+                    <h3 className="text-xl font-serif font-black text-ink">
                         {uiStateCanceled ? 'Subsystem Terminated' : 'Protocol Lifecycle'}
                     </h3>
                     <p className="text-[13px] font-mono text-neutral-500 max-w-xl leading-relaxed">
@@ -72,7 +72,7 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
                     {uiStateCanceled ? (
                         <button
                             onClick={() => setIsResubscribeModalOpen(true)}
-                            className="bg-white text-black px-6 py-3 rounded-xl font-mono text-[11px] font-bold hover:bg-neutral-200 transition-all uppercase tracking-widest flex items-center gap-2"
+                            className="bg-ink text-paper px-6 py-3 rounded-xl font-mono text-[11px] font-bold hover:opacity-80 transition-all uppercase tracking-widest flex items-center gap-2"
                         >
                             <RefreshCcw className="w-3.5 h-3.5" />
                             Engagement Reactivation
@@ -124,7 +124,7 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
                         <button
                             onClick={handlePause}
                             disabled={isLoading}
-                            className="flex-1 bg-white/5 text-white border border-white/10 py-3.5 rounded-xl font-mono text-[11px] font-bold hover:bg-white/10 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                            className="flex-1 bg-ink/5 text-ink border border-ink/10 py-3.5 rounded-xl font-mono text-[11px] font-bold hover:bg-ink/10 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
                         >
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                             Pause Protocol
@@ -132,7 +132,7 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
                         <button
                             onClick={handleCancel}
                             disabled={isLoading}
-                            className="flex-1 bg-rose-500 text-white py-3.5 rounded-xl font-mono text-[11px] font-bold hover:bg-rose-600 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                            className="flex-1 bg-rose-500 text-zinc-50 py-3.5 rounded-xl font-mono text-[11px] font-bold hover:bg-rose-600 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
                         >
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Termination'}
                         </button>
@@ -156,10 +156,10 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
                         </div>
                     </div>
 
-                    <div className="bg-neutral-900 border border-white/5 rounded-xl p-5 flex justify-between items-center">
+                    <div className="bg-ink/5 border border-ink/5 rounded-xl p-5 flex justify-between items-center">
                         <div className="space-y-1">
                             <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Selected Tier</p>
-                            <p className="text-lg font-serif font-black text-white capitalize">{currentPlan} Protocol</p>
+                            <p className="text-lg font-serif font-black text-ink capitalize">{currentPlan} Protocol</p>
                         </div>
                         <div className="text-right">
                             <p className="text-[12px] font-mono text-neutral-500 line-through decoration-rose-500/50">$12.00</p>
@@ -170,7 +170,7 @@ export function SubscriptionManagement({ currentPlan, isCanceled = false }: Subs
                     <button
                         onClick={handleResubscribe}
                         disabled={isLoading}
-                        className="w-full bg-white text-black py-4 rounded-xl font-mono text-[11px] font-bold hover:bg-neutral-200 transition-all uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-white/5"
+                        className="w-full bg-ink text-paper py-4 rounded-xl font-mono text-[11px] font-bold hover:opacity-80 transition-all uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-ink/5"
                     >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Engage Reactivation'}
                     </button>

@@ -43,7 +43,7 @@ export default function BillingPage() {
                     <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
                     <span className="text-[10px] font-mono font-bold text-amber uppercase tracking-[0.2em]">Financial Node</span>
                 </div>
-                <h1 className="text-5xl font-serif font-black text-white tracking-tight">Billing & Plans</h1>
+                <h1 className="text-5xl font-serif font-black text-ink tracking-tight">Billing & Plans</h1>
                 <p className="text-[14px] font-mono text-neutral-500 max-w-2xl leading-relaxed">
                     Manage your synchronization protocols, view operational limits, and scale your cognitive infrastructure.
                 </p>
@@ -54,9 +54,9 @@ export default function BillingPage() {
                 
                 <section className="space-y-6">
                     <div className="flex items-center gap-4">
-                        <div className="h-px flex-1 bg-white/5" />
+                        <div className="h-px flex-1 bg-ink/5" />
                         <h2 className="text-[10px] font-mono font-bold text-neutral-600 uppercase tracking-[0.3em]">Subscription Tiers</h2>
-                        <div className="h-px flex-1 bg-white/5" />
+                        <div className="h-px flex-1 bg-ink/5" />
                     </div>
                     <PlanCard currentPlan={plan} />
                 </section>
@@ -67,19 +67,19 @@ export default function BillingPage() {
             <SubscriptionManagement currentPlan={plan} />
 
             {/* Notification Protocol */}
-            <div className="group relative overflow-hidden bg-neutral-900/50 border border-white/5 rounded-4xl p-8 flex flex-col md:flex-row justify-between items-center gap-8 transition-all hover:border-white/10">
+            <div className="group relative overflow-hidden bg-ink/5 border border-ink/5 rounded-4xl p-8 flex flex-col md:flex-row justify-between items-center gap-8 transition-all hover:border-ink/10">
                 <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center text-neutral-400 group-hover:text-white transition-colors">
+                    <div className="w-14 h-14 rounded-2xl bg-ink/2 border border-ink/5 flex items-center justify-center text-neutral-400 group-hover:text-ink transition-colors">
                         <Mail className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-xl font-serif font-bold text-white mb-1">Communication Protocol</p>
+                        <p className="text-xl font-serif font-bold text-ink mb-1">Communication Protocol</p>
                         <p className="text-[13px] font-mono text-neutral-500">Receive synchronization receipts and billing updates directly to your terminal.</p>
                     </div>
                 </div>
                 <button
                     onClick={() => window.open('/dashboard/billing#preferences', '_self')}
-                    className="shrink-0 px-8 py-3.5 bg-white/5 border border-white/10 text-white rounded-xl font-mono text-[11px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-[0.98] transition-all"
+                    className="shrink-0 px-8 py-3.5 bg-ink/5 border border-ink/10 text-ink rounded-xl font-mono text-[11px] font-bold uppercase tracking-widest hover:bg-ink/10 active:scale-[0.98] transition-all"
                 >
                     Update Dispatch Rules
                 </button>

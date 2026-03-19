@@ -50,7 +50,7 @@ export function PaymentHistory() {
         const styles = {
             paid: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
             failed: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
-            refunded: 'bg-neutral-800 text-neutral-400 border-white/5'
+            refunded: 'bg-ink/10 text-neutral-400 border-ink/5'
         };
         return (
             <span className={cn(
@@ -64,11 +64,11 @@ export function PaymentHistory() {
 
     return (
         <DashboardCard delay={0.3} className="mt-8 p-0 overflow-hidden">
-            <div className="p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="p-8 border-b border-ink/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <DollarSign className="w-4 h-4 text-amber" />
-                        <h3 className="text-xl font-serif font-black text-white">Payment Protocol</h3>
+                        <h3 className="text-xl font-serif font-black text-ink">Payment Protocol</h3>
                     </div>
                     <p className="text-[12px] font-mono text-neutral-500">Historical synchronization of financial transactions.</p>
                 </div>
@@ -79,7 +79,7 @@ export function PaymentHistory() {
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'paid' | 'failed' | 'refunded')}
-                            className="bg-neutral-900 border border-white/5 text-[11px] font-mono text-neutral-300 rounded-lg pl-10 pr-8 py-2.5 appearance-none focus:outline-none focus:border-amber/30 transition-all cursor-pointer w-full"
+                            className="bg-ink/5 border border-ink/5 text-[11px] font-mono text-ink/80 rounded-lg pl-10 pr-8 py-2.5 appearance-none focus:outline-none focus:border-amber/30 transition-all cursor-pointer w-full"
                         >
                             <option value="all">ALL PROTOCOLS</option>
                             <option value="paid">PAID</option>
@@ -89,7 +89,7 @@ export function PaymentHistory() {
                     </div>
                     <button
                         onClick={handleRefresh}
-                        className="p-2.5 bg-neutral-900 border border-white/5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-all"
+                        className="p-2.5 bg-ink/5 border border-ink/5 rounded-lg text-neutral-400 hover:text-ink hover:bg-ink/10 transition-all"
                     >
                         <RefreshCcw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
                     </button>
@@ -99,7 +99,7 @@ export function PaymentHistory() {
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                        <tr className="bg-white/2">
+                        <tr className="bg-ink/2">
                             <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Initialization</th>
                             <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Amount</th>
                             <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Plan</th>
@@ -108,7 +108,7 @@ export function PaymentHistory() {
                             <th className="p-5 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest text-right">Invoices</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-ink/5">
                         {filteredTransactions.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="p-20 text-center">
@@ -118,14 +118,14 @@ export function PaymentHistory() {
                             </tr>
                         ) : (
                             filteredTransactions.map((tx) => (
-                                <tr key={tx.id} className="group hover:bg-white/2 transition-colors">
+                                <tr key={tx.id} className="group hover:bg-ink/2 transition-colors">
                                     <td className="p-5">
                                         <div className="flex items-center gap-2 text-[13px] font-mono text-neutral-400">
                                             <Calendar className="w-3.5 h-3.5 text-neutral-600" />
                                             {formatDate(tx.date)}
                                         </div>
                                     </td>
-                                    <td className="p-5 text-[13px] font-mono font-bold text-white">${tx.amount.toFixed(2)}</td>
+                                    <td className="p-5 text-[13px] font-mono font-bold text-ink">${tx.amount.toFixed(2)}</td>
                                     <td className="p-5 text-[13px] font-mono text-neutral-400 capitalize">{tx.plan}</td>
                                     <td className="p-5"><StatusBadge status={tx.status} /></td>
                                     <td className="p-5 text-[13px] font-mono text-neutral-500">{tx.method}</td>
@@ -138,7 +138,7 @@ export function PaymentHistory() {
                                             )}
                                             <a 
                                                 href={tx.invoiceUrl} 
-                                                className="p-2 text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-2 text-neutral-500 hover:text-ink hover:bg-ink/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                             >
                                                 <Download className="w-4 h-4" />
                                             </a>
@@ -151,13 +151,13 @@ export function PaymentHistory() {
                 </table>
             </div>
 
-            <div className="p-5 border-t border-white/5 bg-white/2 flex justify-between items-center">
+            <div className="p-5 border-t border-ink/5 bg-ink/2 flex justify-between items-center">
                 <p className="font-mono text-[10px] text-neutral-600 uppercase tracking-widest">
                     Execution Log: {filteredTransactions.length} items
                 </p>
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 font-mono text-[10px] text-neutral-600 border border-white/5 rounded-md opacity-50 cursor-not-allowed uppercase tracking-widest">Previous</button>
-                    <button className="px-3 py-1.5 font-mono text-[10px] text-neutral-400 border border-white/10 rounded-md hover:bg-white/5 transition-all uppercase tracking-widest">Next</button>
+                    <button className="px-3 py-1.5 font-mono text-[10px] text-neutral-600 border border-ink/5 rounded-md opacity-50 cursor-not-allowed uppercase tracking-widest">Previous</button>
+                    <button className="px-3 py-1.5 font-mono text-[10px] text-neutral-400 border border-ink/10 rounded-md hover:bg-ink/5 transition-all uppercase tracking-widest">Next</button>
                 </div>
             </div>
         </DashboardCard>

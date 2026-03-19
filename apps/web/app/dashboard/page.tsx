@@ -52,7 +52,7 @@ export default function DashboardOverview() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-4xl md:text-5xl font-serif font-black text-white tracking-tight leading-none mb-4"
+                    className="text-4xl md:text-5xl font-serif font-black text-ink tracking-tight leading-none mb-4"
                 >
                     {userName ? `Welcome, ${userName}.` : 'Welcome back.'}
                 </motion.h1>
@@ -70,16 +70,16 @@ export default function DashboardOverview() {
                 {cards.map((card) => (
                     <Link key={card.title} href={card.href} className="group block focus:outline-none">
                         <DashboardCard delay={card.delay} className="h-full flex flex-col min-h-[280px]">
-                            <div className="p-3 rounded-xl bg-white/5 border border-white/5 w-fit mb-8 group-hover:bg-amber/10 group-hover:border-amber/20 transition-all duration-500">
+                            <div className="p-3 rounded-xl bg-ink/5 border border-ink/5 w-fit mb-8 group-hover:bg-amber/10 group-hover:border-amber/20 transition-all duration-500">
                                 <card.icon className="w-6 h-6 text-neutral-400 group-hover:text-amber transition-colors" />
                             </div>
 
-                            <h2 className="text-xl font-serif font-bold text-white mb-3 group-hover:text-amber transition-colors">{card.title}</h2>
+                            <h2 className="text-xl font-serif font-bold text-ink mb-3 group-hover:text-amber transition-colors">{card.title}</h2>
                             <p className="text-neutral-500 text-[12px] font-mono leading-relaxed mb-10 flex-1">
                                 {card.description}
                             </p>
 
-                            <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors mt-auto">
+                            <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-neutral-400 group-hover:text-ink transition-colors mt-auto">
                                 <span>{card.action}</span>
                                 <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                             </div>
@@ -93,7 +93,7 @@ export default function DashboardOverview() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="pt-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6"
+                className="pt-12 border-t border-ink/5 flex flex-col sm:flex-row items-center justify-between gap-6"
             >
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
