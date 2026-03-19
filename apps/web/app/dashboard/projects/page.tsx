@@ -33,9 +33,9 @@ export default function ProjectsPage() {
 
     if (error) {
         return (
-            <div className="p-6 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl flex flex-col items-center gap-4 max-w-md mx-auto mt-16">
+            <div className="p-6 text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded-xl flex flex-col items-center gap-4 max-w-md mx-auto mt-16">
                 <p className="text-sm text-center">{error}</p>
-                <button onClick={loadProjects} className="px-4 py-2 text-sm font-medium bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 rounded-lg transition-colors">
+                <button onClick={loadProjects} className="px-4 py-2 text-sm font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-lg transition-colors">
                     Try Again
                 </button>
             </div>
@@ -45,7 +45,7 @@ export default function ProjectsPage() {
     if (!projects || userLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <Loader2 className="w-8 h-8 text-amber animate-spin" />
             </div>
         );
     }

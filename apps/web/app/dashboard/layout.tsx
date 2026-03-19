@@ -13,12 +13,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <AuthGuard>
             <UserProvider>
-                <div className="flex min-h-screen bg-dashboard-bg text-neutral-200 font-mono selection:bg-amber/20 cursor-default">
+                <div className="flex min-h-screen bg-paper text-ink font-mono selection:bg-amber/20 cursor-default">
 
                     {/* Subtle Ambient Glow */}
                     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
                         <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-amber/5 rounded-full blur-[120px]" />
-                        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/5 rounded-full blur-[100px]" />
+                        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-ink/5 rounded-full blur-[100px]" />
                     </div>
 
                     {/* Desktop Sidebar (Linear Style) */}

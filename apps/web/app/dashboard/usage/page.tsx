@@ -61,7 +61,7 @@ export default function UsagePage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-4xl md:text-5xl font-serif font-black text-white tracking-tight leading-none mb-4"
+                    className="text-4xl md:text-5xl font-serif font-black text-ink tracking-tight leading-none mb-4"
                 >
                     Plan Usage
                 </motion.h1>
