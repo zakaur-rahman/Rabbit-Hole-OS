@@ -140,10 +140,10 @@ function GoogleCallbackContent() {
                         </div>
 
                         <button
-                            onClick={() => window.close()}
+                            onClick={() => router.push('/dashboard')}
                             className="mt-6 px-8 py-3.5 bg-ink text-paper font-mono text-[10px] tracking-[0.2em] uppercase hover:bg-amber hover:text-ink transition-all"
                         >
-                            Securely End Session
+                            Go to Dashboard
                         </button>
                     </div>
                 ) : (
