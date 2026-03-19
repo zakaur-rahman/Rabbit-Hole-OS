@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Logo } from '@/components/layout/Logo';
 import { NodeCanvas } from '@/components/landing/NodeCanvas';
+import { AuthLoaderAnimation } from '@/components/auth/AuthLoaderAnimation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 const REDIRECT_URI = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI || 'http://localhost:3000/auth/google';
@@ -106,6 +107,10 @@ function GoogleCallbackContent() {
         handleCallback();
     }, [searchParams, router]);
 
+    if (!desktopSuccess && !error) {
+        return <AuthLoaderAnimation />;
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.98, y: 15 }}
@@ -141,7 +146,7 @@ function GoogleCallbackContent() {
                             Securely End Session
                         </button>
                     </div>
-                ) : error ? (
+                ) : (
                     <div className="flex flex-col items-center gap-6">
                         <motion.div 
                             initial={{ scale: 0 }} 
@@ -156,39 +161,13 @@ function GoogleCallbackContent() {
                             <p className="text-mid text-[12px] font-mono leading-relaxed px-4">{error}</p>
                         </div>
                         
+                        
                         <button
                             onClick={() => router.push('/login')}
                             className="mt-6 w-full px-8 py-3.5 bg-ink text-paper font-mono text-[10px] tracking-[0.2em] uppercase hover:bg-amber hover:text-ink transition-all"
                         >
                             Return to Entry
                         </button>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center gap-8">
-                        <div className="relative w-24 h-24 flex items-center justify-center">
-                            <div className="absolute inset-0 border-[1px] border-rule/20 rounded-full scale-110"></div>
-                            <div className="absolute inset-0 border-t-[1px] border-amber rounded-full animate-spin"></div>
-                            <Logo className="opacity-40 grayscale group-hover:grayscale-0" />
-                        </div>
-                        
-                        <div className="space-y-3">
-                            <h1 className="font-serif text-2xl font-black text-ink tracking-tight">Verifying Node Identity</h1>
-                            <p className="text-mid text-[11px] font-mono tracking-wide">
-                                SECURELY ENCRYPTING SESSION &<br/>
-                                EXCHANGING SYNTHESIS KEYS...
-                            </p>
-                        </div>
-                        
-                        <div className="flex gap-1.5">
-                            {[0, 1, 2].map((i) => (
-                                <motion.div 
-                                    key={i}
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                                    className="w-1.5 h-1.5 bg-amber rounded-full"
-                                />
-                            ))}
-                        </div>
                     </div>
                 )}
             </div>
