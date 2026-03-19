@@ -1,0 +1,109 @@
+/*
+ * Synthesis Theme System
+ * Scoped to .synthesis-scope — does NOT affect global theme.
+ *
+ * Primary color scale (indigo-violet AI palette)
+ * Surface & border tokens for synthesis UI
+ */
+
+.synthesis-scope {
+  /* ── Primary Color Scale ── */
+  --synth-primary-50:  #eef2ff;
+  --synth-primary-100: #e0e7ff;
+  --synth-primary-200: #c7d2fe;
+  --synth-primary-300: #a5b4fc;
+  --synth-primary-400: #818cf8;
+  --synth-primary-500: #6366f1;
+  --synth-primary-600: #4f46e5;
+  --synth-primary-700: #4338ca;
+  --synth-primary-800: #3730a3;
+  --synth-primary-900: #312e81;
+
+  /* ── Accent Glow ── */
+  --synth-glow: rgba(99, 102, 241, 0.15);
+  --synth-glow-strong: rgba(99, 102, 241, 0.30);
+  --synth-glow-border: rgba(99, 102, 241, 0.25);
+
+  /* ── Surfaces ── */
+  --synth-surface: #0f0f1a;
+  --synth-surface-raised: #131325;
+  --synth-surface-overlay: rgba(5, 5, 15, 0.92);
+  --synth-surface-card: rgba(255, 255, 255, 0.03);
+
+  /* ── Borders ── */
+  --synth-border: rgba(255, 255, 255, 0.08);
+  --synth-border-hover: rgba(255, 255, 255, 0.14);
+  --synth-border-active: rgba(99, 102, 241, 0.4);
+  --synth-border-focus: rgba(99, 102, 241, 0.6);
+
+  /* ── Text ── */
+  --synth-text: #ffffff;
+  --synth-text-secondary: #d1d1e0;
+  --synth-text-muted: #71717a;
+  --synth-text-accent: #818cf8;
+
+  /* ── Status Colors ── */
+  --synth-success: #10b981;
+  --synth-warning: #eab308;
+  --synth-error: #ef4444;
+  --synth-info: #3b82f6;
+
+  /* ── Typography ── */
+  --synth-font-heading: var(--font-syne, 'Inter', system-ui, sans-serif);
+  --synth-font-body: var(--font-syne, 'Inter', system-ui, sans-serif);
+  --synth-font-mono: var(--font-jetbrains-mono, 'JetBrains Mono', ui-monospace, monospace);
+
+  /* ── Spacing (4px base) ── */
+  --synth-space-1: 4px;
+  --synth-space-2: 8px;
+  --synth-space-3: 12px;
+  --synth-space-4: 16px;
+  --synth-space-5: 20px;
+  --synth-space-6: 24px;
+  --synth-space-8: 32px;
+  --synth-space-10: 40px;
+
+  /* ── Radius ── */
+  --synth-radius-sm: 6px;
+  --synth-radius-md: 8px;
+  --synth-radius-lg: 12px;
+  --synth-radius-xl: 16px;
+  --synth-radius-2xl: 24px;
+
+  /* ── Shadows ── */
+  --synth-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --synth-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --synth-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --synth-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --synth-shadow-glow: 0 0 20px var(--synth-glow);
+}
+
+/* ── Focus Ring (global within scope) ── */
+.synthesis-scope *:focus-visible {
+  outline: 2px solid var(--synth-primary-400);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar Styling ── */
+.synthesis-scope ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.synthesis-scope ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.synthesis-scope ::-webkit-scrollbar-thumb {
+  background: var(--synth-border);
+  border-radius: 10px;
+}
+
+.synthesis-scope ::-webkit-scrollbar-thumb:hover {
+  background: var(--synth-text-muted);
+}
+
+/* ── Transition Utility ── */
+.synthesis-scope .synth-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

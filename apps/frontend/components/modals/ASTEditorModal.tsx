@@ -6,11 +6,12 @@
  * - Section Editor (form-based editing)
  * - Live Preview (rendered output)
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useASTStore, DocumentAST, Section, Block, ParagraphData, ListData, QuoteData, WarningData } from '../../store/ast.store';
 import { synthesisApi, ValidationIssue } from '../../lib/api';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import LatexCodeEditor from '../ui/LatexCodeEditor';
+import '../synthesis/synthesis-theme.css';
 import {
     FileText,
     Book,
@@ -309,7 +310,7 @@ const SidebarSection: React.FC<{
     isBroken: boolean;
     onSelect: (id: string) => void;
     renderChildren: (section: Section) => React.ReactNode;
-}> = ({ section, selectedId, isBroken, onSelect, renderChildren }) => {
+}> = React.memo(({ section, selectedId, isBroken, onSelect, renderChildren }) => {
     const isSelected = selectedId === section.id;
 
     return (
@@ -347,7 +348,7 @@ const SidebarSection: React.FC<{
             )}
         </div>
     );
-};
+});
 
 interface BlockEditorProps {
     block: Block;
@@ -355,7 +356,7 @@ interface BlockEditorProps {
     onRemove: () => void;
 }
 
-const BlockEditor: React.FC<BlockEditorProps> = ({ block, onUpdate, onRemove }) => {
+const BlockEditor: React.FC<BlockEditorProps> = React.memo(({ block, onUpdate, onRemove }) => {
     const renderIcon = () => {
         switch (block.type) {
             case 'paragraph': return <Type size={14} />;
@@ -428,7 +429,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ block, onUpdate, onRemove }) 
             {renderEditor()}
         </div>
     );
-};
+});
 
 // ============================================================
 // MAIN COMPONENT
@@ -516,7 +517,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
     }, [document]);
 
     const handleCompile = useCallback(async (ignoreValidation = false) => {
-        if (!document && viewMode === 'visual') return;
+        if (!document && viewMode !== 'code') return;
 
         // 1. Pre-compile Validation (if in visual mode and not ignored)
         if (viewMode === 'visual' && !ignoreValidation) {
@@ -643,10 +644,18 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
         }
     }, [document, onSave, onClose]);
 
+    const handleClose = useCallback(() => {
+        setPdfPreviewUrl(null);
+        setCompileError(null);
+        setDetailedErrors([]);
+        setLastCompileStats(null);
+        onClose();
+    }, [onClose]);
+
     if (!isOpen) return null;
 
     return (
-        <div style={styles.overlay} onClick={onClose}>
+        <div className="synthesis-scope" style={styles.overlay} onClick={handleClose}>
             <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
                 {isInitializing ? (
                     <div style={styles.loadingOverlay}>
@@ -668,7 +677,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                         <div style={{ color: '#ef4444', fontSize: '24px', marginBottom: '16px' }}>&#9888; Initialization Failed</div>
                         <div style={{ color: '#a5a5c5', marginBottom: '24px' }}>{initError}</div>
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             style={{
                                 ...styles.button,
                                 ...styles.secondaryButton,
@@ -895,7 +904,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                                                                 <button
                                                                     onClick={() => addBlock(selectedSection.id, {
                                                                         type: 'paragraph',
-                                                                        id: Math.random().toString(36).substr(2, 9),
+                                                                        id: crypto.randomUUID(),
                                                                         data: { text: '', citations: [] }
                                                                     })}
                                                                     style={styles.button}
@@ -905,7 +914,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                                                                 <button
                                                                     onClick={() => addBlock(selectedSection.id, {
                                                                         type: 'list',
-                                                                        id: Math.random().toString(36).substr(2, 9),
+                                                                        id: crypto.randomUUID(),
                                                                         data: { items: [], ordered: false }
                                                                     })}
                                                                     style={styles.button}
@@ -915,7 +924,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
                                                                 <button
                                                                     onClick={() => addBlock(selectedSection.id, {
                                                                         type: 'quote',
-                                                                        id: Math.random().toString(36).substr(2, 9),
+                                                                        id: crypto.randomUUID(),
                                                                         data: { text: '', source_refs: [] }
                                                                     })}
                                                                     style={styles.button}
