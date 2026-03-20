@@ -6,6 +6,7 @@ import { synthesisApi } from '@/lib/api';
 import { Node } from 'reactflow';
 import { Sparkles, Loader2, Target, Link2, Search, Share2, AlertTriangle, RotateCcw, X, Copy, Check, FileDown, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import './synthesis-theme.css';
 
 interface SynthesisModalProps {
     onClose: () => void;
@@ -340,6 +341,37 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
                                     >
                                         Try Again
                                     </button>
+                                </motion.div>
+                            ) : synthesisError ? (
+                                <motion.div
+                                    key="error"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="flex flex-col items-center"
+                                >
+                                    <div className="w-[56px] h-[56px] rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-6">
+                                        <AlertTriangle size={24} />
+                                    </div>
+                                    <h2 className="text-[22px] font-extrabold tracking-tight text-(--text) text-center mb-2.5">Synthesis Failed</h2>
+                                    <p className="font-mono text-[11px] text-red-400/80 text-center leading-relaxed max-w-[400px] mb-6 tracking-wide bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
+                                        {synthesisError}
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => { setSynthesisError(null); }}
+                                            className="px-5 py-2.5 bg-(--raised) border border-(--border) text-(--text) font-bold rounded-xl flex items-center gap-2 hover:bg-(--surface) transition-all text-[11px] tracking-widest uppercase"
+                                        >
+                                            <RotateCcw size={14} className="text-(--amber)" />
+                                            Try Again
+                                        </button>
+                                        <button
+                                            onClick={onClose}
+                                            className="px-5 py-2.5 bg-(--raised) border border-(--border) text-(--muted) font-bold rounded-xl flex items-center gap-2 hover:bg-(--surface) transition-all text-[11px] tracking-widest uppercase"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
                                 </motion.div>
                             ) : result ? (
                                 <motion.div key="result" className="flex flex-col h-full py-2">
