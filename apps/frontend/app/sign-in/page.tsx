@@ -13,6 +13,7 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const deepLinkCleanup = useRef<(() => void) | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const source = searchParams.get('source');
   const deviceId = searchParams.get('device_id');
@@ -67,12 +68,15 @@ function SignInContent() {
         loginUrl.searchParams.set('redirect_uri', `${AUTH_CONFIG.DESKTOP_PROTOCOL}://auth/callback`);
 
         const codePromise = new Promise<string>((resolve, reject) => {
-          const timeout = setTimeout(() => {
+          // Clear any existing timeout first just in case
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          
+          timeoutRef.current = setTimeout(() => {
             reject(new Error('Login timed out. Please try again.'));
           }, 5 * 60 * 1000);
 
           deepLinkCleanup.current = electronAuth.onDeepLinkAuth(({ code }) => {
-            clearTimeout(timeout);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
             resolve(code);
           });
         });
@@ -138,6 +142,10 @@ function SignInContent() {
     if (deepLinkCleanup.current) {
       deepLinkCleanup.current();
       deepLinkCleanup.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     router.push('/');
   };

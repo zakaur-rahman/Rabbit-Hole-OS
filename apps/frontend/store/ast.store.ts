@@ -236,6 +236,7 @@ export const useASTStore = create<ASTStore>((set, get) => ({
   setDocument: (doc) => set({
     document: doc,
     originalDocument: JSON.parse(JSON.stringify(doc)),  // Deep clone
+    selectedSectionId: null, // Clear selection when doc changes
     isDirty: false,
     validationStatus: validateDocument(doc)
   }),
