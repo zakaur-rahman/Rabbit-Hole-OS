@@ -69,6 +69,7 @@ export function useSynthesis() {
 
         setShowASTEditor(true);
         setInitialAST(null);
+        setSynthesisError(null);
 
         try {
             const contextItems = buildContextItems();
@@ -83,7 +84,8 @@ export function useSynthesis() {
                 setInitialAST(response.document as DocumentAST);
             }
         } catch (error) {
-            console.error('Failed to load AST:', error);
+            const msg = error instanceof Error ? error.message : 'Failed to load document structure';
+            setSynthesisError(msg);
             setShowASTEditor(false);
         }
     }, [buildContextItems, setAuthModal]);
@@ -112,12 +114,16 @@ export function useSynthesis() {
                 const blob = await synthesisApi.generateLatexResearchPdf(
                     'Dummy Research Report', contextItems, false, true, currentEdges
                 );
-                setPdfUrl(URL.createObjectURL(blob));
+                const blobUrl = URL.createObjectURL(blob);
+                setPdfUrl(blobUrl);
+                // Schedule cleanup for the previous URL on next render
                 return;
             }
 
             // Streaming multi-agent synthesis
-            let finalAST: unknown = null;
+            let finalAST: DocumentAST | null = null;
+            let streamError: string | null = null;
+
             await synthesisApi.streamResearchAST(
                 'Synthesized Research Report',
                 contextItems,
@@ -126,26 +132,35 @@ export function useSynthesis() {
                     setSynthesisStage(step.stage);
                     setSynthesisMessage(step.message || '');
                     if ((step.stage === 'Ready' || step.status === 'COMPLETED') && step.document) {
-                        finalAST = step.document;
+                        finalAST = step.document as DocumentAST;
                     }
                     if (step.status === 'failed') {
-                        throw new Error(step.error || 'Synthesis failed');
+                        // Capture error without throwing inside callback
+                        streamError = step.error || 'Synthesis pipeline failed';
                     }
                 },
                 activeWhiteboardId
             );
 
-            if (!finalAST) throw new Error('Synthesis did not return a document.');
+            // Check for errors captured during streaming
+            if (streamError) {
+                setSynthesisError(streamError);
+                return;
+            }
+
+            if (!finalAST) {
+                setSynthesisError('Synthesis did not return a document. Please try again.');
+                return;
+            }
 
             // Compile PDF from AST
             setSynthesisStage('Compiling');
             setSynthesisMessage('Converting AST to LaTeX and compiling PDF...');
-            const pdfBlob = await synthesisApi.generatePdfFromAST(finalAST as DocumentAST);
+            const pdfBlob = await synthesisApi.generatePdfFromAST(finalAST);
             setPdfUrl(URL.createObjectURL(pdfBlob));
 
         } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
-            console.error('Synthesis failed:', msg);
             setSynthesisError(msg);
         } finally {
             setIsSynthesizing(false);

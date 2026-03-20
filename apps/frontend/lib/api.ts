@@ -332,9 +332,13 @@ export const synthesisApi = {
   },
 
   getLatexFromAST: async (ast: unknown) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast-to-latex`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify(ast)
     });
     if (!response.ok) throw new Error('Failed to convert AST to LaTeX');
@@ -342,9 +346,13 @@ export const synthesisApi = {
   },
 
   compileRawLatex: async (latexSource: string, strict_mode: boolean = true) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/compile-latex`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ latex_source: latexSource, strict_mode: strict_mode })
     });
     if (!response.ok) {

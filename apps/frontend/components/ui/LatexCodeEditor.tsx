@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 interface LatexCodeEditorProps {
@@ -16,9 +16,10 @@ export default function LatexCodeEditor({ value, onChange, errors = [] }: LatexC
 
     // Auto-scroll to first error when errors change
     useEffect(() => {
-        if (errors.length > 0 && textareaRef.current) {
-            const firstErrorLine = Math.min(...errors.map(e => e.line).filter(l => l > 0));
-            if (firstErrorLine > 0) {
+        const positiveLineErrors = errors.filter(e => e.line > 0);
+        if (positiveLineErrors.length > 0 && textareaRef.current) {
+            const firstErrorLine = Math.min(...positiveLineErrors.map(e => e.line));
+            if (firstErrorLine > 0 && isFinite(firstErrorLine)) {
                 // Calculate position: (lineHeight * (line - 1)) + padding
                 const lineHeight = parseFloat(getComputedStyle(textareaRef.current).lineHeight || '20');
                 const scrollPos = (lineHeight * (firstErrorLine - 1)) + 15 - 50; // Scroll target with some offset
@@ -61,9 +62,9 @@ export default function LatexCodeEditor({ value, onChange, errors = [] }: LatexC
         }
     };
 
-    const highlightText = (text: string) => {
+    const highlightedHtml = useMemo(() => {
         // Escape HTML
-        let highlighted = text
+        let highlighted = value
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
@@ -81,7 +82,7 @@ export default function LatexCodeEditor({ value, onChange, errors = [] }: LatexC
         highlighted = highlighted.replace(/(%.*)/g, '<span style="color: #5c6370; font-style: italic;">$1</span>');
 
         return highlighted + '\n'; // Extra newline to match textarea height
-    };
+    }, [value]);
 
     const lines = value.split('\n');
     const numLines = Math.max(lines.length, 1);
@@ -128,7 +129,7 @@ export default function LatexCodeEditor({ value, onChange, errors = [] }: LatexC
                     ref={preRef}
                     aria-hidden="true"
                     style={styles.pre}
-                    dangerouslySetInnerHTML={{ __html: highlightText(value) }}
+                    dangerouslySetInnerHTML={{ __html: highlightedHtml }}
                 />
 
                 {/* Error Markers Overlay */}

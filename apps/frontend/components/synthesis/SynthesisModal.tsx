@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGraphStore } from '@/store/graph.store';
 import { synthesisApi } from '@/lib/api';
-import { Sparkles, Loader2, ArrowRight, Copy, Check, FileDown, Target, Link2, Search, Share2 } from 'lucide-react';
-import { Node } from 'reactflow';
+import { Sparkles, Loader2, ArrowRight, Copy, Check, FileDown, Target, Link2, Search, Share2, AlertTriangle, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import './synthesis-theme.css';
 
 interface SynthesisModalProps {
     onClose: () => void;
@@ -28,6 +28,7 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
     const [saving, setSaving] = useState(false);
     const [progress, setProgress] = useState(0);
     const [activeStepIndex, setActiveStepIndex] = useState(0);
+    const [synthesisError, setSynthesisError] = useState<string | null>(null);
 
     // Get all selected nodes
     const selectedNodes = nodes.filter(n => n.selected);
@@ -67,6 +68,7 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
         setLoading(true);
         setResult('');
         setSources([]);
+        setSynthesisError(null);
 
         try {
             const nodeIds = selectedNodes.length > 0
@@ -90,8 +92,9 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
             setSources(response.sources);
             // setQuery(''); // Keep query for refinement if needed
         } catch (e) {
-            console.error('Synthesis error:', e);
-            setResult('Error generating synthesis. Make sure the backend is running.');
+            const errorMsg = e instanceof Error ? e.message : 'Error generating synthesis. Make sure the backend is running.';
+            setResult('');
+            setSynthesisError(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -120,7 +123,7 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
                 },
             };
 
-            await addNode(newNode as unknown as Node);
+            await addNode(newNode as Parameters<typeof addNode>[0]);
             onClose();
         } catch (e) {
             console.error('Failed to save synthesis:', e);
@@ -151,7 +154,7 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-6 font-[Syne]"
+                className="synthesis-scope fixed inset-0 z-50 flex items-center justify-center p-6 font-[Syne]"
             >
                 {/* Backdrop / Blur */}
                 <div 
@@ -292,6 +295,37 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
                                         <div className="flex items-center gap-1.5">Selected <span className="text-(--sub) font-bold">{selectedCount}</span></div>
                                         <div className="w-px h-3 bg-(--border)" />
                                         <div className="flex items-center gap-1.5">Est. <span className="text-(--sub) font-bold">~{Math.max(5, 12 - Math.floor(progress/10))}s</span></div>
+                                    </div>
+                                </motion.div>
+                            ) : synthesisError ? (
+                                <motion.div
+                                    key="error"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="flex flex-col items-center"
+                                >
+                                    <div className="w-[56px] h-[56px] rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-6">
+                                        <AlertTriangle size={24} />
+                                    </div>
+                                    <h2 className="text-[22px] font-extrabold tracking-tight text-(--text) text-center mb-2.5">Synthesis Failed</h2>
+                                    <p className="font-mono text-[11px] text-red-400/80 text-center leading-relaxed max-w-[400px] mb-6 tracking-wide bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
+                                        {synthesisError}
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => { setSynthesisError(null); }}
+                                            className="px-5 py-2.5 bg-(--raised) border border-(--border) text-(--text) font-bold rounded-xl flex items-center gap-2 hover:bg-(--surface) transition-all text-[11px] tracking-widest uppercase"
+                                        >
+                                            <RotateCcw size={14} className="text-(--amber)" />
+                                            Try Again
+                                        </button>
+                                        <button
+                                            onClick={onClose}
+                                            className="px-5 py-2.5 bg-(--raised) border border-(--border) text-(--muted) font-bold rounded-xl flex items-center gap-2 hover:bg-(--surface) transition-all text-[11px] tracking-widest uppercase"
+                                        >
+                                            Close
+                                        </button>
                                     </div>
                                 </motion.div>
                             ) : result ? (
