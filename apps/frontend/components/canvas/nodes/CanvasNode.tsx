@@ -7,6 +7,7 @@ import { Layout, ArrowRightCircle, Network } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 import { nodesApi, edgesApi, ApiNode } from '@/lib/api';
 import BaseNode from './BaseNode';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 import 'reactflow/dist/style.css';
 
 // Import all node types for internal rendering
@@ -162,8 +163,8 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
 
     // Subscribe to node data for color updates
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
-    const effectiveAccentColor = nodeData?.color || 'indigo-500';
-    const effectiveIconColor = `text-${effectiveAccentColor.replace('500', '400')}`;
+    const effectiveAccentColor = nodeData?.color || 'indigo';
+    const { theme } = useNodeTheme(effectiveAccentColor);
     const [title, setTitle] = useState(data.title || '');
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
@@ -265,7 +266,6 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
             onTitleChange={setTitle}
             subtitle={subtitle}
             icon={Layout}
-            iconColor={effectiveIconColor}
             accentColor={effectiveAccentColor}
             minWidth={480}
             minHeight={420}
@@ -273,7 +273,19 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
             headerRight={
                 <button
                     onClick={handleEnter}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 bg-${effectiveAccentColor}/10 border border-${effectiveAccentColor}/20 hover:bg-${effectiveAccentColor}/20 rounded-lg ${effectiveIconColor} text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 group shadow-lg shadow-${effectiveAccentColor}/5`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 group shadow-lg"
+                    style={{
+                        backgroundColor: `${theme.primary}1a`,
+                        borderColor: `${theme.primary}33`,
+                        color: theme.accent,
+                        boxShadow: `0 10px 15px -3px ${theme.primary}0d`,
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = `${theme.primary}33`;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = `${theme.primary}1a`;
+                    }}
                 >
                     <span>Open</span>
                     <ArrowRightCircle size={14} className="group-hover:translate-x-0.5 transition-transform" />
@@ -282,7 +294,10 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
         >
             <div className="flex-1 p-2 flex flex-col gap-4  nodrag overflow-hidden">
                 {/* Internal ReactFlow View */}
-                <div className={`flex-1 bg-neutral-950/95 rounded-2xl border border-${effectiveAccentColor}/30 relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(var(--accent-rgb),0.05)] ring-1 ring-white/10 min-h-[280px]`}>
+                <div
+                    className="flex-1 bg-neutral-950/95 rounded-2xl border relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] ring-1 ring-white/10 min-h-[280px]"
+                    style={{ borderColor: theme.border }}
+                >
                     <div className="absolute inset-0 z-0">
                         <ReactFlowProvider>
                             <CanvasPreview
@@ -296,10 +311,11 @@ function CanvasNode({ data, selected, id, ...props }: NodeProps<CanvasNodeData>)
                         </ReactFlowProvider>
                     </div>
 
-                    {/* Vignette Overlay for Depth - Slightly transparent to avoid obscuring */}
-                    <div className={`absolute inset-0 bg-linear-to-tr from-${effectiveAccentColor}/[0.04] via-transparent to-transparent pointer-events-none z-10`} />
-                    <div className="absolute inset-0 bg-linear-to-b from-black/10 via-transparent to-black/20 pointer-events-none z-10" />
-                    <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.7)] pointer-events-none z-10" />
+                    {/* Vignette Overlay for Depth */}
+                    <div
+                        className="absolute inset-0 pointer-events-none z-10"
+                        style={{ background: `linear-gradient(to top right, ${theme.primary}0a, transparent, transparent)` }}
+                    />
 
                     {/* Glass Reflection */}
                     <div className="absolute top-0 left-0 right-0 h-1/2 bg-linear-to-b from-white/3 to-transparent pointer-events-none z-10" />

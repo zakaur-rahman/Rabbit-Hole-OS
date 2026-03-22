@@ -124,7 +124,7 @@ function WebNode({ data, selected, id }: NodeProps<WebNodeData>) {
                 title={data.title || domain}
                 subtitle={domain}
                 icon={data.favicon || Globe}
-                accentColor={data.color || 'purple-500'}
+                accentColor={data.color || 'purple'}
                 minWidth={400}
                 minHeight={350}
                 showResizer={true}

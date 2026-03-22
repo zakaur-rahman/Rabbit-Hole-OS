@@ -1,9 +1,10 @@
 'use client';
 
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 
 function TextNode({ id, data, selected }: NodeProps) {
     const [text, setText] = useState(data.text || '');
@@ -25,7 +26,9 @@ function TextNode({ id, data, selected }: NodeProps) {
     };
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
 
-    // Subscribe to color
+    // Subscribe to color from node data
+    const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
+    const { theme, style: themeStyle } = useNodeTheme(nodeColor || 'blue');
 
     // Debounced sync
     useEffect(() => {
@@ -39,14 +42,23 @@ function TextNode({ id, data, selected }: NodeProps) {
         return () => clearTimeout(timer);
     }, [text, id, updateNodeAndPersist, data]);
 
+    // Persist resize dimensions
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
+        const { width, height } = params;
+        updateNodeAndPersist(id, {
+            style: { width, height }
+        });
+    }, [id, updateNodeAndPersist]);
+
     return (
         <>
             <NodeResizer
                 minWidth={150}
                 minHeight={80}
                 isVisible={selected}
-                lineClassName="border-[#4f9eff]/50"
-                handleClassName="h-2 w-2 bg-[#0e1012] border border-[#4f9eff] rounded-sm"
+                lineClassName="!border-[var(--node-primary)]"
+                handleClassName="h-2 w-2 !bg-[#0e1012] !border !border-[var(--node-primary)] rounded-sm"
+                onResizeEnd={onResizeEnd}
             />
             <div
                 onMouseEnter={handleMouseEnter}
@@ -54,11 +66,14 @@ function TextNode({ id, data, selected }: NodeProps) {
                 className={`
                     relative w-full h-full min-w-[280px] min-h-[160px]
                     rounded-[10px] bg-[#191817] border transition-all duration-200
-                    ${selected
-                        ? `border-[#4f9eff]/50 shadow-[0_0_0_1px_rgba(79,158,255,0.18),0_8px_32px_rgba(0,0,0,0.5)]`
-                        : `border-white/5 hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`
-                    }
                 `}
+                style={{
+                    ...themeStyle,
+                    borderColor: selected ? theme.hover : 'rgba(255,255,255,0.05)',
+                    boxShadow: selected
+                        ? `0 0 0 1px ${theme.glow}, 0 8px 32px rgba(0,0,0,0.5)`
+                        : undefined,
+                }}
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
 
@@ -66,13 +81,20 @@ function TextNode({ id, data, selected }: NodeProps) {
                 <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <path d="M1.5 3h10M1.5 6.5h7M1.5 10h8" stroke="#4f9eff" strokeOpacity="0.65" strokeWidth="1.3" strokeLinecap="round"/>
+                            <path d="M1.5 3h10M1.5 6.5h7M1.5 10h8" stroke={theme.primary} strokeOpacity="0.65" strokeWidth="1.3" strokeLinecap="round"/>
                         </svg>
                     </div>
                     <div className="flex-1 font-mono text-[12.5px] font-medium text-[#d4d8de] tracking-tight truncate">
                         {data.label || 'Untitled'}
                     </div>
-                    <div className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border border-[#4f9eff]/20 bg-[#4f9eff]/10 text-[#4f9eff] leading-snug">
+                    <div
+                        className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border leading-snug"
+                        style={{
+                            borderColor: `${theme.primary}33`,
+                            backgroundColor: `${theme.primary}1a`,
+                            color: theme.primary,
+                        }}
+                    >
                         Text
                     </div>
                 </div>
@@ -80,7 +102,8 @@ function TextNode({ id, data, selected }: NodeProps) {
                 {/* Body Section */}
                 <div className="p-3">
                     <textarea
-                        className="w-full bg-transparent border-none outline-none resize-none font-mono text-[12px] font-light text-[#d4d8de]/50 focus:text-[#d4d8de] placeholder-[#d4d8de]/20 leading-[1.65] caret-[#4f9eff] min-h-[52px] nodrag"
+                        className="w-full bg-transparent border-none outline-none resize-none font-mono text-[12px] font-light text-[#d4d8de]/50 focus:text-[#d4d8de] placeholder-[#d4d8de]/20 leading-[1.65] min-h-[52px] nodrag"
+                        style={{ caretColor: theme.primary }}
                         placeholder="Type something..."
                         value={text}
                         onChange={(e) => setText(e.target.value)}
@@ -90,10 +113,10 @@ function TextNode({ id, data, selected }: NodeProps) {
 
                 {/* Handles - standardized Cognode style */}
                 <div className={`transition-opacity duration-300 ${(isHovered || selected) ? 'opacity-100' : 'opacity-0'}`}>
-                    <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="top-target" />
-                    <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="right-source" />
-                    <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="bottom-source" />
-                    <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="left-target" />
+                    <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="top-target" />
+                    <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="right-source" />
+                    <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="bottom-source" />
+                    <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="left-target" />
                 </div>
             </div>
         </>
