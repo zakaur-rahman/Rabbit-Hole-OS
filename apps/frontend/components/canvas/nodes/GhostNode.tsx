@@ -1,15 +1,33 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useState, useRef } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { HelpCircle } from 'lucide-react';
+import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
 export interface GhostNodeData {
     title: string;
     description?: string;
 }
 
-function GhostNode({ data, selected }: NodeProps<GhostNodeData>) {
+function GhostNode({ data, selected, id }: NodeProps<GhostNodeData>) {
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
+
     return (
         <>
             <NodeResizer
@@ -20,6 +38,8 @@ function GhostNode({ data, selected }: NodeProps<GhostNodeData>) {
                 handleClassName="h-3 w-3 bg-neutral-900 border-2 border-orange-500 rounded"
             />
             <div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={`
         group relative bg-transparent border-2 border-dashed rounded-xl p-3 h-full w-full
         transition-all duration-200 cursor-pointer
@@ -29,6 +49,7 @@ function GhostNode({ data, selected }: NodeProps<GhostNodeData>) {
                     }
       `}
             >
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 {/* Center Icon */}
                 <div className="flex flex-col items-center text-center">
                     <div className="w-10 h-10 rounded-full bg-orange-500/20 border border-dashed border-orange-500/50 flex items-center justify-center mb-2">

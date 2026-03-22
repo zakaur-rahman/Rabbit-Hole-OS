@@ -14,8 +14,7 @@ export interface VideoNodeData {
 
 function VideoNode({ data, selected, id }: NodeProps<VideoNodeData & { isPreview?: boolean, color?: string }>) {
     const isPreview = data.isPreview;
-    const accentColor = data.color || "red-500";
-    const iconColor = accentColor === 'red-500' ? 'text-red-400' : `text-${accentColor.replace('500', '400')}`;
+    const accentColor = data.color || 'red';
     let subtitle = 'Video';
     try {
         if (data.url) {
@@ -30,7 +29,6 @@ function VideoNode({ data, selected, id }: NodeProps<VideoNodeData & { isPreview
             title={data.title}
             subtitle={subtitle}
             icon={VideoIcon}
-            iconColor={iconColor}
             accentColor={accentColor}
             minHeight={120}
             showResizer={!isPreview}

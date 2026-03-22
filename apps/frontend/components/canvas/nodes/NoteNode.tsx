@@ -1,8 +1,9 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import TiptapEditor from '../TiptapEditor';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 
 export interface NoteNodeData {
     title: string;
@@ -20,6 +21,10 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
 
     const syncLinks = useGraphStore(state => state.syncLinks);
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+
+    // Subscribe to color from node data
+    const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
+    const { theme, style: themeStyle } = useNodeTheme(nodeColor || 'amber');
 
     const handleMouseEnter = () => {
         if (hoverTimeoutRef.current) {
@@ -54,14 +59,23 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
         e.stopPropagation();
     };
 
+    // Persist resize dimensions
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
+        const { width, height } = params;
+        updateNodeAndPersist(id, {
+            style: { width, height }
+        });
+    }, [id, updateNodeAndPersist]);
+
     return (
         <>
             <NodeResizer
                 minWidth={272}
                 minHeight={150}
                 isVisible={selected}
-                lineClassName="border-[#f5a623]/50"
-                handleClassName="h-2 w-2 bg-[#0e1012] border border-[#f5a623] rounded-sm"
+                lineClassName="!border-[var(--node-primary)]"
+                handleClassName="h-2 w-2 !bg-[#0e1012] !border !border-[var(--node-primary)] rounded-sm"
+                onResizeEnd={onResizeEnd}
             />
             <div
                 onMouseEnter={handleMouseEnter}
@@ -69,11 +83,14 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                 className={`
                     relative w-full h-full min-w-[350px]
                     rounded-[10px] bg-[#191817] border transition-all duration-200
-                    ${selected
-                        ? `border-[#f5a623]/50 shadow-[0_0_0_1px_rgba(245,166,35,0.18),0_8px_32px_rgba(0,0,0,0.5)]`
-                        : `border-white/5 hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`
-                    }
                 `}
+                style={{
+                    ...themeStyle,
+                    borderColor: selected ? theme.hover : 'rgba(255,255,255,0.05)',
+                    boxShadow: selected
+                        ? `0 0 0 1px ${theme.glow}, 0 8px 32px rgba(0,0,0,0.5)`
+                        : undefined,
+                }}
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
 
@@ -81,9 +98,9 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                 <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <path d="M2.5 1.5H8l3 3v7.5H2.5V1.5z" stroke="#f5a623" strokeOpacity="0.6" strokeWidth="1.2"/>
-                            <path d="M8 1.5V4.5H11" stroke="#f5a623" strokeOpacity="0.35" strokeWidth="1.2"/>
-                            <path d="M4.5 7h4M4.5 9h2.5" stroke="#f5a623" strokeOpacity="0.3" strokeWidth="1" strokeLinecap="round"/>
+                            <path d="M2.5 1.5H8l3 3v7.5H2.5V1.5z" stroke={theme.primary} strokeOpacity="0.6" strokeWidth="1.2"/>
+                            <path d="M8 1.5V4.5H11" stroke={theme.primary} strokeOpacity="0.35" strokeWidth="1.2"/>
+                            <path d="M4.5 7h4M4.5 9h2.5" stroke={theme.primary} strokeOpacity="0.3" strokeWidth="1" strokeLinecap="round"/>
                         </svg>
                     </div>
                     <div className="flex-1 font-mono text-[12.5px] font-medium text-[#d4d8de] tracking-tight truncate">
@@ -94,7 +111,15 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                             placeholder="New Note"
                         />
                     </div>
-                    <div className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border border-[#f5a623]/22 bg-[#f5a623]/08 text-[#f5a623] shadow-[0_0_0_1px_rgba(245,166,35,0.08)] leading-snug">
+                    <div
+                        className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border leading-snug"
+                        style={{
+                            borderColor: `${theme.primary}38`,
+                            backgroundColor: `${theme.primary}14`,
+                            color: theme.primary,
+                            boxShadow: `0 0 0 1px ${theme.primary}14`,
+                        }}
+                    >
                         Note
                     </div>
                 </div>
@@ -143,10 +168,10 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
 
                 {/* Handles - standardized Cognode style */}
                 <div className={`transition-opacity duration-300 ${(isHovered || selected) ? 'opacity-100' : 'opacity-0'}`}>
-                    <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="top-target" />
-                    <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="right-source" />
-                    <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="bottom-source" />
-                    <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="left-target" />
+                    <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="top-target" />
+                    <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="right-source" />
+                    <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="bottom-source" />
+                    <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="left-target" />
                 </div>
             </div>
         </>

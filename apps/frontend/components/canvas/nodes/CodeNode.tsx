@@ -1,10 +1,11 @@
 'use client';
 
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { CheckCircle, ChevronDown, Copy } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 
 export interface CodeNodeData {
     title: string;
@@ -29,6 +30,10 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
     const syncLinks = useGraphStore(state => state.syncLinks);
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Subscribe to color from node data
+    const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
+    const { theme, style: themeStyle } = useNodeTheme(nodeColor || 'emerald');
 
     const handleMouseEnter = () => {
         if (hoverTimeoutRef.current) {
@@ -63,6 +68,14 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
         setContent(e.target.value);
     };
 
+    // Persist resize dimensions
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
+        const { width, height } = params;
+        updateNodeAndPersist(id, {
+            style: { width, height }
+        });
+    }, [id, updateNodeAndPersist]);
+
     const lineCount = content.split('\n').length;
     const lineNumbers = Array.from({ length: Math.max(1, lineCount) }, (_, i) => i + 1);
 
@@ -85,8 +98,9 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 minWidth={400}
                 minHeight={250}
                 isVisible={selected}
-                lineClassName="border-[#2dd4b0]/50"
-                handleClassName="h-2 w-2 bg-[#0e1012] border border-[#2dd4b0] rounded-sm"
+                lineClassName="!border-[var(--node-primary)]"
+                handleClassName="h-2 w-2 !bg-[#0e1012] !border !border-[var(--node-primary)] rounded-sm"
+                onResizeEnd={onResizeEnd}
             />
             <div
                 onMouseEnter={handleMouseEnter}
@@ -94,11 +108,14 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 className={`
                     relative w-full h-full min-w-[400px]
                     rounded-[10px] bg-[#191817] border transition-all duration-200
-                    ${selected
-                        ? `border-[#2dd4b0]/50 shadow-[0_0_0_1px_rgba(45,212,176,0.18),0_8px_32px_rgba(0,0,0,0.5)]`
-                        : `border-white/5 hover:border-white/10 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`
-                    }
                 `}
+                style={{
+                    ...themeStyle,
+                    borderColor: selected ? theme.hover : 'rgba(255,255,255,0.05)',
+                    boxShadow: selected
+                        ? `0 0 0 1px ${theme.glow}, 0 8px 32px rgba(0,0,0,0.5)`
+                        : undefined,
+                }}
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
 
@@ -106,7 +123,7 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <path d="M4.5 3.5L1.5 6.5l3 3M8.5 3.5L11.5 6.5l-3 3M7.5 1.5l-2 10" stroke="#2dd4b0" strokeOpacity="0.65" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M4.5 3.5L1.5 6.5l3 3M8.5 3.5L11.5 6.5l-3 3M7.5 1.5l-2 10" stroke={theme.primary} strokeOpacity="0.65" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                     </div>
                     <div className="flex-1 font-mono text-[12.5px] font-medium text-[#d4d8de] tracking-tight truncate">
@@ -127,7 +144,14 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                             {currentLang.label}
                             <ChevronDown size={10} className={`transition-transform duration-200 ${showLangMenu ? 'rotate-180' : ''}`} />
                         </button>
-                        <div className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border border-[#2dd4b0]/22 bg-[#2dd4b0]/08 text-[#2dd4b0] shadow-[0_1px_2px_rgba(0,0,0,0.1)] leading-snug">
+                        <div
+                            className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border shadow-[0_1px_2px_rgba(0,0,0,0.1)] leading-snug"
+                            style={{
+                                borderColor: `${theme.primary}38`,
+                                backgroundColor: `${theme.primary}14`,
+                                color: theme.primary,
+                            }}
+                        >
                             {currentLang.badge}
                         </div>
 
@@ -140,7 +164,11 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                                             setLanguage(lang.id);
                                             setShowLangMenu(false);
                                         }}
-                                        className={`w-full text-left px-3 py-1.5 font-mono text-[10px] tracking-wide transition-colors ${language === lang.id ? 'text-[#2dd4b0] bg-[#2dd4b0]/5' : 'text-[#d4d8de]/40 hover:text-[#d4d8de] hover:bg-white/5'}`}
+                                        className={`w-full text-left px-3 py-1.5 font-mono text-[10px] tracking-wide transition-colors`}
+                                        style={{
+                                            color: language === lang.id ? theme.primary : undefined,
+                                            backgroundColor: language === lang.id ? `${theme.primary}0d` : undefined,
+                                        }}
                                     >
                                         {lang.label}
                                     </button>
@@ -176,7 +204,10 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 {/* Footer Toolbar */}
                 <div className="flex items-center justify-between px-3 h-[42px] border-t border-white/5">
                     <div className="flex items-center gap-2">
-                        <div className="w-[6px] h-[6px] rounded-full bg-[#2dd4b0] opacity-50 shadow-[0_0_6px_#2dd4b0]" />
+                        <div
+                            className="w-[6px] h-[6px] rounded-full opacity-50"
+                            style={{ backgroundColor: theme.primary, boxShadow: `0 0 6px ${theme.primary}` }}
+                        />
                         <span className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.06em]">Ready to execute</span>
                     </div>
 
@@ -187,12 +218,34 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                                 setCopied(true);
                                 setTimeout(() => setCopied(false), 2000);
                             }}
-                            className="h-[22px] px-2 flex items-center gap-1.5 rounded-[5px] border border-white/5 bg-transparent font-mono text-[9px] text-[#d4d8de]/20 hover:border-[#2dd4b0]/30 hover:text-[#2dd4b0]/80 hover:bg-[#2dd4b0]/5 transition-all outline-none"
+                            className="h-[22px] px-2 flex items-center gap-1.5 rounded-[5px] border border-white/5 bg-transparent font-mono text-[9px] text-[#d4d8de]/20 transition-all outline-none"
+                            style={{
+                                '--hover-border': `${theme.primary}4d`,
+                                '--hover-color': `${theme.primary}cc`,
+                                '--hover-bg': `${theme.primary}0d`,
+                            } as React.CSSProperties}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = `${theme.primary}4d`;
+                                e.currentTarget.style.color = `${theme.primary}cc`;
+                                e.currentTarget.style.backgroundColor = `${theme.primary}0d`;
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = '';
+                                e.currentTarget.style.color = '';
+                                e.currentTarget.style.backgroundColor = '';
+                            }}
                         >
                             {copied ? <CheckCircle size={10} /> : <Copy size={10} />}
                             {copied ? 'COPIED' : 'COPY'}
                         </button>
-                        <button className="h-[22px] px-2 flex items-center gap-1.5 rounded-[5px] border border-[#2dd4b0]/20 bg-[#2dd4b0]/10 font-mono text-[9px] font-semibold text-[#2dd4b0] hover:bg-[#2dd4b0]/20 transition-all outline-none">
+                        <button
+                            className="h-[22px] px-2 flex items-center gap-1.5 rounded-[5px] border font-mono text-[9px] font-semibold transition-all outline-none"
+                            style={{
+                                borderColor: `${theme.primary}33`,
+                                backgroundColor: `${theme.primary}1a`,
+                                color: theme.primary,
+                            }}
+                        >
                             <svg width="8" height="9" viewBox="0 0 8 9" fill="currentColor"><path d="M7.5 4.5l-6 3.5v-7z"/></svg>
                             RUN
                         </button>
@@ -201,10 +254,10 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
 
                 {/* Handles - standardized Cognode style */}
                 <div className={`transition-opacity duration-300 ${(isHovered || selected) ? 'opacity-100' : 'opacity-0'}`}>
-                    <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="top-target" />
-                    <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="right-source" />
-                    <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="bottom-source" />
-                    <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! bg-[#0e1012]! border-[1.5px]! border-white/15! hover:border-white/50! transition-all! z-50!" id="left-target" />
+                    <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="top-target" />
+                    <Handle type="source" position={Position.Right} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="right-source" />
+                    <Handle type="source" position={Position.Bottom} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="bottom-source" />
+                    <Handle type="target" position={Position.Left} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="left-target" />
                 </div>
             </div>
         </>

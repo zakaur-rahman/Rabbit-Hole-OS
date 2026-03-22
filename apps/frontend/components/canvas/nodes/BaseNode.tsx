@@ -7,6 +7,7 @@ import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 
 interface BaseNodeProps {
     id: string;
@@ -34,10 +35,9 @@ function BaseNode({
     title,
     subtitle,
     icon: Icon,
-    iconColor = 'text-green-400',
     children,
     footer,
-    accentColor = 'green-500',
+    accentColor = 'green',
     showResizer = true,
     minWidth = 150,
     minHeight = 60,
@@ -66,10 +66,12 @@ function BaseNode({
 
     // Subscribe to node data for color updates
     const nodeData = useGraphStore((state) => state.nodes.find((n) => n.id === id)?.data);
-    const effectiveAccentColor = nodeData?.color || accentColor;
+    const effectiveColor = nodeData?.color || accentColor;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onResizeEnd = useCallback((event: any, params: any) => {
+    // Resolve theme from color name — returns CSS variables and theme object
+    const { theme, style: themeStyle } = useNodeTheme(effectiveColor);
+
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
         const { width, height } = params;
         const node = useGraphStore.getState().nodes.find((n) => n.id === id);
 
@@ -87,8 +89,8 @@ function BaseNode({
                     minWidth={minWidth}
                     minHeight={minHeight}
                     isVisible={true}
-                    lineClassName={`border-${effectiveAccentColor}`}
-                    handleClassName={`h-3 w-3 bg-(--bg) border-2 border-${effectiveAccentColor} rounded`}
+                    lineClassName="!border-[var(--node-primary)]"
+                    handleClassName="h-3 w-3 !bg-[var(--node-bg)] !border-2 !border-[var(--node-primary)] rounded"
                     onResize={onResize}
                     onResizeEnd={onResizeEnd}
                 />
@@ -101,13 +103,14 @@ function BaseNode({
                     bg-(--surface) backdrop-blur-xl border rounded-(--r2)
                     transition-all duration-300 shadow-2xl
                     antialiased
-                    ${selected
-                        ? `border-${effectiveAccentColor} shadow-${effectiveAccentColor}/10 ring-1 ring-${effectiveAccentColor}/20`
-                        : `border-${effectiveAccentColor}/50 hover:border-${effectiveAccentColor} shadow-black/50`
-                    }
                     ${className}
                 `}
                 style={{
+                    ...themeStyle,
+                    borderColor: selected ? theme.primary : theme.border,
+                    boxShadow: selected
+                        ? `0 0 0 1px ${theme.glow}, 0 25px 50px -12px rgba(0,0,0,0.5)`
+                        : `0 25px 50px -12px rgba(0,0,0,0.5)`,
                     backfaceVisibility: 'hidden',
                     transform: 'translateZ(0)',
                     WebkitFontSmoothing: 'subpixel-antialiased',
@@ -115,16 +118,21 @@ function BaseNode({
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 {/* Accent line at the top */}
-                <div className={`absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-${effectiveAccentColor}/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div
+                    className="absolute top-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{
+                        background: `linear-gradient(to right, transparent, ${theme.hover}, transparent)`,
+                    }}
+                />
 
                 {/* Header */}
                 <div className="flex items-center gap-2.5 p-3.5 bg-(--bg) border-b border-(--border) rounded-t-(--r2)">
                     {Icon && (
-                        <div className={`p-1.5 rounded-(--r) bg-(--raised) shadow-inner shrink-0 flex items-center justify-center`}>
+                        <div className="p-1.5 rounded-(--r) bg-(--raised) shadow-inner shrink-0 flex items-center justify-center">
                             {typeof Icon === 'string' ? (
                                 <img src={Icon} alt="" className="w-3.5 h-3.5 object-contain" />
                             ) : (
-                                <Icon size={14} className={iconColor} />
+                                <Icon size={14} style={{ color: theme.accent }} />
                             )}
                         </div>
                     )}
@@ -173,19 +181,28 @@ function BaseNode({
                     </div>
                 )}
 
-                {/* Handles - Standarized for all-to-all routing */}
+                {/* Handles - Standardized for all-to-all routing */}
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'group-hover:opacity-100 opacity-0'}`}>
                     {/* Top */}
-                    <Handle type="target" position={Position.Top} id="top-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-(--bg)! -top-1! left-1/2! transition-transform hover:scale-150`} />
-
+                    <Handle type="target" position={Position.Top} id="top-target"
+                        className="w-2! h-2! border-2! -top-1! left-1/2! transition-transform hover:scale-150"
+                        style={{ backgroundColor: theme.primary, borderColor: 'var(--bg)' }}
+                    />
                     {/* Bottom */}
-                    <Handle type="source" position={Position.Bottom} id="bottom-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-(--bg)! -bottom-1! left-1/2! transition-transform hover:scale-150`} />
-
+                    <Handle type="source" position={Position.Bottom} id="bottom-source"
+                        className="w-2! h-2! border-2! -bottom-1! left-1/2! transition-transform hover:scale-150"
+                        style={{ backgroundColor: theme.primary, borderColor: 'var(--bg)' }}
+                    />
                     {/* Left */}
-                    <Handle type="target" position={Position.Left} id="left-target" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-(--bg)! -left-1! top-1/2! transition-transform hover:scale-150`} />
-
+                    <Handle type="target" position={Position.Left} id="left-target"
+                        className="w-2! h-2! border-2! -left-1! top-1/2! transition-transform hover:scale-150"
+                        style={{ backgroundColor: theme.primary, borderColor: 'var(--bg)' }}
+                    />
                     {/* Right */}
-                    <Handle type="source" position={Position.Right} id="right-source" className={`w-2! h-2! bg-${effectiveAccentColor} border-2! border-(--bg)! -right-1! top-1/2! transition-transform hover:scale-150`} />
+                    <Handle type="source" position={Position.Right} id="right-source"
+                        className="w-2! h-2! border-2! -right-1! top-1/2! transition-transform hover:scale-150"
+                        style={{ backgroundColor: theme.primary, borderColor: 'var(--bg)' }}
+                    />
                 </div>
             </div>
         </>
