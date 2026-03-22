@@ -5,6 +5,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -78,17 +79,40 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
         setPageNumber(prevPageNumber => prevPageNumber + offset);
     };
 
+    // Subscribe to color from node data
+    const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
+    const { theme } = useNodeTheme(nodeColor || 'red');
+
     return (
         <div 
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-1 ring-(--red) shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(212,91,91,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(212,91,91,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(212,91,91,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(212,91,91,0.1)]'}`}
-            style={{ border: `1px solid ${selected ? 'var(--red)' : 'rgba(212,91,91,0.3)'}` }}
+            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? '-translate-y-[2px]' : 'hover:-translate-y-[2px]'}`}
+            style={{
+                border: `1px solid ${selected ? theme.primary : theme.border}`,
+                boxShadow: selected
+                    ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 28px ${theme.glow}`
+                    : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
+            }}
         >
             <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
             {/* Connection Dots */}
-            <div className={`absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--red) border-(--red) shadow-[0_0_8px_rgba(212,91,91,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--red) group-hover:border-(--red) group-hover:shadow-[0_0_8px_rgba(212,91,91,0.5)]'}`} />
-            <div className={`absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--red) border-(--red) shadow-[0_0_8px_rgba(212,91,91,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--red) group-hover:border-(--red) group-hover:shadow-[0_0_8px_rgba(212,91,91,0.5)]'}`} />
+            <div
+                className="absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px]"
+                style={{
+                    backgroundColor: selected ? theme.primary : 'var(--border2)',
+                    borderColor: selected ? theme.primary : 'var(--border)',
+                    boxShadow: selected ? `0 0 8px ${theme.hover}` : undefined,
+                }}
+            />
+            <div
+                className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px]"
+                style={{
+                    backgroundColor: selected ? theme.primary : 'var(--border2)',
+                    borderColor: selected ? theme.primary : 'var(--border)',
+                    boxShadow: selected ? `0 0 8px ${theme.hover}` : undefined,
+                }}
+            />
 
             {/* Hidden ReactFlow handles */}
             <div className="absolute inset-0 pointer-events-none opacity-0">
@@ -100,12 +124,15 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                 className="px-[13px] py-[12px] pb-[11px] flex items-center gap-[10px] border-b border-(--border) relative z-10"
                 style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
             >
-                <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 bg-(--red-dim) border border-[rgba(212,91,91,0.2)]">
+                <div
+                    className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 border"
+                    style={{ backgroundColor: theme.background, borderColor: theme.border }}
+                >
                     📄
                 </div>
                 <div className="flex-1">
                     <div className="text-[13px] font-bold text-(--text) tracking-[0.01em] mb-[2px] leading-tight">PDF Document</div>
-                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase text-(--red) leading-tight">FILE</div>
+                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase leading-tight" style={{ color: theme.primary }}>FILE</div>
                 </div>
                 <button className="w-[22px] h-[22px] rounded-[5px] bg-transparent border border-transparent text-(--muted) flex items-center justify-center text-[14px] cursor-pointer transition-all tracking-[1px] hover:bg-(--raised) hover:border-(--border) hover:text-(--sub) leading-none pb-[6px]">
                     ...
@@ -116,8 +143,10 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
             <div className={`relative overflow-hidden flex flex-col items-center bg-[#111010] z-10 ${url ? 'h-[300px]' : 'h-[140px] justify-center'}`}>
                 {!url && (
                     <div 
-                        className="absolute inset-0" 
-                        style={{ background: 'linear-gradient(135deg, rgba(212,91,91,0.04) 0%, transparent 60%), repeating-linear-gradient(-45deg, transparent, transparent 12px, rgba(212,91,91,0.03) 12px, rgba(212,91,91,0.03) 13px)' }}
+                        className="absolute inset-0 opacity-20" 
+                        style={{
+                            background: `linear-gradient(135deg, ${theme.primary} 0%, transparent 60%), repeating-linear-gradient(-45deg, transparent, transparent 12px, ${theme.primary} 12px, ${theme.primary} 13px)`,
+                        }}
                     />
                 )}
                 
@@ -150,7 +179,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                         <div className="flex-1 overflow-auto flex justify-center bg-(--bg) p-3 relative scrollbar-hide">
                             {isLoading && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-(--bg)/50 z-10 backdrop-blur-sm">
-                                    <Loader2 className="animate-spin text-(--red)" size={20} />
+                                    <Loader2 className="animate-spin" style={{ color: theme.primary }} size={20} />
                                 </div>
                             )}
                             <Document
@@ -162,7 +191,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                                 }}
                                 loading={null}
                                 error={
-                                    <div className="flex items-center justify-center h-full text-(--red) text-[10px] font-mono">
+                                    <div className="flex items-center justify-center h-full text-[10px] font-mono" style={{ color: theme.primary }}>
                                         Failed to load PDF.
                                     </div>
                                 }
@@ -195,13 +224,14 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                             onChange={(e) => setInputUrl(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
                             placeholder="Paste PDF URL..."
-                            className="flex-1 h-[34px] bg-(--bg) border border-(--border2) rounded-[10px] px-[10px] font-mono text-[10px] text-(--sub) outline-none transition-all placeholder:text-(--muted) focus:border-(--red) focus:shadow-[0_0_0_2px_rgba(212,91,91,0.1)]"
-                            style={{ caretColor: 'var(--amber)' }}
+                            className="flex-1 h-[34px] bg-(--bg) border border-(--border2) rounded-[10px] px-[10px] font-mono text-[10px] text-(--sub) outline-none transition-all placeholder:text-(--muted)"
+                            style={{ '--focus-color': theme.primary, caretColor: 'var(--amber)' } as React.CSSProperties}
                             onClick={(e) => e.stopPropagation()}
                         />
                         <button
                             onClick={handleUrlSubmit}
-                            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[15px] cursor-pointer shrink-0 transition-all bg-(--red-dim) text-(--red) border border-[rgba(212,91,91,0.2)] hover:bg-(--red) hover:text-white hover:border-(--red) hover:shadow-[0_0_12px_rgba(212,91,91,0.3)]"
+                            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[15px] cursor-pointer shrink-0 transition-all border"
+                            style={{ backgroundColor: theme.background, color: theme.primary, borderColor: theme.border }}
                         >
                             🔗
                         </button>
@@ -220,7 +250,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                     />
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full h-[36px] rounded-[10px] border border-dashed border-(--border2) bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-(--sub) hover:bg-(--red-dim) hover:border-(--red) hover:text-(--red)"
+                        className="w-full h-[36px] rounded-[10px] border border-dashed border-(--border2) bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-(--sub)"
                     >
                         <span className="text-[14px]">↑</span> Upload PDF
                     </button>
@@ -236,9 +266,9 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                     {url ? (new URL(url).hostname || 'Local Document') : 'Supports PDF · up to 50MB'}
                 </span>
                 <div className="flex gap-[3px]">
-                    <div className={`w-[4px] h-[4px] rounded-full transition-colors duration-200 ${selected ? 'bg-(--red)' : 'bg-(--muted) group-hover:bg-(--red)'}`} />
-                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 ${selected ? 'bg-(--red) opacity-60' : 'bg-(--muted) group-hover:bg-(--red) group-hover:opacity-60'}`} />
-                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 ${selected ? 'bg-(--red) opacity-30' : 'bg-(--muted) group-hover:bg-(--red) group-hover:opacity-30'}`} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-colors duration-200" style={{ backgroundColor: theme.primary }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 opacity-60" style={{ backgroundColor: theme.primary }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 opacity-30" style={{ backgroundColor: theme.primary }} />
                 </div>
             </div>
         </div>

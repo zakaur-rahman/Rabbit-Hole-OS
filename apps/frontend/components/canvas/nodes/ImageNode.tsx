@@ -4,6 +4,7 @@ import { Image as ImageIcon } from 'lucide-react';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 
 export interface ImageNodeData {
     title?: string;
@@ -62,17 +63,40 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
         }
     }, [id, updateNode]);
 
+    // Subscribe to color from node data
+    const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
+    const { theme } = useNodeTheme(nodeColor || 'blue');
+
     return (
         <div 
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-1 ring-(--blue) shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)]'}`}
-            style={{ border: `1px solid ${selected ? 'var(--blue)' : 'rgba(91,143,212,0.3)'}` }}
+            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? '-translate-y-[2px]' : 'hover:-translate-y-[2px]'}`}
+            style={{
+                border: `1px solid ${selected ? theme.primary : theme.border}`,
+                boxShadow: selected
+                    ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 28px ${theme.glow}`
+                    : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
+            }}
         >
             <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
             {/* Connection Dots */}
-            <div className={`absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--blue) border-(--blue) shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--blue) group-hover:border-(--blue) group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
-            <div className={`absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--blue) border-(--blue) shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--blue) group-hover:border-(--blue) group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
+            <div
+                className="absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px]"
+                style={{
+                    backgroundColor: selected ? theme.primary : 'var(--border2)',
+                    borderColor: selected ? theme.primary : 'var(--border)',
+                    boxShadow: selected ? `0 0 8px ${theme.hover}` : undefined,
+                }}
+            />
+            <div
+                className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px]"
+                style={{
+                    backgroundColor: selected ? theme.primary : 'var(--border2)',
+                    borderColor: selected ? theme.primary : 'var(--border)',
+                    boxShadow: selected ? `0 0 8px ${theme.hover}` : undefined,
+                }}
+            />
 
             {/* Hidden ReactFlow handles to maintain connectivity */}
             <div className="absolute inset-0 pointer-events-none opacity-0">
@@ -95,12 +119,15 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                 className="px-[13px] py-[12px] pb-[11px] flex items-center gap-[10px] border-b border-(--border) relative z-10"
                 style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
             >
-                <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 bg-(--blue-dim) border border-[rgba(91,143,212,0.2)]">
+                <div
+                    className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[14px] shrink-0 border"
+                    style={{ backgroundColor: theme.background, borderColor: theme.border }}
+                >
                     🖼
                 </div>
                 <div className="flex-1">
                     <div className="text-[13px] font-bold text-(--text) tracking-[0.01em] mb-[2px] leading-tight">Image</div>
-                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase text-(--blue) leading-tight">MEDIA</div>
+                    <div className="font-mono text-[9px] tracking-[0.14em] uppercase leading-tight" style={{ color: theme.primary }}>MEDIA</div>
                 </div>
                 <button className="w-[22px] h-[22px] rounded-[5px] bg-transparent border border-transparent text-(--muted) flex items-center justify-center text-[14px] cursor-pointer transition-all tracking-[1px] hover:bg-(--raised) hover:border-(--border) hover:text-(--sub) leading-none pb-[6px]">
                     ...
@@ -140,13 +167,14 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                             onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
                             onPaste={handlePaste}
                             placeholder="Paste image URL..."
-                            className="flex-1 h-[34px] bg-(--bg) border border-(--border2) rounded-[10px] px-[10px] font-mono text-[10px] text-(--sub) outline-none transition-all placeholder:text-(--muted) focus:border-(--blue) focus:shadow-[0_0_0_2px_rgba(91,143,212,0.1)]"
-                            style={{ caretColor: 'var(--amber)' }}
+                            className="flex-1 h-[34px] bg-(--bg) border border-(--border2) rounded-[10px] px-[10px] font-mono text-[10px] text-(--sub) outline-none transition-all placeholder:text-(--muted)"
+                            style={{ '--focus-color': theme.primary, caretColor: 'var(--amber)' } as React.CSSProperties}
                             onClick={(e) => e.stopPropagation()}
                         />
                         <button
                             onClick={handleUrlSubmit}
-                            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[15px] cursor-pointer shrink-0 transition-all bg-(--blue-dim) text-(--blue) border border-[rgba(91,143,212,0.2)] hover:bg-(--blue) hover:text-white hover:border-(--blue) hover:shadow-[0_0_12px_rgba(91,143,212,0.3)]"
+                            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[15px] cursor-pointer shrink-0 transition-all border"
+                            style={{ backgroundColor: theme.background, color: theme.primary, borderColor: theme.border }}
                         >
                             🔗
                         </button>
@@ -165,7 +193,7 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                     />
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full h-[36px] rounded-[10px] border border-dashed border-(--border2) bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-(--sub) hover:bg-(--blue-dim) hover:border-(--blue) hover:text-(--blue)"
+                        className="w-full h-[36px] rounded-[10px] border border-dashed border-(--border2) bg-transparent font-sans text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-[7px] transition-all tracking-[0.03em] text-(--sub)"
                     >
                         <span className="text-[14px]">↑</span> Upload Image
                     </button>
@@ -181,9 +209,9 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                     {url ? (new URL(url).hostname || 'Local Image') : 'Supports JPG · PNG · WebP · SVG'}
                 </span>
                 <div className="flex gap-[3px]">
-                    <div className={`w-[4px] h-[4px] rounded-full transition-colors duration-200 ${selected ? 'bg-(--blue)' : 'bg-(--muted) group-hover:bg-(--blue)'}`} />
-                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 ${selected ? 'bg-(--blue) opacity-60' : 'bg-(--muted) group-hover:bg-(--blue) group-hover:opacity-60'}`} />
-                    <div className={`w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 ${selected ? 'bg-(--blue) opacity-30' : 'bg-(--muted) group-hover:bg-(--blue) group-hover:opacity-30'}`} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-colors duration-200" style={{ backgroundColor: theme.primary }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 opacity-60" style={{ backgroundColor: theme.primary }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 opacity-30" style={{ backgroundColor: theme.primary }} />
                 </div>
             </div>
         </div>
