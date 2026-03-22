@@ -3,6 +3,7 @@ import { NodeProps } from 'reactflow';
 import { Image as ImageIcon } from 'lucide-react';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';
+import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
 export interface ImageNodeData {
     title?: string;
@@ -14,6 +15,22 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
     const [inputUrl, setInputUrl] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const updateNode = useGraphStore(state => state.updateNode);
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
 
     const handleUrlSubmit = useCallback(() => {
         if (inputUrl) {
@@ -47,9 +64,12 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
 
     return (
         <div 
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? 'ring-1 ring-(--blue) shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)] -translate-y-[2px]' : 'shadow-[0_0_0_1px_rgba(255,255,255,0.025)_inset,0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-[2px] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_4px_rgba(91,143,212,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_28px_rgba(91,143,212,0.1)]'}`}
             style={{ border: `1px solid ${selected ? 'var(--blue)' : 'rgba(91,143,212,0.3)'}` }}
         >
+            <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
             {/* Connection Dots */}
             <div className={`absolute left-1/2 -translate-x-1/2 -top-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--blue) border-(--blue) shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--blue) group-hover:border-(--blue) group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />
             <div className={`absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-[8px] h-[8px] rounded-full z-10 transition-all duration-200 border-[1.5px] ${selected ? 'bg-(--blue) border-(--blue) shadow-[0_0_8px_rgba(91,143,212,0.5)]' : 'bg-(--border2) border-(--border) group-hover:bg-(--blue) group-hover:border-(--blue) group-hover:shadow-[0_0_8px_rgba(91,143,212,0.5)]'}`} />

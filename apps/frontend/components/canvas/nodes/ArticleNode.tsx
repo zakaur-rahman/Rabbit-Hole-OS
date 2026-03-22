@@ -1,11 +1,12 @@
 'use client';
 
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useRef } from 'react';
 import { NodeProps } from 'reactflow';
 import dynamic from 'next/dynamic';
 import BaseNode from './BaseNode';
 import OutlineTree, { OutlineItem } from '../OutlineTree';
 import { useGraphStore } from '@/store/graph.store';
+import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
 const MarkdownPreview = dynamic(
     () => import('@uiw/react-md-editor').then((mod) => mod.default.Markdown),
@@ -28,6 +29,22 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
     const [showOutline, setShowOutline] = useState(true);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(data.selectedTopics || []));
     const { updateNodeData } = useGraphStore();
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
 
     const isPreview = data.isPreview;
     const hasOutline = data.outline && data.outline.length > 0;
@@ -52,12 +69,15 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
 
     return (
         <div 
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             className={`relative w-[300px] bg-(--surface) border rounded-xl overflow-hidden cursor-pointer transition-all duration-250 group ${
                 selected 
                 ? 'border-(--amber) shadow-[0_0_0_4px_rgba(232,160,32,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_24px_rgba(232,160,32,0.1)] -translate-y-0.5' 
                 : 'border-(--border2) hover:border-(--amber) shadow-[0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-0.5'
             }`}
         >
+            <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
             {/* Hidden ReactFlow handles to maintain connectivity */}
             <div className="absolute inset-0 pointer-events-none opacity-0">
                 <BaseNode

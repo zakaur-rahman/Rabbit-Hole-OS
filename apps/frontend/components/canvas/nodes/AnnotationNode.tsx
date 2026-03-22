@@ -1,9 +1,26 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState, useRef } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { useGraphStore } from '@/store/graph.store';
+import { NodeActionsToolbar } from '../NodeActionsToolbar';
 
 const AnnotationNode = ({ id, data, selected }: NodeProps) => {
     const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
 
     const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
         const { width, height } = params;
@@ -22,7 +39,12 @@ const AnnotationNode = ({ id, data, selected }: NodeProps) => {
                 handleClassName="h-3 w-3 bg-neutral-900 border-2 border-blue-500 rounded"
                 onResizeEnd={onResizeEnd}
             />
-            <div className={`relative h-full w-full pointer-events-auto transition-all duration-300 ${selected ? 'ring-2 ring-blue-500/50 rounded-lg shadow-lg shadow-blue-500/10' : ''}`}>
+            <div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`relative h-full w-full pointer-events-auto transition-all duration-300 ${selected ? 'ring-2 ring-blue-500/50 rounded-lg shadow-lg shadow-blue-500/10' : ''}`}
+            >
+                <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
                 <svg
                     width="100%"
                     height="100%"
