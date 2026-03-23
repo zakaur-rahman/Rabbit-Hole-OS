@@ -7,6 +7,7 @@ import BaseNode from './BaseNode';
 import OutlineTree, { OutlineItem } from '../OutlineTree';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
+import { useNodeTheme } from '@/hooks/useNodeTheme';
 
 const MarkdownPreview = dynamic(
     () => import('@uiw/react-md-editor').then((mod) => mod.default.Markdown),
@@ -67,15 +68,25 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
     const totalTopics = data.outline?.length || 0;
     const selectedCount = selectedIds.size;
 
+    // Subscribe to color from node data
+    const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
+    const { theme } = useNodeTheme(nodeColor || 'amber');
+
     return (
         <div 
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className={`relative w-[300px] bg-(--surface) border rounded-xl overflow-hidden cursor-pointer transition-all duration-250 group ${
+            className={`relative w-[300px] bg-(--surface) rounded-xl overflow-hidden cursor-pointer transition-all duration-250 group ${
                 selected 
-                ? 'border-(--amber) shadow-[0_0_0_4px_rgba(232,160,32,0.08),0_12px_48px_rgba(0,0,0,0.7),0_0_24px_rgba(232,160,32,0.1)] -translate-y-0.5' 
-                : 'border-(--border2) hover:border-(--amber) shadow-[0_8px_40px_rgba(0,0,0,0.65)] hover:-translate-y-0.5'
+                ? '-translate-y-0.5' 
+                : 'hover:-translate-y-0.5'
             }`}
+            style={{
+                border: `1px solid ${selected ? theme.primary : theme.border}`,
+                boxShadow: selected
+                    ? `0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 24px ${theme.glow}`
+                    : `0 8px 40px rgba(0,0,0,0.65)`,
+            }}
         >
             <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
             {/* Hidden ReactFlow handles to maintain connectivity */}
@@ -117,7 +128,14 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
 
             {/* Structure Bar */}
             <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-(--border)">
-                <span className="font-mono text-[9px] font-medium tracking-[0.16em] text-(--amber) bg-(--amber)/7 border border-(--amber)/20 rounded-[5px] px-2 py-1 uppercase group-hover:bg-(--amber)/12 group-hover:border-(--amber)/35 transition-all">
+                <span 
+                    className="font-mono text-[9px] font-medium tracking-[0.16em] border rounded-[5px] px-2 py-1 uppercase transition-all"
+                    style={{ 
+                        color: theme.primary, 
+                        backgroundColor: theme.background, 
+                        borderColor: theme.border 
+                    }}
+                >
                     Structure
                 </span>
                 <div className="flex items-center gap-2">
@@ -160,27 +178,30 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
                 </div>
             )}
 
-            {/* Footer */}
-            <div className="px-3.5 py-2 border-t border-(--border) flex items-center justify-between bg-linear-to-br from-(--raised)/50 to-(--raised)">
-                {data.url ? (
-                    <a 
-                        href={data.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="font-mono text-[9px] text-(--muted) tracking-widest hover:text-(--amber) transition-colors flex items-center gap-1.5 nodrag"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        ↗ Open source
-                    </a>
-                ) : (
-                    <span className="font-mono text-[9px] text-(--muted) tracking-widest uppercase">Metadata ready</span>
-                )}
-                <div className="flex gap-0.5">
-                    <div className="w-1 h-1 rounded-full bg-(--muted) group-hover:bg-(--amber) transition-colors" />
-                    <div className="w-1 h-1 rounded-full bg-(--muted) group-hover:bg-(--amber)/60 group-hover:delay-50 transition-colors" />
-                    <div className="w-1 h-1 rounded-full bg-(--muted) group-hover:bg-(--amber)/30 group-hover:delay-100 transition-colors" />
-                </div>
+        {/* Footer */}
+        <div className="px-3.5 py-2 border-t border-(--border) flex items-center justify-between bg-linear-to-br from-(--raised)/50 to-(--raised)">
+            {data.url ? (
+                <a 
+                    href={data.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-mono text-[9px] text-(--muted) tracking-widest transition-colors flex items-center gap-1.5 nodrag"
+                    style={{ '--hover-color': theme.primary } as React.CSSProperties}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    ↗ Open source
+                </a>
+            ) : (
+                <span className="font-mono text-[9px] text-(--muted) tracking-widest uppercase">Metadata ready</span>
+            )}
+            <div className="flex gap-0.5">
+                <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
             </div>
+        </div>
 
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
