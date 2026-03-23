@@ -157,7 +157,7 @@ export class LocalStorageService {
         node.id!,
         node.type!,
         node.url || null,
-        node.title!,
+        node.title || '',
         node.content || null,
         node.whiteboard_id!,
         node.user_id!,
