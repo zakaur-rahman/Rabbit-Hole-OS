@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { NodeProps } from 'reactflow';
+import { NodeProps, NodeResizer } from 'reactflow';
 import { Image as ImageIcon } from 'lucide-react';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';
@@ -16,6 +16,7 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
     const [inputUrl, setInputUrl] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const updateNode = useGraphStore(state => state.updateNode);
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
     const [isHovered, setIsHovered] = useState(false);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -63,15 +64,30 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
         }
     }, [id, updateNode]);
 
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
+        updateNodeAndPersist(id, {
+            style: { width: params.width, height: params.height }
+        });
+    }, [id, updateNodeAndPersist]);
+
     // Subscribe to color from node data
     const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
     const { theme } = useNodeTheme(nodeColor || 'blue');
 
     return (
-        <div 
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? '-translate-y-[2px]' : 'hover:-translate-y-[2px]'}`}
+        <>
+            <NodeResizer 
+                minWidth={280} 
+                minHeight={200}
+                isVisible={selected}
+                lineClassName="!border-[var(--node-primary)]"
+                handleClassName="h-2 w-2 !bg-[#0e1012] !border !border-[var(--node-primary)] rounded-sm"
+                onResizeEnd={onResizeEnd} 
+            />
+            <div 
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`flex flex-col relative w-full h-full min-w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? '-translate-y-[2px]' : 'hover:-translate-y-[2px]'}`}
             style={{
                 border: `1px solid ${selected ? theme.primary : theme.border}`,
                 boxShadow: selected
@@ -135,7 +151,7 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
             </div>
 
             {/* Preview Area */}
-            <div className="h-[140px] relative overflow-hidden flex items-center justify-center bg-[#111010] z-10">
+            <div className="relative overflow-hidden flex-1 flex flex-col items-center justify-center bg-[#111010] z-10 min-h-[140px]">
                 {!url && (
                     <div 
                         className="absolute inset-0" 
@@ -215,6 +231,7 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
                 </div>
             </div>
         </div>
+        </>
     );
 }
 

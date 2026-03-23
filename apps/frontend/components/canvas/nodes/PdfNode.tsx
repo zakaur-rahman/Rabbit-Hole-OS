@@ -1,6 +1,6 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { NodeProps } from 'reactflow';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { NodeProps, NodeResizer } from 'reactflow';
+import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import BaseNode from './BaseNode';
 import { useGraphStore } from '@/store/graph.store';
@@ -25,8 +25,10 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
+    const [scale, setScale] = useState(1);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const updateNode = useGraphStore(state => state.updateNode);
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
     const [isHovered, setIsHovered] = useState(false);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -76,18 +78,33 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
     }, [id, updateNode]);
 
     const changePage = (offset: number) => {
-        setPageNumber(prevPageNumber => prevPageNumber + offset);
+        setPageNumber((prevPageNumber: number) => prevPageNumber + offset);
     };
+
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
+        updateNodeAndPersist(id, {
+            style: { width: params.width, height: params.height }
+        });
+    }, [id, updateNodeAndPersist]);
 
     // Subscribe to color from node data
     const nodeColor = useGraphStore(state => state.nodes.find(n => n.id === id)?.data?.color);
     const { theme } = useNodeTheme(nodeColor || 'red');
 
     return (
-        <div 
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            className={`relative w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? '-translate-y-[2px]' : 'hover:-translate-y-[2px]'}`}
+        <>
+            <NodeResizer 
+                minWidth={280} 
+                minHeight={200}
+                isVisible={selected}
+                lineClassName="!border-[var(--node-primary)]"
+                handleClassName="h-2 w-2 !bg-[#0e1012] !border !border-[var(--node-primary)] rounded-sm"
+                onResizeEnd={onResizeEnd} 
+            />
+            <div 
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`flex flex-col relative w-full h-full min-w-[280px] bg-(--surface) rounded-[13px] overflow-hidden cursor-pointer transition-all duration-250 group ${selected ? '-translate-y-[2px]' : 'hover:-translate-y-[2px]'}`}
             style={{
                 border: `1px solid ${selected ? theme.primary : theme.border}`,
                 boxShadow: selected
@@ -140,7 +157,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
             </div>
 
             {/* Preview Area */}
-            <div className={`relative overflow-hidden flex flex-col items-center bg-[#111010] z-10 ${url ? 'h-[300px]' : 'h-[140px] justify-center'}`}>
+            <div className={`relative overflow-hidden flex-1 flex flex-col items-center bg-[#111010] z-10 ${url ? 'min-h-[300px]' : 'min-h-[140px] justify-center'}`}>
                 {!url && (
                     <div 
                         className="absolute inset-0 opacity-20" 
@@ -159,6 +176,24 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                             </span>
                             <div className="flex items-center gap-1">
                                 <button
+                                    onClick={() => setScale((s: number) => Math.max(0.5, s - 0.25))}
+                                    className="p-1 text-(--sub) hover:text-(--text) cursor-pointer"
+                                    title="Zoom Out"
+                                >
+                                    <ZoomOut size={13} />
+                                </button>
+                                <span className="font-mono text-[9px] text-(--sub) w-[24px] text-center">
+                                    {Math.round(scale * 100)}%
+                                </span>
+                                <button
+                                    onClick={() => setScale((s: number) => Math.min(3, s + 0.25))}
+                                    className="p-1 text-(--sub) hover:text-(--text) cursor-pointer"
+                                    title="Zoom In"
+                                >
+                                    <ZoomIn size={13} />
+                                </button>
+                                <div className="w-[1px] h-[12px] bg-(--border) mx-1" />
+                                <button
                                     disabled={pageNumber <= 1}
                                     onClick={() => changePage(-1)}
                                     className="p-1 text-(--sub) hover:text-(--text) disabled:opacity-30 disabled:hover:text-(--sub) cursor-pointer"
@@ -176,7 +211,10 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                         </div>
 
                         {/* PDF Content */}
-                        <div className="flex-1 overflow-auto flex justify-center bg-(--bg) p-3 relative scrollbar-hide">
+                        <div 
+                            className="flex-1 overflow-auto flex justify-center bg-(--bg) p-3 relative scrollbar-hide nodrag nowheel custom-scrollbar"
+                            onWheel={(e) => e.stopPropagation()}
+                        >
                             {isLoading && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-(--bg)/50 z-10 backdrop-blur-sm">
                                     <Loader2 className="animate-spin" style={{ color: theme.primary }} size={20} />
@@ -199,6 +237,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                                 <Page
                                     pageNumber={pageNumber}
                                     width={240} // Fit nicely inside 280px container
+                                    scale={scale}
                                     renderTextLayer={false}
                                     renderAnnotationLayer={false}
                                     className="shadow-lg rounded overflow-hidden"
@@ -272,6 +311,7 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                 </div>
             </div>
         </div>
+        </>
     );
 }
 
