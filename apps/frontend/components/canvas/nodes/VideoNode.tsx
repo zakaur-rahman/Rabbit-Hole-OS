@@ -35,7 +35,7 @@ function VideoNode({ data, selected, id }: NodeProps<VideoNodeData & { isPreview
         >
             <div className="flex-1 flex flex-col min-h-0 relative">
                 {/* Thumbnail / Placeholder */}
-                <div className={`relative ${isPreview ? 'h-20' : 'h-24'} bg-neutral-800/50 flex items-center justify-center overflow-hidden`}>
+                <div className={`relative flex-1 ${isPreview ? 'min-h-[80px]' : 'min-h-[96px]'} bg-neutral-800/50 flex items-center justify-center overflow-hidden`}>
                     {data.thumbnail ? (
                         <img src={data.thumbnail} alt={data.title} className="w-full h-full object-cover" />
                     ) : (

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { NodeProps } from 'reactflow';
+import { NodeProps, NodeResizer } from 'reactflow';
 import dynamic from 'next/dynamic';
 import BaseNode from './BaseNode';
 import OutlineTree, { OutlineItem } from '../OutlineTree';
@@ -30,6 +30,7 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
     const [showOutline, setShowOutline] = useState(true);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(data.selectedTopics || []));
     const { updateNodeData } = useGraphStore();
+    const updateNodeAndPersist = useGraphStore(state => state.updateNodeAndPersist);
     const [isHovered, setIsHovered] = useState(false);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -65,6 +66,12 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
         }));
     }, [id, updateNodeData]);
 
+    const onResizeEnd = useCallback((_event: unknown, params: { width: number; height: number }) => {
+        updateNodeAndPersist(id, {
+            style: { width: params.width, height: params.height }
+        });
+    }, [id, updateNodeAndPersist]);
+
     const totalTopics = data.outline?.length || 0;
     const selectedCount = selectedIds.size;
 
@@ -73,10 +80,19 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
     const { theme } = useNodeTheme(nodeColor || 'amber');
 
     return (
-        <div 
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            className={`relative w-[300px] bg-(--surface) rounded-xl overflow-hidden cursor-pointer transition-all duration-250 group ${
+        <>
+            <NodeResizer 
+                minWidth={300} 
+                minHeight={250}
+                isVisible={selected && !isPreview}
+                lineClassName="!border-[var(--node-primary)]"
+                handleClassName="h-2 w-2 !bg-[#0e1012] !border !border-[var(--node-primary)] rounded-sm"
+                onResizeEnd={onResizeEnd} 
+            />
+            <div 
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`flex flex-col relative w-full h-full min-w-[300px] bg-(--surface) rounded-xl overflow-hidden cursor-pointer transition-all duration-250 group ${
                 selected 
                 ? '-translate-y-0.5' 
                 : 'hover:-translate-y-0.5'
@@ -153,7 +169,7 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
 
             {/* Topics List */}
             {showOutline && hasOutline && (
-                <div className="max-h-[320px] overflow-y-auto custom-scrollbar nodrag">
+                <div className="flex-1 overflow-y-auto custom-scrollbar nodrag min-h-[100px]">
                     <OutlineTree
                         items={data.outline!}
                         selectedIds={selectedIds}
@@ -165,7 +181,7 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
 
             {/* Snippet (if no outline) */}
             {(!hasOutline || isPreview) && data.snippet && (
-                <div className="p-4 bg-(--bg)/20 text-[13px] text-(--sub) leading-relaxed select-text cursor-text nodrag prose prose-sm prose-invert max-w-none">
+                <div className="flex-1 overflow-y-auto p-4 bg-(--bg)/20 text-[13px] text-(--sub) leading-relaxed select-text cursor-text nodrag prose prose-sm prose-invert max-w-none">
                     <MarkdownPreview
                         source={data.snippet}
                         style={{
@@ -219,6 +235,7 @@ function ArticleNode({ data, selected, id }: NodeProps<ArticleNodeData & { isPre
                 }
             `}</style>
         </div>
+        </>
     );
 }
 

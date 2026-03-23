@@ -38,7 +38,7 @@ function ProductNode({ data, selected, id }: NodeProps<ProductNodeData & { isPre
         >
             <div className="flex-1 flex flex-col min-h-0 relative">
                 {/* Thumbnail */}
-                <div className={`relative ${isPreview ? 'h-24' : 'h-28'} bg-(--raised)/50 flex items-center justify-center overflow-hidden`}>
+                <div className={`relative flex-1 ${isPreview ? 'min-h-[96px]' : 'min-h-[112px]'} bg-(--raised)/50 flex items-center justify-center overflow-hidden`}>
                     {data.thumbnail ? (
                         <img src={data.thumbnail} alt={data.title} className="w-full h-full object-cover" />
                     ) : (

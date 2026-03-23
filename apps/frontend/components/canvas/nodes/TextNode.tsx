@@ -2,6 +2,10 @@
 
 import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
+import { Eye, Edit3 } from 'lucide-react';
+import MDEditor from '@uiw/react-md-editor';
+import '@uiw/react-md-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
 import { useGraphStore } from '@/store/graph.store';
 import { NodeActionsToolbar } from '../NodeActionsToolbar';
 import { useNodeTheme } from '@/hooks/useNodeTheme';
@@ -9,6 +13,7 @@ import { useNodeTheme } from '@/hooks/useNodeTheme';
 function TextNode({ id, data, selected }: NodeProps) {
     const [text, setText] = useState(data.text || '');
     const [isHovered, setIsHovered] = useState(false);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleMouseEnter = () => {
@@ -66,6 +71,7 @@ function TextNode({ id, data, selected }: NodeProps) {
                 className={`
                     relative w-full h-full min-w-[280px] min-h-[160px]
                     rounded-[10px] bg-[#191817] border transition-all duration-200
+                    flex flex-col overflow-hidden
                 `}
                 style={{
                     ...themeStyle,
@@ -87,6 +93,21 @@ function TextNode({ id, data, selected }: NodeProps) {
                     <div className="flex-1 font-mono text-[12.5px] font-medium text-[#d4d8de] tracking-tight truncate">
                         {data.label || 'Untitled'}
                     </div>
+                    {/* Preview Toggle */}
+                    <button
+                        onClick={() => setIsPreviewMode(!isPreviewMode)}
+                        className="flex items-center gap-1.5 px-2 py-[2px] rounded-[4px] border transition-colors outline-none"
+                        style={{
+                            borderColor: isPreviewMode ? theme.primary : 'rgba(255,255,255,0.1)',
+                            backgroundColor: isPreviewMode ? `${theme.primary}1a` : 'transparent',
+                            color: isPreviewMode ? theme.primary : 'rgba(212,216,222,0.5)',
+                        }}
+                    >
+                        {isPreviewMode ? <Edit3 size={10} /> : <Eye size={10} />}
+                        <span className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase leading-snug">
+                            {isPreviewMode ? 'Edit' : 'Preview'}
+                        </span>
+                    </button>
                     <div
                         className="font-mono text-[9px] font-semibold tracking-[0.12em] uppercase px-[7px] py-[2px] rounded-[3px] border leading-snug"
                         style={{
@@ -100,15 +121,35 @@ function TextNode({ id, data, selected }: NodeProps) {
                 </div>
 
                 {/* Body Section */}
-                <div className="p-3">
-                    <textarea
-                        className="w-full bg-transparent border-none outline-none resize-none font-mono text-[12px] font-light text-[#d4d8de]/50 focus:text-[#d4d8de] placeholder-[#d4d8de]/20 leading-[1.65] min-h-[52px] nodrag"
-                        style={{ caretColor: theme.primary }}
-                        placeholder="Type something..."
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        rows={3}
-                    />
+                <div className="p-3 flex-1 flex flex-col relative min-h-0 overflow-hidden" data-color-mode="dark">
+                    {isPreviewMode ? (
+                        <div 
+                            className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden nodrag nowheel custom-scrollbar"
+                            onWheel={(e) => e.stopPropagation()}
+                        >
+                            <MDEditor.Markdown 
+                                source={text || '*No content*'} 
+                                style={{ 
+                                    backgroundColor: 'transparent',
+                                    color: 'rgba(212,216,222,0.85)',
+                                    fontFamily: 'inherit',
+                                    fontSize: '12px',
+                                    lineHeight: '1.65'
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <textarea
+                            className="w-full h-full bg-transparent border-none outline-none resize-none font-mono text-[12px] font-light text-[#d4d8de]/50 focus:text-[#d4d8de] placeholder-[#d4d8de]/20 leading-[1.65] min-h-[52px] nodrag nowheel"
+                            style={{ caretColor: theme.primary }}
+                            placeholder="Type something..."
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            rows={3}
+                        />
+                    )}
                 </div>
 
                 {/* Handles - standardized Cognode style */}

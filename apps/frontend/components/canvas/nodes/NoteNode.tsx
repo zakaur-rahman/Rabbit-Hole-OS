@@ -83,6 +83,7 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                 className={`
                     relative w-full h-full min-w-[350px]
                     rounded-[10px] bg-[#191817] border transition-all duration-200
+                    flex flex-col overflow-hidden
                 `}
                 style={{
                     ...themeStyle,
@@ -105,9 +106,11 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                     </div>
                     <div className="flex-1 font-mono text-[12.5px] font-medium text-[#d4d8de] tracking-tight truncate">
                         <input
-                            className="bg-transparent border-none outline-none w-full cursor-text placeholder-[#d4d8de]/20"
+                            className="bg-transparent border-none outline-none w-full cursor-text placeholder-[#d4d8de]/20 nodrag nowheel"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                             placeholder="New Note"
                         />
                     </div>
@@ -125,13 +128,16 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                 </div>
 
                 {/* Body Section */}
-                <div className="p-3">
+                <div className="p-3 flex-1 flex flex-col min-h-0 overflow-hidden">
                     <div className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.08em] uppercase mb-[9px]">
                         NOTE · {new Date().toISOString().split('T')[0]}
                     </div>
                     <div
-                        className={`flex-1 ${isPreview ? '' : 'cursor-text'} nodrag relative min-h-[58px] flex flex-col`}
+                        className={`flex-1 ${isPreview ? '' : 'cursor-text'} nodrag nowheel relative min-h-[58px] flex flex-col`}
                         onClick={onNoteClick}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onWheel={(e) => e.stopPropagation()}
                         onDoubleClick={() => !isPreview && setIsEditing(true)}
                     >
                         {isEditing && !isPreview ? (

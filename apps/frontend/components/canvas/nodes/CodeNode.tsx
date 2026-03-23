@@ -108,6 +108,7 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 className={`
                     relative w-full h-full min-w-[400px]
                     rounded-[10px] bg-[#191817] border transition-all duration-200
+                    flex flex-col overflow-hidden
                 `}
                 style={{
                     ...themeStyle,
@@ -179,7 +180,7 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 </div>
 
                 {/* Body Section - Editor Content */}
-                <div className="relative flex h-[calc(100%-88px)] min-h-[140px]">
+                <div className="relative flex flex-1 min-h-[140px] overflow-hidden">
                     {/* Gutter */}
                     <div className="w-[34px] shrink-0 bg-white/2 border-r border-white/5 flex flex-col items-end pt-3 pr-[10px] select-none pointer-events-none">
                         {lineNumbers.map(n => (
@@ -195,7 +196,10 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                             onChange={handleContentChange}
                             readOnly={isPreview}
                             spellCheck={false}
-                            className="w-full h-full bg-transparent p-3 pt-3 font-mono text-[11.5px] font-light leading-[1.8] text-[#d4d8de]/60 focus:text-[#d4d8de] placeholder-[#d4d8de]/10 outline-none resize-none scrollbar-hide nodrag"
+                            className="w-full h-full bg-transparent p-3 pt-3 font-mono text-[11.5px] font-light leading-[1.8] text-[#d4d8de]/60 focus:text-[#d4d8de] placeholder-[#d4d8de]/10 outline-none resize-none scrollbar-hide nodrag nowheel"
+                            onWheel={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                             placeholder="// Start coding..."
                         />
                     </div>
