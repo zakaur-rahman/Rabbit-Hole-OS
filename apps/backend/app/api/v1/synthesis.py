@@ -667,7 +667,7 @@ async def get_research_ast(
 
     # 3. Build edge relationships for LLM
     url_to_ref = get_url_to_ref_map(chunks)
-    node_to_ref = {c.node_id: url_to_ref[c.source_url] for c in chunks}
+    node_to_ref = {c.node_id: url_to_ref.get(c.source_url, "") for c in chunks}
 
     transformed_edges = []
     if request.edges:
@@ -735,7 +735,7 @@ async def stream_research_ast(
     source_map = build_source_map(chunks)
 
     url_to_ref = get_url_to_ref_map(chunks)
-    node_to_ref = {c.node_id: url_to_ref[c.source_url] for c in chunks}
+    node_to_ref = {c.node_id: url_to_ref.get(c.source_url, "") for c in chunks}
 
     transformed_edges = []
     if request.edges:
@@ -802,7 +802,7 @@ async def generate_ast_pdf(
 
         # 3. Build edge relationships for LLM
         url_to_ref = get_url_to_ref_map(chunks)
-        node_to_ref = {c.node_id: url_to_ref[c.source_url] for c in chunks}
+        node_to_ref = {c.node_id: url_to_ref.get(c.source_url, "") for c in chunks}
 
         transformed_edges = []
         if request.edges:
