@@ -70,21 +70,24 @@ function TextNode({ id, data, selected }: NodeProps) {
                 onMouseLeave={handleMouseLeave}
                 className={`
                     relative w-full h-full min-w-[280px] min-h-[160px]
-                    rounded-[10px] bg-[#191817] border transition-all duration-200
-                    flex flex-col overflow-hidden
+                    rounded-[13px] bg-(--surface) border transition-all duration-250
+                    flex flex-col overflow-hidden group
+                    ${selected ? '-translate-y-0.5' : 'hover:-translate-y-0.5'}
                 `}
                 style={{
                     ...themeStyle,
-                    borderColor: selected ? theme.hover : 'rgba(255,255,255,0.05)',
+                    borderColor: selected ? theme.primary : theme.border,
                     boxShadow: selected
-                        ? `0 0 0 1px ${theme.glow}, 0 8px 32px rgba(0,0,0,0.5)`
-                        : undefined,
+                        ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 24px ${theme.glow}`
+                        : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
                 }}
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
 
                 {/* Header Section */}
-                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
+                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-(--border)"
+                    style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
+                >
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                             <path d="M1.5 3h10M1.5 6.5h7M1.5 10h8" stroke={theme.primary} strokeOpacity="0.65" strokeWidth="1.3" strokeLinecap="round"/>
@@ -150,6 +153,19 @@ function TextNode({ id, data, selected }: NodeProps) {
                             rows={3}
                         />
                     )}
+                </div>
+
+                {/* Footer */}
+                <div
+                    className="px-3 py-[7px] border-t border-(--border) flex items-center justify-between"
+                    style={{ background: 'linear-gradient(135deg, rgba(22,20,18,0.5) 0%, var(--raised) 100%)' }}
+                >
+                    <span className="font-mono text-[9px] text-(--muted) tracking-[0.06em]">Text</span>
+                    <div className="flex gap-0.5">
+                        <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
+                    </div>
                 </div>
 
                 {/* Handles - standardized Cognode style */}

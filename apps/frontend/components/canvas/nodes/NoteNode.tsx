@@ -82,21 +82,24 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                 onMouseLeave={handleMouseLeave}
                 className={`
                     relative w-full h-full min-w-[350px]
-                    rounded-[10px] bg-[#191817] border transition-all duration-200
-                    flex flex-col overflow-hidden
+                    rounded-[13px] bg-(--surface) border transition-all duration-250
+                    flex flex-col overflow-hidden group
+                    ${selected ? '-translate-y-0.5' : 'hover:-translate-y-0.5'}
                 `}
                 style={{
                     ...themeStyle,
-                    borderColor: selected ? theme.hover : 'rgba(255,255,255,0.05)',
+                    borderColor: selected ? theme.primary : theme.border,
                     boxShadow: selected
-                        ? `0 0 0 1px ${theme.glow}, 0 8px 32px rgba(0,0,0,0.5)`
-                        : undefined,
+                        ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 24px ${theme.glow}`
+                        : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
                 }}
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
 
                 {/* Header Section */}
-                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
+                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-(--border)"
+                    style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
+                >
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                             <path d="M2.5 1.5H8l3 3v7.5H2.5V1.5z" stroke={theme.primary} strokeOpacity="0.6" strokeWidth="1.2"/>
@@ -159,15 +162,12 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData & { isPreview?:
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between mt-[10px] pt-[9px] border-t border-white/5">
-                        <span className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.06em]">Modified just now</span>
-                        <div className="flex gap-[5px]">
-                            <button className="w-[22px] h-[22px] rounded-[5px] border border-white/5 bg-transparent flex items-center justify-center cursor-pointer text-[#d4d8de]/20 hover:border-white/10 hover:text-[#d4d8de]/50 hover:bg-white/5 transition-all outline-none">
-                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1h3.5l4.5 4.5L5.5 9 1 4.5V1z" stroke="currentColor" strokeWidth="1.1"/><circle cx="3.2" cy="3.2" r="0.7" fill="currentColor"/></svg>
-                            </button>
-                            <button className="w-[22px] h-[22px] rounded-[5px] border border-white/5 bg-transparent flex items-center justify-center cursor-pointer text-[#d4d8de]/20 hover:border-white/10 hover:text-[#d4d8de]/50 hover:bg-white/5 transition-all outline-none">
-                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="2" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="8" cy="5" r="1" fill="currentColor"/></svg>
-                            </button>
+                    <div className="flex items-center justify-between mt-[10px] pt-[9px] border-t border-(--border)">
+                        <span className="font-mono text-[9px] text-(--muted) tracking-[0.06em]">Modified just now</span>
+                        <div className="flex gap-0.5">
+                            <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                            <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                            <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
                         </div>
                     </div>
                 </div>

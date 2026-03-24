@@ -107,21 +107,24 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 onMouseLeave={handleMouseLeave}
                 className={`
                     relative w-full h-full min-w-[400px]
-                    rounded-[10px] bg-[#191817] border transition-all duration-200
-                    flex flex-col overflow-hidden
+                    rounded-[13px] bg-(--surface) border transition-all duration-250
+                    flex flex-col overflow-hidden group
+                    ${selected ? '-translate-y-0.5' : 'hover:-translate-y-0.5'}
                 `}
                 style={{
                     ...themeStyle,
-                    borderColor: selected ? theme.hover : 'rgba(255,255,255,0.05)',
+                    borderColor: selected ? theme.primary : theme.border,
                     boxShadow: selected
-                        ? `0 0 0 1px ${theme.glow}, 0 8px 32px rgba(0,0,0,0.5)`
-                        : undefined,
+                        ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 24px ${theme.glow}`
+                        : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
                 }}
             >
                 <NodeActionsToolbar nodeId={id} isVisible={isHovered} onMouseEnter={handleMouseEnter} />
 
                 {/* Header Section */}
-                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-white/5">
+                <div className="flex items-center gap-2 px-3 pt-[10px] pb-[9px] border-b border-(--border)"
+                    style={{ background: 'linear-gradient(135deg, var(--raised) 0%, rgba(22,20,18,0.5) 100%)' }}
+                >
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                             <path d="M4.5 3.5L1.5 6.5l3 3M8.5 3.5L11.5 6.5l-3 3M7.5 1.5l-2 10" stroke={theme.primary} strokeOpacity="0.65" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -206,13 +209,14 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 </div>
 
                 {/* Footer Toolbar */}
-                <div className="flex items-center justify-between px-3 h-[42px] border-t border-white/5">
+                <div className="flex items-center justify-between px-3 h-[42px] border-t border-(--border)">
                     <div className="flex items-center gap-2">
-                        <div
-                            className="w-[6px] h-[6px] rounded-full opacity-50"
-                            style={{ backgroundColor: theme.primary, boxShadow: `0 0 6px ${theme.primary}` }}
-                        />
-                        <span className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.06em]">Ready to execute</span>
+                        <div className="flex gap-0.5">
+                            <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                            <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                            <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
+                        </div>
+                        <span className="font-mono text-[9px] text-(--muted) tracking-[0.06em]">Ready to execute</span>
                     </div>
 
                     <div className="flex gap-[6px]">

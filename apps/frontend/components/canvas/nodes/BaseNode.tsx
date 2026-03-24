@@ -101,18 +101,19 @@ function BaseNode({
                 className={`
                     group relative flex flex-col h-full w-full
                     bg-(--surface) backdrop-blur-xl border rounded-(--r2)
-                    transition-all duration-300 shadow-2xl
+                    transition-all duration-250 shadow-2xl
                     antialiased
+                    ${selected ? '-translate-y-0.5' : 'hover:-translate-y-0.5'}
                     ${className}
                 `}
                 style={{
                     ...themeStyle,
                     borderColor: selected ? theme.primary : theme.border,
                     boxShadow: selected
-                        ? `0 0 0 1px ${theme.glow}, 0 25px 50px -12px rgba(0,0,0,0.5)`
-                        : `0 25px 50px -12px rgba(0,0,0,0.5)`,
+                        ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 24px ${theme.glow}`
+                        : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
                     backfaceVisibility: 'hidden',
-                    transform: 'translateZ(0)',
+                    transform: selected ? 'translateY(-2px) translateZ(0)' : undefined,
                     WebkitFontSmoothing: 'subpixel-antialiased',
                 }}
             >
@@ -180,6 +181,15 @@ function BaseNode({
                         {footer}
                     </div>
                 )}
+
+                {/* Status Dots */}
+                <div className="px-3 py-[6px] border-t border-(--border) flex items-center justify-end rounded-b-(--r2)">
+                    <div className="flex gap-0.5">
+                        <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
+                    </div>
+                </div>
 
                 {/* Handles - Standardized for all-to-all routing */}
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'group-hover:opacity-100 opacity-0'}`}>
