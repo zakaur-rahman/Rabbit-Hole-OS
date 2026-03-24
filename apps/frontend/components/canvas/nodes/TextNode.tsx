@@ -155,6 +155,19 @@ function TextNode({ id, data, selected }: NodeProps) {
                     )}
                 </div>
 
+                {/* Footer */}
+                <div
+                    className="px-3 py-[7px] border-t border-(--border) flex items-center justify-between"
+                    style={{ background: 'linear-gradient(135deg, rgba(22,20,18,0.5) 0%, var(--raised) 100%)' }}
+                >
+                    <span className="font-mono text-[9px] text-(--muted) tracking-[0.06em]">Text</span>
+                    <div className="flex gap-0.5">
+                        <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
+                    </div>
+                </div>
+
                 {/* Handles - standardized Cognode style */}
                 <div className={`transition-opacity duration-300 ${(isHovered || selected) ? 'opacity-100' : 'opacity-0'}`}>
                     <Handle type="target" position={Position.Top} className="w-[9px]! h-[9px]! !bg-[#0e1012] !border-[1.5px] !border-white/15 hover:!border-white/50 !transition-all z-50!" id="top-target" />

@@ -305,9 +305,9 @@ function PdfNode({ data, selected, id }: NodeProps<PdfNodeData>) {
                     {url ? (new URL(url).hostname || 'Local Document') : 'Supports PDF · up to 50MB'}
                 </span>
                 <div className="flex gap-[3px]">
-                    <div className="w-[4px] h-[4px] rounded-full transition-colors duration-200" style={{ backgroundColor: theme.primary }} />
-                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50 opacity-60" style={{ backgroundColor: theme.primary }} />
-                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100 opacity-30" style={{ backgroundColor: theme.primary }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-colors duration-200" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                    <div className="w-[4px] h-[4px] rounded-full transition-all duration-200 delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
                 </div>
             </div>
         </div>

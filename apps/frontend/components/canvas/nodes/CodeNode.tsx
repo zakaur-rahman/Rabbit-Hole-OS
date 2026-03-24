@@ -209,13 +209,14 @@ function CodeNode({ id, data, selected }: NodeProps<CodeNodeData & { isPreview?:
                 </div>
 
                 {/* Footer Toolbar */}
-                <div className="flex items-center justify-between px-3 h-[42px] border-t border-white/5">
+                <div className="flex items-center justify-between px-3 h-[42px] border-t border-(--border)">
                     <div className="flex items-center gap-2">
-                        <div
-                            className="w-[6px] h-[6px] rounded-full opacity-50"
-                            style={{ backgroundColor: theme.primary, boxShadow: `0 0 6px ${theme.primary}` }}
-                        />
-                        <span className="font-mono text-[9px] text-[#d4d8de]/20 tracking-[0.06em]">Ready to execute</span>
+                        <div className="flex gap-0.5">
+                            <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                            <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                            <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
+                        </div>
+                        <span className="font-mono text-[9px] text-(--muted) tracking-[0.06em]">Ready to execute</span>
                     </div>
 
                     <div className="flex gap-[6px]">

@@ -182,6 +182,15 @@ function BaseNode({
                     </div>
                 )}
 
+                {/* Status Dots */}
+                <div className="px-3 py-[6px] border-t border-(--border) flex items-center justify-end rounded-b-(--r2)">
+                    <div className="flex gap-0.5">
+                        <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)' }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-50" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.6 : 1 }} />
+                        <div className="w-1 h-1 rounded-full transition-colors delay-100" style={{ backgroundColor: isHovered ? theme.primary : 'var(--muted)', opacity: isHovered ? 0.3 : 1 }} />
+                    </div>
+                </div>
+
                 {/* Handles - Standardized for all-to-all routing */}
                 <div className={`transition-opacity duration-300 ${selected ? 'opacity-100' : 'group-hover:opacity-100 opacity-0'}`}>
                     {/* Top */}
