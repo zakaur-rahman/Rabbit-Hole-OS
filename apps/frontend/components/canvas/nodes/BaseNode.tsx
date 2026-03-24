@@ -101,18 +101,19 @@ function BaseNode({
                 className={`
                     group relative flex flex-col h-full w-full
                     bg-(--surface) backdrop-blur-xl border rounded-(--r2)
-                    transition-all duration-300 shadow-2xl
+                    transition-all duration-250 shadow-2xl
                     antialiased
+                    ${selected ? '-translate-y-0.5' : 'hover:-translate-y-0.5'}
                     ${className}
                 `}
                 style={{
                     ...themeStyle,
                     borderColor: selected ? theme.primary : theme.border,
                     boxShadow: selected
-                        ? `0 0 0 1px ${theme.glow}, 0 25px 50px -12px rgba(0,0,0,0.5)`
-                        : `0 25px 50px -12px rgba(0,0,0,0.5)`,
+                        ? `0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 0 4px ${theme.glow}, 0 12px 48px rgba(0,0,0,0.7), 0 0 24px ${theme.glow}`
+                        : `0 0 0 1px rgba(255,255,255,0.025) inset, 0 8px 40px rgba(0,0,0,0.65)`,
                     backfaceVisibility: 'hidden',
-                    transform: 'translateZ(0)',
+                    transform: selected ? 'translateY(-2px) translateZ(0)' : undefined,
                     WebkitFontSmoothing: 'subpixel-antialiased',
                 }}
             >
