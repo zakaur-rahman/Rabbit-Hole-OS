@@ -12,6 +12,8 @@ from .document_ast import (
     Reference
 )
 from .latex_service import escape_latex
+import os
+import urllib.parse
 
 
 # ============================================================
@@ -101,20 +103,32 @@ def convert_figure(block: FigureBlock) -> str:
         refs = ", ".join([f"\\cite{{{r}}}" for r in data.source_refs])
         source_note = f" Source: {refs}"
 
-    if data.path:
+    # Verify path exists locally to prevent pdflatex from crashing
+    is_valid_file = False
+    local_path = data.path
+    if local_path:
+        if local_path.startswith("file://"):
+            local_path = urllib.parse.unquote(local_path[7:])
+        
+        # Check if local absolute path exists
+        if os.path.isfile(local_path):
+            is_valid_file = True
+
+    if is_valid_file:
         return f"""
 \\begin{{figure}}[htbp]
 \\centering
-\\includegraphics[width=0.8\\textwidth]{{{data.path}}}
+\\includegraphics[width=0.8\\textwidth]{{{local_path}}}
 \\caption{{{caption}.{source_note}}}
 \\end{{figure}}
 """
     else:
-        # Placeholder for missing image
+        # Placeholder for missing, invalid, or remote image
+        hint = f" [Path: {escape_latex(data.path)}]" if data.path else ""
         return f"""
 \\begin{{figure}}[htbp]
 \\centering
-\\fbox{{\\parbox{{0.7\\textwidth}}{{\\centering\\textit{{[Figure: {caption}]}}}}}}
+\\fbox{{\\parbox{{0.7\\textwidth}}{{\\centering\\textit{{[Figure: {caption}]{hint}}}}}}}
 \\caption{{{caption}.{source_note}}}
 \\end{{figure}}
 """

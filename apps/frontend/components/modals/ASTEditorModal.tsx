@@ -469,7 +469,11 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
   React.useEffect(() => {
     const init = async () => {
       if (!isOpen) return;
-      if (!document && !initialAST) { setIsInitializing(true); return; }
+      if (!document && !initialAST) { 
+        setIsInitializing(true); 
+        setInitError('No document provided. Please generate a report first.');
+        return; 
+      }
       if (initialAST) {
         setIsInitializing(true); setInitError(null);
         setDocument(initialAST);

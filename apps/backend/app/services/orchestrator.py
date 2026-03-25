@@ -43,7 +43,7 @@ class SynthesisOrchestrator:
 
     # Configuration constants
     PROMPT_VERSION = "2.0.0"
-    WORKER_TIMEOUT_SECONDS = 10
+    WORKER_TIMEOUT_SECONDS = 45
     MAX_JOB_TIMEOUT_SECONDS = 300  # 5 minutes max for any job
     REDIS_CONN_TIMEOUT = 2
     REDIS_CONN_RETRIES = 1

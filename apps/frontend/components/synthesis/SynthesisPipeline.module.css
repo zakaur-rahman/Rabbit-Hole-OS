@@ -1,0 +1,639 @@
+.scene {
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-dm-mono), monospace;
+  position: relative;
+}
+
+.pipeCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(200, 134, 10, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 134, 10, 0.025) 1px, transparent 1px);
+  background-size: 52px 52px;
+  pointer-events: none;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(10, 9, 6, 0.6) 100%);
+  pointer-events: none;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  background: rgba(17, 16, 9, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.appIcon {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-hi);
+  background: var(--amber-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.appIcon svg {
+  width: 13px;
+  height: 13px;
+}
+.topbarTitle {
+  font-family: var(--font-playfair), serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.topbarSub {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jobId {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-family: var(--font-dm-mono), monospace;
+}
+.jobId span {
+  color: var(--amber-l);
+}
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border: 1px solid var(--border);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.statusPill.running {
+  border-color: var(--amber);
+  color: var(--amber-l);
+}
+.statusPill.done {
+  border-color: var(--green-border);
+  color: var(--green);
+}
+.statusPill.error {
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+.pillDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.pillDot.pulsing {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.5);
+  }
+}
+.topbarSweep {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  overflow: hidden;
+}
+.topbarSweep::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 30%;
+  height: 100%;
+  background: rgba(255, 210, 100, 0.4);
+  animation: sweep 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes sweep {
+  to {
+    left: 130%;
+  }
+}
+
+/* ── BODY ── */
+.body {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL: PIPELINE ── */
+.panelPipeline {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(17, 16, 9, 0.7);
+  backdrop-filter: blur(4px);
+}
+.panelLabel {
+  padding: 11px 16px 9px;
+  border-bottom: 1px solid var(--border);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.globalBarWrap {
+  height: 2px;
+  background: rgba(200, 134, 10, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.globalBarFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.3s linear;
+}
+.globalBarWrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 30%;
+  height: 100%;
+  background: rgba(255, 210, 100, 0.5);
+  animation: sweep 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.pipelineList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.pipelineList::-webkit-scrollbar {
+  width: 3px;
+}
+.pipelineList::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+.agentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.18s;
+  position: relative;
+}
+.agentRow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+.agentRow:hover {
+  background: rgba(200, 134, 10, 0.04);
+}
+.agentRow.active {
+  background: var(--amber-dim);
+}
+.agentRow.active::before {
+  background: var(--amber);
+}
+.agentRow.done::before {
+  background: rgba(80, 180, 100, 0.5);
+}
+.agentRow.error::before {
+  background: var(--danger);
+}
+.agentRow.warn::before {
+  background: var(--warn);
+}
+
+.agentNode {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.3s;
+  font-size: 9px;
+}
+.agentNode.idle {
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.agentNode.active {
+  border-color: var(--amber);
+  background: var(--amber-dim);
+  animation: pulse 1.3s ease-in-out infinite;
+}
+.agentNode.done {
+  border-color: rgba(80, 180, 100, 0.4);
+  background: rgba(80, 180, 100, 0.1);
+  color: var(--green);
+}
+.agentNode.error {
+  border-color: var(--danger-border);
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+.agentNode.warn {
+  border-color: var(--warn-border);
+  background: var(--warn-dim);
+  color: var(--warn);
+}
+
+.agentMeta {
+  flex: 1;
+  min-width: 0;
+}
+.agentName {
+  font-size: 10.5px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: var(--text-mid);
+  transition: color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.agentRow.active .agentName {
+  color: var(--text);
+}
+.agentTag {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.agentRow.active .agentTag {
+  color: var(--amber-l);
+}
+.agentRow.done .agentTag {
+  color: rgba(80, 180, 100, 0.6);
+}
+.agentRow.error .agentTag {
+  color: var(--danger);
+}
+.agentRow.warn .agentTag {
+  color: var(--warn);
+}
+
+.agentTime {
+  font-size: 9px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.agentRow.done .agentTime {
+  color: rgba(80, 180, 100, 0.65);
+}
+
+/* connector line between agents */
+.connector {
+  margin-left: 26px;
+  padding-left: 13px;
+  border-left: 1px dashed rgba(200, 134, 10, 0.12);
+  height: 8px;
+}
+.connector.lit {
+  border-left-color: rgba(200, 134, 10, 0.35);
+}
+
+/* ── CENTRE: LOG STREAM ── */
+.panelLog {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.logScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+.logScroll::-webkit-scrollbar {
+  width: 3px;
+}
+.logScroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+.logEntry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 16px;
+  transition: background 0.18s;
+  animation: logIn 0.2s ease both;
+}
+@keyframes logIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.logEntry:hover {
+  background: rgba(200, 134, 10, 0.03);
+}
+.logTs {
+  font-size: 9px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding-top: 1px;
+  width: 56px;
+}
+.logBadge {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border: 1px solid;
+  border-radius: 0;
+  flex-shrink: 0;
+  margin-top: 1px;
+  min-width: 52px;
+  text-align: center;
+}
+.badge-info {
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.badge-ok {
+  border-color: var(--green-border);
+  color: var(--green);
+}
+.badge-warn {
+  border-color: var(--warn-border);
+  color: var(--warn);
+}
+.badge-error {
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+.badge-step {
+  border-color: var(--border-hi);
+  color: var(--amber-l);
+}
+.logMsg {
+  font-size: 10.5px;
+  font-weight: 300;
+  color: var(--text-mid);
+  line-height: 1.55;
+  flex: 1;
+}
+.logMsg .hl {
+  color: var(--amber-l);
+}
+.logMsg .hl-g {
+  color: var(--green);
+}
+.logMsg .hl-r {
+  color: var(--danger);
+}
+.logMsg .hl-w {
+  color: var(--warn);
+}
+.logMsg code {
+  font-family: var(--font-dm-mono), monospace;
+  font-size: 9.5px;
+  background: rgba(200, 134, 10, 0.08);
+  padding: 1px 5px;
+  color: var(--amber);
+}
+
+/* ── RIGHT: STATS ── */
+.panelStats {
+  width: 200px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(17, 16, 9, 0.7);
+  backdrop-filter: blur(4px);
+}
+.statBlock {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.statLabel {
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.statValue {
+  font-family: var(--font-playfair), serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.statValue.amber {
+  color: var(--amber);
+}
+.statValue.green {
+  color: var(--green);
+}
+.statValue.danger {
+  color: var(--danger);
+}
+.statSub {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  letter-spacing: 0.06em;
+}
+
+.llmBlock {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.llmLabel {
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.llmCall {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(200, 134, 10, 0.06);
+  font-size: 9px;
+}
+.llmCall:last-child {
+  border-bottom: none;
+}
+.llmCallName {
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.llmCallStatus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.llmDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.errorsBlock {
+  padding: 14px 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+.errorsBlock::-webkit-scrollbar {
+  width: 2px;
+}
+.errorsBlock::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+.errorItem {
+  font-size: 9.5px;
+  color: var(--danger);
+  padding: 7px 9px;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-dim);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.warnItem {
+  font-size: 9.5px;
+  color: var(--warn);
+  padding: 7px 9px;
+  border: 1px solid var(--warn-border);
+  background: var(--warn-dim);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+/* ── STATUS BAR ── */
+.statusbar {
+  position: relative;
+  z-index: 2;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: rgba(17, 16, 9, 0.92);
+  border-top: 1px solid var(--border);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+.sbLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-muted);
+}
+.sbRight {
+  color: var(--text-muted);
+}
+.sbItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.sbDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.replayBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-dm-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.replayBtn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}

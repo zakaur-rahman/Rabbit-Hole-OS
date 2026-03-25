@@ -10,7 +10,7 @@ import {
 } from 'reactflow';
 import { AnyNodeData } from '@/types/nodes';
 import { localStorage as storage, isElectron } from '@/lib/local-storage';
-import { nodesApi, edgesApi, whiteboardsApi } from '@/lib/api';
+import { nodesApi, edgesApi, whiteboardsApi, SynthesisAST } from '@/lib/api';
 
 // Module-level guards to prevent duplicate API calls
 const _pendingDeletes = new Set<string>();
@@ -123,6 +123,8 @@ export interface GraphState {
   fetchWhiteboards: () => Promise<void>;
   openWhiteboardIds: string[];
   closeWhiteboard: (id: string) => void;
+  synthesisAst: SynthesisAST | null;
+  setSynthesisAst: (ast: SynthesisAST | null) => void;
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({
@@ -144,6 +146,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   authModalState: { isOpen: false, message: '' },
   setAuthModal: (isOpen: boolean, message = '') => set({ authModalState: { isOpen, message } }),
   openWhiteboardIds: ['main'],
+  synthesisAst: null,
+  setSynthesisAst: (ast) => set({ synthesisAst: ast }),
 
   closeWhiteboard: (id: string) => {
       if (id === 'main') return; // Cannot close main tab for now (optional design choice)

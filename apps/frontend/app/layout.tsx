@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Syne, JetBrains_Mono } from "next/font/google";
+import { Syne, JetBrains_Mono, Playfair_Display, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { UpdateModal } from "../components/updater/UpdateModal";
 
@@ -10,6 +10,18 @@ const syne = Syne({
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+});
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
+  weight: ["300", "400", "500"],
   subsets: ["latin"],
 });
 
@@ -26,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${syne.variable} ${jetbrainsMono.variable} antialiased font-sans`}
+        className={`${syne.variable} ${jetbrainsMono.variable} ${playfairDisplay.variable} ${dmMono.variable} antialiased font-sans`}
       >
         {children}
         <UpdateModal />
