@@ -371,6 +371,9 @@ Plain content (no marker) → Standard synthesis into "paragraph" blocks with ci
 
 TASK:
 - Generate a complete Document AST based on the plan above.
+- You MUST use the section titles, structure, and ordering precisely as defined in the PLAN's document_outline.
+- Create a professional, academic "title" for the whole document based on the TOPIC.
+- Generate a comprehensive "abstract".
 - Use ONLY the provided context.
 - Insert inline citations [1], [2] in paragraphs using ref IDs from REFERENCES.
 - Apply NODE TYPE MARKER rules strictly.
@@ -378,12 +381,12 @@ TASK:
 
 OUTPUT SCHEMA (JSON):
 {{
-  "title": "string",
-  "abstract": "string",
+  "title": "<Create a professional title>",
+  "abstract": "<Write a comprehensive abstract>",
   "sections": [
     {{
       "id": "sec-1",
-      "title": "string",
+      "title": "<Use title from plan>",
       "level": 1,
       "content": [
         {{ "type": "paragraph", "data": {{ "text": "...", "citations": ["1"] }} }},
