@@ -249,6 +249,9 @@ def document_to_dict(doc: DocumentAST) -> dict:
 
 def _normalize_ast_data(data: dict) -> dict:
     """Normalize LLM output to match DocumentAST schema before parsing."""
+    if not isinstance(data, dict):
+        return {}
+        
     # Normalize sections: auto-generate missing 'id' fields
     for i, section in enumerate(data.get("sections", [])):
         if "id" not in section:
