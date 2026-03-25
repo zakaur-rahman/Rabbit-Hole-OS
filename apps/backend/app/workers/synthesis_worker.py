@@ -399,7 +399,7 @@ async def compilation_task(ctx, job_id: str):
     if pdf_buffer:
         try:
             # Upload PDF
-            file_url = await StorageService.upload(pdf_buffer, f"{job_id}.pdf")
+            file_url = await StorageService.upload(pdf_buffer.getvalue(), f"{job_id}.pdf")
             logger.info(f"PDF uploaded to {file_url}")
 
             async with SessionLocal() as db:

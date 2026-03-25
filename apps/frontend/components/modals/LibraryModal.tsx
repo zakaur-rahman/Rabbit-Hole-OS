@@ -115,13 +115,13 @@ export default function LibraryModal({ isOpen, onClose }: LibraryModalProps) {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-2 no-scrollbar">
-                    {filteredBoards.map(wb => {
+                    {filteredBoards.map((wb, index) => {
                         const isSynced = !!wb.synced_at;
                         const isActive = wb.id === activeWhiteboardId;
 
                         return (
                             <div
-                                key={wb.id}
+                                key={wb.id || `wb-${index}`}
                                 onDoubleClick={() => handleOpen(wb.id)}
                                 onClick={() => handleOpen(wb.id)}
                                 className={`

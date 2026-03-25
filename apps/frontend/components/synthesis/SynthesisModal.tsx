@@ -136,12 +136,16 @@ export default function SynthesisModal({ onClose }: SynthesisModalProps) {
         setSynthesisError(null);
 
         try {
-            const nodeIds = selectedNodes.length > 0
-                ? selectedNodes.map(n => n.id)
-                : nodes.map(n => n.id);
+            const targetNodes = selectedNodes.length > 0 ? selectedNodes : nodes;
+            const contextItems = targetNodes.map(n => ({
+                title: n.data?.title || 'Untitled',
+                content: n.data?.content || n.data?.title || '',
+                url: n.data?.url || `local://${n.id}`
+            }));
 
             const response = await synthesisApi.generate({
-                node_ids: nodeIds,
+                node_ids: targetNodes.map(n => n.id),
+                context_items: contextItems,
                 query: query.trim(),
                 previous_summary: result || undefined
             });

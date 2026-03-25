@@ -127,6 +127,14 @@ export default function Titlebar({
 
       <div className={`flex items-center gap-2 ml-auto ${isMac ? 'pr-4' : 'pr-0'}`}>
         <button
+          onClick={() => router.push('/synthesis')}
+          className="h-[28px] rounded-(--r) border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.05)] text-emerald-500 cursor-pointer font-sans text-[11px] font-semibold flex items-center justify-center px-3 w-auto gap-1.5 no-drag-region hover:bg-[rgba(16,185,129,0.1)] hover:border-[rgba(16,185,129,0.5)] transition-all"
+          title="Live Agent Orchestration Pipeline"
+        >
+          ✨ Observability
+        </button>
+        
+        <button
           onClick={onOpenLibrary}
           className="h-[28px] rounded-(--r) border border-(--border) bg-(--bg) text-(--text) cursor-pointer font-sans text-[11px] font-semibold flex items-center justify-center px-3 w-auto gap-1.5 no-drag-region hover:bg-(--raised) hover:border-(--border2) transition-all"
         >
