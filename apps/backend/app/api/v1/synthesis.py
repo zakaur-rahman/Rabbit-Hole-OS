@@ -16,8 +16,14 @@ orchestrator = SynthesisOrchestrator()
 
 router = APIRouter()
 
+class SynthesisContextItemOpt(BaseModel):
+    title: str
+    content: str
+    url: str
+
 class SynthesisRequest(BaseModel):
-    node_ids: List[str]
+    node_ids: Optional[List[str]] = None
+    context_items: Optional[List[SynthesisContextItemOpt]] = None
     query: str
     previous_summary: Optional[str] = None
 
@@ -35,8 +41,10 @@ async def create_synthesis(
     """
     Generate an AI synthesis from selected nodes.
     """
-    print(f"Received synthesis request for {len(request.node_ids)} nodes: {request.node_ids}")
-    if not request.node_ids:
+    node_count = len(request.node_ids or []) + len(request.context_items or [])
+    print(f"Received synthesis request for {node_count} nodes")
+    
+    if not request.node_ids and not request.context_items:
         raise HTTPException(status_code=400, detail="No nodes selected")
 
     if not request.query:
@@ -46,17 +54,26 @@ async def create_synthesis(
     node_contents = []
     source_titles = []
 
-    # Fetch nodes from DB
-    result = await db.execute(select(Node).where(Node.id.in_(request.node_ids), Node.user_id == current_user.id))
-    nodes = result.scalars().all()
+    if request.context_items:
+        for item in request.context_items:
+            node_contents.append({
+                "title": item.title,
+                "content": item.content,
+                "url": item.url
+            })
+            source_titles.append(item.title)
+    else:
+        # Fetch nodes from DB
+        result = await db.execute(select(Node).where(Node.id.in_(request.node_ids), Node.user_id == current_user.id))
+        nodes = result.scalars().all()
 
-    for node in nodes:
-        node_contents.append({
-            "title": node.title,
-            "content": node.content or "",
-            "url": node.url or ""
-        })
-        source_titles.append(node.title)
+        for node in nodes:
+            node_contents.append({
+                "title": node.title,
+                "content": node.content or "",
+                "url": node.url or ""
+            })
+            source_titles.append(node.title)
 
     if not node_contents:
         raise HTTPException(status_code=404, detail="No valid nodes found")

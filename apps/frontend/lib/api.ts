@@ -1,4 +1,4 @@
-const API_BASE = 'https://api.cognode.tech/api/v1';
+const API_BASE = 'http://localhost:8000/api/v1';
 import { Edge } from 'reactflow';
 import { AnyNodeData } from '@/types/nodes';
 
@@ -99,7 +99,8 @@ export const nodesApi = {
 
 // Synthesis Types
 export interface SynthesisRequest {
-  node_ids: string[];
+  node_ids?: string[];
+  context_items?: { title: string; content: string; url: string }[];
   query: string;
   previous_summary?: string;
 }
@@ -126,6 +127,13 @@ export interface SynthesisContextItem {
   selected_topics: string[];
   outline: string[];
   system_instruction?: string;
+}
+
+export interface SynthesisAST {
+  title?: string;
+  sections?: { heading: string; content: string }[];
+  references?: { id: string; title: string; url: string }[];
+  [key: string]: unknown;
 }
 
 // Synthesis API
@@ -213,7 +221,7 @@ export const synthesisApi = {
     use_dummy_data: boolean = false,
     edges: Edge[] = [],
     whiteboardId?: string
-  ): Promise<{ status: string; document: unknown }> => {
+  ): Promise<{ status: string; document: SynthesisAST }> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const response = await fetch(`${API_BASE}/synthesis/research-ast`, {
       method: "POST",
@@ -231,7 +239,7 @@ export const synthesisApi = {
     query: string,
     context_items: SynthesisContextItem[],
     edges: Edge[] = [],
-    onUpdate: (step: { stage: string; status: string; message?: string; document?: unknown; error?: string }) => void,
+    onUpdate: (step: { stage?: string; status: string; message?: string; document?: SynthesisAST; error?: string; job_id?: string; progress?: number; output_ast?: SynthesisAST }) => void,
     whiteboardId?: string
   ): Promise<void> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
