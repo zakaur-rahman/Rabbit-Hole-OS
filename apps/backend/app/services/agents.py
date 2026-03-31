@@ -23,6 +23,8 @@ class AgentResponse(BaseModel):
     agent_name: str
     status: str
     data: Any
+    prompt: Optional[str] = None
+    raw_response: Optional[str] = None
     reasoning: Optional[str] = None
     timestamp: str = datetime.now().isoformat()
 
@@ -58,7 +60,7 @@ class BaseAgent:
     @classmethod
     async def cleanup_http_client(cls):
         """Close shared HTTP client. Call on application shutdown."""
-        if cls._http_client:
+        if cls._http_client is not None:
             await cls._http_client.aclose()
             cls._http_client = None
 
@@ -82,7 +84,7 @@ class BaseAgent:
     async def _parse_llm_json(
         self,
         raw_response: str,
-        expected_keys: list = None
+        expected_keys: Optional[List[str]] = None
     ) -> Union[dict, list]:
         """Parse LLM response as JSON with error recovery."""
         cleaned = self._clean_json_response(raw_response)
@@ -309,7 +311,9 @@ OUTPUT FORMAT (JSON):
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Planner failed: {e}", exc_info=True)
@@ -416,7 +420,9 @@ OUTPUT SCHEMA (JSON):
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Writer failed: {e}", exc_info=True)
@@ -455,7 +461,9 @@ TASK:
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Reviewer failed: {e}")
@@ -490,7 +498,9 @@ TASK:
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Chart analysis failed: {e}")
@@ -537,7 +547,9 @@ TASK:
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Bib normalization failed: {e}")
@@ -574,7 +586,9 @@ TASK:
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Memory learning failed: {e}")
@@ -611,7 +625,9 @@ TASK:
             return AgentResponse(
                 agent_name=self.name,
                 status="success",
-                data=data
+                data=data,
+                prompt=prompt,
+                raw_response=raw_response
             )
         except Exception as e:
             self.logger.error(f"Recovery agent failed: {e}")
