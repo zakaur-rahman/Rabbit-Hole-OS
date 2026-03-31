@@ -1,0 +1,11 @@
+{
+  "source_directories": [
+    "apps/backend"
+  ],
+  "exclude": [
+    ".*/venv/.*",
+    ".*/\\.venv/.*",
+    ".*/node_modules/.*"
+  ],
+  "strict": true
+}
