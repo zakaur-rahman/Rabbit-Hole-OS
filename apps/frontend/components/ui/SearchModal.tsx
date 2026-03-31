@@ -110,8 +110,8 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                             onClick={() => handleSelectResult(node)}
                             onMouseEnter={() => setActiveIndex(index)}
                             className={`w-full p-4 flex items-start gap-3 transition-colors text-left border-l-[3px] ${index === activeIndex
-                                ? 'bg-[var(--raised)] border-[var(--green)]'
-                                : 'hover:bg-[var(--raised)] border-transparent'
+                                ? 'bg-(--raised) border-(--amber)'
+                                : 'hover:bg-(--raised) border-transparent'
                                 }`}
                         >
                             <div className="w-10 h-10 rounded-[var(--r)] bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">

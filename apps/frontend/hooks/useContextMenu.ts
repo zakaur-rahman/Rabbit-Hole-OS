@@ -28,7 +28,7 @@ interface UseContextMenuParams {
     activeWhiteboardId: string;
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
     onFitSelection: () => void;
-    handleSynthesis: (dummy?: boolean) => Promise<void>;
+    handleGenerateReport: () => void;
     showImportModal: boolean;
     setShowImportModal: (v: boolean) => void;
     setPendingWebPosition: (pos: { x: number; y: number } | null) => void;
@@ -43,7 +43,7 @@ export function useContextMenu({
     activeWhiteboardId,
     screenToFlowPosition,
     onFitSelection,
-    handleSynthesis,
+    handleGenerateReport,
     setShowImportModal,
     setPendingWebPosition,
     setShowWebUrlModal,
@@ -289,8 +289,8 @@ export function useContextMenu({
         { separator: true, label: '', onClick: () => {} },
         { label: 'Snap to grid', onClick: () => handlePaneAction('toggle-snap'), icon: React.createElement(Grid, { size: 14 }) },
         { label: readOnly ? 'Enable editing' : 'Read-only', onClick: () => handlePaneAction('toggle-readonly'), icon: readOnly ? React.createElement(Unlock, { size: 14 }) : React.createElement(Lock, { size: 14 }) },
-        { label: 'Generate Dummy Report', onClick: () => handleSynthesis(true), icon: React.createElement(Sparkles, { size: 14 }) },
-    ], [handlePaneAction, readOnly, handleSynthesis]);
+        { label: 'Generate Report', onClick: () => handleGenerateReport(), icon: React.createElement(Sparkles, { size: 14 }) },
+    ], [handlePaneAction, readOnly, handleGenerateReport]);
 
     const edgeActions = useMemo(() => [
         { label: 'Delete Edge', onClick: () => handleEdgeAction('delete'), icon: React.createElement(Trash2, { size: 14 }), danger: true, shortcut: 'Del' },

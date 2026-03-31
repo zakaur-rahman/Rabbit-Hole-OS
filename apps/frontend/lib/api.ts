@@ -239,7 +239,21 @@ export const synthesisApi = {
     query: string,
     context_items: SynthesisContextItem[],
     edges: Edge[] = [],
-    onUpdate: (step: { stage?: string; status: string; message?: string; document?: SynthesisAST; error?: string; job_id?: string; progress?: number; output_ast?: SynthesisAST }) => void,
+    onUpdate: (step: { 
+      stage?: string; 
+      status: string; 
+      message?: string; 
+      document?: SynthesisAST; 
+      error?: string; 
+      job_id?: string; 
+      progress?: number; 
+      output_ast?: SynthesisAST;
+      data?: {
+        prompt?: string;
+        response?: string;
+        json?: any;
+      };
+    }) => void,
     whiteboardId?: string
   ): Promise<void> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
