@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import WindowControls from '../window/WindowControls';
+import { CognodeLogo } from './CognodeLogo';
 
 export interface TitlebarProps {
   onSearch?: (query: string) => void;
@@ -78,11 +79,13 @@ export default function Titlebar({
         </div>
       )}
 
-      <div className={`flex items-center gap-2 text-(--text) font-bold text-[13px] tracking-[0.02em] ${isMac ? '' : 'pl-4'}`}>
-        <div className="w-[22px] h-[22px] bg-(--amber) rounded-[5px] flex items-center justify-center text-[10px] text-(--bg) font-extrabold no-drag-region">
-          C
+      <div className={`flex items-center gap-2.5 no-drag-region ${isMac ? '' : 'pl-4'}`}>
+        <div className="w-[20px] h-[20px] flex items-center justify-center transition-transform hover:scale-110">
+          <CognodeLogo className="w-full h-full text-(--text)" />
         </div>
-        Cognode
+        <span className="font-serif text-[15px] font-bold tracking-tight text-(--text)">
+          Cognode
+        </span>
       </div>
 
       <div className="flex gap-[2px] flex-1 pl-4">
