@@ -980,25 +980,25 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                           {sessions.map((session) => (
                             <div
                               key={session.id}
-                              className={`bg-[var(--surface)] border rounded-[var(--r)] p-4 hover:bg-[var(--raised)] transition-all duration-200 ${session.is_current
-                                ? 'border-[var(--green)] bg-[var(--green-bg)] shadow-[0_0_20px_-12px_rgba(76,175,125,0.3)]'
-                                : 'border-[var(--border)]'
+                              className={`bg-(--surface) border rounded-(--r) p-4 hover:bg-(--raised) transition-all duration-200 ${session.is_current
+                                ? 'border-(--amber) bg-(--amber-bg) shadow-[0_0_20px_-12px_rgba(232,160,32,0.3)]'
+                                : 'border-(--border)'
                                 }`}
                             >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-start gap-4 flex-1">
-                                  <div className={`w-10 h-10 rounded-[var(--r)] flex items-center justify-center border ${session.is_current ? 'bg-[rgba(76,175,125,0.1)] border-[rgba(76,175,125,0.2)] text-[var(--green)]' : 'bg-[var(--raised)] border-[var(--border)] text-[var(--sub)]'
+                                  <div className={`w-10 h-10 rounded-(--r) flex items-center justify-center border ${session.is_current ? 'bg-(--amber-dim) border-[rgba(232,160,32,0.2)] text-(--amber)' : 'bg-(--raised) border-(--border) text-(--sub)'
                                     }`}>
                                     {getDeviceIcon(session)}
                                   </div>
 
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center flex-wrap gap-2 mb-1">
-                                      <h3 className="text-[13px] font-semibold text-[var(--text)] truncate">
+                                      <h3 className="text-[13px] font-semibold text-(--text) truncate">
                                         {session.device_name || session.device_id || 'Unknown Device'}
                                       </h3>
                                       {session.is_current && (
-                                        <span className="px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-[var(--green)] bg-[var(--green-bg)] rounded-[var(--r)] border border-[rgba(76,175,125,0.2)]">
+                                        <span className="px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-(--amber) bg-(--amber-bg) rounded-(--r) border border-[rgba(232,160,32,0.2)]">
                                           Current
                                         </span>
                                       )}
@@ -1059,7 +1059,7 @@ export default function SettingsModal({ isOpen, onClose, initialTab = 'general' 
                                       )}
                                     </button>
                                   ) : (
-                                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--green)] flex items-center gap-1.5 bg-[var(--green-bg)] rounded-[var(--r)] border border-[rgba(76,175,125,0.2)]">
+                                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-(--amber) flex items-center gap-1.5 bg-(--amber-bg) rounded-(--r) border border-[rgba(232,160,32,0.2)]">
                                       <CheckCircle2 size={12} />
                                       <span>Active Now</span>
                                     </div>

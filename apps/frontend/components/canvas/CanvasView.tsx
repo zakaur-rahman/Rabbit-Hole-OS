@@ -16,6 +16,9 @@ import { useGraphStore } from '@/store/graph.store';
 import { nodesApi } from '@/lib/api';
 
 import { ASTEditorModal } from '../modals/ASTEditorModal';
+import SynthesisNotification from '../synthesis/SynthesisNotification';
+import SynthesisMonitorPanel from '../synthesis/SynthesisMonitorPanel';
+import { useSynthesisMonitorStore } from '@/store/synthesis-monitor.store';
 import dynamic from 'next/dynamic';
 
 // Node types
@@ -40,7 +43,7 @@ const PdfNode = dynamic(() => import('./nodes/PdfNode'), { ssr: false });
 // Layout / UI
 import GraphControls from './GraphControls';
 import SynthesisModal from '../synthesis/SynthesisModal';
-import ResearchPdfModal from '../modals/ResearchPdfModal';
+// ResearchPdfModal removed — replaced by SynthesisNotification + ASTEditorModal flow
 import EmptyGraphState from './EmptyGraphState';
 import WhiteboardSelector from './WhiteboardSelector';
 import TemplateModal from '../modals/TemplateModal';
@@ -97,32 +100,18 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         activeWhiteboardId,
     } = useGraphStore();
 
-    // ── Synthesis (PDF + AST) ────────────────────────────────────────────────
+    // ── Synthesis (unified Generate Report → AST Editor) ──────────────────
     const [showSynthesis, setShowSynthesis] = useState(false);
     const {
-        showPdfModal, setShowPdfModal,
-        pdfUrl,
-        isSynthesizing, synthesisStage, synthesisMessage, synthesisError,
         showASTEditor, setShowASTEditor,
         initialAST,
-        handleSynthesis,
-        handleOpenASTEditor,
+        handleGenerateReport,
+        handleOpenCompletedReport,
+        handleCompileAST,
     } = useSynthesis();
 
-    const handleOpenAdvancedEditor = useCallback(() => {
-        setShowPdfModal(false);
-        handleOpenASTEditor();
-    }, [handleOpenASTEditor, setShowPdfModal]);
-
-    // Compile AST → PDF from ASTEditorModal
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleCompileAST = useCallback(async (ast: any): Promise<Blob> => {
-        const { synthesisApi } = await import('@/lib/api');
-        setShowASTEditor(false);
-        const blob = await synthesisApi.generatePdfFromAST(ast);
-        setShowPdfModal(true);
-        return blob;
-    }, [setShowASTEditor, setShowPdfModal]);
+    const showMonitorPanel = useSynthesisMonitorStore(s => s.showMonitorPanel);
+    const setShowMonitorPanel = useSynthesisMonitorStore(s => s.setShowMonitorPanel);
 
 
     // ── ReactFlow utilities ──────────────────────────────────────────────────
@@ -154,7 +143,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         activeWhiteboardId,
         screenToFlowPosition,
         onFitSelection,
-        handleSynthesis,
+        handleGenerateReport,
         showImportModal, setShowImportModal,
         setPendingWebPosition, setShowWebUrlModal,
         pendingWebPosition,
@@ -422,9 +411,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 )}
 
                 <GraphControls
-                    onSynthesis={handleSynthesis}
                     onChatSynthesis={() => setShowSynthesis(true)}
-                    onASTEditor={handleOpenASTEditor}
+                    onGenerateReport={handleGenerateReport}
+                    onToggleLogs={() => setShowMonitorPanel(!showMonitorPanel)}
                     onAddNote={handleAddNote}
                     onAddGroup={handleAddGroup}
                     onAddText={handleAddText}
@@ -440,15 +429,16 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onCompile={handleCompileAST}
             />
 
-            <ResearchPdfModal
-                isOpen={showPdfModal}
-                onClose={() => setShowPdfModal(false)}
-                pdfUrl={pdfUrl}
-                isLoading={isSynthesizing}
-                stage={synthesisStage}
-                message={synthesisMessage}
-                onOpenAdvancedEditor={handleOpenAdvancedEditor}
-                error={synthesisError}
+            {/* Synthesis Notification — floating bottom-right */}
+            <SynthesisNotification
+                onOpenReport={handleOpenCompletedReport}
+                onViewLogs={() => setShowMonitorPanel(true)}
+            />
+
+            {/* Synthesis Monitor Panel — full-screen overlay */}
+            <SynthesisMonitorPanel
+                isOpen={showMonitorPanel}
+                onClose={() => setShowMonitorPanel(false)}
             />
 
             <WebUrlModal

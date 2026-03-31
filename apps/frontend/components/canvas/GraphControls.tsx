@@ -2,13 +2,13 @@
 
 import React from 'react';
 import { useReactFlow } from 'reactflow';
-import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, Download, Target, FilePen, Settings2 } from 'lucide-react';
+import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, Download, FilePen, Settings2, Terminal } from 'lucide-react';
 
 
 interface GraphControlsProps {
-    onSynthesis?: () => void;
     onChatSynthesis?: () => void;
-    onASTEditor?: () => void;
+    onGenerateReport?: () => void;
+    onToggleLogs?: () => void;
     onAddNote?: () => void;
     onAddGroup?: () => void;
     onAddText?: () => void;
@@ -16,7 +16,7 @@ interface GraphControlsProps {
     onExport?: () => void;
 }
 
-export default function GraphControls({ onSynthesis, onChatSynthesis, onASTEditor, onAddNote, onAddGroup, onAddText, onTemplate, onExport }: GraphControlsProps) {
+export default function GraphControls({ onChatSynthesis, onGenerateReport, onToggleLogs, onAddNote, onAddGroup, onAddText, onTemplate, onExport }: GraphControlsProps) {
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     const btnBase = "w-[36px] h-[36px] flex items-center justify-center text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] transition-colors cursor-pointer";
@@ -33,22 +33,22 @@ export default function GraphControls({ onSynthesis, onChatSynthesis, onASTEdito
                 <Sparkles size={18} fill="currentColor" />
             </button>
 
-            {/* Quick PDF Synthesis — Optional fallback */}
+            {/* Generate Report — background synthesis → AST editor */}
             <button
-                onClick={() => onSynthesis?.()}
+                onClick={() => onGenerateReport?.()}
                 className="w-[36px] h-[36px] rounded-(--r) border border-(--border) bg-(--surface) text-(--amber) hover:text-(--amber) hover:bg-(--raised) hover:border-(--amber)/30 flex items-center justify-center transition-all cursor-pointer"
-                title="Generate PDF Report"
-            >
-                <Target size={16} />
-            </button>
-
-            {/* Document Editor */}
-            <button
-                onClick={() => onASTEditor?.()}
-                className="w-[36px] h-[36px] rounded-(--r) border border-(--border) bg-(--surface) text-(--sub) hover:text-(--text) hover:bg-(--raised) hover:border-(--border2) flex items-center justify-center transition-all cursor-pointer"
-                title="Advanced Document Editor (AST)"
+                title="Generate research report and edit before exporting PDF"
             >
                 <FilePen size={16} />
+            </button>
+
+            {/* Synthesis Logs */}
+            <button
+                onClick={() => onToggleLogs?.()}
+                className="w-[36px] h-[36px] rounded-(--r) border border-(--border) bg-(--surface) text-(--sub) hover:text-(--text) hover:bg-(--raised) hover:border-(--border2) flex items-center justify-center transition-all cursor-pointer"
+                title="Synthesis Logs"
+            >
+                <Terminal size={16} />
             </button>
 
             {/* Creation Tools */}

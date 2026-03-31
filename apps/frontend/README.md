@@ -38,7 +38,7 @@ components/
   canvas/               Canvas: CanvasView, node types, overlays, controls
   browser/              BrowserView — Electron webview integration
   synthesis/            Synthesis modal + SSE progress stream
-  modals/               ASTEditorModal, ResearchPdfModal, TemplateModal…
+  modals/               ASTEditorModal, TemplateModal…
   ui/                   ContextMenu, shared primitives
 hooks/
   useContextMenu.ts     Right-click menus (node / pane / edge)

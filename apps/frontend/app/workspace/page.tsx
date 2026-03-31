@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react';
 import { WorkspaceCanvas } from "../../components/graph/WorkspaceCanvas";
-import { SynthesisPipeline } from "../../components/synthesis/SynthesisPipeline";
 import { PromptLab } from "../../components/prompt-lab/PromptLab";
 import { MemorySystem } from "../../components/memory/MemorySystem";
 import { SynthesisViewer } from "../../components/synthesis/SynthesisViewer";
 
 export default function WorkspacePage() {
-  const [activeTab, setActiveTab] = useState<'graph' | 'pipeline' | 'prompt' | 'memory' | 'viewer'>('graph');
+  const [activeTab, setActiveTab] = useState<'graph' | 'prompt' | 'memory' | 'viewer'>('graph');
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', flexDirection: 'column', background: 'var(--bg)', color: 'var(--text)' }}>
@@ -30,16 +29,7 @@ export default function WorkspacePage() {
             }}>
             Workspace
           </button>
-          <button 
-            onClick={() => setActiveTab('pipeline')}
-            style={{ 
-              background: 'none', border: 'none', cursor: 'pointer', 
-              color: activeTab === 'pipeline' ? 'var(--amber)' : 'var(--text-muted)',
-              borderBottom: activeTab === 'pipeline' ? '2px solid var(--amber)' : '2px solid transparent',
-              padding: '14px 0', transition: 'all 0.2s'
-            }}>
-            Observability
-          </button>
+
           <button 
             onClick={() => setActiveTab('prompt')}
             style={{ 
@@ -76,7 +66,6 @@ export default function WorkspacePage() {
       {/* MAIN VIEW */}
       <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {activeTab === 'graph' && <WorkspaceCanvas />}
-        {activeTab === 'pipeline' && <SynthesisPipeline />}
         {activeTab === 'prompt' && <PromptLab />}
         {activeTab === 'memory' && <MemorySystem />}
         {activeTab === 'viewer' && (

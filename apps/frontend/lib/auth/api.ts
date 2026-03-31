@@ -59,6 +59,14 @@ async function authenticatedFetch(
 
   // If response is not ok, try to parse error message
   if (!response.ok) {
+    // Handle 401 Unauthorized by clearing the token and notifying the UI
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        window.dispatchEvent(new Event('auth-state-changed'));
+      }
+    }
+
     let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     try {
       const errorData = await response.json();

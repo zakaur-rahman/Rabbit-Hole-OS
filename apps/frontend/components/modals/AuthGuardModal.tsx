@@ -73,11 +73,11 @@ export default function AuthGuardModal() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="relative w-full max-w-[360px] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col items-center pt-8 pb-4"
+                            className="relative w-full max-w-[360px] bg-(--surface) border border-(--border) rounded-2xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col items-center pt-8 pb-4"
                         >
                             {/* Header Section */}
-                            <div className="flex items-center justify-center w-12 h-12 rounded-[14px] bg-[rgba(76,175,125,0.05)] border border-[var(--green)] mb-5">
-                                <Lock size={20} className="text-[var(--green)]" strokeWidth={1.5} />
+                            <div className="flex items-center justify-center w-12 h-12 rounded-[14px] bg-(--amber-bg) border border-(--amber) mb-5">
+                                <Lock size={20} className="text-(--amber)" strokeWidth={1.5} />
                             </div>
 
                             <h2 className="text-[20px] font-bold text-[#f0f0f0] tracking-tight mb-2">Secure Your Knowledge</h2>
@@ -89,7 +89,7 @@ export default function AuthGuardModal() {
                             <div className="w-full px-6 flex flex-col gap-3">
                                 <button
                                     onClick={handleSignIn}
-                                    className="w-full flex items-center justify-center gap-2 h-11 bg-[var(--green)] hover:brightness-110 text-[#111] rounded-[6px] font-bold text-[14px] transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center justify-center gap-2 h-11 bg-(--amber) hover:brightness-110 text-[#111] rounded-[6px] font-bold text-[14px] transition-all active:scale-[0.98]"
                                 >
                                     <LogIn size={18} strokeWidth={2} />
                                     Sign In to Continue
@@ -97,22 +97,22 @@ export default function AuthGuardModal() {
 
                                 <button
                                     onClick={handleClose}
-                                    className="w-full h-11 bg-[var(--raised)] border border-[var(--border2)] hover:bg-[var(--border)] text-[#f0f0f0] rounded-[6px] font-bold text-[14px] transition-colors"
+                                    className="w-full h-11 bg-(--raised) border border-(--border2) hover:bg-(--border) text-[#f0f0f0] rounded-[6px] font-bold text-[14px] transition-colors"
                                 >
                                     Not Now
                                 </button>
                             </div>
 
                             {/* Trust Footer */}
-                            <div className="w-full mt-6 pt-4 border-t border-[var(--border)] flex items-center justify-center gap-2">
-                                <ShieldCheck size={14} className="text-[var(--green)] opacity-70" />
-                                <span className="text-[10px] text-[#666] uppercase tracking-[0.1em] font-bold">Your data, your control</span>
+                            <div className="w-full mt-6 pt-4 border-t border-(--border) flex items-center justify-center gap-2">
+                                <ShieldCheck size={14} className="text-(--amber) opacity-70" />
+                                <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">Your data, your control</span>
                             </div>
 
                             {/* Close Button */}
                             <button
                                 onClick={handleClose}
-                                className="absolute top-3 right-3 p-1.5 text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] rounded-[var(--r)] transition-all"
+                                className="absolute top-3 right-3 p-1.5 text-(--sub) hover:text-(--text) hover:bg-(--raised) rounded-(--r) transition-all"
                             >
                                 <X size={16} />
                             </button>
