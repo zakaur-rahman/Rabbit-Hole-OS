@@ -51,7 +51,8 @@ async def update_job_status(ctx, job_id: str, status: JobStatus, stage: str, mes
                     "stage": stage,
                     "status": status,
                     "message": message,
-                    "progress": progress
+                    "progress": progress,
+                    "data": data  # NEW: Include agent results in the stream
                 })
                 await redis.publish(f"job_updates:{job_id}", update_payload)
         except Exception as e:
@@ -102,7 +103,13 @@ async def planner_task(ctx, job_id: str):
                 job.metadata_["plan"] = response.data
                 await db.commit()
 
-                await update_job_status(ctx, job_id, JobStatus.PLANNING, "Planning", "Research plan finalized.", 20, data=response.data)
+                # Pass full agent result (prompt, response, etc.) in the data field
+                agent_data = {
+                    "prompt": response.prompt,
+                    "response": response.raw_response,
+                    "json": response.data
+                }
+                await update_job_status(ctx, job_id, JobStatus.PLANNING, "Planning", "Research plan finalized.", 20, data=agent_data)
                 return "READY_FOR_WRITING"
             except Exception as e:
                 await db.rollback()
@@ -149,12 +156,17 @@ async def writer_task(ctx, job_id: str):
                     logger.warning(f"Job {job_id} status changed to {job.status} during writing, aborting")
                     return "ABORTED"
 
-                job.output_ast = response.data
                 job.metadata_ = job.metadata_ or {}
                 job.metadata_["writer_completed_at"] = datetime.utcnow().isoformat()
 
                 await db.commit()
-                await update_job_status(ctx, job_id, JobStatus.WRITING, "Writing", "AST synthesis complete.", 40, data=response.data)
+                
+                agent_data = {
+                    "prompt": response.prompt,
+                    "response": response.raw_response,
+                    "json": response.data
+                }
+                await update_job_status(ctx, job_id, JobStatus.WRITING, "Writing", "AST synthesis complete.", 40, data=agent_data)
                 return "READY_FOR_REVIEW"
             except Exception as e:
                 await db.rollback()
@@ -194,6 +206,13 @@ async def reviewer_task(ctx, job_id: str):
                 job = (await db.execute(select(ResearchJob).where(ResearchJob.id == job_id))).scalar_one()
                 job.output_ast = response.data
                 await db.commit()
+                
+                agent_data = {
+                    "prompt": response.prompt,
+                    "response": response.raw_response,
+                    "json": response.data
+                }
+                await update_job_status(ctx, job_id, JobStatus.REVIEWING, "Reviewing", "Content validation complete.", 60, data=agent_data)
                 return "READY_FOR_VISUALS"
             except Exception as e:
                 await db.rollback()
@@ -226,11 +245,16 @@ async def chart_task(ctx, job_id: str):
     if response.status == "success":
         async with SessionLocal() as db:
             try:
-                job = (await db.execute(select(ResearchJob).where(ResearchJob.id == job_id))).scalar_one()
-                # Simple injection for now
                 job.metadata_ = job.metadata_ or {}
                 job.metadata_["figures"] = response.data.get("figures", [])
                 await db.commit()
+
+                agent_data = {
+                    "prompt": response.prompt,
+                    "response": response.raw_response,
+                    "json": response.data
+                }
+                await update_job_status(ctx, job_id, JobStatus.VISUAL_ANALYSIS, "Visual Analysis", "Visual analysis complete.", 75, data=agent_data)
                 return "READY_FOR_BIB"
             except Exception as e:
                 await db.rollback()
@@ -270,11 +294,17 @@ async def bib_task(ctx, job_id: str):
                 # Apply normalization updates to AST
                 # In a real impl, we'd traverse the AST and replace old_id with new_id
                 # For now, we just update the references list in the AST root
-                if job.output_ast:
-                    job.output_ast["references"] = response.data.get("normalized_references", [])
-                    # We could also apply 'ast_updates' here if we had a traverser
+                job.output_ast["references"] = response.data.get("normalized_references", [])
+                # We could also apply 'ast_updates' here if we had a traverser
 
                 await db.commit()
+
+                agent_data = {
+                    "prompt": response.prompt,
+                    "response": response.raw_response,
+                    "json": response.data
+                }
+                await update_job_status(ctx, job_id, JobStatus.BIBLIOGRAPHY, "Bibliography", "Bibliography normalized.", 85, data=agent_data)
                 return "READY_FOR_MEMORY"
             except Exception as e:
                 await db.rollback()
@@ -461,7 +491,9 @@ async def run_synthesis_pipeline(ctx, job_id: str):
             logger.info(f"Job {job_id}: Starting step {step_name}")
 
             try:
-                result = await step(ctx, job_id)
+                import typing
+                task_func = typing.cast(typing.Callable[[dict, str], typing.Awaitable[typing.Any]], step)
+                result = await task_func(ctx, job_id)
                 logger.info(f"Job {job_id}: Step {step_name} completed with result: {result}")
 
                 # compilation_task and memory_task are non-fatal — AST is already complete
@@ -548,11 +580,29 @@ async def run_synthesis_pipeline(ctx, job_id: str):
                             "job_id": job_id,
                             "status": "FAILED",
                             "stage": "ERROR",
-                            "message": f"Pipeline failed at {failed_step}: {failure_reason[:100]}",
+                            "message": f"Pipeline failed at {failed_step}: {(failure_reason or '')[:100]}",
                             "progress": job_record.progress
                         }))
             except Exception as e:
                 logger.error(f"Critical: Failed to record job failure: {e}", exc_info=True)
+
+async def worker_on_startup(ctx: dict):
+    logger.info(f"Worker starting up... Connecting to Redis at {WorkerSettings.redis_settings.host}:{WorkerSettings.redis_settings.port}")
+    try:
+        from arq.connections import create_pool
+        ctx['redis_pool'] = await create_pool(WorkerSettings.redis_settings)
+        logger.info("Worker successfully connected to Redis pool.")
+        print("Worker startup complete - Ready for jobs")
+    except Exception as e:
+        logger.error(f"Worker failed to connect to Redis: {e}", exc_info=True)
+        raise
+
+async def worker_on_shutdown(ctx: dict):
+    from app.services.agents import BaseAgent
+    await BaseAgent.cleanup_http_client()
+    if 'redis_pool' in ctx:
+        await ctx['redis_pool'].close()
+    logger.info("Worker shutdown complete")
 
 class WorkerSettings:
     """arq worker configuration."""
@@ -562,21 +612,5 @@ class WorkerSettings:
         port=int(settings.REDIS_URL.split(":")[-1].split("/")[0]) if settings.REDIS_URL and ":" in settings.REDIS_URL else 6379,
         # password=settings.REDIS_PASSWORD
     )
-
-    async def on_startup(ctx):
-        logger.info(f"Worker starting up... Connecting to Redis at {WorkerSettings.redis_settings.host}:{WorkerSettings.redis_settings.port}")
-        try:
-            # Fix: ctx doesn't contain redis_settings by default, use class attr
-            ctx['redis_pool'] = await create_pool(WorkerSettings.redis_settings)
-            logger.info("Worker successfully connected to Redis pool.")
-            print("Worker startup complete - Ready for jobs")
-        except Exception as e:
-            logger.error(f"Worker failed to connect to Redis: {e}", exc_info=True)
-            raise
-
-    async def on_shutdown(ctx):
-        from app.services.agents import BaseAgent
-        await BaseAgent.cleanup_http_client()
-        if 'redis_pool' in ctx:
-            await ctx['redis_pool'].close()
-        logger.info("Worker shutdown complete")
+    on_startup = worker_on_startup
+    on_shutdown = worker_on_shutdown
