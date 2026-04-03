@@ -22,6 +22,7 @@ import {
     type LogEntry,
 } from '@/store/synthesis-monitor.store';
 import { useGraphStore } from '@/store/graph.store';
+import { LogTabs } from './LogTabs';
 
 // ── Color tokens ─────────────────────────────────────────────────────────────
 
@@ -173,6 +174,17 @@ const LogRow = React.memo(({ log }: { log: LogEntry }) => (
 ));
 LogRow.displayName = 'LogRow';
 
+/**
+ * CognodeLogo Helper
+ */
+const CognodeLogo = ({ size = 20 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke={C.amber} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 17L12 22L22 17" stroke={C.amber} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 12L12 17L22 12" stroke={C.amber} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
 // ── Main Component ───────────────────────────────────────────────────────────
 
 interface SynthesisMonitorPanelProps {
@@ -181,14 +193,21 @@ interface SynthesisMonitorPanelProps {
 }
 
 export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMonitorPanelProps) {
-    const agents = useSynthesisMonitorStore(s => s.agents);
-    const logs = useSynthesisMonitorStore(s => s.logs);
+    const sessions = useSynthesisMonitorStore(s => s.sessions);
+    const activeSessionId = useSynthesisMonitorStore(s => s.activeSessionId);
+    
+    // Derive active session data
+    const activeSession = activeSessionId ? sessions[activeSessionId] : null;
+    
+    const agents = activeSession?.agents ?? {};
+    const logs = activeSession?.logs ?? [];
+    const agentResponses = activeSession?.agentResponses ?? {};
+    const pipelineStatus = activeSession?.pipelineStatus ?? 'idle';
+    const progress = activeSession?.progress ?? 0;
+    const elapsedMs = activeSession?.elapsedMs ?? 0;
+    const jobId = activeSession?.jobId ?? null;
+
     const selectedAgentId = useSynthesisMonitorStore(s => s.selectedAgentId);
-    const agentResponses = useSynthesisMonitorStore(s => s.agentResponses);
-    const pipelineStatus = useSynthesisMonitorStore(s => s.pipelineStatus);
-    const progress = useSynthesisMonitorStore(s => s.progress);
-    const elapsedMs = useSynthesisMonitorStore(s => s.elapsedMs);
-    const jobId = useSynthesisMonitorStore(s => s.jobId);
     const selectAgent = useSynthesisMonitorStore(s => s.selectAgent);
     const nodes = useGraphStore(s => s.nodes);
 
@@ -208,160 +227,120 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
         setInspectorTab('response');
     }, [selectAgent]);
 
+    const renderTime = Date.now();
+
     if (!isOpen) return null;
 
     const selectedResponse = selectedAgentId ? agentResponses[selectedAgentId] : null;
     const selectedAgent = selectedAgentId ? agents[selectedAgentId] : null;
-    const elapsed = (elapsedMs / 1000).toFixed(1);
 
     return (
         <div
             style={{
                 position: 'fixed', inset: 0, zIndex: 999998,
                 background: 'rgba(10,9,6,.92)',
-                backdropFilter: 'blur(10px)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backdropFilter: 'blur(12px)',
+                display: 'flex', flexDirection: 'column',
+                color: C.text,
             }}
-            onClick={onClose}
         >
             <style>{`
                 @keyframes sm-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.35)} }
-                @keyframes sm-sweep { to { left: 140%; } }
                 .sm-tab { font-family:'DM Mono',monospace; font-size:9px; font-weight:400; letter-spacing:.14em; text-transform:uppercase; padding:8px 14px; cursor:pointer; background:none; border:none; border-bottom:2px solid transparent; transition:all .2s; color:rgba(240,236,224,.35); }
                 .sm-tab:hover { color: #c8860a; }
                 .sm-tab.active { color:#c8860a; border-bottom-color:#c8860a; background:rgba(200,134,10,.06); }
             `}</style>
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.97, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                style={{
-                    width: '94vw', height: '88vh',
-                    background: C.paper,
-                    border: `1px solid ${C.border}`,
-                    display: 'flex', flexDirection: 'column',
-                    overflow: 'hidden', position: 'relative',
-                }}
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Corner brackets */}
-                {(['tl','tr','bl','br'] as const).map(pos => (
-                    <span key={pos} style={{
-                        position: 'absolute', width: 10, height: 10,
-                        borderStyle: 'solid', borderColor: C.borderHi, zIndex: 10,
-                        ...(pos === 'tl' ? { top:0, left:0,  borderWidth:'1.5px 0 0 1.5px' } :
-                            pos === 'tr' ? { top:0, right:0, borderWidth:'1.5px 1.5px 0 0' } :
-                            pos === 'bl' ? { bottom:0, left:0,  borderWidth:'0 0 1.5px 1.5px' } :
-                                           { bottom:0, right:0, borderWidth:'0 1.5px 1.5px 0' }),
-                    }} />
-                ))}
+            {/* ── LOG HISTORY TABS ── */}
+            <LogTabs />
 
-                {/* ── TOP BAR ── */}
-                <div style={{
-                    height: 48,
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0 20px',
-                    background: C.surface,
-                    borderBottom: `1px solid ${C.border}`,
-                    flexShrink: 0,
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Terminal size={14} style={{ color: C.amber }} />
-                        <div>
-                            <div style={{
-                                fontFamily: "'Playfair Display',serif",
-                                fontSize: 14, fontWeight: 700, color: C.text,
-                                letterSpacing: '-.01em', lineHeight: 1,
-                            }}>
-                                Synthesis Monitor
-                            </div>
-                            <div style={{
-                                fontFamily: "'DM Mono',monospace",
-                                fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase',
-                                color: C.textMuted, marginTop: 2,
-                            }}>
-                                {pipelineStatus === 'running' ? `Running · ${elapsed}s · ${progress}%` :
-                                 pipelineStatus === 'completed' ? `Completed · ${elapsed}s` :
-                                 pipelineStatus === 'error' ? 'Failed' : 'Idle'}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        {/* Stats block */}
-                        <div style={{
-                            display: 'flex', gap: 16, borderRight: `1px solid ${C.border}`,
-                            paddingRight: 16, height: 28, alignItems: 'center',
+            {/* ── TOP BAR ── */}
+            <div style={{
+                height: 48, borderBottom: `1px solid ${C.border}`,
+                background: 'rgba(17,16,9, 0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0 24px', flexShrink: 0,
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <CognodeLogo size={20} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{
+                            fontFamily: "'DM Serif Text', serif",
+                            fontSize: 16, letterSpacing: '0.04em', lineHeight: 1,
+                            color: C.amber,
                         }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: 7, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Job ID</span>
-                                <span style={{ fontSize: 10, color: C.amberL, fontFamily: "'DM Mono',monospace" }}>{jobId ? jobId.substring(0,8) : '—'}</span>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: 7, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Context Nodes</span>
-                                <span style={{ fontSize: 10, color: C.text, fontFamily: "'DM Mono',monospace" }}>{nodes.length}</span>
-                            </div>
-                        </div>
-
-                        {/* Progress bar */}
-                        {pipelineStatus === 'running' && (
-                            <div style={{
-                                width: 120, height: 3,
-                                background: 'rgba(200,134,10,0.1)',
-                                overflow: 'hidden',
-                            }}>
-                                <div style={{
-                                    height: '100%', background: C.amber,
-                                    width: `${progress}%`,
-                                    transition: 'width 0.5s',
-                                }} />
-                            </div>
-                        )}
-                        <button
-                            onClick={onClose}
-                            style={{
-                                background: 'none', border: `1px solid ${C.border}`,
-                                cursor: 'pointer', color: C.textMuted, padding: '6px 12px',
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                fontFamily: "'DM Mono',monospace",
-                                fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
-                                transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderHi; e.currentTarget.style.color = C.amber; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}
-                        >
-                            <X size={11} /> Close
-                        </button>
+                            Cognode Synthesis Monitor
+                        </span>
+                        <span style={{
+                            fontSize: 8, opacity: 0.5, letterSpacing: '0.15em',
+                            textTransform: 'uppercase', fontFamily: "'DM Mono', monospace",
+                        }}>
+                            Pipeline Observability & Session History
+                        </span>
                     </div>
                 </div>
 
-                {/* ── THREE-COLUMN BODY ── */}
-                <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-
-                    {/* ── LEFT: Agent List ── */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{
-                        width: 220, flexShrink: 0,
-                        borderRight: `1px solid ${C.border}`,
-                        background: C.raised,
-                        overflowY: 'auto',
+                        display: 'flex', gap: 16, borderRight: `1px solid ${C.border}`,
+                        paddingRight: 16, height: 28, alignItems: 'center',
                     }}>
-                        <div style={{
-                            padding: '10px 14px',
-                            borderBottom: `1px solid ${C.border}`,
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
-                            color: C.textMuted,
-                        }}>
-                            Agents ({Object.values(agents).filter(a => a.status === 'completed').length}/{AGENTS_CONFIG.length})
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: 7, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Job ID</span>
+                            <span style={{ fontSize: 10, color: C.amberL, fontFamily: "'DM Mono',monospace" }}>{jobId ? jobId.substring(0,8) : '—'}</span>
                         </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: 7, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Nodes</span>
+                            <span style={{ fontSize: 10, color: C.text, fontFamily: "'DM Mono',monospace" }}>{nodes.length}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: 7, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</span>
+                            <span style={{ fontSize: 10, color: C.text, fontFamily: "'DM Mono',monospace" }}>{pipelineStatus.toUpperCase()}</span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: C.textMuted, transition: 'color 0.2s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = C.amber)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = C.textMuted)}
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+            </div>
+
+            {/* ── THREE-COLUMN BODY ── */}
+            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+                
+                {/* ── LEFT: Agent List ── */}
+                <div style={{
+                    width: 280, borderRight: `1px solid ${C.border}`,
+                    display: 'flex', flexDirection: 'column', background: 'rgba(17,16,9, 0.2)',
+                }}>
+                    <div style={{
+                        padding: '10px 14px',
+                        borderBottom: `1px solid ${C.border}`,
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
+                        color: C.textMuted,
+                    }}>
+                        Agents ({Object.values(agents).filter(a => a.status === 'completed').length}/{AGENTS_CONFIG.length})
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
                         {AGENTS_CONFIG.map(cfg => {
                             const a = agents[cfg.id];
+                            if (!a) return null;
+
                             const execTime = a.startTime && a.endTime
-                                ? a.endTime - a.startTime
+                                ? Number(a.endTime) - Number(a.startTime)
                                 : a.startTime && a.status === 'running'
-                                ? Date.now() - a.startTime
+                                ? renderTime - Number(a.startTime)
                                 : null;
+
                             return (
                                 <AgentItem
                                     key={cfg.id}
@@ -378,107 +357,94 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
                             );
                         })}
                     </div>
+                </div>
 
-                    {/* ── CENTER: Log Stream ── */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        {/* Log header */}
-                        <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '8px 16px',
-                            borderBottom: `1px solid ${C.border}`,
-                            background: C.surface,
-                            flexShrink: 0,
+                {/* ── CENTER: Log Stream ── */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '8px 16px',
+                        borderBottom: `1px solid ${C.border}`,
+                        background: C.surface,
+                        flexShrink: 0,
+                    }}>
+                        <span style={{
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
+                            color: C.textMuted,
                         }}>
-                            <span style={{
-                                fontFamily: "'DM Mono',monospace",
-                                fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
-                                color: C.textMuted,
-                            }}>
-                                Logs ({logs.length})
-                            </span>
-                            <button
-                                onClick={() => setAutoScroll(v => !v)}
-                                style={{
-                                    background: 'none', border: `1px solid ${C.border}`,
-                                    cursor: 'pointer',
-                                    color: autoScroll ? C.amber : C.textMuted,
-                                    padding: '4px 8px',
-                                    display: 'flex', alignItems: 'center', gap: 4,
-                                    fontFamily: "'DM Mono',monospace",
-                                    fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                {autoScroll ? <Play size={8} /> : <Pause size={8} />}
-                                {autoScroll ? 'Auto-scroll' : 'Paused'}
-                            </button>
-                        </div>
-
-                        {/* Log entries */}
-                        <div
-                            ref={logContainerRef}
+                            Logs ({logs.length})
+                        </span>
+                        <button
+                            onClick={() => setAutoScroll(v => !v)}
                             style={{
-                                flex: 1, overflowY: 'auto',
-                                background: C.paper,
-                                contain: 'strict',
-                                contentVisibility: 'auto',
+                                background: 'none', border: `1px solid ${C.border}`,
+                                cursor: 'pointer',
+                                color: autoScroll ? C.amber : C.textMuted,
+                                padding: '4px 8px',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                fontFamily: "'DM Mono',monospace",
+                                fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase',
+                                transition: 'all 0.2s',
                             }}
                         >
-                            {logs.length === 0 ? (
-                                <div style={{
-                                    display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    height: '100%', gap: 12,
-                                }}>
-                                    <Terminal size={28} style={{ color: C.textMuted, opacity: 0.3 }} />
-                                    <span style={{
-                                        fontFamily: "'DM Mono',monospace",
-                                        fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
-                                        color: C.textMuted,
-                                    }}>
-                                        No logs yet — start a synthesis to see output
-                                    </span>
-                                </div>
-                            ) : (
-                                logs.map(log => <LogRow key={log.id} log={log} />)
-                            )}
-                        </div>
+                            {autoScroll ? <Play size={8} /> : <Pause size={8} />}
+                            {autoScroll ? 'Auto-scroll' : 'Paused'}
+                        </button>
                     </div>
 
-                    {/* ── RIGHT: Agent Inspector ── */}
-                    <div style={{
-                        width: 340, flexShrink: 0,
-                        borderLeft: `1px solid ${C.border}`,
-                        background: C.raised,
-                        display: 'flex', flexDirection: 'column',
-                    }}>
-                        {/* Inspector header */}
-                        <div style={{
-                            padding: '10px 14px',
-                            borderBottom: `1px solid ${C.border}`,
-                            display: 'flex', alignItems: 'center', gap: 8,
-                        }}>
-                            <ChevronRight size={10} style={{ color: C.amber }} />
-                            <span style={{
-                                fontFamily: "'DM Mono',monospace",
-                                fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
-                                color: C.textMuted,
+                    <div
+                        ref={logContainerRef}
+                        style={{
+                            flex: 1, overflowY: 'auto',
+                            background: C.paper,
+                        }}
+                    >
+                        {logs.length === 0 ? (
+                            <div style={{
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: 'center', justifyContent: 'center',
+                                height: '100%', gap: 12,
                             }}>
-                                {selectedAgent ? selectedAgent.name : 'Select an agent'}
-                            </span>
-                            {selectedAgent && (
+                                <Terminal size={28} style={{ color: C.textMuted, opacity: 0.3 }} />
                                 <span style={{
-                                    fontSize: 8, letterSpacing: '0.1em', color: C.textMuted,
-                                    marginLeft: 'auto',
                                     fontFamily: "'DM Mono',monospace",
+                                    fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
+                                    color: C.textMuted,
                                 }}>
-                                    {selectedAgent.role}
+                                    Waiting for output...
                                 </span>
-                            )}
-                        </div>
+                            </div>
+                        ) : (
+                            logs.map(log => <LogRow key={log.id} log={log} />)
+                        )}
+                    </div>
+                </div>
 
-                        {/* Tabs */}
-                        {selectedAgent && (
+                {/* ── RIGHT: Agent Inspector ── */}
+                <div style={{
+                    width: 380, flexShrink: 0,
+                    borderLeft: `1px solid ${C.border}`,
+                    background: C.raised,
+                    display: 'flex', flexDirection: 'column',
+                }}>
+                    <div style={{
+                        padding: '10px 14px',
+                        borderBottom: `1px solid ${C.border}`,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                        <ChevronRight size={10} style={{ color: C.amber }} />
+                        <span style={{
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
+                            color: C.textMuted,
+                        }}>
+                            {selectedAgent ? selectedAgent.name : 'Select an agent'}
+                        </span>
+                    </div>
+
+                    {selectedAgent && (
+                        <>
                             <div style={{
                                 display: 'flex', borderBottom: `1px solid ${C.border}`,
                                 background: C.surface, flexShrink: 0,
@@ -502,81 +468,66 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
                                     <Code2 size={9} style={{ marginRight: 4 }} /> JSON
                                 </button>
                             </div>
-                        )}
 
-                        {/* Inspector body */}
-                        <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
-                            {!selectedAgent ? (
-                                <div style={{
-                                    display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    height: '100%', gap: 10,
-                                }}>
-                                    <Cpu size={24} style={{ color: C.textMuted, opacity: 0.25 }} />
-                                    <span style={{
+                            <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+                                {!selectedResponse ? (
+                                    <div style={{
                                         fontFamily: "'DM Mono',monospace",
-                                        fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
-                                        color: C.textMuted, textAlign: 'center',
+                                        fontSize: 10, color: C.textMuted,
+                                        letterSpacing: '0.08em',
                                     }}>
-                                        Click an agent to inspect
-                                    </span>
-                                </div>
-                            ) : !selectedResponse ? (
-                                <div style={{
-                                    fontFamily: "'DM Mono',monospace",
-                                    fontSize: 10, color: C.textMuted,
-                                    letterSpacing: '0.08em',
-                                }}>
-                                    {selectedAgent.status === 'idle'
-                                        ? 'Agent has not run yet.'
-                                        : selectedAgent.status === 'running'
-                                        ? 'Agent is currently executing...'
-                                        : 'No response data captured.'}
-                                </div>
-                            ) : (
-                                <div style={{
-                                    fontFamily: "'DM Mono', monospace",
-                                    fontSize: 10, lineHeight: 1.7, color: C.text,
-                                    letterSpacing: '0.02em',
-                                    wordBreak: 'break-word',
-                                }}>
-                                    {inspectorTab === 'response' && (
-                                        <pre style={{
-                                            whiteSpace: 'pre-wrap',
-                                            margin: 0,
-                                            fontFamily: "'DM Mono', monospace",
-                                        }}>
-                                            {selectedResponse.response || 'No response body.'}
-                                        </pre>
-                                    )}
-                                    {inspectorTab === 'prompt' && (
-                                        <pre style={{
-                                            whiteSpace: 'pre-wrap',
-                                            margin: 0,
-                                            fontFamily: "'DM Mono', monospace",
-                                            color: C.textMid,
-                                        }}>
-                                            {selectedResponse.prompt || 'No prompt data captured.'}
-                                        </pre>
-                                    )}
-                                    {inspectorTab === 'json' && (
-                                        <pre style={{
-                                            whiteSpace: 'pre-wrap',
-                                            margin: 0,
-                                            fontFamily: "'DM Mono', monospace",
-                                            color: C.amberL,
-                                        }}>
-                                            {selectedResponse.json
-                                                ? JSON.stringify(selectedResponse.json, null, 2)
-                                                : 'No structured output.'}
-                                        </pre>
-                                    )}
-                                </div>
-                            )}
+                                        {selectedAgent.status === 'idle'
+                                            ? 'Agent has not run yet.'
+                                            : selectedAgent.status === 'running'
+                                            ? 'Agent is currently executing...'
+                                            : 'No response data captured.'}
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        fontFamily: "'DM Mono', monospace",
+                                        fontSize: 10, lineHeight: 1.7, color: C.text,
+                                        letterSpacing: '0.02em',
+                                        wordBreak: 'break-word',
+                                    }}>
+                                        {inspectorTab === 'response' && (
+                                            <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>
+                                                {selectedResponse.response || 'No response body.'}
+                                            </pre>
+                                        )}
+                                        {inspectorTab === 'prompt' && (
+                                            <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit', color: C.textMid }}>
+                                                {selectedResponse.prompt || 'No prompt data captured.'}
+                                            </pre>
+                                        )}
+                                        {inspectorTab === 'json' && (
+                                            <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit', color: C.amberL }}>
+                                                {selectedResponse.json
+                                                    ? JSON.stringify(selectedResponse.json, null, 2)
+                                                    : 'No structured output.'}
+                                            </pre>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                    {!selectedAgent && (
+                        <div style={{
+                            flex: 1, display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', justifyContent: 'center', gap: 10,
+                        }}>
+                            <Cpu size={24} style={{ color: C.textMuted, opacity: 0.25 }} />
+                            <span style={{
+                                fontFamily: "'DM Mono',monospace",
+                                fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
+                                color: C.textMuted, textAlign: 'center',
+                            }}>
+                                Click an agent to inspect
+                            </span>
                         </div>
-                    </div>
+                    )}
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 }
