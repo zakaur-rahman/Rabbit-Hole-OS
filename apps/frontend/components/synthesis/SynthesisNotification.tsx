@@ -18,14 +18,18 @@ interface SynthesisNotificationProps {
 }
 
 export default function SynthesisNotification({ onOpenReport, onViewLogs }: SynthesisNotificationProps) {
-    const status = useSynthesisMonitorStore(s => s.pipelineStatus);
+    const sessions = useSynthesisMonitorStore(s => s.sessions);
+    const activeSessionId = useSynthesisMonitorStore(s => s.activeSessionId);
     const show = useSynthesisMonitorStore(s => s.showNotification);
-    const progress = useSynthesisMonitorStore(s => s.progress);
-    const activeAgentId = useSynthesisMonitorStore(s => s.activeAgentId);
-    const elapsedMs = useSynthesisMonitorStore(s => s.elapsedMs);
-    const error = useSynthesisMonitorStore(s => s.pipelineError);
     const dismiss = useSynthesisMonitorStore(s => s.dismissNotification);
-    const agents = useSynthesisMonitorStore(s => s.agents);
+
+    const activeSession = activeSessionId ? sessions[activeSessionId] : null;
+    const status = activeSession?.pipelineStatus ?? 'idle';
+    const progress = activeSession?.progress ?? 0;
+    const activeAgentId = activeSession?.activeAgentId ?? null;
+    const elapsedMs = activeSession?.elapsedMs ?? 0;
+    const error = activeSession?.pipelineError ?? null;
+    const agents = activeSession?.agents ?? {};
 
     // Cycling dot animation for active agent
     const [dotPhase, setDotPhase] = useState(0);
@@ -43,6 +47,7 @@ export default function SynthesisNotification({ onOpenReport, onViewLogs }: Synt
 
     // Get completed agent count
     const completedCount = Object.values(agents).filter(a => a.status === 'completed').length;
+
 
     return (
         <AnimatePresence>

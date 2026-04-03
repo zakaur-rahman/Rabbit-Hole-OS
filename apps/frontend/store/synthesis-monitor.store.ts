@@ -5,8 +5,8 @@
  *
  * Tracks agent statuses, streaming logs, agent responses/prompts,
  * pipeline progress, and notification visibility.
- */
-import { create } from 'zustand';
+ */import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { DocumentAST } from './ast.store';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -49,6 +49,22 @@ export interface AgentResponse {
 
 export type PipelineStatus = 'idle' | 'running' | 'completed' | 'error';
 
+export interface LogSession {
+  id: string;
+  title: string;
+  createdAt: number;
+  pipelineStatus: PipelineStatus;
+  progress: number;
+  elapsedMs: number;
+  jobId: string | null;
+  agents: Record<string, AgentInfo>;
+  logs: LogEntry[];
+  agentResponses: Record<string, AgentResponse>;
+  completedAST: DocumentAST | null;
+  pipelineError: string | null;
+  activeAgentId: string | null;
+}
+
 // ── Agent Definitions ────────────────────────────────────────────────────────
 
 export const AGENTS_CONFIG: Omit<AgentInfo, 'status' | 'startTime' | 'endTime' | 'model' | 'tokenUsage'>[] = [
@@ -84,40 +100,30 @@ function getTs(): string {
 // ── Store Interface ──────────────────────────────────────────────────────────
 
 interface SynthesisMonitorStore {
-  // Pipeline
-  pipelineStatus: PipelineStatus;
-  progress: number;         // 0-100
-  elapsedMs: number;
-  startTimestamp: number | null;
-  pipelineError: string | null;
-  jobId: string | null;
+  // Global Registry
+  sessions: Record<string, LogSession>;
+  activeSessionId: string | null;
 
-  // Agents
-  agents: Record<string, AgentInfo>;
-  activeAgentId: string | null;
-  selectedAgentId: string | null;
-
-  // Logs
-  logs: LogEntry[];
-
-  // Agent Responses
-  agentResponses: Record<string, AgentResponse>;
-
-  // UI
+  // UI State (Global across sessions)
   showNotification: boolean;
   showMonitorPanel: boolean;
-  completedAST: DocumentAST | null;
+  selectedAgentId: string | null;
 
   // Actions
-  startPipeline: () => void;
-  pushLog: (agent: string, logType: LogEntry['logType'], message: string) => void;
-  setAgentStatus: (agentId: string, status: AgentStatus, meta?: { model?: string; tokens?: number }) => void;
-  setAgentResponse: (agentId: string, data: Omit<AgentResponse, 'agentId' | 'agentName' | 'agentRole'>) => void;
-  completePipeline: (ast: DocumentAST) => void;
-  failPipeline: (error: string) => void;
-  setProgress: (pct: number) => void;
-  setJobId: (id: string) => void;
-  setElapsedMs: (ms: number) => void;
+  startPipeline: () => string; // Returns new sessionId
+  pushLog: (agent: string, logType: LogEntry['logType'], message: string, sessionId?: string) => void;
+  setAgentStatus: (agentId: string, status: AgentStatus, meta?: { model?: string; tokens?: number }, sessionId?: string) => void;
+  setAgentResponse: (agentId: string, data: Omit<AgentResponse, 'agentId' | 'agentName' | 'agentRole'>, sessionId?: string) => void;
+  completePipeline: (ast: DocumentAST, sessionId?: string) => void;
+  failPipeline: (error: string, sessionId?: string) => void;
+  setProgress: (pct: number, sessionId?: string) => void;
+  setJobId: (id: string, sessionId?: string) => void;
+  setElapsedMs: (ms: number, sessionId?: string) => void;
+
+  // Session Management
+  selectSession: (id: string | null) => void;
+  removeSession: (id: string) => void;
+  renameSession: (id: string, title: string) => void;
 
   // UI actions
   selectAgent: (id: string | null) => void;
@@ -129,132 +135,254 @@ interface SynthesisMonitorStore {
 
 // ── Store ────────────────────────────────────────────────────────────────────
 
-export const useSynthesisMonitorStore = create<SynthesisMonitorStore>((set, _get) => ({
-  // Initial state
-  pipelineStatus: 'idle',
-  progress: 0,
-  elapsedMs: 0,
-  startTimestamp: null,
-  pipelineError: null,
-  jobId: null,
+export const useSynthesisMonitorStore = create<SynthesisMonitorStore>()(
+  persist(
+    (set, get) => ({
+      sessions: {},
+      activeSessionId: null,
 
-  agents: buildInitialAgents(),
-  activeAgentId: null,
-  selectedAgentId: null,
+      showNotification: false,
+      showMonitorPanel: false,
+      selectedAgentId: null,
 
-  logs: [],
-  agentResponses: {},
+      // ── Actions ──────────────────────────────────────────────────────────────
 
-  showNotification: false,
-  showMonitorPanel: false,
-  completedAST: null,
+      startPipeline: () => {
+        const id = `session-${Date.now()}`;
+        const newSession: LogSession = {
+          id,
+          title: `Run ${Object.keys(get().sessions).length + 1}`,
+          createdAt: Date.now(),
+          pipelineStatus: 'running',
+          progress: 0,
+          elapsedMs: 0,
+          jobId: null,
+          agents: buildInitialAgents(),
+          logs: [],
+          agentResponses: {},
+          completedAST: null,
+          pipelineError: null,
+          activeAgentId: null,
+        };
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+        set(state => ({
+          sessions: { ...state.sessions, [id]: newSession },
+          activeSessionId: id,
+          showNotification: true,
+          selectedAgentId: null,
+        }));
 
-  startPipeline: () => set({
-    pipelineStatus: 'running',
-    progress: 0,
-    elapsedMs: 0,
-    startTimestamp: Date.now(),
-    pipelineError: null,
-    jobId: null,
-    agents: buildInitialAgents(),
-    activeAgentId: null,
-    selectedAgentId: null,
-    logs: [],
-    agentResponses: {},
-    showNotification: true,
-    completedAST: null,
-  }),
-
-  pushLog: (agent, logType, message) => set(state => ({
-    logs: [...state.logs, {
-      id: `log-${state.logs.length}-${Date.now()}`,
-      timestamp: getTs(),
-      agent,
-      logType,
-      message,
-    }],
-  })),
-
-  setAgentStatus: (agentId, status, meta) => set(state => {
-    const agent = state.agents[agentId];
-    if (!agent) return state;
-
-    const now = Date.now();
-    const updated: AgentInfo = {
-      ...agent,
-      status,
-      ...(status === 'running' && !agent.startTime ? { startTime: now } : {}),
-      ...(status === 'completed' || status === 'error' || status === 'warning' ? { endTime: now } : {}),
-      ...(meta?.model ? { model: meta.model } : {}),
-      ...(meta?.tokens ? { tokenUsage: agent.tokenUsage + meta.tokens } : {}),
-    };
-
-    return {
-      agents: { ...state.agents, [agentId]: updated },
-      activeAgentId: status === 'running' ? agentId : state.activeAgentId,
-    };
-  }),
-
-  setAgentResponse: (agentId, data) => set(state => {
-    const agent = state.agents[agentId];
-    const existing = state.agentResponses[agentId] || {
-      agentId,
-      agentName: agent?.name ?? agentId,
-      agentRole: agent?.role ?? '',
-      prompt: '',
-      response: '',
-      json: null,
-    };
-
-    return {
-      agentResponses: {
-        ...state.agentResponses,
-        [agentId]: {
-          ...existing,
-          ...data,
-        },
+        return id;
       },
-    };
-  }),
 
-  completePipeline: (ast) => set({
-    pipelineStatus: 'completed',
-    progress: 100,
-    completedAST: ast,
-    activeAgentId: null,
-  }),
+      pushLog: (agent, logType, message, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
 
-  failPipeline: (error) => set({
-    pipelineStatus: 'error',
-    pipelineError: error,
-    activeAgentId: null,
-  }),
+        const session = state.sessions[sid];
+        const newLog: LogEntry = {
+          id: `log-${session.logs.length}-${Date.now()}`,
+          timestamp: getTs(),
+          agent,
+          logType,
+          message,
+        };
 
-  setProgress: (pct) => set({ progress: Math.min(100, Math.max(0, pct)) }),
-  setJobId: (id) => set({ jobId: id }),
-  setElapsedMs: (ms) => set({ elapsedMs: ms }),
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...session,
+              logs: [...session.logs, newLog],
+            },
+          },
+        };
+      }),
 
-  selectAgent: (id) => set({ selectedAgentId: id }),
-  setShowNotification: (v) => set({ showNotification: v }),
-  setShowMonitorPanel: (v) => set({ showMonitorPanel: v }),
-  dismissNotification: () => set({ showNotification: false }),
+      setAgentStatus: (agentId, status, meta, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
 
-  reset: () => set({
-    pipelineStatus: 'idle',
-    progress: 0,
-    elapsedMs: 0,
-    startTimestamp: null,
-    pipelineError: null,
-    jobId: null,
-    agents: buildInitialAgents(),
-    activeAgentId: null,
-    selectedAgentId: null,
-    logs: [],
-    agentResponses: {},
-    showNotification: false,
-    showMonitorPanel: false,
-    completedAST: null,
-  }),
-}));
+        const session = state.sessions[sid];
+        const agent = session.agents[agentId];
+        if (!agent) return state;
+
+        const now = Date.now();
+        const updatedAgent: AgentInfo = {
+          ...agent,
+          status,
+          ...(status === 'running' && !agent.startTime ? { startTime: now } : {}),
+          ...(status === 'completed' || status === 'error' || status === 'warning' ? { endTime: now } : {}),
+          ...(meta?.model ? { model: meta.model } : {}),
+          ...(meta?.tokens ? { tokenUsage: agent.tokenUsage + meta.tokens } : {}),
+        };
+
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...session,
+              agents: { ...session.agents, [agentId]: updatedAgent },
+              activeAgentId: status === 'running' ? agentId : session.activeAgentId,
+            },
+          },
+        };
+      }),
+
+      setAgentResponse: (agentId, data, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
+
+        const session = state.sessions[sid];
+        const agent = session.agents[agentId];
+        const existing = session.agentResponses[agentId] || {
+          agentId,
+          agentName: agent?.name ?? agentId,
+          agentRole: agent?.role ?? '',
+          prompt: '',
+          response: '',
+          json: null,
+        };
+
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...session,
+              agentResponses: {
+                ...session.agentResponses,
+                [agentId]: { ...existing, ...data },
+              },
+            },
+          },
+        };
+      }),
+
+      completePipeline: (ast, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
+
+        const session = state.sessions[sid];
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...session,
+              pipelineStatus: 'completed',
+              progress: 100,
+              completedAST: ast,
+              activeAgentId: null,
+            },
+          },
+        };
+      }),
+
+      failPipeline: (error, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
+
+        const session = state.sessions[sid];
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...session,
+              pipelineStatus: 'error',
+              pipelineError: error,
+              activeAgentId: null,
+            },
+          },
+        };
+      }),
+
+      setProgress: (pct, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...state.sessions[sid],
+              progress: Math.min(100, Math.max(0, pct)),
+            },
+          },
+        };
+      }),
+
+      setJobId: (id, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...state.sessions[sid],
+              jobId: id,
+            },
+          },
+        };
+      }),
+
+      setElapsedMs: (ms, sessionId) => set(state => {
+        const sid = sessionId || state.activeSessionId;
+        if (!sid || !state.sessions[sid]) return state;
+        return {
+          sessions: {
+            ...state.sessions,
+            [sid]: {
+              ...state.sessions[sid],
+              elapsedMs: ms,
+            },
+          },
+        };
+      }),
+
+      selectSession: (id) => set({ activeSessionId: id, selectedAgentId: null }),
+
+      removeSession: (id) => set(state => {
+        const newSessions = { ...state.sessions };
+        delete newSessions[id];
+        let nextActive = state.activeSessionId;
+        if (nextActive === id) {
+          const keys = Object.keys(newSessions);
+          nextActive = keys.length > 0 ? keys[keys.length - 1] : null;
+        }
+        return {
+          sessions: newSessions,
+          activeSessionId: nextActive,
+        };
+      }),
+
+      renameSession: (id, title) => set(state => {
+        if (!state.sessions[id]) return state;
+        return {
+          sessions: {
+            ...state.sessions,
+            [id]: { ...state.sessions[id], title },
+          },
+        };
+      }),
+
+      selectAgent: (id) => set({ selectedAgentId: id }),
+      setShowNotification: (v) => set({ showNotification: v }),
+      setShowMonitorPanel: (v) => set({ showMonitorPanel: v }),
+      dismissNotification: () => set({ showNotification: false }),
+      reset: () => set({
+        sessions: {},
+        activeSessionId: null,
+        selectedAgentId: null,
+        showNotification: false,
+        showMonitorPanel: false,
+      }),
+    }),
+    {
+      name: 'synthesis-logs-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        sessions: state.sessions,
+        activeSessionId: state.activeSessionId,
+      }),
+    }
+  )
+);
+

@@ -109,23 +109,25 @@ export function useSynthesis() {
         if (nodes.length === 0) return;
 
         const state = monitor.getState();
-        if (state.pipelineStatus === 'running') {
+        const activeSession = state.activeSessionId ? state.sessions[state.activeSessionId] : null;
+        
+        if (activeSession?.pipelineStatus === 'running') {
             // Already running — toggle the monitor panel open
             monitor.getState().setShowMonitorPanel(true);
             return;
         }
 
         // Reset + start pipeline state
-        monitor.getState().startPipeline();
+        const sessionId = monitor.getState().startPipeline();
 
         const contextItems = buildContextItems();
 
-        monitor.getState().pushLog('System', 'info', `Compiling ${nodes.length} nodes for context...`);
-        monitor.getState().pushLog('System', 'step', 'Connecting to orchestrator SSE...');
+        monitor.getState().pushLog('System', 'info', `Compiling ${nodes.length} nodes for context...`, sessionId);
+        monitor.getState().pushLog('System', 'step', 'Connecting to orchestrator SSE...', sessionId);
 
         const startTime = Date.now();
         const elapsedInterval = setInterval(() => {
-            monitor.getState().setElapsedMs(Date.now() - startTime);
+            monitor.getState().setElapsedMs(Date.now() - startTime, sessionId);
         }, 200);
 
         // Fire-and-forget in a background closure
@@ -140,35 +142,39 @@ export function useSynthesis() {
                     contextItems,
                     edges,
                     (step) => {
+                        const currentSession = monitor.getState().sessions[sessionId];
+                        if (!currentSession) return;
+
                         // Track stage changes
                         if (step.stage) {
-                            const prevActive = monitor.getState().activeAgentId;
+                            const prevActive = currentSession.activeAgentId;
                             if (prevActive && prevActive !== step.stage) {
-                                monitor.getState().setAgentStatus(prevActive, 'completed');
+                                monitor.getState().setAgentStatus(prevActive, 'completed', undefined, sessionId);
                                 agentsCompleted++;
                             }
-                            monitor.getState().setAgentStatus(step.stage, 'running');
-                            monitor.getState().pushLog(step.stage, 'step', step.message || `${step.stage} started`);
+                            monitor.getState().setAgentStatus(step.stage, 'running', undefined, sessionId);
+                            monitor.getState().pushLog(step.stage, 'step', step.message || `${step.stage} started`, sessionId);
                         }
 
                         // Update progress
                         if (step.progress !== undefined) {
-                            monitor.getState().setProgress(step.progress);
+                            monitor.getState().setProgress(step.progress, sessionId);
                         } else {
-                            monitor.getState().setProgress(Math.round((agentsCompleted / totalAgents) * 100));
+                            monitor.getState().setProgress(Math.round((agentsCompleted / totalAgents) * 100), sessionId);
                         }
 
                         // Capture job ID
                         if (step.job_id) {
-                            monitor.getState().setJobId(step.job_id);
+                            monitor.getState().setJobId(step.job_id, sessionId);
                         }
 
                         // Info messages
                         if (step.message && !step.stage) {
                             monitor.getState().pushLog(
-                                monitor.getState().activeAgentId || 'System',
+                                currentSession.activeAgentId || 'System',
                                 'info',
-                                step.message
+                                step.message,
+                                sessionId
                             );
                         }
 
@@ -178,7 +184,7 @@ export function useSynthesis() {
                                 prompt: step.data.prompt || '',
                                 response: step.data.response || '',
                                 json: step.data.json || null,
-                            });
+                            }, sessionId);
                         }
 
                         // Capture final AST from completion events
@@ -189,14 +195,15 @@ export function useSynthesis() {
 
                         // Handle failures
                         if (step.status === 'failed') {
-                            const activeAgent = monitor.getState().activeAgentId;
+                            const activeAgent = currentSession.activeAgentId;
                             if (activeAgent) {
-                                monitor.getState().setAgentStatus(activeAgent, 'error');
+                                monitor.getState().setAgentStatus(activeAgent, 'error', undefined, sessionId);
                             }
                             monitor.getState().pushLog(
                                 activeAgent || 'System',
                                 'error',
-                                step.error || 'Agent failed'
+                                step.error || 'Agent failed',
+                                sessionId
                             );
                         }
                     },
@@ -206,30 +213,32 @@ export function useSynthesis() {
                 clearInterval(elapsedInterval);
 
                 // Mark remaining running agents as complete
-                const finalState = monitor.getState();
-                if (finalState.activeAgentId) {
-                    monitor.getState().setAgentStatus(finalState.activeAgentId, 'completed');
+                const finalSession = monitor.getState().sessions[sessionId];
+                if (finalSession?.activeAgentId) {
+                    monitor.getState().setAgentStatus(finalSession.activeAgentId, 'completed', undefined, sessionId);
                 }
 
                 if (finalAST) {
-                    monitor.getState().pushLog('System', 'ok', 'Report generated successfully.');
-                    monitor.getState().completePipeline(finalAST);
+                    monitor.getState().pushLog('System', 'ok', 'Report generated successfully.', sessionId);
+                    monitor.getState().completePipeline(finalAST, sessionId);
                 } else {
-                    monitor.getState().pushLog('System', 'error', 'Synthesis did not return a document.');
-                    monitor.getState().failPipeline('Synthesis did not return a document. Please try again.');
+                    monitor.getState().pushLog('System', 'error', 'Synthesis did not return a document.', sessionId);
+                    monitor.getState().failPipeline('Synthesis did not return a document. Please try again.', sessionId);
                 }
             } catch (error) {
                 clearInterval(elapsedInterval);
                 const msg = error instanceof Error ? error.message : String(error);
-                monitor.getState().pushLog('System', 'error', msg);
-                monitor.getState().failPipeline(msg);
+                monitor.getState().pushLog('System', 'error', msg, sessionId);
+                monitor.getState().failPipeline(msg, sessionId);
             }
         })();
     }, [buildContextItems, setAuthModal, monitor]);
 
     /** Open AST Editor with the completed document from the pipeline */
     const handleOpenCompletedReport = useCallback(() => {
-        const ast = monitor.getState().completedAST;
+        const state = monitor.getState();
+        const activeSession = state.activeSessionId ? state.sessions[state.activeSessionId] : null;
+        const ast = activeSession?.completedAST;
         if (ast) {
             setInitialAST(ast);
             setShowASTEditor(true);
