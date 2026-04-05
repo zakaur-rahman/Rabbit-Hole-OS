@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
+      - "render.yaml"
 
 concurrency: production-deployment
 
@@ -19,24 +26,16 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
-        
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           release-type: simple
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
-  # 2. Build & Test on main (Only if we didn't just merge the auto-generated Release PR)
-  ci:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true' || github.event.head_commit.author.name != 'github-actions[bot]'
-    uses: ./.github/workflows/build.yml
-    with:
-      filter: '' # Build all in main to be safe
-
-  # 3. Build & Push Docker containers tied to the Semantic Version
+  # 2. Build & Push Docker containers tied to the Semantic Version
   docker_build:
-    needs: [ci, release-please]
+    needs: [release-please]
     if: needs.release-please.outputs.release_created == 'true'
     permissions:
       contents: read
@@ -52,7 +51,7 @@ jobs:
       registry_username: ${{ github.actor }}
       registry_token: ${{ secrets.GITHUB_TOKEN }}
 
-  # 4. Trigger Webhook to Deploy on Render
+  # 3. Trigger Webhook to Deploy on Render
   deploy_to_production:
     needs: [docker_build, release-please]
     if: needs.release-please.outputs.release_created == 'true'
@@ -64,12 +63,12 @@ jobs:
       - name: Trigger Webhook for Web Service
         run: |
           curl -X POST "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/web:${{ needs.release-please.outputs.tag_name }}"
-      
+
       - name: Trigger Webhook for Backend API
         run: |
           curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/backend:${{ needs.release-please.outputs.tag_name }}"
 
-  # 5. Build & Package Desktop App
+  # 4. Build & Package Desktop App
   desktop_build:
     needs: [release-please]
     if: needs.release-please.outputs.release_created == 'true'
@@ -81,18 +80,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-        
+          node-version: "20"
+          cache: "npm"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps

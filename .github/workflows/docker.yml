@@ -4,13 +4,18 @@ on:
   workflow_call:
     inputs:
       app_name:
-        description: 'Name of the app to build (e.g., web, backend)'
+        description: "Name of the app to build (e.g., web, backend)"
         required: true
         type: string
       image_name:
-        description: 'Target image name without registry (e.g., cognode/web)'
+        description: "Target image name without registry (e.g., cognode/web)"
         required: true
         type: string
+      push:
+        description: "Whether to push the built image to registry"
+        required: false
+        type: boolean
+        default: true
     secrets:
       registry_username:
         required: true
@@ -23,13 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
+        if: inputs.push
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -54,8 +57,10 @@ jobs:
         with:
           context: .
           file: ./apps/${{ inputs.app_name }}/Dockerfile
-          push: true
+          push: ${{ inputs.push }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.cognode.tech/api/v1
           cache-from: type=gha,scope=${{ inputs.app_name }}
           cache-to: type=gha,mode=max,scope=${{ inputs.app_name }}

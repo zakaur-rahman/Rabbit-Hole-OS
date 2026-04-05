@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+# Husky pre-push hook — runs local CI validation before pushing
+# This prevents broken code from reaching the remote
+
+echo "🔍 Running pre-push CI validation..."
+
+# Use the PowerShell script on Windows, bash script otherwise
+if [ -f "scripts/ci-local.sh" ]; then
+  ./scripts/ci-local.sh --lint-only
+else
+  echo "⚠️  ci-local.sh not found, skipping pre-push checks"
+  exit 0
+fi

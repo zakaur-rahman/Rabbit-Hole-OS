@@ -1,4 +1,4 @@
-name: Build Validation
+name: Tests
 
 on:
   pull_request:
@@ -6,26 +6,21 @@ on:
     paths:
       - "apps/**"
       - "packages/**"
-      - "turbo.json"
-      - "package.json"
-      - "package-lock.json"
+      - "*.json"
   push:
     branches: ["main"]
     paths:
       - "apps/**"
       - "packages/**"
-      - "turbo.json"
-      - "package.json"
-      - "package-lock.json"
   workflow_dispatch:
 
 concurrency:
-  group: ci-build-${{ github.event.pull_request.number || github.ref }}
+  group: ci-test-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build Artifacts
+  test:
+    name: Unit & Integration Tests
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
@@ -39,8 +34,18 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install Dependencies
+      - name: Install Node Dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Build (Turbo)
-        run: npx turbo run build
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: apps/backend/requirements.txt
+
+      - name: Install Python Dependencies
+        run: pip install -r apps/backend/requirements.txt
+
+      - name: Run Tests (Turbo)
+        run: npx turbo run test

@@ -2,15 +2,28 @@ name: Security Scanning
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "*.json"
+      - "*.txt"
+      - "*.toml"
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "*.json"
+      - "*.txt"
+      - "*.toml"
   schedule:
-    - cron: '27 15 * * 0' # Weekly
+    - cron: "27 15 * * 0" # Weekly
 
 jobs:
   analyze:
     name: CodeQL Analyze
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -20,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript', 'python' ]
+        language: ["javascript", "python"]
 
     steps:
       - name: Checkout repository
@@ -30,13 +43,13 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-          
+
       - name: Setup Node (For TS/JS)
         if: matrix.language == 'javascript'
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          
+
       - name: Setup Python
         if: matrix.language == 'python'
         uses: actions/setup-python@v5
@@ -51,6 +64,7 @@ jobs:
 
   secret-scanning:
     name: Secret Scanning
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -68,6 +82,7 @@ jobs:
 
   dependency-scanning:
     name: Dependency Scanning (Trivy)
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -76,20 +91,19 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
-      # Frontend dependencies
+
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
+          scan-type: "fs"
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         continue-on-error: true
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"

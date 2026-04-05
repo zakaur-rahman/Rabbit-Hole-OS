@@ -2,7 +2,12 @@ name: PR Preview Environments
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened, labeled, closed]
+    paths:
+      - "apps/web/**"
+      - "apps/backend/**"
+      - "packages/**"
+      - "docker/**"
 
 # Concurrency group ensures outdated PR deployments are cancelled
 concurrency:
@@ -10,8 +15,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-push:
+  # Gate: only build previews for PRs with the "preview" label
+  check-label:
+    name: Check Preview Label
     if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    outputs:
+      has_label: ${{ steps.check.outputs.has_label }}
+    steps:
+      - name: Check for preview label
+        id: check
+        run: |
+          HAS_LABEL="false"
+          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+          if echo "$LABELS" | grep -q '"preview"'; then
+            HAS_LABEL="true"
+          fi
+          echo "has_label=$HAS_LABEL" >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    needs: check-label
+    if: |
+      github.event.action != 'closed' &&
+      needs.check-label.outputs.has_label == 'true' &&
+      github.event.pull_request.draft == false
     permissions:
       contents: read
       packages: write
@@ -29,7 +56,9 @@ jobs:
   deploy-preview:
     needs: build-and-push
     name: Deploy to Render Preview
-    if: github.event.action != 'closed'
+    if: |
+      github.event.action != 'closed' &&
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
       RENDER_SERVICE_ID_WEB: ${{ secrets.RENDER_SERVICE_ID_WEB }}
@@ -38,17 +67,17 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
+
       # Trigger Web Service Preview
       - name: Trigger Web Preview Deployment
         uses: fjogeleit/http-request-action@v1
         id: render_trigger_web
         with:
-          url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_WEB }}/preview'
-          method: 'POST'
+          url: "https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_WEB }}/preview"
+          method: "POST"
           bearerToken: ${{ env.RENDER_API_KEY }}
           timeout: 15000
-          contentType: 'application/json'
+          contentType: "application/json"
           data: '{"imagePath": "ghcr.io/${{ github.repository_owner }}/web:pr-${{ github.event.pull_request.number }}"}'
 
       # Trigger Backend Service Preview
@@ -56,13 +85,13 @@ jobs:
         uses: fjogeleit/http-request-action@v1
         id: render_trigger_backend
         with:
-          url: 'https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_BACKEND }}/preview'
-          method: 'POST'
+          url: "https://api.render.com/v1/services/${{ env.RENDER_SERVICE_ID_BACKEND }}/preview"
+          method: "POST"
           bearerToken: ${{ env.RENDER_API_KEY }}
           timeout: 15000
-          contentType: 'application/json'
+          contentType: "application/json"
           data: '{"imagePath": "ghcr.io/${{ github.repository_owner }}/backend:pr-${{ github.event.pull_request.number }}"}'
-          
+
       - name: Comment PR with Preview URLs
         uses: actions/github-script@v7
         env:
@@ -72,15 +101,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const prNum = context.payload.pull_request.number;
-            
-            // Access responses from environment variables to avoid direct context access issues
+
             const webResponse = JSON.parse(process.env.WEB_RESPONSE || '{}');
             const backendResponse = JSON.parse(process.env.BACKEND_RESPONSE || '{}');
-            
-            // Extract the generated URL from Render's API response
+
             const webPreviewUrl = webResponse?.preview?.service?.serviceDetails?.url || `https://frontend-cognode-pr-${prNum}.onrender.com`;
             const backendPreviewUrl = backendResponse?.preview?.service?.serviceDetails?.url || `https://backend-cognode-pr-${prNum}.onrender.com`;
-            
+
             github.rest.issues.createComment({
               issue_number: prNum,
               owner: context.repo.owner,
@@ -97,4 +124,3 @@ jobs:
         run: |
           echo "Render natively cleans up preview environments when a PR is closed or merged."
           echo "If explicit deletion is needed, the Render API can be called here via curl."
-          # curl -X DELETE https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/preview -H 'Authorization: Bearer ${{ secrets.RENDER_API_KEY }}'

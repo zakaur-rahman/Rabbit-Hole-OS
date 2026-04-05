@@ -51,3 +51,6 @@ desktop.ini
 apps/backend/storage/edges.json
 apps/backend/storage/nodes.json
 apps/frontend/lint_output.txt
+
+# CI local testing secrets (for act)
+.secrets
