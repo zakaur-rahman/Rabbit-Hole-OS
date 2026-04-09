@@ -1,66 +1,24 @@
-name: Build & Push Docker Image (Reusable)
+name: Docker Build
 
 on:
-  workflow_call:
-    inputs:
-      app_name:
-        description: "Name of the app to build (e.g., web, backend)"
-        required: true
-        type: string
-      image_name:
-        description: "Target image name without registry (e.g., cognode/web)"
-        required: true
-        type: string
-      push:
-        description: "Whether to push the built image to registry"
-        required: false
-        type: boolean
-        default: true
-    secrets:
-      registry_username:
-        required: true
-      registry_token:
-        required: true
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build_and_push:
+  docker:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        app: [web, backend]
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        if: inputs.push
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.registry_username }}
-          password: ${{ secrets.registry_token }}
-
-      - name: Extract Metadata (Tags, Labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ inputs.image_name }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,format=long
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./apps/${{ inputs.app_name }}/Dockerfile
-          push: ${{ inputs.push }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            NEXT_PUBLIC_API_URL=https://api.cognode.tech/api/v1
-          cache-from: type=gha,scope=${{ inputs.app_name }}
-          cache-to: type=gha,mode=max,scope=${{ inputs.app_name }}
+      - name: Build Image
+        run: docker build -f apps/${{ matrix.app }}/Dockerfile -t cognode-${{ matrix.app }}:latest .

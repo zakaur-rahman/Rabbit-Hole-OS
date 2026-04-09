@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Webhook for Web Service
+        run: |
+          curl -X POST "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/web:latest"
+
+      - name: Trigger Webhook for Backend API
+        run: |
+          curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/backend:latest"

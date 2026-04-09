@@ -26,7 +26,7 @@ import LatexCodeEditor from '../ui/LatexCodeEditor';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layout, X, Save, Zap, Download, Check,
-  RotateCcw, Trash2, AlertCircle, AlertTriangle,
+  RotateCcw, AlertCircle, AlertTriangle,
   Type, List as ListIcon, Quote as QuoteIcon,
   Book, FileText, File as FileIcon,
 } from 'lucide-react';
@@ -442,7 +442,7 @@ interface ASTEditorModalProps {
 }
 
 export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
-  isOpen, onClose, initialAST, onSave, onCompile,
+  isOpen, onClose, initialAST, onSave,
 }) => {
   const {
     document, selectedSectionId, isDirty,

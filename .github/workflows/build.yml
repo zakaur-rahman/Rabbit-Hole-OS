@@ -2,45 +2,27 @@ name: Build Validation
 
 on:
   pull_request:
-    branches: ["main", "develop"]
     paths:
       - "apps/**"
       - "packages/**"
-      - "turbo.json"
-      - "package.json"
-      - "package-lock.json"
-  push:
-    branches: ["main"]
-    paths:
-      - "apps/**"
-      - "packages/**"
-      - "turbo.json"
-      - "package.json"
-      - "package-lock.json"
-  workflow_dispatch:
+      - "*.json"
 
 concurrency:
-  group: ci-build-${{ github.event.pull_request.number || github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build Artifacts
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
           cache: "npm"
 
-      - name: Install Dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Build (Turbo)
-        run: npx turbo run build
+      - run: npm ci --legacy-peer-deps
+      - run: npx turbo run build

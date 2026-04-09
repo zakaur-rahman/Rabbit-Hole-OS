@@ -1,8 +1,7 @@
-name: Lint & Typecheck
+name: Lint
 
 on:
   pull_request:
-    branches: ["main", "develop"]
     paths:
       - "apps/**"
       - "packages/**"
@@ -10,35 +9,23 @@ on:
       - "*.ts"
       - "*.tsx"
       - "*.py"
-  push:
-    branches: ["main"]
-    paths:
-      - "apps/**"
-      - "packages/**"
-  workflow_dispatch:
 
 concurrency:
-  group: ci-lint-${{ github.event.pull_request.number || github.ref }}
+  group: lint-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   lint:
-    name: Lint & Typecheck
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
           cache: "npm"
-
-      - name: Install Node Dependencies
-        run: npm ci --legacy-peer-deps
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -47,11 +34,8 @@ jobs:
           cache: "pip"
           cache-dependency-path: apps/backend/requirements.txt
 
-      - name: Install Python Dependencies
-        run: pip install -r apps/backend/requirements.txt ruff
+      - run: npm ci --legacy-peer-deps
+      - run: pip install -r apps/backend/requirements.txt ruff
 
-      - name: Run Node Lint & Typecheck (Turbo)
-        run: npx turbo run lint typecheck
-
-      - name: Run Python Lint (Ruff)
-        run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841
+      - run: npx turbo run lint typecheck
+      - run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841

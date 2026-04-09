@@ -18,9 +18,7 @@ export function useSynthesis() {
     // AST editor state
     const [showASTEditor, setShowASTEditor] = useState(false);
     const [initialAST, setInitialAST] = useState<DocumentAST | null>(null);
-    const [lastGeneratedAST, setLastGeneratedAST] = useState<DocumentAST | null>(null);
-    const [synthesisError, setSynthesisError] = useState<string | null>(null);
-
+    
     /** Build context items from current canvas nodes — always includes node_type + metadata */
     const buildContextItems = useCallback((): SynthesisContextItem[] => {
         const { nodes, edges } = useGraphStore.getState();
@@ -52,48 +50,6 @@ export function useSynthesis() {
             };
         });
     }, []);
-
-    /** Open AST editor: fetches document structure from backend first */
-    const handleOpenASTEditor = useCallback(async (ast?: DocumentAST) => {
-        if (typeof window !== 'undefined' && !localStorage.getItem('auth_token')) {
-            setAuthModal(true, 'Research synthesis and AI document structuring require a premium account.');
-            return;
-        }
-
-        const { nodes, edges, activeWhiteboardId } = useGraphStore.getState();
-        if (nodes.length === 0) return;
-
-        setShowASTEditor(true);
-        setInitialAST(ast || null);
-        setSynthesisError(null);
-
-        if (ast) {
-            return; // Skip the network request if AST is already provided
-        }
-
-        try {
-            const contextItems = buildContextItems();
-            const response = await synthesisApi.getResearchAST(
-                'Synthesized Research Report',
-                contextItems,
-                false,
-                edges,
-                activeWhiteboardId
-            );
-            if (response.status === 'success' || response.status === 'partial') {
-                const docAST = response.document as unknown as DocumentAST;
-                setInitialAST(docAST);
-                setLastGeneratedAST(docAST);
-            } else {
-                setSynthesisError('AST generation failed');
-                setShowASTEditor(false);
-            }
-        } catch (error) {
-            const msg = error instanceof Error ? error.message : 'Failed to load document structure';
-            setSynthesisError(msg);
-            setShowASTEditor(false);
-        }
-    }, [buildContextItems, setAuthModal]);
 
     /**
      * Generate Report — launches background streaming synthesis.
