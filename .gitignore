@@ -48,6 +48,20 @@ desktop.ini
 .turbo
 *.log
 .eslintcache
+
+# Debug / lint output artefacts — NOT committed to repo
+# Run lint commands and ignore their text output files
+**/lint*.json
+**/lint*.txt
+**/lint*.log
+**/full_lint*.txt
+**/lint_compact.txt
+**/lint_output*.txt
+**/tsc*.txt
+**/tsc*.log
+**/tsc_output.txt
+
+# Specific committed artefacts to ignore going forward
 apps/backend/storage/edges.json
 apps/backend/storage/nodes.json
 apps/frontend/lint_output.txt

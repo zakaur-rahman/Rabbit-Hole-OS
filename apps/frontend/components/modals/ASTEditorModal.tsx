@@ -587,7 +587,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
       }}
       onClick={handleClose}
     >
-      {/* global keyframes */}
+      {/* app-wide animations */}
       <style>{`
         @keyframes cog-rspin { to { transform: rotate(360deg); } }
         @keyframes cog-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }

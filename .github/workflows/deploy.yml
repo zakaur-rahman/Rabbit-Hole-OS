@@ -1,19 +1,17 @@
-name: Deploy
+name: "Deploy (migrated)"
+
+# Deploy logic has been consolidated into docker.yml.
+# This file is kept as a named stub so GitHub's workflow history
+# doesn't show a removed workflow.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  deploy:
+  notice:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Trigger Webhook for Web Service
+      - name: Notice
         run: |
-          curl -X POST "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/web:latest"
-
-      - name: Trigger Webhook for Backend API
-        run: |
-          curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/backend:latest"
+          echo "Deploy is now handled by docker.yml (Build + Push + Deploy pipeline)."
+          echo "This workflow is a stub. Trigger docker.yml via workflow_dispatch instead."

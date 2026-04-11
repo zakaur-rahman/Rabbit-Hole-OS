@@ -1,11 +1,14 @@
-name: Lint
+name: Lint & Typecheck
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "apps/**"
       - "packages/**"
-      - "*.json"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
       - "*.ts"
       - "*.tsx"
       - "*.py"
@@ -14,15 +17,24 @@ concurrency:
   group: lint-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_DAEMON: "0"
+  TURBO_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+  FORCE_COLOR: "1"
+
 jobs:
   lint:
+    name: Node Lint & Typecheck
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
@@ -34,8 +46,23 @@ jobs:
           cache: "pip"
           cache-dependency-path: apps/backend/requirements.txt
 
-      - run: npm ci --legacy-peer-deps
-      - run: pip install -r apps/backend/requirements.txt ruff
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-lint-${{ runner.os }}-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-lint-${{ runner.os }}-${{ hashFiles('turbo.json') }}-
+            turbo-lint-${{ runner.os }}-
 
-      - run: npx turbo run lint typecheck
-      - run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841
+      - name: Install Node dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Python dependencies
+        run: pip install -r apps/backend/requirements.txt ruff
+
+      - name: Turbo lint & typecheck
+        run: npx turbo run lint typecheck --no-daemon --cache-dir=.turbo
+
+      - name: Python lint (Ruff)
+        run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841

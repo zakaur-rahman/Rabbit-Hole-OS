@@ -73,7 +73,7 @@ interface AgentItemProps {
     onClick: () => void;
 }
 
-const AgentItem = React.memo(({ agentId, name, role, status, executionTimeMs, model, tokenUsage, isSelected, onClick }: AgentItemProps) => {
+const AgentItem = React.memo(({ name, role, status, executionTimeMs, model, tokenUsage, isSelected, onClick }: AgentItemProps) => {
     const timeStr = executionTimeMs !== null ? `${(executionTimeMs / 1000).toFixed(1)}s` : '—';
 
     return (
@@ -187,6 +187,8 @@ const CognodeLogo = ({ size = 20 }: { size?: number }) => (
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
+const EMPTY_LOGS: LogEntry[] = [];
+
 interface SynthesisMonitorPanelProps {
     isOpen: boolean;
     onClose: () => void;
@@ -200,8 +202,7 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
     const activeSession = activeSessionId ? sessions[activeSessionId] : null;
     
     const agents = activeSession?.agents ?? {};
-    const emptyLogsRef = useRef<LogEntry[]>([]);
-    const logs = activeSession?.logs ?? emptyLogsRef.current;
+    const logs = activeSession?.logs ?? EMPTY_LOGS;
     const agentResponses = activeSession?.agentResponses ?? {};
     const pipelineStatus = activeSession?.pipelineStatus ?? 'idle';
     const jobId = activeSession?.jobId ?? null;
@@ -226,7 +227,7 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
         setInspectorTab('response');
     }, [selectAgent]);
 
-    const [renderTime, setRenderTime] = useState(Date.now());
+    const [renderTime, setRenderTime] = useState(() => Date.now());
     useEffect(() => {
         const timer = setInterval(() => setRenderTime(Date.now()), 1000);
         return () => clearInterval(timer);

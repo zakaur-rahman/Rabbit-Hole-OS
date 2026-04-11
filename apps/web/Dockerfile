@@ -2,9 +2,15 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Build-time args for NEXT_PUBLIC env vars (baked into JS bundle)
+# Disable Next.js telemetry during build (faster, no network calls)
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build-time args for NEXT_PUBLIC env vars (baked into JS bundle at build time).
+# NEXT_PUBLIC_GOOGLE_CLIENT_ID has NO default — it MUST be passed via:
+#   docker build --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=<value>
+# In CI this comes from a GitHub Actions repository secret.
 ARG NEXT_PUBLIC_API_URL=https://api.cognode.tech/api/v1
-ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=792621487150-e9gs7qqoaog8itci4omijccgakdrvuk3.apps.googleusercontent.com
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ARG NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://cognode.tech/auth/google
 
 # Make ARGs available as ENV during build
@@ -13,7 +19,8 @@ ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_PUBLIC_OAUTH_REDIRECT_URI=$NEXT_PUBLIC_OAUTH_REDIRECT_URI
 
 # Copy workspace structure for npm ci
-COPY package.json package-lock.json ./
+# turbo.json is needed so Turbo can resolve the workspace structure
+COPY package.json package-lock.json turbo.json ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY apps/desktop/package.json ./apps/desktop/package.json
