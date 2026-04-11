@@ -127,13 +127,15 @@ jobs:
     steps:
       - name: Trigger Render deploy — Web
         run: |
-          curl --fail -X POST \
-            "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-web:latest"
+          WEBHOOK="${{ secrets.RENDER_WEB_DEPLOY_HOOK }}"
+          IMAGE_URL="ghcr.io/${{ github.repository_owner }}/cognode-web:latest"
+          curl --fail -X POST "${WEBHOOK}?imgURL=${IMAGE_URL}"
 
       - name: Trigger Render deploy — Backend
         run: |
-          curl --fail -X POST \
-            "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-backend:latest"
+          WEBHOOK="${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}"
+          IMAGE_URL="ghcr.io/${{ github.repository_owner }}/cognode-backend:latest"
+          curl --fail -X POST "${WEBHOOK}?imgURL=${IMAGE_URL}"
 
       - name: Summary
         run: |
