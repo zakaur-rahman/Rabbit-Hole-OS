@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.6.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.5.0...v1.6.0) (2026-04-03)
+
+
+### Features
+
+* implement custom Titlebar component with integrated CognodeLogo and navigation controls ([d80bec1](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/d80bec1041062de70e8513338661ad695be4f537))
+* Synthesis Observability Parity ([#42](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/42)) ([6460600](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/64606001190b1747b4b575d5601e2f7d762bdbf3))
+* **synthesis:** Implement Multi-Session Log History System ([#43](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/43)) ([ca5c50a](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/ca5c50ad9122cd583c46f55dd923dae27c8d9307))
+* **theme:** implement high-fidelity dark mode toggle with ripple animation ([#29](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/29)) ([b9e915e](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/b9e915e5c8e92c19aa0f0432e07d05eb279b4378))
+* **ui:** implement adaptive theme across dashboard ([#30](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/30)) ([0a4e288](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/0a4e288c5f284f8881b1e8d7368230c7548f6021))
+* **ui:** Unify node hover effects ([#38](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/38)) ([2d4247e](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/2d4247e3e4e2b9a6ff2e2e7fb77e46c45a177233))
+* **web:** premium dashboard redesign and cursor refinement ([#27](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/27)) ([4814816](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/4814816fdd819d89dd9a59ae2bc79b41b0a5a41f))
+* **web:** premium ink-and-paper redesign with elite motion UI ([#23](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/23)) ([54371e4](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/54371e4d3fb0a11f8a6100dddbfe91c6773ad147))
+* **web:** update Cognode branding with new SVG logo and standardized components ([9c58307](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/9c58307119056532d0b573d292ce6472b6e480fa))
+
+
+### Bug Fixes
+
+* **api:** handle empty source_urls avoiding KeyError during synthesis streaming ([#39](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/39)) ([c011043](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/c0110438c1845399fe9576f07b6739f21cef6687))
+* **api:** resolve synthesis crashes and improve writer agent adherence ([#40](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/40)) ([b6d78f7](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/b6d78f7dee64deaa17a5a2daa408df9acce887f3))
+* **backend:** add desktop app://- protocol to allowed CORS origins for oauth exchange ([#18](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/18)) ([d4b81dd](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/d4b81dd6f01fc68c856592e489e6c75c772c2f11))
+* **frontend:** use absolute https url for react-pdf worker to prevent app:// protocol resolution errors ([#19](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/19)) ([e308ac1](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/e308ac16a56f4d23d1eb2b76f49adcd694fe680b))
+* **web:** restore ink-and-paper light theme and stabilize typography ([#24](https://github.com/zakaur-rahman/Rabbit-Hole-OS/issues/24)) ([44c92d8](https://github.com/zakaur-rahman/Rabbit-Hole-OS/commit/44c92d8775b47b365263579404cef179c95349a0))
+
 ## [1.5.0](https://github.com/zakaur-rahman/Rabbit-Hole-OS/compare/v1.4.0...v1.5.0) (2026-03-13)
 
 
