@@ -43,7 +43,7 @@ async def create_synthesis(
     """
     node_count = len(request.node_ids or []) + len(request.context_items or [])
     print(f"Received synthesis request for {node_count} nodes")
-    
+
     if not request.node_ids and not request.context_items:
         raise HTTPException(status_code=400, detail="No nodes selected")
 

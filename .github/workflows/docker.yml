@@ -1,61 +1,143 @@
-name: Build & Push Docker Image (Reusable)
+name: Docker Build & Deploy
 
+# Runs only on push to main (after PR is merged) or manual trigger.
+# Never runs on PRs — Docker builds are expensive.
 on:
-  workflow_call:
-    inputs:
-      app_name:
-        description: 'Name of the app to build (e.g., web, backend)'
-        required: true
-        type: string
-      image_name:
-        description: 'Target image name without registry (e.g., cognode/web)'
-        required: true
-        type: string
-    secrets:
-      registry_username:
-        required: true
-      registry_token:
-        required: true
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "apps/backend/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+concurrency:
+  group: docker-deploy-${{ github.ref }}
+  cancel-in-progress: false  # Never cancel in-progress deploys
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
-  build_and_push:
+  # -----------------------------------------------------------------------
+  # Job 1: Build & push web image to GHCR
+  # -----------------------------------------------------------------------
+  docker-web:
+    name: Docker — Web (Next.js)
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      contents: read
+      packages: write
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.registry_username }}
-          password: ${{ secrets.registry_token }}
-
-      - name: Extract Metadata (Tags, Labels)
-        id: meta
+      - name: Extract metadata for web image
+        id: meta-web
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ inputs.image_name }}
+          images: ${{ env.IMAGE_PREFIX }}/cognode-web
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,format=long
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-,format=short
 
-      - name: Build and push Docker image
+      - name: Build & push web image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/${{ inputs.app_name }}/Dockerfile
+          file: apps/web/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ inputs.app_name }}
-          cache-to: type=gha,mode=max,scope=${{ inputs.app_name }}
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          # GitHub Actions cache — free, fast layer caching
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.cognode.tech/api/v1
+            NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://cognode.tech/auth/google
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+
+  # -----------------------------------------------------------------------
+  # Job 2: Build & push backend image to GHCR
+  # -----------------------------------------------------------------------
+  docker-backend:
+    name: Docker — Backend (FastAPI)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata for backend image
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/cognode-backend
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+  # -----------------------------------------------------------------------
+  # Job 3: Trigger Render deploys after BOTH images are pushed
+  # -----------------------------------------------------------------------
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: [docker-web, docker-backend]
+
+    steps:
+      - name: Trigger Render deploy — Web
+        run: |
+          curl --fail -X POST \
+            "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-web:latest"
+
+      - name: Trigger Render deploy — Backend
+        run: |
+          curl --fail -X POST \
+            "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-backend:latest"
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Deploy triggered" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web**: ghcr.io/${{ github.repository_owner }}/cognode-web:latest" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend**: ghcr.io/${{ github.repository_owner }}/cognode-backend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

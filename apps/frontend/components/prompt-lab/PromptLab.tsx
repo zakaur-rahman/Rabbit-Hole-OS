@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import clsx from 'clsx';
+
 
 export function PromptLab() {
-  const [prompt, setPrompt] = useState('You are an expert AI research scientist.\\n\\nExtract the core entities and their relationships from the provided document...\\n\\nOutput as strictly structured JSON.');
-  const [systemInstructions, setSystemInstructions] = useState('Current Model: gemini-2.5-flash-lite');
+  const [prompt, setPrompt] = useState('You are an expert AI research scientist.\n\nExtract the core entities and their relationships from the provided document...\n\nOutput as strictly structured JSON.');
 
   return (
     <div style={{ display: 'flex', width: '100%', height: '100%', background: 'var(--bg)' }}>

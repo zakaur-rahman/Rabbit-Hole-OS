@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Terminal, Clock, Edit2, Check } from 'lucide-react';
+import { X, Terminal } from 'lucide-react';
 import { useSynthesisMonitorStore, type LogSession } from '@/store/synthesis-monitor.store';
 
 const C = {

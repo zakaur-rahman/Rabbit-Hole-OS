@@ -26,7 +26,7 @@ import LatexCodeEditor from '../ui/LatexCodeEditor';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layout, X, Save, Zap, Download, Check,
-  RotateCcw, Trash2, AlertCircle, AlertTriangle,
+  RotateCcw, AlertCircle, AlertTriangle,
   Type, List as ListIcon, Quote as QuoteIcon,
   Book, FileText, File as FileIcon,
 } from 'lucide-react';
@@ -442,7 +442,7 @@ interface ASTEditorModalProps {
 }
 
 export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
-  isOpen, onClose, initialAST, onSave, onCompile,
+  isOpen, onClose, initialAST, onSave,
 }) => {
   const {
     document, selectedSectionId, isDirty,
@@ -587,7 +587,7 @@ export const ASTEditorModal: React.FC<ASTEditorModalProps> = ({
       }}
       onClick={handleClose}
     >
-      {/* global keyframes */}
+      {/* app-wide animations */}
       <style>{`
         @keyframes cog-rspin { to { transform: rotate(360deg); } }
         @keyframes cog-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }

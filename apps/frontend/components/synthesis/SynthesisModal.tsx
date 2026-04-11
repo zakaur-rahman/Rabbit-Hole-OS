@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGraphStore } from '@/store/graph.store';
 import { synthesisApi } from '@/lib/api';
 import { Node } from 'reactflow';
-import { Sparkles, Loader2, Target, Link2, Search, Share2, AlertTriangle, RotateCcw, X, Copy, Check, FileDown, ArrowRight } from 'lucide-react';
+import { Sparkles, Loader2, Target, Link2, Search, Share2, AlertTriangle, RotateCcw, Copy, Check, FileDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './synthesis-theme.css';
 

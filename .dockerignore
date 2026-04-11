@@ -1,9 +1,19 @@
 # Ignore everything not needed for Docker builds
+
+# Version control
 .git
 .github
+
+# Python virtualenv
 .venv
-.turbo
 __pycache__
+*.pyc
+*.pyo
+
+# Turbo cache (rebuilt inside container)
+.turbo
+
+# Spec files and scripts not needed in images
 *.spec
 docs
 scripts
@@ -13,17 +23,40 @@ verify_*.py
 **/.env
 **/.env.*
 **/.env.local
+!**/.env.example
 
-# Desktop source not needed, but keep package.json for workspace resolution
+# Desktop source not needed — keep package.json for workspace resolution
 apps/desktop
 !apps/desktop/package.json
 
-# Build artifacts
+# Electron build artefacts
+apps/desktop/dist
+apps/desktop/build
+
+# Build artefacts (will be re-built inside container)
 apps/web/.next
 apps/frontend/.next
 apps/backend/dist
+apps/backend/build
 **/node_modules
+
+# Debug / lint output artefacts (never in images)
+**/*.log
+**/lint*.txt
+**/lint*.json
+**/lint*.log
+**/full_lint*.txt
+**/tsc*.txt
+**/tsc*.log
+
+# Test coverage
+**/coverage
 
 # Misc
 *.md
 .gitignore
+.actrc
+.secrets
+.secrets.example
+*.heapsnapshot
+*.map

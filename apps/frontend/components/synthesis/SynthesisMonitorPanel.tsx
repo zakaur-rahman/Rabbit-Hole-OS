@@ -10,7 +10,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import {
     X, Play, Pause, Clock, Cpu, Zap,
     ChevronRight, Terminal, FileText, Code2,
@@ -73,7 +73,7 @@ interface AgentItemProps {
     onClick: () => void;
 }
 
-const AgentItem = React.memo(({ agentId, name, role, status, executionTimeMs, model, tokenUsage, isSelected, onClick }: AgentItemProps) => {
+const AgentItem = React.memo(({ name, role, status, executionTimeMs, model, tokenUsage, isSelected, onClick }: AgentItemProps) => {
     const timeStr = executionTimeMs !== null ? `${(executionTimeMs / 1000).toFixed(1)}s` : '—';
 
     return (
@@ -187,6 +187,8 @@ const CognodeLogo = ({ size = 20 }: { size?: number }) => (
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
+const EMPTY_LOGS: LogEntry[] = [];
+
 interface SynthesisMonitorPanelProps {
     isOpen: boolean;
     onClose: () => void;
@@ -200,11 +202,9 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
     const activeSession = activeSessionId ? sessions[activeSessionId] : null;
     
     const agents = activeSession?.agents ?? {};
-    const logs = activeSession?.logs ?? [];
+    const logs = activeSession?.logs ?? EMPTY_LOGS;
     const agentResponses = activeSession?.agentResponses ?? {};
     const pipelineStatus = activeSession?.pipelineStatus ?? 'idle';
-    const progress = activeSession?.progress ?? 0;
-    const elapsedMs = activeSession?.elapsedMs ?? 0;
     const jobId = activeSession?.jobId ?? null;
 
     const selectedAgentId = useSynthesisMonitorStore(s => s.selectedAgentId);
@@ -227,7 +227,11 @@ export default function SynthesisMonitorPanel({ isOpen, onClose }: SynthesisMoni
         setInspectorTab('response');
     }, [selectAgent]);
 
-    const renderTime = Date.now();
+    const [renderTime, setRenderTime] = useState(() => Date.now());
+    useEffect(() => {
+        const timer = setInterval(() => setRenderTime(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     if (!isOpen) return null;
 

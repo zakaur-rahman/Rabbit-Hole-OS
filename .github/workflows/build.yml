@@ -1,122 +1,83 @@
-name: Build and Test (Reusable)
+name: Build Validation
 
 on:
-  workflow_call:
-    inputs:
-      filter:
-        description: 'Turbo filter string (e.g., [HEAD^1])'
-        required: false
-        type: string
-        default: '...HEAD^1'
-      python-version:
-        description: 'Python Version'
-        required: false
-        type: string
-        default: '3.11'
-      node-version:
-        description: 'Node Version'
-        required: false
-        type: string
-        default: '20'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_DAEMON: "0"
+  TURBO_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+  FORCE_COLOR: "1"
 
 jobs:
-  lint-and-typecheck:
-    name: Lint & Typecheck
+  typecheck:
+    name: TypeScript Typecheck
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    if: github.event.pull_request.draft == false
 
-      - name: Setup Node.js
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'npm'
+          node-version: 20
+          cache: "npm"
 
-      - name: Install Node Dependencies
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-tc-${{ runner.os }}-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-tc-${{ runner.os }}-${{ hashFiles('turbo.json') }}-
+            turbo-tc-${{ runner.os }}-
+
+      - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ inputs.python-version }}
-          cache: 'pip'
-
-      - name: Install Python Dependencies
-        run: pip install -r apps/backend/requirements.txt
-
-      - name: Run Linters & Typecheck (Turbo)
-        run: |
-          if [ -n "${{ inputs.filter }}" ]; then
-            npx turbo run lint typecheck --filter="${{ inputs.filter }}"
-          else
-            npx turbo run lint typecheck
-          fi
-
-  test:
-    name: Unit & Integration Tests
-    runs-on: ubuntu-latest
-    needs: lint-and-typecheck
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-
-      - name: Install Node Dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ inputs.python-version }}
-          cache: 'pip'
-
-      - name: Install Python Dependencies
-        run: pip install -r apps/backend/requirements.txt
-        
-      # Example background services for integration tests
-      # - name: Start PostgreSQL
-      #   uses: ankane/setup-postgres@v1
-      # - name: Start Redis 
-      #   uses: shogo82148/actions-setup-redis@v1
-
-      - name: Run Tests (Turbo)
-        run: |
-          if [ -n "${{ inputs.filter }}" ]; then
-            npx turbo run test --filter="${{ inputs.filter }}"
-          else
-            npx turbo run test
-          fi
+      - name: Typecheck
+        run: npx turbo run typecheck --no-daemon --cache-dir=.turbo
 
   build:
-    name: Build Artifacts 
+    name: Production Build
     runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    needs: typecheck
+    if: github.event.pull_request.draft == false
 
-      - name: Setup Node.js
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'npm'
+          node-version: 20
+          cache: "npm"
 
-      - name: Install Dependencies
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-build-${{ runner.os }}-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-build-${{ runner.os }}-${{ hashFiles('turbo.json') }}-
+            turbo-build-${{ runner.os }}-
+
+      - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Build (Turbo)
-        run: |
-          if [ -n "${{ inputs.filter }}" ]; then
-            npx turbo run build --filter="${{ inputs.filter }}"
-          else
-            npx turbo run build
-          fi
+      - name: Build
+        run: npx turbo run build --no-daemon --cache-dir=.turbo

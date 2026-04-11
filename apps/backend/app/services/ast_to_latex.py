@@ -109,7 +109,7 @@ def convert_figure(block: FigureBlock) -> str:
     if local_path:
         if local_path.startswith("file://"):
             local_path = urllib.parse.unquote(local_path[7:])
-        
+
         # Check if local absolute path exists
         if os.path.isfile(local_path):
             is_valid_file = True

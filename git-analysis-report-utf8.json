@@ -1,0 +1,172 @@
+﻿{
+    "Branches":  [
+                     {
+                         "Branch":  "feat/dark-mode",
+                         "Commits":  "78076f4 feat(theme): implement high-fidelity dark mode toggle with ripple animation",
+                         "DiffStat":  "8 files changed, 277 insertions(+), 18 deletions(-)",
+                         "HasConflicts":  true,
+                         "AheadMain":  1,
+                         "BehindMain":  17
+                     },
+                     {
+                         "Branch":  "feat/dashboard-premium-redesign",
+                         "Commits":  "fadde6a feat(web): premium dashboard redesign and cursor refinement",
+                         "DiffStat":  "35 files changed, 1207 insertions(+), 873 deletions(-)",
+                         "HasConflicts":  true,
+                         "AheadMain":  1,
+                         "BehindMain":  18
+                     },
+                     {
+                         "Branch":  "feature/cicd-optimization",
+                         "Commits":  "34421ec refactor(ci): optimize CI/CD pipeline for cost efficiency and local testing",
+                         "DiffStat":  "16 files changed, 759 insertions(+), 252 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  1,
+                         "BehindMain":  0
+                     },
+                     {
+                         "Branch":  "feature/cognode-ultimate-interface",
+                         "Commits":  [
+                                         "f823696 feat(synthesis): finalize redesign. cut-over to background monitor and notification system. remove legacy sync pipeline components.",
+                                         "314490f merge(synthesis): resolve conflict in useSynthesis.ts and merge main",
+                                         "0cd0cf7 chore(config): instantiate root pyre bounds for IDE",
+                                         "1352f37 refactor(frontend): strict types implementation in synthesis stores",
+                                         "78bd355 feat(observability): instrument memory and recovery agents with data telemetry",
+                                         "addcc1a fix(backend): resolve IndentationError in background worker",
+                                         "dd8dba0 feat(synthesis): comprehensive observability pipeline and workspace integration",
+                                         "919dafd fix(synthesis): solve 404 node error by sending context_items from frontend"
+                                     ],
+                         "DiffStat":  "25 files changed, 1426 insertions(+), 1781 deletions(-)",
+                         "HasConflicts":  true,
+                         "AheadMain":  8,
+                         "BehindMain":  3
+                     },
+                     {
+                         "Branch":  "feature/dashboard-theme",
+                         "Commits":  [
+                                         "5e27b96 feat(auth): redesign auth loader animation",
+                                         "0c655bc feat(ui): implement adaptive theme across dashboard"
+                                     ],
+                         "DiffStat":  "20 files changed, 497 insertions(+), 146 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  2,
+                         "BehindMain":  15
+                     },
+                     {
+                         "Branch":  "feature/devops-cicd-overhaul",
+                         "Commits":  [
+                                         "0ae04e6 feat/fix(ci-frontend): consolidate github actions and resolve strict UI typescript lint errors",
+                                         "34421ec refactor(ci): optimize CI/CD pipeline for cost efficiency and local testing"
+                                     ],
+                         "DiffStat":  "27 files changed, 590 insertions(+), 618 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  2,
+                         "BehindMain":  0
+                     },
+                     {
+                         "Branch":  "feature/fix-node-resizing",
+                         "Commits":  [
+                                         "51854db style(nodes): unify hover effects across all nodes to match ArticleNode pattern",
+                                         "440eb60 feat/fix(nodes): implement node resizing, scroll handling, and zoom controls"
+                                     ],
+                         "DiffStat":  "11 files changed, 202 insertions(+), 58 deletions(-)",
+                         "HasConflicts":  true,
+                         "AheadMain":  2,
+                         "BehindMain":  8
+                     },
+                     {
+                         "Branch":  "feature/swap-theme-icons",
+                         "Commits":  [
+                                         "50eae32 feat(ui): swap theme toggle icons and fix hydration lint error",
+                                         "78076f4 feat(theme): implement high-fidelity dark mode toggle with ripple animation"
+                                     ],
+                         "DiffStat":  "8 files changed, 282 insertions(+), 18 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  2,
+                         "BehindMain":  17
+                     },
+                     {
+                         "Branch":  "feature/synthesis-audit-improvements",
+                         "Commits":  [
+                                         "a43c4d1 feat: add LatexCodeEditor component",
+                                         "99f3a0f feat(synthesis): premium Cognode redesign and architectural stabilization",
+                                         "fa4ba26 feat: Add Google authentication page and update TypeScript build info.",
+                                         "483ccac feat(synthesis): audit and improve synthesis feature"
+                                     ],
+                         "DiffStat":  "11 files changed, 1865 insertions(+), 1389 deletions(-)",
+                         "HasConflicts":  true,
+                         "AheadMain":  4,
+                         "BehindMain":  13
+                     },
+                     {
+                         "Branch":  "feature/synthesis-log-history",
+                         "Commits":  [
+                                         "ee2a140 feat(deploy): add frontend canvas deployment to Render and CI/CD",
+                                         "ea9e2de feat(synthesis): integrate log tabs and resolve agent list TypeError",
+                                         "6d29643 feat(synthesis): implement multi-session log history with persistence"
+                                     ],
+                         "DiffStat":  "10 files changed, 786 insertions(+), 487 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  3,
+                         "BehindMain":  1
+                     },
+                     {
+                         "Branch":  "feature/synthesis-pipeline-optimization",
+                         "Commits":  [
+                                         "0ae04e6 feat/fix(ci-frontend): consolidate github actions and resolve strict UI typescript lint errors",
+                                         "34421ec refactor(ci): optimize CI/CD pipeline for cost efficiency and local testing"
+                                     ],
+                         "DiffStat":  "27 files changed, 590 insertions(+), 618 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  2,
+                         "BehindMain":  0
+                     },
+                     {
+                         "Branch":  "feature/unify-hover-effects",
+                         "Commits":  [
+                                         "19c17f5 feat(ui): unify node hover effects across canvas nodes",
+                                         "51854db style(nodes): unify hover effects across all nodes to match ArticleNode pattern",
+                                         "440eb60 feat/fix(nodes): implement node resizing, scroll handling, and zoom controls"
+                                     ],
+                         "DiffStat":  "11 files changed, 243 insertions(+), 79 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  3,
+                         "BehindMain":  8
+                     },
+                     {
+                         "Branch":  "fix/synthesis-keyerror",
+                         "Commits":  "e359b74 fix(api): handle empty source_urls avoiding KeyError during synthesis streaming",
+                         "DiffStat":  "1 file changed, 3 insertions(+), 3 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  1,
+                         "BehindMain":  7
+                     },
+                     {
+                         "Branch":  "fix/synthesis-pipeline-bugs",
+                         "Commits":  "9c04793 fix(api): resolve synthesis crashes and improve writer agent adherence",
+                         "DiffStat":  "2 files changed, 9 insertions(+), 3 deletions(-)",
+                         "HasConflicts":  false,
+                         "AheadMain":  1,
+                         "BehindMain":  5
+                     },
+                     {
+                         "Branch":  "fix/ui-regression-stabilization",
+                         "Commits":  [
+                                         "99045b0 style(web): center changelog layout for better visual balance",
+                                         "13e0117 fix(web): improve changelog parsing and render markdown links",
+                                         "f29bea4 fix(web): implement local CHANGELOG.md fallback for changelog page",
+                                         "3881d32 style(web): increase cursor responsiveness by tuning spring physics",
+                                         "edb039d feat(web): implement premium adaptive cursor system with smooth physics and smart hovers",
+                                         "1c8773f fix(web): fix adaptive cursor blending by resolving stacking context isolation",
+                                         "83eb6f3 fix(web): resolve lint in AdaptiveCursor.tsx and finalize blending fix",
+                                         "b1a57c1 fix(web): ensure adaptive cursor blending by moving to layout end and adding GPU acceleration",
+                                         "d988bad feat(web): implement adaptive custom cursor with mix-blend-mode for automatic inversion",
+                                         "fa04f0d fix(web): restore ink-and-paper light theme and stabilize typography"
+                                     ],
+                         "DiffStat":  "7 files changed, 301 insertions(+), 115 deletions(-)",
+                         "HasConflicts":  true,
+                         "AheadMain":  10,
+                         "BehindMain":  22
+                     }
+                 ]
+}

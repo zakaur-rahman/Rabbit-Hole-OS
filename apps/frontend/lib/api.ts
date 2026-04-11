@@ -251,7 +251,7 @@ export const synthesisApi = {
       data?: {
         prompt?: string;
         response?: string;
-        json?: any;
+        json?: unknown;
       };
     }) => void,
     whiteboardId?: string

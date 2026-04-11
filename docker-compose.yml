@@ -1,0 +1,137 @@
+# =============================================================================
+# docker-compose.yml — Local development stack for Rabbit-Hole-OS
+#
+# Services:
+#   redis    — Redis 7 (required by synthesis worker & backend)
+#   backend  — FastAPI app (auto-reload on code changes)
+#   web      — Next.js marketing/dashboard site (hot-reload)
+#   frontend — Next.js Electron renderer (hot-reload)
+#
+# Usage:
+#   docker compose up                    # Start all services
+#   docker compose up backend redis      # Start only backend + redis
+#   docker compose up web                # Start only web dashboard
+#   docker compose --profile dev up      # Start with dev overrides
+#   docker compose down                  # Stop all
+#   docker compose down -v               # Stop and remove volumes
+#
+# Note: The frontend (Electron app) is best run natively on Windows
+# with `npm run dev:frontend`. The web and backend services are
+# the primary Docker targets.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Redis — message broker for synthesis worker
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: cognode-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - cognode-net
+
+  # ---------------------------------------------------------------------------
+  # Backend — FastAPI + Uvicorn with hot-reload
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: cognode-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Override with a .env.local file at repo root (see .secrets.example)
+      - DATABASE_URL=${DATABASE_URL:-}
+      - REDIS_URL=redis://redis:6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-changeme-local-dev-only}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3001,http://localhost:3000}
+      - PORT=8000
+    volumes:
+      # Mount source for hot-reload (uvicorn --reload watches this)
+      - ./apps/backend:/app:delegated
+      # Persist uploads between restarts
+      - backend-uploads:/app/static/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    # Override the production CMD with a dev server
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - cognode-net
+
+  # ---------------------------------------------------------------------------
+  # Web — Next.js dashboard / marketing site with hot-reload
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: builder          # Use the builder stage for dev (has source + devDeps)
+    container_name: cognode-web
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+      - NEXT_PUBLIC_OAUTH_REDIRECT_URI=${NEXT_PUBLIC_OAUTH_REDIRECT_URI:-http://localhost:3001/auth/google}
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3001
+    volumes:
+      # Mount web source for hot-reload (Next.js HMR watches this)
+      - ./apps/web:/app/apps/web:delegated
+      # Persist .next cache between restarts — critical for fast rebuilds
+      - web-next-cache:/app/apps/web/.next
+      # Prevent host node_modules from overriding container's
+      - /app/node_modules
+      - /app/apps/web/node_modules
+    depends_on:
+      - backend
+    # Override to run `next dev` instead of the production server
+    command: sh -c "cd /app/apps/web && npm run dev"
+    networks:
+      - cognode-net
+
+# ---------------------------------------------------------------------------
+# Named volumes
+# ---------------------------------------------------------------------------
+volumes:
+  redis-data:
+    name: cognode-redis-data
+  backend-uploads:
+    name: cognode-backend-uploads
+  web-next-cache:
+    name: cognode-web-next-cache
+
+# ---------------------------------------------------------------------------
+# Networks
+# ---------------------------------------------------------------------------
+networks:
+  cognode-net:
+    name: cognode-network
+    driver: bridge

@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { setTokens } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
-import { Logo } from '@/components/layout/Logo';
 import { NodeCanvas } from '@/components/landing/NodeCanvas';
 import { AuthLoaderAnimation } from '@/components/auth/AuthLoaderAnimation';
 

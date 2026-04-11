@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { DashboardCard } from './DashboardCard';
-import { motion } from 'framer-motion';
 import { Folder, Clock, Database, Trash2, RefreshCw, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

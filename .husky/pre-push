@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+# .husky/pre-push — Windows-aware pre-push hook
+#
+# On native Windows Git (no WSL), calling `bash` may fail if Git Bash is not
+# on PATH. This hook detects the shell environment and calls the appropriate
+# script:
+#   - MINGW/MSYS (Git Bash) or WSL → bash scripts/ci-local.sh --lint-only
+#   - Native Windows (no uname)    → PowerShell scripts/ci-local.ps1 -LintOnly
+#
+# Only --lint-only is run on pre-push (fast, ~30-60s) to avoid blocking
+# developers. Full build + test + Docker always runs in GitHub Actions CI.
+
+OS=$(uname -s 2>/dev/null || echo "Windows")
+
+case "$OS" in
+    MINGW* | MSYS* | CYGWIN*)
+        # Git Bash on Windows — bash is available
+        bash scripts/ci-local.sh --lint-only
+        ;;
+    Windows)
+        # Native Windows — use PowerShell
+        powershell.exe -ExecutionPolicy Bypass -NonInteractive \
+            -File scripts/ci-local.ps1 -LintOnly
+        ;;
+    *)
+        # Linux / macOS / WSL
+        bash scripts/ci-local.sh --lint-only
+        ;;
+esac

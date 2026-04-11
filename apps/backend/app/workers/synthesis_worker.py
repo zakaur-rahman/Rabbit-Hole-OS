@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 from typing import Optional
-from arq import create_pool
 from arq.connections import RedisSettings
 from sqlalchemy import select
 
@@ -160,7 +159,7 @@ async def writer_task(ctx, job_id: str):
                 job.metadata_["writer_completed_at"] = datetime.utcnow().isoformat()
 
                 await db.commit()
-                
+
                 agent_data = {
                     "prompt": response.prompt,
                     "response": response.raw_response,
@@ -206,7 +205,7 @@ async def reviewer_task(ctx, job_id: str):
                 job = (await db.execute(select(ResearchJob).where(ResearchJob.id == job_id))).scalar_one()
                 job.output_ast = response.data
                 await db.commit()
-                
+
                 agent_data = {
                     "prompt": response.prompt,
                     "response": response.raw_response,
