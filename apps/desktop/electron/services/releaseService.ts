@@ -46,11 +46,18 @@ export class ReleaseService {
 
       if (!targetRelease) return null;
 
-      // Extract the correct asset (Windows .exe installer)
-      const asset = targetRelease.assets.find(a => a.name.endsWith('.exe'));
+      // Identify the correct asset for the current platform
+      const isWin = process.platform === 'win32';
+      const isMac = process.platform === 'darwin';
+      
+      const asset = targetRelease.assets.find(a => {
+        if (isWin) return a.name.endsWith('.exe');
+        if (isMac) return a.name.endsWith('.dmg') || a.name.endsWith('.zip');
+        return false;
+      });
 
       if (!asset) {
-        console.warn(`[ReleaseService] No compatible Windows asset found for release ${targetRelease.tag_name}`);
+        console.warn(`[ReleaseService] No compatible ${process.platform} asset found for release ${targetRelease.tag_name}`);
         return null;
       }
 
@@ -65,7 +72,8 @@ export class ReleaseService {
         downloadUrl: asset.browser_download_url,
         releaseDate: targetRelease.published_at,
         channel,
-        size: asset.size
+        size: asset.size,
+        assetName: asset.name
       };
     } catch (error) {
       console.error('[ReleaseService] Failed to fetch latest release:', error);
