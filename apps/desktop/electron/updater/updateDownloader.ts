@@ -29,7 +29,8 @@ export class UpdateDownloader extends EventEmitter {
   }
 
   public async download(updateInfo: UpdateInfo): Promise<string> {
-    const fileName = `cognode-setup-v${updateInfo.version}.exe`;
+    const extension = updateInfo.downloadUrl.split('.').pop() || (process.platform === 'win32' ? 'exe' : 'zip');
+    const fileName = updateInfo.assetName || `cognode-setup-v${updateInfo.version}.${extension}`;
     this.targetPath = path.join(this.baseDir, fileName);
     this.currentUrl = updateInfo.downloadUrl;
     this.totalBytes = updateInfo.size || 0;
