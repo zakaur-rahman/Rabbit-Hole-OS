@@ -7,6 +7,7 @@ export interface UpdateInfo {
   releaseDate: string;
   channel: UpdateChannel;
   size?: number;
+  assetName?: string;
 }
 
 export interface DownloadProgress {
