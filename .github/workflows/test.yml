@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Setup Python
@@ -46,16 +46,25 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: turbo-test-${{ runner.os }}-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          key: turbo-test-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-${{ github.sha }}
           restore-keys: |
-            turbo-test-${{ runner.os }}-${{ hashFiles('turbo.json') }}-
+            turbo-test-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-
             turbo-test-${{ runner.os }}-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install Node dependencies
         run: npm ci --legacy-peer-deps
 
       - name: Install Python dependencies
-        run: pip install -r apps/backend/requirements.txt
+        run: |
+          if [ -f apps/backend/requirements.txt ]; then
+            pip install -r apps/backend/requirements.txt
+          fi
 
       - name: Run tests
         run: npx turbo run test --no-daemon --cache-dir=.turbo
