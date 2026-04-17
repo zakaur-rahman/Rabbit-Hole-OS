@@ -1,0 +1,211 @@
+name: Desktop CI & Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+    paths:
+      - "apps/desktop/**"
+      - "apps/backend/**"
+      - "apps/frontend/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Job 1: Build the frontend assets once
+  # -----------------------------------------------------------------------
+  build-frontend:
+    name: Build Frontend Assets
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-frontend-${{ runner.os }}-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-frontend-${{ runner.os }}-${{ hashFiles('turbo.json') }}-
+            turbo-frontend-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Frontend
+        run: npx turbo run build --filter=frontend --cache-dir=.turbo
+
+      - name: Upload Frontend Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-out
+          path: apps/frontend/out/
+
+  # -----------------------------------------------------------------------
+  # Job 2: Build Desktop artifacts (with Pyinstaller Backend)
+  # -----------------------------------------------------------------------
+  build-desktop:
+    name: Build Desktop (${{ matrix.os }})
+    needs: build-frontend
+    if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: apps/backend/requirements.txt
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-desktop-${{ runner.os }}-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-desktop-${{ runner.os }}-${{ hashFiles('turbo.json') }}-
+            turbo-desktop-${{ runner.os }}-
+
+      - name: Install Node Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Download Frontend Build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-out
+          path: apps/frontend/out
+
+      - name: Install Python Dependencies & PyInstaller
+        run: |
+          pip install -r apps/backend/requirements.txt
+          pip install pyinstaller
+
+      - name: Build Backend (PyInstaller)
+        run: |
+          cd apps/backend
+          python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec
+
+      - name: Build Desktop Artifacts (Electron Builder)
+        run: npx turbo run dist --filter=desktop --no-daemon --cache-dir=.turbo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_SKIP_SIGNING: true 
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-binaries-${{ matrix.platform }}
+          path: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.zip
+            apps/desktop/dist/*.blockmap
+
+  # -----------------------------------------------------------------------
+  # Job 3: Create GitHub Release and attach binaries (Only on tags)
+  # -----------------------------------------------------------------------
+  release:
+    name: Create GitHub Release
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-binaries-win
+          path: dist-win
+
+      - name: Download MacOS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-binaries-mac
+          path: dist-mac
+
+      - name: Build Changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          configuration: |
+            {
+              "categories": [
+                {
+                  "title": "## 🚀 Features",
+                  "labels": ["feat", "feature"]
+                },
+                {
+                  "title": "## 🐛 Fixes",
+                  "labels": ["fix", "bug"]
+                },
+                {
+                  "title": "## 🧪 Testing",
+                  "labels": ["test"]
+                },
+                {
+                  "title": "## 🧱 Infrastructure",
+                  "labels": ["ci", "build"]
+                },
+                {
+                  "title": "## 📝 Documentation",
+                  "labels": ["docs"]
+                },
+                {
+                  "title": "## ⚙️ Refactoring",
+                  "labels": ["refactor", "perf"]
+                }
+              ],
+              "template": "${{ '{{' }}CHANGELOG${{ '}}' }}\n\n<details>\n<summary><b>Detailed Changes</b></summary>\n\n${{ '{{' }}COMMITS${{ '}}' }}\n</details>",
+              "prerelease": "${{ startsWith(github.ref, 'refs/tags/v') && (contains(github.ref, 'beta') || contains(github.ref, 'alpha') || contains(github.ref, 'nightly')) }}"
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.build_changelog.outputs.changelog }}
+          files: |
+            dist-win/*.exe
+            dist-mac/*.dmg
+            dist-mac/*.zip
