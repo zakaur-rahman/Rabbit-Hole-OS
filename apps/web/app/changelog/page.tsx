@@ -23,9 +23,17 @@ export default async function ChangelogPage({
       ? 'https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/latest'
       : `https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/v${version.replace(/^v/, '')}`;
       
+    const headers: Record<string, string> = { 
+      'User-Agent': 'Cognode/1.0',
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    if (process.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
+    }
+
     const res = await fetch(apiUrl, { 
       next: { revalidate: 3600 },
-      headers: { 'User-Agent': 'Cognode/1.0' } // Good practice for GitHub API
+      headers
     });
     
     if (res.ok) {
@@ -41,7 +49,7 @@ export default async function ChangelogPage({
     } else {
       // API Failed - Try Local Fallback
       if (res.status === 404 && version !== 'latest') {
-        const fbRes = await fetch(`https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/${version.replace(/^v/, '')}`, { next: { revalidate: 3600 }});
+        const fbRes = await fetch(`https://api.github.com/repos/zakaur-rahman/Rabbit-Hole-OS/releases/tags/${version.replace(/^v/, '')}`, { next: { revalidate: 3600 }, headers });
         if (fbRes.ok) {
            const data = await fbRes.json();
            markdown = data.body || 'No release notes provided.';
@@ -57,7 +65,9 @@ export default async function ChangelogPage({
   } catch {
     // FINAL FALLBACK: Read local CHANGELOG.md
     try {
-      const changelogPath = path.join(process.cwd(), '../../CHANGELOG.md');
+      const dockerPath = path.join(process.cwd(), 'CHANGELOG.md');
+      const monorepoPath = path.join(process.cwd(), '../../CHANGELOG.md');
+      const changelogPath = fs.existsSync(dockerPath) ? dockerPath : monorepoPath;
       if (fs.existsSync(changelogPath)) {
         const content = fs.readFileSync(changelogPath, 'utf8');
         // Extract latest version or specific one

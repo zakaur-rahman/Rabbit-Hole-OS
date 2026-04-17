@@ -20,7 +20,7 @@ ENV NEXT_PUBLIC_OAUTH_REDIRECT_URI=$NEXT_PUBLIC_OAUTH_REDIRECT_URI
 
 # Copy workspace structure for npm ci
 # turbo.json is needed so Turbo can resolve the workspace structure
-COPY package.json package-lock.json turbo.json ./
+COPY package.json package-lock.json turbo.json CHANGELOG.md ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY apps/desktop/package.json ./apps/desktop/package.json
@@ -47,8 +47,9 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy Next.js standalone output and static files with correct ownership
+# Copy Next.js standalone output, static files, and changelog with correct ownership
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/CHANGELOG.md ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
