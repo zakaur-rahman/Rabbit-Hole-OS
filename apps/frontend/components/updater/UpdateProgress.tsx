@@ -6,6 +6,7 @@ interface UpdateProgressProps {
   onPause: () => void;
   onResume: () => void;
   onCancel: () => void;
+  onBackground?: () => void;
   isPaused: boolean;
 }
 
@@ -14,6 +15,7 @@ export const UpdateProgress: React.FC<UpdateProgressProps> = ({
   onPause,
   onResume,
   onCancel,
+  onBackground,
   isPaused,
 }) => {
   const formatBytes = (bytes: number) => {
@@ -50,6 +52,14 @@ export const UpdateProgress: React.FC<UpdateProgressProps> = ({
       </div>
 
       <div className="flex justify-end gap-3 mt-4">
+        {onBackground && (
+          <button
+            onClick={onBackground}
+            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            Hide in Background
+          </button>
+        )}
         <button
           onClick={onCancel}
           className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
