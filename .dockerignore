@@ -54,6 +54,7 @@ apps/backend/build
 
 # Misc
 *.md
+!CHANGELOG.md
 .gitignore
 .actrc
 .secrets

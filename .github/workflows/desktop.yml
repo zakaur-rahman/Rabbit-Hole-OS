@@ -121,7 +121,7 @@ jobs:
           python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec
 
       - name: Build Desktop Artifacts (Electron Builder)
-        run: npx turbo run dist --filter=desktop --no-daemon --cache-dir=.turbo
+        run: npx turbo run dist --filter=Cognode --no-daemon --cache-dir=.turbo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_SKIP_SIGNING: true 
