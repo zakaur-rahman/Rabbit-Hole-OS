@@ -126,6 +126,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_SKIP_SIGNING: true 
 
+      - name: Verify Build Artifacts Exist
+        shell: bash
+        run: |
+          if [ ! -d "apps/desktop/dist" ] || [ -z "$(ls -A apps/desktop/dist)" ]; then
+            echo "ERROR: No artifacts found in apps/desktop/dist"
+            exit 1
+          fi
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
