@@ -15,7 +15,7 @@ export const UpdateModal: React.FC = () => {
     // Fetch initial state
     window.electron.updater.getState().then((state) => {
       setUpdateState(state);
-      if (['available', 'downloading', 'downloaded', 'error'].includes(state.status)) {
+      if (['available', 'downloaded', 'error'].includes(state.status)) {
         setIsOpen(true);
       }
     });
@@ -23,7 +23,7 @@ export const UpdateModal: React.FC = () => {
     // Listen for updates
     const unsubscribe = window.electron.updater.onStateChanged((newState) => {
       setUpdateState(newState);
-      if (['available', 'downloading', 'downloaded', 'error'].includes(newState.status)) {
+      if (['available', 'downloaded', 'error'].includes(newState.status)) {
         setIsOpen(true);
       }
     });
@@ -50,8 +50,44 @@ export const UpdateModal: React.FC = () => {
     }
   };
 
-  if (!isOpen || updateState.status === 'idle' || updateState.status === 'checking' || updateState.status === 'up-to-date') {
+  if (updateState.status === 'idle' || updateState.status === 'checking' || updateState.status === 'up-to-date') {
     return null; // Don't show modal during checking phases unless explicitly requested via specific UI button.
+  }
+
+  if (!isOpen) {
+    if (updateState.status === 'downloading') {
+      return (
+        <div className="fixed bottom-6 right-6 z-[100] bg-[#121212] border border-[#2a2a2a] shadow-xl p-4 rounded-xl flex flex-col gap-2 w-80 animate-in slide-in-from-bottom-5">
+           <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-white flex items-center gap-2">
+                <svg className="animate-spin text-blue-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="6" y2="12"></line>
+                  <line x1="18" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                </svg>
+                Downloading Update... {updateState.progress?.percent.toFixed(1)}%
+              </span>
+              <button onClick={() => setIsOpen(true)} className="text-gray-400 hover:text-white transition-colors" title="Maximize">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                   <polyline points="15 3 21 3 21 9"></polyline>
+                   <polyline points="9 21 3 21 3 15"></polyline>
+                   <line x1="21" y1="3" x2="14" y2="10"></line>
+                   <line x1="3" y1="21" x2="10" y2="14"></line>
+                 </svg>
+              </button>
+           </div>
+           <div className="w-full bg-gray-800 rounded-full h-1.5 mt-2 overflow-hidden">
+             <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${Math.max(0, Math.min(100, updateState.progress?.percent || 0))}%` }}></div>
+           </div>
+        </div>
+      );
+    }
+    return null;
   }
 
   return (
@@ -68,18 +104,16 @@ export const UpdateModal: React.FC = () => {
               </p>
             )}
           </div>
-          {updateState.status !== 'downloading' && (
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-white transition-colors p-1"
-            >
-              <span className="sr-only">Close</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          )}
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white transition-colors p-1"
+          >
+            <span className="sr-only">Close</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
 
         {/* Content */}
@@ -109,6 +143,7 @@ export const UpdateModal: React.FC = () => {
               onPause={handlePause}
               onResume={handleResume}
               onCancel={handleCancel}
+              onBackground={handleClose}
               isPaused={false} // The engine sets to 'available' when paused
             />
           )}
