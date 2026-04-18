@@ -1,8 +1,0 @@
-name: "Deleted Preview"
-on:
-  workflow_dispatch:
-jobs:
-  deleted:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "This workflow has been deleted."
