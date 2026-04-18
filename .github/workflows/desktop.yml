@@ -4,6 +4,14 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - "apps/desktop/**"
+      - "apps/backend/**"
+      - "apps/frontend/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
     tags:
       - 'v*'
   pull_request:
