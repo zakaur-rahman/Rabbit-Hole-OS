@@ -68,3 +68,4 @@ apps/frontend/lint_output.txt
 
 # CI local testing secrets (for act)
 .secrets
+graphify-out/

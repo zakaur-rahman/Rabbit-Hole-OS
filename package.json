@@ -15,6 +15,7 @@
     "build:backend": "cd apps/backend && python -m pip install pyinstaller && python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec",
     "package": "npm run build:frontend && npm run build:backend && cd apps/desktop && npm run dist",
     "prepare": "husky",
+    "postinstall": "npx electron-builder install-app-deps --appDir=apps/desktop",
     "ci:local": "bash scripts/ci-local.sh",
     "ci:local:lint": "bash scripts/ci-local.sh --lint-only",
     "ci:local:docker": "bash scripts/ci-local.sh --docker"

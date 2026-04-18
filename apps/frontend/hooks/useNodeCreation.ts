@@ -100,7 +100,7 @@ export function useNodeCreation({ addNode }: UseNodeCreationParams) {
             type: 'text',
             position,
             style,
-            data: { text: 'Type something...' },
+            data: { text: '' },
         };
         addNode(newNode);
         persistNode({ id: nodeId, type: 'text', title: 'Text Node', data: newNode.data, position, style });
