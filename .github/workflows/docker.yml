@@ -24,11 +24,38 @@ env:
 
 jobs:
   # -----------------------------------------------------------------------
+  # Job 0: Detect which apps changed to skip unnecessary builds
+  # -----------------------------------------------------------------------
+  detect:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      web_changed: ${{ steps.filter.outputs.web }}
+      backend_changed: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+            backend:
+              - 'apps/backend/**'
+
+  # -----------------------------------------------------------------------
   # Job 1: Build & push web image to GHCR
   # -----------------------------------------------------------------------
   docker-web:
     name: Docker — Web (Next.js)
     runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.web_changed == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -78,6 +105,8 @@ jobs:
   docker-backend:
     name: Docker — Backend (FastAPI)
     runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.backend_changed == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -122,23 +151,29 @@ jobs:
   deploy:
     name: Deploy to Render
     runs-on: ubuntu-latest
-    needs: [docker-web, docker-backend]
+    needs: [detect, docker-web, docker-backend]
+    if: |
+      always() &&
+      (needs.docker-web.result == 'success' || needs.docker-backend.result == 'success')
 
     steps:
       - name: Trigger Render deploy — Web
+        if: needs.docker-web.result == 'success'
         run: |
           curl --fail -X POST \
             "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-web:latest"
 
       - name: Trigger Render deploy — Backend
+        if: needs.docker-backend.result == 'success'
         run: |
           curl --fail -X POST \
             "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-backend:latest"
 
-
       - name: Summary
         run: |
           echo "## 🚀 Deploy triggered" >> $GITHUB_STEP_SUMMARY
-          echo "- **Web**: ghcr.io/${{ github.repository_owner }}/cognode-web:latest" >> $GITHUB_STEP_SUMMARY
-          echo "- **Backend**: ghcr.io/${{ github.repository_owner }}/cognode-backend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | ${{ needs.docker-web.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.docker-backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

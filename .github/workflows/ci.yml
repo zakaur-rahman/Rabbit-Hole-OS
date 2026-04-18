@@ -1,0 +1,242 @@
+# =============================================================================
+# ci.yml — Unified CI Pipeline for Rabbit-Hole-OS monorepo
+#
+# Replaces: lint.yml, test.yml, build.yml
+#
+# Architecture:
+#   1. analyze  — detect what changed (~5s)
+#   2. lint     — Node lint + typecheck + Python ruff (parallel with test)
+#   3. test     — Turbo test runner (parallel with lint)
+#   4. build    — Turbo build validation (after lint + test)
+#
+# Cost optimizations:
+#   - Path filtering on BOTH PR and push triggers
+#   - Change detection skips irrelevant jobs
+#   - Typecheck runs once (not duplicated)
+#   - Python installed only when backend changed
+#   - Concurrency cancels superseded runs
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "turbo.json"
+      - "package.json"
+      - "package-lock.json"
+      - "*.ts"
+      - "*.tsx"
+      - "*.py"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  TURBO_DAEMON: "0"
+  TURBO_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+  FORCE_COLOR: "1"
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Job 1: Analyze — detect what changed to gate downstream jobs
+  # -------------------------------------------------------------------------
+  analyze:
+    name: Analyze Changes
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      node_changed: ${{ steps.filter.outputs.node }}
+      python_changed: ${{ steps.filter.outputs.python }}
+      frontend_changed: ${{ steps.filter.outputs.frontend }}
+      web_changed: ${{ steps.filter.outputs.web }}
+      backend_changed: ${{ steps.filter.outputs.backend }}
+      desktop_changed: ${{ steps.filter.outputs.desktop }}
+      any_code: ${{ steps.filter.outputs.any_code }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            node:
+              - 'apps/frontend/**'
+              - 'apps/web/**'
+              - 'apps/desktop/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'package-lock.json'
+              - '*.ts'
+              - '*.tsx'
+            python:
+              - 'apps/backend/**/*.py'
+              - 'apps/backend/requirements.txt'
+            frontend:
+              - 'apps/frontend/**'
+            web:
+              - 'apps/web/**'
+            backend:
+              - 'apps/backend/**'
+            desktop:
+              - 'apps/desktop/**'
+            any_code:
+              - 'apps/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'package-lock.json'
+
+      - name: Summary
+        run: |
+          echo "## 🔍 Change Detection" >> $GITHUB_STEP_SUMMARY
+          echo "| Area | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Node (TS/JS) | \`${{ steps.filter.outputs.node }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | \`${{ steps.filter.outputs.python }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | \`${{ steps.filter.outputs.frontend }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | \`${{ steps.filter.outputs.web }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | \`${{ steps.filter.outputs.backend }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Desktop | \`${{ steps.filter.outputs.desktop }}\` |" >> $GITHUB_STEP_SUMMARY
+
+  # -------------------------------------------------------------------------
+  # Job 2: Lint & Typecheck — Node + Python
+  # -------------------------------------------------------------------------
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    needs: analyze
+    if: needs.analyze.outputs.node_changed == 'true' || needs.analyze.outputs.python_changed == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Python
+        if: needs.analyze.outputs.python_changed == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: apps/backend/requirements.txt
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-ci-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-ci-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-
+            turbo-ci-${{ runner.os }}-
+
+      - name: Install Node dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Python linter
+        if: needs.analyze.outputs.python_changed == 'true'
+        run: pip install ruff
+
+      - name: Turbo lint & typecheck
+        if: needs.analyze.outputs.node_changed == 'true'
+        run: npx turbo run lint typecheck --no-daemon --cache-dir=.turbo
+
+      - name: Python lint (Ruff)
+        if: needs.analyze.outputs.python_changed == 'true'
+        run: ruff check apps/backend/ --select E,W,F --ignore E501,E402,E701,F841
+
+  # -------------------------------------------------------------------------
+  # Job 3: Test — runs in parallel with lint
+  # -------------------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: analyze
+    if: needs.analyze.outputs.node_changed == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-ci-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-ci-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-
+            turbo-ci-${{ runner.os }}-
+
+      - name: Install Node dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run tests
+        run: npx turbo run test --no-daemon --cache-dir=.turbo
+
+  # -------------------------------------------------------------------------
+  # Job 4: Build Validation — after lint + test pass
+  # -------------------------------------------------------------------------
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [analyze, lint, test]
+    if: |
+      always() &&
+      needs.analyze.outputs.node_changed == 'true' &&
+      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-ci-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-ci-${{ runner.os }}-${{ hashFiles('turbo.json', 'package-lock.json') }}-
+            turbo-ci-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        run: npx turbo run build --no-daemon --cache-dir=.turbo

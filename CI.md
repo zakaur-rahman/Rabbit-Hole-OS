@@ -8,13 +8,9 @@ This guide covers how the CI/CD pipeline works, when workflows run, how to test 
 
 | Workflow | File | Trigger | Purpose | Estimated Time |
 |---|---|---|---|---|
-| **Lint & Typecheck** | `lint.yml` | PR + push to `main` (path-filtered) | Node lint, TS typecheck, Python ruff | ~2 min |
-| **Tests** | `test.yml` | PR + push to `main` (path-filtered) | Turbo test runner | ~3 min |
-| **Build Validation** | `build.yml` | PR + push to `main` (path-filtered) | Turbo build validation | ~3 min |
-| **Docker (Reusable)** | `docker.yml` | Called by other workflows | Build & push Docker images | ~5 min |
-| **Preview** | `preview.yml` | PR with `preview` label | Ephemeral preview environments on Render | ~10 min |
-| **Release & Deploy** | `release.yml` | Push to `main` (on release) | Semantic versioning + production deploy | ~15 min |
-| **Security** | `security.yml` | PR + push + weekly cron | CodeQL, TruffleHog, Trivy | ~5 min |
+| **CI** | `ci.yml` | PR + push to `main` (path-filtered) | Change detection → lint → test → build | ~5-8 min |
+| **Docker Build & Deploy** | `docker.yml` | Push to `main` (path-filtered) + manual | Build & push Docker images, deploy to Render | ~5 min |
+| **Desktop CI & Release** | `desktop.yml` | PR + push to `main` (path-filtered) + tags | Build Electron desktop app (Win + Mac) | ~15 min |
 
 ---
 
@@ -22,21 +18,40 @@ This guide covers how the CI/CD pipeline works, when workflows run, how to test 
 
 ### Pull Request
 
-| Event | lint | test | build | preview | security |
-|---|---|---|---|---|---|
-| **Draft PR opened** | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **PR opened (code changes)** | ✅ | ✅ | ✅ | ❌ | ✅ |
-| **PR opened (docs only)** | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **PR with `preview` label** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **PR sync (new push)** | ✅ | ✅ | ✅ | Only if labeled | ✅ |
+| Event | CI | Docker | Desktop |
+|---|---|---|---|
+| **Draft PR opened** | ❌ | ❌ | ❌ |
+| **PR opened (code changes)** | ✅ | ❌ | ✅ (if desktop/frontend/backend changed) |
+| **PR opened (docs only)** | ❌ | ❌ | ❌ |
+| **PR sync (new push)** | ✅ | ❌ | ✅ (if desktop/frontend/backend changed) |
 
 ### Push to `main`
 
-| Event | lint | test | build | release | security |
-|---|---|---|---|---|---|
-| **Code changes merged** | ✅ | ✅ | ✅ | ✅ (release-please) | ✅ |
-| **Docs/config only** | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Release PR merged** | ✅ | ✅ | ✅ | ✅ (Docker + Deploy) | ✅ |
+| Event | CI | Docker | Desktop |
+|---|---|---|---|
+| **Code changes merged** | ✅ | ✅ (only changed services) | ✅ (if desktop/frontend/backend changed) |
+| **Docs/config only** | ❌ | ❌ | ❌ |
+| **Tag pushed (v*)** | ❌ | ❌ | ✅ (full release build) |
+
+### CI Job Details (`ci.yml`)
+
+The CI workflow uses intelligent change detection to skip unnecessary work:
+
+| Job | Runs When | Depends On |
+|---|---|---|
+| **Analyze** | Always (unless draft PR) | — |
+| **Lint & Typecheck** | Node or Python code changed | Analyze |
+| **Test** | Node code changed | Analyze |
+| **Build** | Node code changed | Lint + Test |
+
+### Docker Job Details (`docker.yml`)
+
+| Job | Runs When | Depends On |
+|---|---|---|
+| **Detect** | Always | — |
+| **Docker Web** | `apps/web/**` or `packages/**` changed | Detect |
+| **Docker Backend** | `apps/backend/**` changed | Detect |
+| **Deploy** | At least one image built | Web + Backend |
 
 ---
 
@@ -105,14 +120,11 @@ curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo ba
 # Dry-run (validate YAML without executing)
 act --dryrun pull_request
 
-# Run lint workflow
-act pull_request -W .github/workflows/lint.yml
-
-# Run build workflow
-act pull_request -W .github/workflows/build.yml
+# Run CI workflow
+act pull_request -W .github/workflows/ci.yml
 
 # Run with secrets file
-act pull_request -W .github/workflows/lint.yml --secret-file .secrets
+act pull_request -W .github/workflows/ci.yml --secret-file .secrets
 ```
 
 ### Secrets for `act`
@@ -124,37 +136,35 @@ GITHUB_TOKEN=your_github_token
 RENDER_API_KEY=your_render_key
 ```
 
-> **Note**: Some workflows use GitHub-specific actions (like `github/codeql-action`) that don't work with `act`. The lint, test, and build workflows are fully `act`-compatible.
+> **Note**: Some workflows use GitHub-specific actions (like `dorny/paths-filter`) that may behave differently with `act`. The core turbo tasks (lint, test, build) are fully `act`-compatible.
 
 ---
 
 ## 💰 Cost Optimization Strategy
 
-### What Changed
+### Architecture Decisions
 
-| Optimization | Minutes Saved |
-|---|---|
-| **Removed Docker dry-runs on every PR** | ~18 min per PR |
-| **Preview builds gated by `preview` label** | ~20 min per PR sync |
-| **Removed redundant CI re-run in release** | ~8 min per release |
-| **Path-filtered all workflows** | 100% on docs-only changes |
-| **Draft PR filtering** | 100% on draft PRs |
-| **Parallel lint/test/build** | ~40% faster wall-clock |
+1. **Unified CI workflow**: `lint.yml`, `test.yml`, and `build.yml` were consolidated into a single `ci.yml` with change detection. This eliminates duplicate `npm ci` runs (was 3×, now 1× per job) and runs typecheck only once.
+
+2. **Smart change detection**: All workflows use `dorny/paths-filter` to detect which apps changed. Jobs are skipped entirely if their code hasn't changed.
+
+3. **Path-filtered triggers**: Both PR and push-to-main triggers use path filtering. Documentation-only changes never trigger any workflow.
+
+4. **Conditional Docker builds**: `docker.yml` only builds images for services that actually changed. If only the web app changed, the backend image is not rebuilt.
+
+5. **Concurrency groups**: Each workflow cancels in-progress runs when new commits are pushed, preventing queue buildup.
+
+6. **Label-gated desktop builds**: Desktop builds on PRs only run when desktop/frontend/backend code changed. Full release builds only trigger on version tags.
 
 ### Estimated Impact
 
-- **Before**: ~50+ min of CI per PR (worst case)
-- **After**: ~8 min for code changes, 0 min for docs
-
-### Key Design Decisions
-
-1. **No Docker dry-runs on PRs**: Dockerfile issues are caught during preview builds (labeled PRs) or on the release pipeline. The tradeoff is worth the ~18 min per PR savings.
-
-2. **Label-gated previews**: Adding a `preview` label to a PR triggers full Docker builds + Render preview deployments. Without the label, only lint/test/build run.
-
-3. **Independent workflows instead of orchestrator**: `lint.yml`, `test.yml`, and `build.yml` run in parallel instead of sequentially through `ci.yml`. This means all three start immediately rather than waiting for each previous step.
-
-4. **Concurrency groups**: Each workflow has its own concurrency group that cancels in-progress runs when new commits are pushed, preventing queue buildup.
+| Scenario | Before | After | Savings |
+|---|---|---|---|
+| PR (code change) | ~24 min / 5 runners | ~8 min / 3 runners | **67%** |
+| PR (docs only) | ~24 min / 5 runners | 0 min | **100%** |
+| Push to main (docs) | ~29 min / 7 runners | 0 min | **100%** |
+| Push to main (web only) | ~29 min / 7 runners | ~13 min / 4 runners | **55%** |
+| Push to main (all code) | ~29 min / 7 runners | ~13 min / 5 runners | **55%** |
 
 ---
 
@@ -178,17 +188,16 @@ git push --no-verify
 - Check if you changed files in the **path filter** — docs-only changes are skipped
 - Check the **Actions** tab for cancelled runs (concurrency may have cancelled it)
 
-### "Preview environment not created"
+### "CI passed but Docker didn't build"
 
-- Ensure the PR has the **`preview`** label
-- Check `preview.yml` in the Actions tab for errors
-- Previews take 3-5 minutes to boot on Render
+- Docker only runs on pushes to `main`, never on PRs
+- Docker only builds images for services whose code changed
+- Use `workflow_dispatch` to force a manual Docker build
 
-### "Release didn't deploy"
+### "Desktop build didn't trigger"
 
-- Verify `release-please` created a release — check for a "Release PR" in open PRs
-- Only code changes in `apps/`, `packages/`, or core config files trigger the release pipeline
-- Check the `production` environment in GitHub Settings for required reviewers
+- Desktop builds require changes in `apps/desktop/`, `apps/frontend/`, `apps/backend/`, or `packages/`
+- Full release builds require a version tag (`v*`)
 
 ### Running individual checks locally
 
@@ -208,3 +217,16 @@ npx turbo run test
 # Build
 npx turbo run build
 ```
+
+---
+
+## 🏗️ Branch Protection
+
+If you have branch protection rules, update the required status checks to use the new job names:
+
+| Old Status Check | New Status Check |
+|---|---|
+| `lint / Node Lint & Typecheck` | `CI / Lint & Typecheck` |
+| `test / Unit & Integration Tests` | `CI / Test` |
+| `build / TypeScript Typecheck` | _(removed, merged into Lint)_ |
+| `build / Production Build` | `CI / Build` |
