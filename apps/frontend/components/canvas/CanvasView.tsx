@@ -52,6 +52,8 @@ import CanvasImportModal from '../modals/CanvasImportModal';
 import WebUrlModal from '../modals/WebUrlModal';
 import ConnectionDropMenu from './ConnectionDropMenu';
 import { SyncStatus } from '../ui/SyncStatus';
+import ChatPanel from '../ai-chat/ChatPanel';
+import { useChatStore } from '@/store/chat.store';
 
 // Hooks
 import { useContextMenu } from '@/hooks/useContextMenu';
@@ -112,6 +114,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
 
     const showMonitorPanel = useSynthesisMonitorStore(s => s.showMonitorPanel);
     const setShowMonitorPanel = useSynthesisMonitorStore(s => s.setShowMonitorPanel);
+
+    // ── AI Chat ──────────────────────────────────────────────────────────────
+    const toggleChatPanel = useChatStore(s => s.togglePanel);
 
 
     // ── ReactFlow utilities ──────────────────────────────────────────────────
@@ -418,6 +423,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     onAddGroup={handleAddGroup}
                     onAddText={handleAddText}
                     onTemplate={() => setShowTemplateModal(true)}
+                    onToggleChat={toggleChatPanel}
                 />
             </ReactFlow>
 
@@ -506,6 +512,9 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                 onClose={closeConnectionDropMenu}
             />
             </div>
+
+            {/* AI Chat Panel */}
+            <ChatPanel />
 
             {/* Sync Status Badge */}
             <SyncStatus />

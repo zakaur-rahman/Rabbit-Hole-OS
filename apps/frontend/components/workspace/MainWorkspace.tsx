@@ -6,7 +6,6 @@ import BrowserView from '@/components/browser/BrowserView';
 import CanvasView from '@/components/canvas/CanvasView';
 import Titlebar from '@/components/ui/Titlebar';
 import SearchModal from '@/components/ui/SearchModal';
-import NodeDetailsPanel from '@/components/canvas/NodeDetailsPanel';
 import { useGraphStore } from '@/store/graph.store';
 import FileTreeSidebar from '@/components/workspace/FileTreeSidebar';
 import AuthGuardModal from '@/components/modals/AuthGuardModal';
@@ -18,8 +17,7 @@ export default function MainWorkspace() {
     const [showLibraryModal, setShowLibraryModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [leftPanelMode, setLeftPanelMode] = useState<'browser' | 'files'>('browser');
-    const { selectedNodeId, selectNode } = useGraphStore();
-    const [openNodeIds, setOpenNodeIds] = useState<string[]>([]);
+    const { selectNode } = useGraphStore();
 
     const [showLeftPanel, setShowLeftPanel] = useState(true);
 
@@ -77,14 +75,7 @@ export default function MainWorkspace() {
         };
     }, [fetchNodes, fetchWhiteboards, clearGraph, initialize, activeWhiteboardId]);
 
-    const handleCloseNode = (id: string) => {
-        const newIds = openNodeIds.filter(n => n !== id);
-        setOpenNodeIds(newIds);
 
-        if (selectedNodeId === id) {
-            selectNode(newIds.length > 0 ? newIds[newIds.length - 1] : null);
-        }
-    };
 
     const handleSearch = (query: string) => {
         console.log('Search:', query);
@@ -127,26 +118,7 @@ export default function MainWorkspace() {
                 )}
 
                 <Panel defaultSize={60} minSize={60} className="flex flex-col relative bg-[var(--bg)] border-l border-[var(--border)]">
-                    <CanvasView
-                        onNodeOpen={(id) => {
-                            if (!openNodeIds.includes(id)) {
-                                setOpenNodeIds(prev => [...prev, id]);
-                            }
-                        }}
-                        onPaneClick={() => setOpenNodeIds([])}
-                    />
-
-                    {/* Node Details Panel (Tabs) */}
-                    {openNodeIds.length > 0 && (
-                        <div className="absolute inset-y-0 right-0 w-96 z-20 shadow-2xl">
-                            <NodeDetailsPanel
-                                nodeIds={openNodeIds}
-                                activeNodeId={selectedNodeId}
-                                onClose={handleCloseNode}
-                                onActivate={selectNode}
-                            />
-                        </div>
-                    )}
+                    <CanvasView />
                 </Panel>
             </PanelGroup>
 
