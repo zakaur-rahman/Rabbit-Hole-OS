@@ -33,7 +33,7 @@ async def get_ai_client():
         print("--- AI Service: NO API KEYS FOUND - Using MOCK mode")
         return ("mock", None, None)
 
-async def stream_generate(prompt: str, system_instruction: str = "You are a helpful assistant.") -> AsyncGenerator[str, None]:
+async def stream_generate(prompt: str, system_instruction: str = "You are a helpful assistant.", model: Optional[str] = None) -> AsyncGenerator[str, None]:
     """
     Stream text generation from the configured AI provider.
     """
@@ -44,7 +44,7 @@ async def stream_generate(prompt: str, system_instruction: str = "You are a help
         client = genai.Client(api_key=api_key)
         def call():
             return client.models.generate_content_stream(
-                model="gemini-2.0-flash",
+                model=model or "gemini-2.0-flash",
                 contents=prompt,
                 config={"system_instruction": system_instruction}
             )
@@ -56,7 +56,8 @@ async def stream_generate(prompt: str, system_instruction: str = "You are a help
 
     elif provider in ("chutes", "openai"):
         import httpx
-        model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+        default_model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+        target_model = model or default_model
         async with httpx.AsyncClient() as client:
             async with client.stream(
                 "POST",
@@ -66,7 +67,7 @@ async def stream_generate(prompt: str, system_instruction: str = "You are a help
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": model,
+                    "model": target_model,
                     "messages": [
                         {"role": "system", "content": system_instruction},
                         {"role": "user", "content": prompt}

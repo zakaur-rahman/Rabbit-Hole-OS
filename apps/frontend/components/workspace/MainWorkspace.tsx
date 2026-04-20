@@ -11,15 +11,21 @@ import FileTreeSidebar from '@/components/workspace/FileTreeSidebar';
 import AuthGuardModal from '@/components/modals/AuthGuardModal';
 import SettingsModal from '@/components/modals/SettingsModal';
 import LibraryModal from '@/components/modals/LibraryModal';
+import ChatPanel from '@/components/ai-chat/ChatPanel';
+import { useChatStore } from '@/store/chat.store';
+import { useShallow } from 'zustand/shallow';
 
 export default function MainWorkspace() {
     const [showSearch, setShowSearch] = useState(false);
     const [showLibraryModal, setShowLibraryModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [leftPanelMode, setLeftPanelMode] = useState<'browser' | 'files'>('browser');
-    const { selectNode } = useGraphStore();
+    const selectNode = useGraphStore(s => s.selectNode);
 
     const [showLeftPanel, setShowLeftPanel] = useState(true);
+
+    const isChatOpen = useChatStore(s => s.isOpen);
+    const toggleChat = useChatStore(s => s.togglePanel);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -29,6 +35,11 @@ export default function MainWorkspace() {
                 e.preventDefault();
                 setShowLeftPanel(prev => !prev);
             }
+            // Toggle Chat (Cmd/Ctrl + I)
+            if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+                e.preventDefault();
+                toggleChat();
+            }
             // Search modal (Cmd/Ctrl + K)
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
@@ -37,10 +48,18 @@ export default function MainWorkspace() {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [toggleChat]);
 
     // Refresh nodes on auth change
-    const { fetchNodes, fetchWhiteboards, clearGraph, activeWhiteboardId, initialize } = useGraphStore();
+    const { fetchNodes, fetchWhiteboards, clearGraph, activeWhiteboardId, initialize } = useGraphStore(
+        useShallow(s => ({
+            fetchNodes: s.fetchNodes,
+            fetchWhiteboards: s.fetchWhiteboards,
+            clearGraph: s.clearGraph,
+            activeWhiteboardId: s.activeWhiteboardId,
+            initialize: s.initialize,
+        }))
+    );
     useEffect(() => {
         const handleAuthChange = () => {
             if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
@@ -117,9 +136,22 @@ export default function MainWorkspace() {
                     </>
                 )}
 
-                <Panel defaultSize={60} minSize={60} className="flex flex-col relative bg-[var(--bg)] border-l border-[var(--border)]">
+                <Panel defaultSize={60} minSize={30} className="flex flex-col relative bg-[var(--bg)]">
                     <CanvasView />
                 </Panel>
+
+                {isChatOpen && (
+                    <>
+                        <PanelResizeHandle className="w-1.5 bg-[var(--surface)] hover:bg-[var(--ws-blue)]/20 transition-colors cursor-col-resize group h-full">
+                            <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-0.5 h-8 bg-[var(--ws-border-dim)] group-hover:bg-[var(--ws-blue)]/50 rounded-full transition-colors" />
+                            </div>
+                        </PanelResizeHandle>
+                        <Panel defaultSize={30} minSize={20} className="flex flex-col bg-[var(--surface)] border-l border-[var(--border)] overflow-hidden">
+                            <ChatPanel />
+                        </Panel>
+                    </>
+                )}
             </PanelGroup>
 
             {/* Search Modal */}

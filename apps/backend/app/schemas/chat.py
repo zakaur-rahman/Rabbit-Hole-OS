@@ -22,6 +22,7 @@ class ChatRequest(BaseModel):
     whiteboard_id: str = "main"
     selected_node_ids: List[str] = []
     conversation_history: List[ConversationMessage] = []
+    model: Optional[str] = "gemini-2.0-flash"
 
 
 class ToolCallArgs(BaseModel):

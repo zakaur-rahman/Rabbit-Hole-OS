@@ -13,6 +13,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useGraphStore } from '@/store/graph.store';
+import { useShallow } from 'zustand/shallow';
 import { nodesApi } from '@/lib/api';
 
 import { ASTEditorModal } from '../modals/ASTEditorModal';
@@ -92,16 +93,24 @@ interface CanvasViewProps {
 
 // ─── Inner component (must be inside ReactFlowProvider) ──────────────────────
 function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasViewProps) {
-    const {
-        nodes, edges,
-        onNodesChange, onEdgesChange,
-        addEdge: addStoreEdge,
-        selectNode,
-        setSelectedNodeIds,
-        addNode,
-        fetchNodes,
-        activeWhiteboardId,
-    } = useGraphStore();
+    const { nodes, edges, activeWhiteboardId } = useGraphStore(
+        useShallow((s) => ({
+            nodes: s.nodes,
+            edges: s.edges,
+            activeWhiteboardId: s.activeWhiteboardId,
+        }))
+    );
+
+    const onNodesChange = useGraphStore(s => s.onNodesChange);
+    const onEdgesChange = useGraphStore(s => s.onEdgesChange);
+    const addStoreEdge = useGraphStore(s => s.addEdge);
+    const selectNode = useGraphStore(s => s.selectNode);
+    const setSelectedNodeIds = useGraphStore(s => s.setSelectedNodeIds);
+    const addNode = useGraphStore(s => s.addNode);
+    const fetchNodes = useGraphStore(s => s.fetchNodes);
+
+    // Current selection from store (for comparison)
+    const selectedNodeIds = useGraphStore((s) => s.selectedNodeIds);
 
     // ── Synthesis (unified Generate Report → AST Editor) ──────────────────
     const [showSynthesis, setShowSynthesis] = useState(false);
@@ -363,7 +372,16 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     onNodeMouseEnter={onNodeMouseEnter}
                     onNodeMouseLeave={onNodeMouseLeave}
                     onNodeDragStop={onNodeDragStop}
-                    onSelectionChange={({ nodes }) => setSelectedNodeIds(nodes.map(n => n.id))}
+                    onSelectionChange={({ nodes }) => {
+                        const newIds = nodes.map(n => n.id);
+                        // Only update if selection has actually changed (array contents)
+                        const hasChanged = newIds.length !== selectedNodeIds.length || 
+                                         newIds.some(id => !selectedNodeIds.includes(id));
+                        
+                        if (hasChanged) {
+                            setSelectedNodeIds(newIds);
+                        }
+                    }}
                     nodeTypes={useMemo(() => nodeTypes, [])}
                     edgeTypes={useMemo(() => edgeTypes, [])}
                     defaultEdgeOptions={defaultEdgeOptions}
@@ -515,8 +533,6 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
             />
             </div>
 
-            {/* AI Chat Panel */}
-            <ChatPanel />
 
             {/* Sync Status Badge */}
             <SyncStatus />

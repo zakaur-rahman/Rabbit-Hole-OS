@@ -86,6 +86,7 @@ class GraphPlannerAgent(BaseAgent):
         selected_nodes: List[Dict[str, Any]],
         conversation_history: List[Dict[str, str]],
         all_nodes: Optional[List[Dict[str, Any]]] = None,
+        model_name: Optional[str] = "gemini-2.0-flash",
     ) -> AgentResponse:
         """
         Process a user message and return a plan of actions.
@@ -385,15 +386,15 @@ class GraphExecutorAgent:
 
     async def _summarize_node(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Summarize a node (or nodes). 
-        The actual summarization is usually handled by the planner providing the summary content 
+        Summarize a node (or nodes).
+        The actual summarization is usually handled by the planner providing the summary content
         in a createNode call, but this tool can be used to explicitly trigger a condensation.
         """
         node_id = args.get("id")
         if not node_id:
             return {"success": False, "error": "Node ID required"}
-            
-        # For now, we return a success signal. 
+
+        # For now, we return a success signal.
         # Future: Trigger a deep LLM distillation task.
         return {
             "success": True,

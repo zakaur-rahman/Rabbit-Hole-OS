@@ -70,6 +70,7 @@ async def _stream_chat_response(
             selected_nodes=selected_nodes,
             conversation_history=history,
             all_nodes=all_nodes,
+            model_name=request.model,
         )
 
         if planner_response.status != "success":

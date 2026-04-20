@@ -88,6 +88,7 @@ export interface ChatRequest {
     role: MessageRole;
     content: string;
   }>;
+  model?: string;
 }
 
 export interface ChatStreamEvent {
