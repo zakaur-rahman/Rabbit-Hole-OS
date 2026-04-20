@@ -25,7 +25,7 @@ export default function ChatPanel() {
     contextNodeIds,
   } = useChatStore();
 
-  const { activeWhiteboardId, selectedNodeId, addNode, addEdge, removeNode, fetchNodes } = useGraphStore();
+  const { activeWhiteboardId, selectedNodeIds, addNode, addEdge, removeNode, fetchNodes } = useGraphStore();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -39,9 +39,8 @@ export default function ChatPanel() {
 
   // Update context when selection changes
   useEffect(() => {
-    const ids = selectedNodeId ? [selectedNodeId] : [];
-    useChatStore.getState().setContextNodeIds(ids);
-  }, [selectedNodeId]);
+    useChatStore.getState().setContextNodeIds(selectedNodeIds);
+  }, [selectedNodeIds]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const executeToolCall = useCallback(async (toolCall: any) => {

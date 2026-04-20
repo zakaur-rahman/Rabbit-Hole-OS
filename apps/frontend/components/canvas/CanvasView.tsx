@@ -97,6 +97,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
         onNodesChange, onEdgesChange,
         addEdge: addStoreEdge,
         selectNode,
+        setSelectedNodeIds,
         addNode,
         fetchNodes,
         activeWhiteboardId,
@@ -362,6 +363,7 @@ function CanvasViewInner({ onNodeOpen, onPaneClick: onPaneClickProp }: CanvasVie
                     onNodeMouseEnter={onNodeMouseEnter}
                     onNodeMouseLeave={onNodeMouseLeave}
                     onNodeDragStop={onNodeDragStop}
+                    onSelectionChange={({ nodes }) => setSelectedNodeIds(nodes.map(n => n.id))}
                     nodeTypes={useMemo(() => nodeTypes, [])}
                     edgeTypes={useMemo(() => edgeTypes, [])}
                     defaultEdgeOptions={defaultEdgeOptions}

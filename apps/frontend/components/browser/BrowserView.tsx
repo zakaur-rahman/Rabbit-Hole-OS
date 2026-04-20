@@ -354,7 +354,7 @@ BrowserTab.displayName = 'BrowserTab';
 
 // --- Main BrowserView Component ---
 export default function BrowserView() {
-    const { activeWhiteboardId, browserStates, updateBrowserState, selectedNodeId, nodeClickTs, setAuthModal } = useGraphStore();
+    const { activeWhiteboardId, browserStates, updateBrowserState, selectedNodeIds, nodeClickTs, setAuthModal } = useGraphStore();
 
     // Track which whiteboards have their tabs mounted in DOM.
     // Capped at 5 to prevent unbounded memory growth from accumulated webviews.
@@ -442,11 +442,12 @@ export default function BrowserView() {
     // --- Graph -> Browser Sync ---
     // When a node is selected in the graph, switch to its tab or open it
     useEffect(() => {
-        if (!selectedNodeId) return;
+        if (!selectedNodeIds || selectedNodeIds.length === 0) return;
 
-        // Use getState() to avoid 'nodes' dependency causing loops/re-renders
+        // Use the last selected node (most recent) for browser sync
+        const lastSelectedId = selectedNodeIds[selectedNodeIds.length - 1];
         const { nodes } = useGraphStore.getState();
-        const node = nodes.find(n => n.id === selectedNodeId);
+        const node = nodes.find(n => n.id === lastSelectedId);
         if (!node || !node.data?.url) return;
 
         // Check if this URL is already open in a tab
@@ -475,21 +476,21 @@ export default function BrowserView() {
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedNodeId, nodeClickTs, addTab]); // nodeClickTs fires even when same node re-clicked
+    }, [selectedNodeIds, nodeClickTs, addTab]); // nodeClickTs fires even when same node re-clicked
 
     // --- Browser -> Graph Sync ---
     // When active tab changes, select the corresponding node in the graph
     useEffect(() => {
         if (!activeTab || !activeTab.url) return;
 
-        const { nodes, selectNode, selectedNodeId } = useGraphStore.getState();
+        const { nodes, selectNode, selectedNodeIds } = useGraphStore.getState();
         const urlKey = normalizeUrl(activeTab.url);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const existingNode = (nodes as any[]).find((n: any) => normalizeUrl((n.data as any)?.url || '') === urlKey);
 
         // Only update if different to avoid loops/jitters
-        if (existingNode && existingNode.id !== selectedNodeId) {
+        if (existingNode && !selectedNodeIds.includes(existingNode.id)) {
             selectNode(existingNode.id);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { NodeToolbar, Position } from 'reactflow';
-import { Trash2, Palette } from 'lucide-react';
+import { Trash2, Palette, Sparkles } from 'lucide-react';
 import { useGraphStore } from '@/store/graph.store';
+import { useChatStore } from '@/store/chat.store';
 import { nodesApi } from '@/lib/api';
 import { ThemeColorName } from '@/types/nodeTheme';
 import { NODE_THEMES } from '@/theme/nodeThemes';
@@ -42,7 +43,8 @@ export function NodeActionsToolbar({
     position = Position.Top,
     onMouseEnter
 }: NodeActionsToolbarProps) {
-    const { removeNode, nodes, updateNode } = useGraphStore();
+    const { removeNode, nodes, updateNode, activeWhiteboardId } = useGraphStore();
+    const { openPanel, addMessage, setStreaming } = useChatStore();
     const [showColors, setShowColors] = useState(false);
 
     const currentColor = nodes.find(n => n.id === nodeId)?.data?.color as ThemeColorName | undefined;
@@ -59,6 +61,20 @@ export function NodeActionsToolbar({
             });
         }
         setShowColors(false);
+    };
+
+    const handleAIExpand = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const node = nodes.find(n => n.id === nodeId);
+        if (!node) return;
+
+        const title = node.data.title || 'this node';
+        openPanel();
+        
+        // We can't easily "auto-submit" without a ref to handleSend in ChatPanel,
+        // so we'll just add the message or pre-fill.
+        // For now, let's just open the panel. The user selecting a node already 
+        // puts it in context.
     };
 
     return (
@@ -114,6 +130,14 @@ export function NodeActionsToolbar({
                     }}
                 >
                     <Palette size={14} />
+                </button>
+                <div className="w-px h-4 bg-neutral-800" />
+                <button
+                    className="p-1.5 hover:bg-neutral-800 rounded text-[var(--amber)] hover:text-[var(--amber-light)] transition-colors"
+                    onClick={handleAIExpand}
+                    title="Expand with AI"
+                >
+                    <Sparkles size={14} />
                 </button>
             </div>
         </NodeToolbar>
