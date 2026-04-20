@@ -59,7 +59,11 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build Frontend
-        run: npx turbo run build --filter=frontend --cache-dir=.turbo
+        run: npx turbo run build --filter=frontend --no-daemon --concurrency=2 --cache-dir=.turbo
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          TURBO_DAEMON: 0
+          CI: true
 
       - name: Upload Frontend Build
         uses: actions/upload-artifact@v4
@@ -129,10 +133,13 @@ jobs:
           python -m PyInstaller --noconfirm --clean rabbit-hole-backend.spec
 
       - name: Build Desktop Artifacts (Electron Builder)
-        run: npx turbo run dist --filter=Cognode --no-daemon --cache-dir=.turbo
+        run: npx turbo run dist --filter=Cognode --no-daemon --concurrency=2 --cache-dir=.turbo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_SKIP_SIGNING: true 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          TURBO_DAEMON: 0
+          CI: true
 
       - name: Verify Build Artifacts Exist
         shell: bash

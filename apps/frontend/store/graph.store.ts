@@ -88,7 +88,7 @@ interface RawEdge {
 export interface GraphState {
   nodes: Node[];
   edges: Edge[];
-  selectedNodeId: string | null;
+  selectedNodeIds: string[];
   activeWhiteboardId: string;
   whiteboards: Whiteboard[];
   browserStates: Record<string, BrowserState>;
@@ -111,6 +111,7 @@ export interface GraphState {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   selectNode: (id: string | null) => void;
+  setSelectedNodeIds: (ids: string[]) => void;
   /** Monotonic ms timestamp updated on every selectNode call (even same id). Used to force BrowserView re-sync without setTimeout hacks. */
   nodeClickTs: number;
   syncLinks: (sourceId: string, content: string) => void;
@@ -130,7 +131,7 @@ export interface GraphState {
 export const useGraphStore = create<GraphState>((set, get) => ({
   nodes: [],
   edges: [],
-  selectedNodeId: null,
+  selectedNodeIds: [],
   nodeClickTs: 0,
   activeWhiteboardId: 'main',
   whiteboards: [{ id: 'main', name: 'Main Brain' }],
@@ -727,7 +728,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         .filter(n => n.id !== id)
         .map(n => n.parentId === id ? { ...n, parentId: undefined } : n),
       edges: state.edges.filter(e => e.source !== id && e.target !== id),
-      selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
+      selectedNodeIds: state.selectedNodeIds.filter(sid => sid !== id),
     }));
 
     try {
@@ -958,6 +959,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     set({
       nodes: finalNodes,
+      selectedNodeIds: get().selectedNodeIds.filter(id => !removedIds.has(id)),
     });
 
     // Handle position/dimension persistence
@@ -1039,7 +1041,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({ edges: uniqueEdges });
   },
 
-  selectNode: (id: string | null) => set({ selectedNodeId: id, nodeClickTs: Date.now() }),
+  selectNode: (id: string | null) => set({ 
+    selectedNodeIds: id ? [id] : [], 
+    nodeClickTs: Date.now() 
+  }),
+
+  setSelectedNodeIds: (ids: string[]) => set({ selectedNodeIds: ids }),
 
 
   // Parse content for bidirectional links [[...]] and tags #...
@@ -1106,10 +1113,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   getSelectedNodes: () => {
-    const { nodes, selectedNodeId } = get();
-    if (!selectedNodeId) return [];
-    return nodes.filter(n => n.id === selectedNodeId);
+    const { nodes, selectedNodeIds } = get();
+    if (selectedNodeIds.length === 0) return [];
+    return nodes.filter(n => selectedNodeIds.includes(n.id));
   },
 
-  clearGraph: () => set({ nodes: [], edges: [], selectedNodeId: null }),
+  clearGraph: () => set({ nodes: [], edges: [], selectedNodeIds: [] }),
 }));

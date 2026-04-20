@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 import os
 import json
 
@@ -32,6 +32,73 @@ async def get_ai_client():
     else:
         print("--- AI Service: NO API KEYS FOUND - Using MOCK mode")
         return ("mock", None, None)
+
+async def stream_generate(prompt: str, system_instruction: str = "You are a helpful assistant.", model: Optional[str] = None) -> AsyncGenerator[str, None]:
+    """
+    Stream text generation from the configured AI provider.
+    """
+    provider, api_key, base_url = await get_ai_client()
+
+    if provider == "gemini":
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        def call():
+            return client.models.generate_content_stream(
+                model=model or "gemini-2.0-flash",
+                contents=prompt,
+                config={"system_instruction": system_instruction}
+            )
+        import asyncio
+        # Gemini Python SDK streaming is a bit different, we'll wrap it
+        for chunk in await asyncio.to_thread(call):
+            if chunk.text:
+                yield chunk.text
+
+    elif provider in ("chutes", "openai"):
+        import httpx
+        default_model = "deepseek-ai/DeepSeek-V3-0324" if provider == "chutes" else "gpt-4o"
+        target_model = model or default_model
+        async with httpx.AsyncClient() as client:
+            async with client.stream(
+                "POST",
+                f"{base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": target_model,
+                    "messages": [
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "stream": True,
+                    "max_tokens": 1000
+                },
+                timeout=60.0
+            ) as response:
+                if response.status_code == 200:
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:].strip()
+                            if data_str == "[DONE]":
+                                break
+                            try:
+                                data = json.loads(data_str)
+                                chunk = data["choices"][0]["delta"].get("content", "")
+                                if chunk:
+                                    yield chunk
+                            except Exception:
+                                continue
+                else:
+                    yield f"Error: {response.status_code}"
+    else:
+        # Mock streaming
+        words = f"This is a mock response from the AI for your prompt: '{prompt[:30]}...'".split()
+        import asyncio
+        for word in words:
+            yield word + " "
+            await asyncio.sleep(0.05)
 
 async def generate_synthesis(query: str, node_contents: List[dict], previous_summary: Optional[str] = None) -> str:
     """

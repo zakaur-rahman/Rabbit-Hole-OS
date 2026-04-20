@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useReactFlow } from 'reactflow';
-import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, Download, FilePen, Settings2, Terminal } from 'lucide-react';
+import { Sparkles, Plus, Minus, Maximize2, Type, Layout, StickyNote, Download, FilePen, Settings2, Terminal, MessageSquare } from 'lucide-react';
 
 
 interface GraphControlsProps {
@@ -14,9 +14,10 @@ interface GraphControlsProps {
     onAddText?: () => void;
     onTemplate?: () => void;
     onExport?: () => void;
+    onToggleChat?: () => void;
 }
 
-export default function GraphControls({ onChatSynthesis, onGenerateReport, onToggleLogs, onAddNote, onAddGroup, onAddText, onTemplate, onExport }: GraphControlsProps) {
+export default function GraphControls({ onChatSynthesis, onGenerateReport, onToggleLogs, onAddNote, onAddGroup, onAddText, onTemplate, onExport, onToggleChat }: GraphControlsProps) {
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     const btnBase = "w-[36px] h-[36px] flex items-center justify-center text-[var(--sub)] hover:text-[var(--text)] hover:bg-[var(--raised)] transition-colors cursor-pointer";
@@ -24,6 +25,15 @@ export default function GraphControls({ onChatSynthesis, onGenerateReport, onTog
 
     return (
         <div className="absolute top-1/2 -translate-y-1/2 right-3 flex flex-col gap-3 z-60 pointer-events-auto">
+
+            {/* AI Chat Toggle */}
+            <button
+                onClick={() => onToggleChat?.()}
+                className="w-[40px] h-[40px] rounded-(--r2) bg-[var(--amber)] hover:brightness-110 text-[var(--bg)] flex items-center justify-center shadow-lg shadow-[rgba(232,160,32,0.2)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                title="AI Chat — ask Cognode AI"
+            >
+                <MessageSquare size={18} fill="currentColor" />
+            </button>
 
             <button
                 onClick={() => onChatSynthesis?.()}
