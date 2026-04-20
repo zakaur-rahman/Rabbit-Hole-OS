@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, X } from 'lucide-react';
+import { Send, Square, Mic, Plus } from 'lucide-react';
 import { useChatStore } from '@/store/chat.store';
 import { useGraphStore } from '@/store/graph.store';
 
@@ -61,56 +61,54 @@ export default function ChatInput({ onSend, onStop, isStreaming, contextNodeCoun
   };
 
   return (
-    <div className="border-t border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-sm">
-      {/* Context indicator */}
-      {contextNodeCount > 0 && (
-        <div className="px-3 pt-2">
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--amber-dim)] border border-[var(--amber)]/15 text-[10px] text-[var(--amber)] group cursor-default">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--amber)]" />
-            <span>{contextNodeCount} node{contextNodeCount > 1 ? 's' : ''} selected</span>
-            <button 
-              onClick={() => setSelectedNodeIds([])}
-              className="ml-1 p-0.5 rounded-full hover:bg-[var(--amber)]/20 transition-colors opacity-0 group-hover:opacity-100"
-              title="Clear selection"
-            >
-              <X size={10} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Input area */}
-      <div className="p-3 flex items-end gap-2">
+    <div className="ws-input-container">
+      {/* Search/Workflow Indicator (Placeholder style) */}
+      <div className="ws-input-wrapper">
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask AI to create nodes, expand ideas..."
+          placeholder="Ask anything, @ to mention, / for workflows"
           disabled={disabled || isStreaming}
           rows={1}
-          className="flex-1 resize-none bg-[var(--raised)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-[13px] text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--amber)]/30 focus:ring-1 focus:ring-[var(--amber)]/10 transition-all disabled:opacity-50 leading-relaxed"
-          style={{ minHeight: '40px', maxHeight: '120px' }}
+          className="ws-textarea no-scrollbar"
+          style={{ minHeight: '20px', maxHeight: '120px' }}
         />
+      </div>
 
-        {isStreaming ? (
-          <button
-            onClick={onStop}
-            className="shrink-0 w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center hover:bg-red-500/25 transition-all"
-            title="Stop generating"
-          >
-            <Square size={14} className="text-red-400" fill="currentColor" />
-          </button>
-        ) : (
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || disabled}
-            className="shrink-0 w-9 h-9 rounded-xl bg-[var(--amber)]/15 border border-[var(--amber)]/20 flex items-center justify-center hover:bg-[var(--amber)]/25 transition-all disabled:opacity-30 disabled:hover:bg-[var(--amber)]/15"
-            title="Send message"
-          >
-            <Send size={14} className="text-[var(--amber)]" />
-          </button>
-        )}
+      <div className="ws-input-footer">
+        <div className="ws-input-left">
+          <span className="ws-plus-icon"><Plus size={16} /></span>
+          <div className="ws-mode-chip flex items-center gap-1">
+             <span className="text-[10px]">∧</span> Planning <span className="text-[10px]">∧</span>
+          </div>
+          <div className="ws-mode-chip flex items-center gap-1">
+             <span className="text-[10px]">∧</span> Gemini 2.0 Flash <span className="text-[10px]">∧</span>
+          </div>
+          {contextNodeCount > 0 && (
+            <div className="ws-mode-chip !text-[var(--amber)] !border-[var(--amber)]/20 bg-[var(--amber)]/5 flex items-center gap-1">
+              {contextNodeCount} contextual node{contextNodeCount > 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
+        
+        <div className="ws-input-right">
+          <span className="ws-mic-icon"><Mic size={14} /></span>
+          {isStreaming ? (
+            <div onClick={onStop} className="ws-stop-btn" title="Stop generating">
+              <div className="ws-stop-inner"></div>
+            </div>
+          ) : (
+            <button 
+              onClick={handleSend}
+              disabled={!input.trim() || disabled}
+              className={`p-1 rounded-lg transition-colors ${!input.trim() ? 'text-[#444]' : 'text-[var(--amber)] hover:text-[var(--amber-light)]'}`}
+            >
+              <Send size={15} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

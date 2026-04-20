@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
-import { X, Sparkles, Trash2, Bot } from 'lucide-react';
+import { Bot, User, Trash2, X, Sparkles, Pin, RotateCcw, MoreHorizontal, Plus, Square, MessageSquare, Files, Layout, Smile } from 'lucide-react';
+import '@/styles/chat-windsurf.css';
 import { useChatStore } from '@/store/chat.store';
 import { useGraphStore } from '@/store/graph.store';
 import { sendChatMessage } from '@/lib/ai-chat';
@@ -219,54 +220,28 @@ export default function ChatPanel() {
 
   return (
     <div
-      className="absolute top-0 right-0 bottom-0 z-30 flex flex-col"
-      style={{
-        width: '380px',
-        background: 'rgba(17, 16, 14, 0.92)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        borderLeft: '1px solid var(--border)',
-        boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.4)',
-      }}
+      className="absolute top-0 right-0 bottom-0 z-30 ws-window overflow-hidden border-l border-[var(--border)]"
+      style={{ width: '400px' }}
     >
-      {/* Header */}
-      <div className="shrink-0 h-[44px] flex items-center justify-between px-4 border-b border-[var(--border)]">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[var(--amber)]/10 border border-[var(--amber)]/20 flex items-center justify-center">
-            <Sparkles size={13} className="text-[var(--amber)]" />
-          </div>
-          <span className="text-[12px] font-semibold tracking-wide text-[var(--text)]">Cognode AI</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--green-dim)] text-[var(--green)] border border-[var(--green-border)] font-medium">
-            LIVE
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => clearMessages(activeWhiteboardId)}
-            className="p-1.5 rounded-lg hover:bg-[var(--surface)] text-[var(--sub)] hover:text-[var(--text)] transition-all"
-            title="Clear chat"
-          >
-            <Trash2 size={13} />
-          </button>
-          <button
-            onClick={closePanel}
-            className="p-1.5 rounded-lg hover:bg-[var(--surface)] text-[var(--sub)] hover:text-[var(--text)] transition-all"
-            title="Close panel"
-          >
-            <X size={14} />
-          </button>
+      {/* Title bar */}
+      <div className="ws-title-bar">
+        <span className="ws-title-text truncate">Building AI-Native Knowledge Graph</span>
+        <div className="ws-title-icons">
+          <span><Plus size={14} /></span>
+          <span><RotateCcw size={14} /></span>
+          <span><MoreHorizontal size={14} /></span>
+          <span onClick={closePanel}><X size={14} /></span>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+      <div className="ws-chat-area flex-1 no-scrollbar space-y-1">
         {currentMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--amber)]/8 border border-[var(--amber)]/15 flex items-center justify-center mb-4">
-              <Bot size={24} className="text-[var(--amber)]/60" />
+            <div className="w-14 h-14 rounded-2xl bg-[var(--ws-bubble-user)] border border-[var(--ws-border-dim)] flex items-center justify-center mb-4">
+              <Bot size={24} className="text-[var(--ws-text-sub)]" />
             </div>
-            <h3 className="text-[14px] font-semibold text-[var(--text)] mb-1.5">Cognode AI</h3>
-            <p className="text-[11px] text-[var(--sub)] leading-relaxed max-w-[260px]">
+            <h3 className="text-[14px] font-semibold text-[var(--ws-text-bold)] mb-1.5">Cognode AI</h3>
+            <p className="text-[11px] text-[var(--ws-text-sub)] leading-relaxed max-w-[260px]">
               Create nodes, expand ideas, connect concepts — all through natural language. Select nodes on the canvas for context.
             </p>
             <div className="mt-4 space-y-1.5 w-full max-w-[260px]">
@@ -278,7 +253,7 @@ export default function ChatPanel() {
                 <button
                   key={i}
                   onClick={() => handleSend(example.slice(1, -1))}
-                  className="w-full text-left px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[11px] text-[var(--text-mid)] hover:border-[var(--amber)]/30 hover:text-[var(--text)] transition-all"
+                  className="w-full text-left px-3 py-2 rounded-lg bg-[var(--ws-bubble-user)] border border-[var(--ws-border-dim)] text-[11px] text-[var(--ws-text-sub)] hover:border-[var(--ws-blue)]/30 hover:text-[var(--ws-text-bold)] transition-all"
                 >
                   {example}
                 </button>
@@ -291,16 +266,31 @@ export default function ChatPanel() {
           ))
         )}
 
-        {/* Action Preview */}
-        {pendingAction && (
-          <ActionPreview
-            preview={pendingAction}
-            onConfirm={handleConfirmAction}
-            onReject={handleRejectAction}
-          />
-        )}
-
         <div ref={messagesEndRef} />
+
+        {/* Action Preview (Windsurf style) */}
+        {pendingAction && (
+          <div className="pb-4">
+            <ActionPreview
+              preview={pendingAction}
+              onConfirm={handleConfirmAction}
+              onReject={handleRejectAction}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar */}
+      <div className="ws-toolbar">
+        <div className="ws-tool-icons">
+          <span><Files size={14} /></span>
+          <span><Layout size={14} /></span>
+          <span><MessageSquare size={14} /></span>
+          <span><Smile size={14} /></span>
+        </div>
+        <div className="ws-review-btn" onClick={() => {/* Future PR/Action logic */}}>
+          <span className="text-[10px]">≡</span> Review Changes
+        </div>
       </div>
 
       {/* Input */}

@@ -17,49 +17,36 @@ export default function ActionPreview({ preview, onConfirm, onReject }: ActionPr
   if (preview.nodesToDelete) stats.push(`${preview.nodesToDelete} node${preview.nodesToDelete > 1 ? 's' : ''} to delete`);
 
   return (
-    <div className="mx-3 my-2 rounded-xl border border-[var(--amber)]/20 bg-[var(--amber)]/5 overflow-hidden backdrop-blur-sm">
+    <div className="mx-2 my-2 rounded-lg border border-[var(--ws-border-dim)] bg-[#1d1d1d] overflow-hidden">
       {/* Header */}
-      <div className="px-3.5 py-2.5 flex items-center gap-2 border-b border-[var(--amber)]/10">
-        <div className="w-5 h-5 rounded-md bg-[var(--amber)]/15 flex items-center justify-center">
-          <Zap size={12} className="text-[var(--amber)]" />
+      <div className="ws-run-header !py-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Zap size={11} className="text-[var(--amber)]" />
+          <span className="text-[11px] font-medium text-[var(--ws-text-sub)]">Action Preview</span>
         </div>
-        <span className="text-xs font-medium text-[var(--text)]">AI Action Preview</span>
+        <span className="ws-run-badge !text-[9px]">Review Required</span>
       </div>
 
       {/* Description */}
-      <div className="px-3.5 py-2.5">
-        <p className="text-[12px] text-[var(--text-mid)] leading-relaxed">
+      <div className="px-3 py-2.5">
+        <p className="text-[11.5px] text-[var(--ws-text)] leading-relaxed">
           {preview.description}
         </p>
-
-        {/* Stats */}
-        {stats.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {stats.map((stat, i) => (
-              <span
-                key={i}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--sub)]"
-              >
-                {stat}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Tool calls preview */}
         {preview.toolCalls.length > 0 && (
           <div className="mt-2.5 space-y-1">
             {preview.toolCalls.slice(0, 5).map((tc, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-[10px] text-[var(--sub)]">
+              <div key={i} className="flex items-center gap-1.5 text-[10px] text-[#777]">
                 <span className="w-1 h-1 rounded-full bg-[var(--amber)]" />
-                <span className="font-mono">{tc.tool}</span>
-                <span className="text-[var(--muted)]">
-                  {tc.args.title ? `"${tc.args.title}"` : ''}
+                <span className="font-mono text-[#6ab0f5]">{tc.tool}</span>
+                <span className="text-[#555] truncate max-w-[200px]">
+                  {(tc.args as any).title || (tc.args as any).id || ''}
                 </span>
               </div>
             ))}
             {preview.toolCalls.length > 5 && (
-              <div className="text-[10px] text-[var(--muted)] pl-3">
+              <div className="text-[9px] text-[#555] pl-3">
                 +{preview.toolCalls.length - 5} more actions...
               </div>
             )}
@@ -68,20 +55,20 @@ export default function ActionPreview({ preview, onConfirm, onReject }: ActionPr
       </div>
 
       {/* Actions */}
-      <div className="px-3.5 py-2.5 flex gap-2 border-t border-[var(--amber)]/10">
+      <div className="px-2 py-2 flex gap-2 border-t border-[var(--ws-border-dim)] bg-[#252525]">
         <button
           onClick={onConfirm}
-          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-[var(--amber)]/15 hover:bg-[var(--amber)]/25 text-[var(--amber)] text-xs font-medium transition-all duration-200 border border-[var(--amber)]/20 hover:border-[var(--amber)]/40"
+          className="flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md bg-[#1a3a60] hover:bg-[#204a7a] text-[#6ab0f5] text-[11px] font-medium transition-all"
         >
-          <Check size={13} />
+          <Check size={12} />
           Proceed
         </button>
         <button
           onClick={onReject}
-          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-[var(--surface)] hover:bg-[var(--raised)] text-[var(--sub)] text-xs font-medium transition-all duration-200 border border-[var(--border)]"
+          className="flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md bg-[#2a2a2a] hover:bg-[#333] text-[#777] text-[11px] font-medium transition-all border border-[#333]"
         >
-          <X size={13} />
-          Cancel
+          <X size={12} />
+          Reject
         </button>
       </div>
     </div>

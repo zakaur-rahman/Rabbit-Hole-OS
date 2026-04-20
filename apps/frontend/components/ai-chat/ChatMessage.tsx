@@ -10,125 +10,110 @@ interface ChatMessageProps {
 
 function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
   const toolLabels: Record<string, string> = {
-    createNode: '📝 Create Node',
-    updateNode: '✏️ Update Node',
-    deleteNode: '🗑️ Delete Node',
-    linkNodes: '🔗 Link Nodes',
-    unlinkNodes: '✂️ Unlink Nodes',
-    searchNodes: '🔍 Search Nodes',
-    expandNode: '🌱 Expand Node',
-    summarizeNode: '📋 Summarize Node',
-  };
-
-  const statusColors: Record<string, string> = {
-    pending: 'border-amber-500/30 bg-amber-500/5',
-    confirmed: 'border-green-500/30 bg-green-500/5',
-    executed: 'border-green-500/30 bg-green-500/5',
-    rejected: 'border-red-500/30 bg-red-500/5',
-    failed: 'border-red-500/30 bg-red-500/5',
-  };
-
-  const statusIcons: Record<string, React.ReactNode> = {
-    pending: <Loader2 size={12} className="text-amber-400 animate-spin" />,
-    confirmed: <Check size={12} className="text-green-400" />,
-    executed: <Check size={12} className="text-green-400" />,
-    rejected: <X size={12} className="text-red-400" />,
-    failed: <AlertTriangle size={12} className="text-red-400" />,
+    createNode: 'createNode',
+    updateNode: 'updateNode',
+    deleteNode: 'deleteNode',
+    linkNodes: 'linkNodes',
+    unlinkNodes: 'unlinkNodes',
+    searchNodes: 'searchNodes',
+    expandNode: 'expandNode',
+    summarizeNode: 'summarizeNode',
   };
 
   return (
-    <div className={`mt-2 rounded-lg border px-3 py-2 ${statusColors[toolCall.status] || ''}`}>
-      <div className="flex items-center gap-2">
-        {statusIcons[toolCall.status]}
-        <span className="text-xs font-medium text-[var(--text-mid)]">
-          {toolLabels[toolCall.tool] || toolCall.tool}
-        </span>
+    <div className="ws-running-block">
+      <div className="ws-run-header">
+        Running <span className="ws-run-badge">1 tool</span> <span className="text-[10px] text-[#555]">⌄</span>
       </div>
-      {toolCall.args && Object.keys(toolCall.args).length > 0 && (
-        <div className="mt-1.5 space-y-0.5">
-          {Object.entries(toolCall.args).map(([key, value]) => (
-            <div key={key} className="flex items-baseline gap-1.5 text-[10px]">
-              <span className="text-[var(--sub)] font-mono">{key}:</span>
-              <span className="text-[var(--text-mid)] truncate max-w-[200px]">
-                {typeof value === 'string' ? value : JSON.stringify(value)}
-              </span>
-            </div>
-          ))}
+      <div className="ws-cmd-line">
+        <span className="ws-cmd-prompt">…\ Rabbit-Hole-OS &gt;</span>
+        <span className="ws-cmd-text">
+          {toolLabels[toolCall.tool] || toolCall.tool} 
+          {toolCall.args && ' ' + JSON.stringify(toolCall.args).slice(0, 50) + '...'}
+        </span>
+        <span className="ws-action-btn ml-auto text-[10px]">⧉</span>
+      </div>
+      {toolCall.result && (
+        <div className="ws-result-area">
+          {toolCall.result.success ? (
+            <div className="text-green-500/70">Success: {JSON.stringify(toolCall.result.data).slice(0, 100)}</div>
+          ) : (
+            <div className="text-red-400">Error: {toolCall.result.error}</div>
+          )}
         </div>
       )}
-      {toolCall.result && !toolCall.result.success && (
-        <div className="mt-1 text-[10px] text-red-400">
-          {toolCall.result.error || 'Action failed'}
-        </div>
-      )}
+      <div className="ws-run-footer">
+        <span className="text-[10px] text-[#777] flex items-center gap-1 cursor-pointer hover:text-[#aaa]">
+          Ask every time ∧
+        </span>
+        <span className="ws-exit-code">Exit code {toolCall.result?.success ? 0 : 1}</span>
+      </div>
     </div>
   );
 }
 
 export default function ChatMessage({ message }: ChatMessageProps) {
+  const isBot = message.role === 'assistant';
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
   if (isSystem) {
     return (
       <div className="flex justify-center my-2">
-        <div className="text-[10px] text-[var(--sub)] bg-[var(--surface)] px-3 py-1 rounded-full border border-[var(--border)]">
+        <div className="text-[10px] text-[var(--ws-status)] bg-[var(--surface)] px-3 py-1 rounded-full border border-[var(--ws-border-dim)]">
           {message.content}
         </div>
       </div>
     );
   }
 
+  if (isUser) {
+    return (
+      <div className="ws-user-bubble group mb-2">
+        {message.content}
+        <button className="ws-action-btn opacity-0 group-hover:opacity-100 transition-opacity">⧉</button>
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex gap-2.5 mb-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      {/* Avatar */}
-      <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5 ${
-        isUser
-          ? 'bg-[var(--amber-dim)] border border-[var(--amber)]/20'
-          : 'bg-[var(--surface)] border border-[var(--border)]'
-      }`}>
-        {isUser ? (
-          <User size={14} className="text-[var(--amber)]" />
-        ) : (
-          <Bot size={14} className="text-[var(--text-mid)]" />
+    <div className="flex flex-col gap-1 mb-4">
+      {/* Status indicator for assistant */}
+      <div className="ws-status-row">
+        <span>Worked for 1s</span>
+        <span className="ws-status-chevron">›</span>
+      </div>
+
+      <div className="text-[12.5px] leading-relaxed text-[var(--ws-text)] px-1">
+        {message.content}
+        {message.isStreaming && (
+          <span className="inline-block w-1.5 h-4 bg-[var(--amber)] ml-0.5 animate-pulse rounded-sm" />
         )}
       </div>
 
-      {/* Content */}
-      <div className={`flex flex-col max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
-        <div className={`rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
-          isUser
-            ? 'bg-[var(--amber)]/10 border border-[var(--amber)]/15 text-[var(--text)]'
-            : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-mid)]'
-        }`}>
-          {message.content}
-          {message.isStreaming && (
-            <span className="inline-block w-1.5 h-4 bg-[var(--amber)] ml-0.5 animate-pulse rounded-sm" />
-          )}
+      {/* Tool Calls */}
+      {message.toolCalls && message.toolCalls.length > 0 && (
+        <div className="w-full mt-1">
+          {message.toolCalls.map((tc) => (
+            <ToolCallCard key={tc.id} toolCall={tc} />
+          ))}
         </div>
+      )}
 
-        {/* Tool Calls */}
-        {message.toolCalls && message.toolCalls.length > 0 && (
-          <div className="w-full mt-1">
-            {message.toolCalls.map((tc) => (
-              <ToolCallCard key={tc.id} toolCall={tc} />
-            ))}
-          </div>
-        )}
-
-        {/* Error */}
-        {message.error && (
-          <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-red-400">
-            <AlertTriangle size={10} />
-            {message.error}
-          </div>
-        )}
-
-        {/* Timestamp */}
-        <span className="text-[9px] text-[var(--sub)] mt-1 px-1">
-          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
+      {/* Error Row (Windsurf style) */}
+      {message.error && (
+        <div className="ws-error-row">
+          <span className="ws-err-label">Error</span>
+          <span className="ws-err-msg">{message.error}</span>
+          <span className="text-[11px] text-[#555] ml-auto">›</span>
+        </div>
+      )}
+      
+      {isBot && !message.isStreaming && (
+        <div className="flex justify-end px-1 mt-1">
+          <button className="text-[12px] text-[#4a4a4a] hover:text-[#888] transition-colors">⧉</button>
+        </div>
+      )}
     </div>
   );
 }
