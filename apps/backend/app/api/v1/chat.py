@@ -14,8 +14,9 @@ from app.core.database import get_db
 from app.api.v1.oauth import get_current_user
 from app.models.user import User
 from app.models.node import Node
-from app.schemas.chat import ChatRequest, ConfirmActionRequest, UndoRequest
+from app.schemas.chat import ChatRequest, ConfirmActionRequest, UndoRequest, GenerateRequest
 from app.services.graph_agent import GraphPlannerAgent, GraphExecutorAgent
+from app.services.llm import stream_generate
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -162,3 +163,42 @@ async def undo_action(
     Currently handled client-side via the undo stack.
     """
     return {"success": True, "message": "Undo processed"}
+
+
+async def _stream_generate_response(
+    request: GenerateRequest,
+    current_user: User,
+) -> AsyncGenerator[str, None]:
+    """
+    SSE streaming for generic text generation (slash commands).
+    """
+    try:
+        system_instr = "You are a writing assistant inside Cognode. "
+        if request.operation == "summarize":
+            system_instr += "Summarize the text concisely."
+        elif request.operation == "expand":
+            system_instr += "Expand on the text thoughtfully."
+        elif request.operation == "fix_grammar":
+            system_instr += "Fix any grammar and spelling issues without changing the meaning."
+        elif request.operation == "professional":
+            system_instr += "Rewrite the text to sound professional and academic."
+
+        async for chunk in stream_generate(request.prompt, system_instruction=system_instr):
+            yield f"data: {json.dumps({'content': chunk})}\n\n"
+
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        logger.error(f"Generate stream error: {e}", exc_info=True)
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+
+@router.post("/generate")
+async def generate_text(
+    request: GenerateRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Stream text generation for slash commands."""
+    return StreamingResponse(
+        _stream_generate_response(request, current_user),
+        media_type="text/event-stream"
+    )

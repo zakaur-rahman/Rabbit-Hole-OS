@@ -52,3 +52,10 @@ class ConfirmActionRequest(BaseModel):
 
 class UndoRequest(BaseModel):
     whiteboard_id: str
+
+
+class GenerateRequest(BaseModel):
+    """Request schema for generic text generation (slash commands)."""
+    prompt: str
+    context: Optional[str] = None
+    operation: Optional[str] = "generate"  # summarize, expand, fix_grammar, etc.
