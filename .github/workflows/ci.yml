@@ -51,6 +51,7 @@ env:
   TURBO_TELEMETRY_DISABLED: "1"
   NEXT_TELEMETRY_DISABLED: "1"
   FORCE_COLOR: "1"
+  CI: "true"
 
 jobs:
   # -------------------------------------------------------------------------
@@ -163,7 +164,9 @@ jobs:
 
       - name: Turbo lint & typecheck
         if: needs.analyze.outputs.node_changed == 'true'
-        run: npx turbo run lint typecheck --no-daemon --cache-dir=.turbo
+        run: npx turbo run lint typecheck --no-daemon --concurrency=2 --cache-dir=.turbo
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Python lint (Ruff)
         if: needs.analyze.outputs.python_changed == 'true'
@@ -201,7 +204,9 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Run tests
-        run: npx turbo run test --no-daemon --cache-dir=.turbo
+        run: npx turbo run test --no-daemon --concurrency=2 --cache-dir=.turbo
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
   # -------------------------------------------------------------------------
   # Job 4: Build Validation — after lint + test pass
@@ -239,4 +244,6 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build
-        run: npx turbo run build --no-daemon --cache-dir=.turbo
+        run: npx turbo run build --no-daemon --concurrency=2 --cache-dir=.turbo
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
