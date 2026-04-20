@@ -14,6 +14,8 @@ interface ChatState {
   undoStack: Record<string, UndoEntry[]>;
   /** Currently selected node IDs for context */
   contextNodeIds: string[];
+  /** Transient input to pre-fill the chat textarea */
+  initialInput: string | null;
 
   // Actions
   togglePanel: () => void;
@@ -26,6 +28,7 @@ interface ChatState {
   pushUndo: (whiteboardId: string, entry: UndoEntry) => void;
   popUndo: (whiteboardId: string) => UndoEntry | undefined;
   setContextNodeIds: (ids: string[]) => void;
+  setInitialInput: (input: string | null) => void;
   clearMessages: (whiteboardId: string) => void;
   getMessages: (whiteboardId: string) => ChatMessage[];
 }
@@ -63,6 +66,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   pendingAction: null,
   undoStack: {},
   contextNodeIds: [],
+  initialInput: null,
 
   togglePanel: () => set(s => ({ isOpen: !s.isOpen })),
   openPanel: () => set({ isOpen: true }),
@@ -115,6 +119,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   setContextNodeIds: (ids) => set({ contextNodeIds: ids }),
+  setInitialInput: (input) => set({ initialInput: input }),
 
   clearMessages: (whiteboardId) => {
     set(s => {

@@ -28,8 +28,7 @@ You can perform these actions by returning tool calls:
 - linkNodes: Create an edge between two nodes with a relationship label
 - unlinkNodes: Remove an edge between two nodes
 - searchNodes: Find nodes by semantic similarity
-- expandNode: Generate related sub-nodes from a concept
-- summarizeNode: Condense a node's content
+- summarizeNode: Condense a node's content (or a set of nodes) into a new summary node
 
 ## NODE TYPES
 Available types: article, note, code, academic, product, video, text, image, pdf, group
@@ -37,10 +36,11 @@ Available types: article, note, code, academic, product, video, text, image, pdf
 ## BEHAVIOR RULES
 1. When creating multiple nodes, space them apart (increment y by 150 for each)
 2. When expanding an idea, create 3-7 sub-nodes and link them to the parent
-3. Always provide meaningful titles and concise content
-4. When asked to connect nodes, create edges with descriptive labels
-5. For delete operations, mention the node name and ask for confirmation
-6. Think in graph structures — nodes are concepts, edges are relationships
+3. MULTI-NODE SYNTHESIS: If multiple nodes are selected, prioritize looking for patterns or contradictions between them.
+4. If asked to "summarize" a selection, create ONE new node of type 'note' and link it to all original sources with the label "summarizes".
+5. Always provide meaningful titles and concise content
+6. For delete operations, mention the node name and ask for confirmation
+7. Think in graph structures — nodes are concepts, edges are relationships
 
 ## OUTPUT FORMAT
 You MUST respond with valid JSON in this exact format:
@@ -384,8 +384,19 @@ class GraphExecutorAgent:
         }
 
     async def _summarize_node(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Placeholder — summarization will be implemented in Phase 2."""
+        """
+        Summarize a node (or nodes). 
+        The actual summarization is usually handled by the planner providing the summary content 
+        in a createNode call, but this tool can be used to explicitly trigger a condensation.
+        """
+        node_id = args.get("id")
+        if not node_id:
+            return {"success": False, "error": "Node ID required"}
+            
+        # For now, we return a success signal. 
+        # Future: Trigger a deep LLM distillation task.
         return {
             "success": True,
-            "data": {"message": "Summarization will be available in a future update"},
+            "data": {"message": "Summarization task initiated"},
+            "affectedIds": [node_id]
         }

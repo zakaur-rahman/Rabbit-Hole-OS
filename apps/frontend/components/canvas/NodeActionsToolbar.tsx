@@ -43,8 +43,8 @@ export function NodeActionsToolbar({
     position = Position.Top,
     onMouseEnter
 }: NodeActionsToolbarProps) {
-    const { removeNode, nodes, updateNode, activeWhiteboardId } = useGraphStore();
-    const { openPanel, addMessage, setStreaming } = useChatStore();
+    const { removeNode, nodes, updateNode, activeWhiteboardId, selectNode } = useGraphStore();
+    const { openPanel, addMessage, setStreaming, setInitialInput } = useChatStore();
     const [showColors, setShowColors] = useState(false);
 
     const currentColor = nodes.find(n => n.id === nodeId)?.data?.color as ThemeColorName | undefined;
@@ -69,12 +69,14 @@ export function NodeActionsToolbar({
         if (!node) return;
 
         const title = node.data.title || 'this node';
-        openPanel();
         
-        // We can't easily "auto-submit" without a ref to handleSend in ChatPanel,
-        // so we'll just add the message or pre-fill.
-        // For now, let's just open the panel. The user selecting a node already 
-        // puts it in context.
+        // Ensure this node is selected for context
+        selectNode(nodeId);
+        
+        // Pre-fill prompt
+        setInitialInput(`Expand on "${title}" by generating 5 related sub-topics and linking them to this node.`);
+        
+        openPanel();
     };
 
     return (
