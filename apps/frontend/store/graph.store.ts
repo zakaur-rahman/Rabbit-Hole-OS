@@ -124,6 +124,7 @@ export interface GraphState {
   fetchWhiteboards: () => Promise<void>;
   openWhiteboardIds: string[];
   closeWhiteboard: (id: string) => void;
+  reorderWhiteboards: (ids: string[]) => void;
   synthesisAst: SynthesisAST | null;
   setSynthesisAst: (ast: SynthesisAST | null) => void;
 }
@@ -161,6 +162,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       if (activeWhiteboardId === id) {
           // Switch to main or the previous one in list
           get().setWhiteboard('main');
+      }
+  },
+
+  reorderWhiteboards: (ids: string[]) => {
+      set({ openWhiteboardIds: ids });
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('open_whiteboard_ids', JSON.stringify(ids));
       }
   },
 
@@ -226,6 +234,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 set({ whiteboards: JSON.parse(stored) });
             } catch (e) {
                 console.error("Failed to parse whiteboards from localStorage", e);
+            }
+        }
+
+        const storedOpenIds = localStorage.getItem('open_whiteboard_ids');
+        if (storedOpenIds) {
+            try {
+                set({ openWhiteboardIds: JSON.parse(storedOpenIds) });
+            } catch (e) {
+                console.error("Failed to parse open_whiteboard_ids from localStorage", e);
             }
         }
 
