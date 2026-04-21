@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import nodes, synthesis, files, edges, oauth, whiteboards, health, billing, usage, projects, chat
+from app.api.v1 import nodes, synthesis, files, edges, oauth, whiteboards, health, billing, usage, projects, chat, updates
 
 api_router = APIRouter()
 
@@ -15,6 +15,7 @@ api_router.include_router(billing.router, prefix="/billing", tags=["billing"])
 api_router.include_router(usage.router, prefix="/usage", tags=["usage"])
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
+api_router.include_router(updates.router, prefix="/updates", tags=["updates"])
 
 @api_router.get("/")
 async def root():

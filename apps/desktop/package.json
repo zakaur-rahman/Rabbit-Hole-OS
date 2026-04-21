@@ -14,6 +14,13 @@
     "build": {
         "appId": "com.cognode.app",
         "productName": "Cognode",
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "zakaur-rahman",
+                "repo": "Rabbit-Hole-OS"
+            }
+        ],
         "protocols": {
             "name": "Cognode",
             "schemes": [
@@ -64,7 +71,9 @@
         }
     },
     "dependencies": {
-        "better-sqlite3": "^11.7.0"
+        "better-sqlite3": "^11.7.0",
+        "electron-updater": "^6.1.8",
+        "electron-log": "^5.1.2"
     },
     "devDependencies": {
         "@types/better-sqlite3": "^7.6.12",

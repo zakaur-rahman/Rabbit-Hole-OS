@@ -1,30 +1,73 @@
 import { app, BrowserWindow } from 'electron';
 import { EventEmitter } from 'events';
-import { UpdateChecker } from './updateChecker';
-import { UpdateDownloader } from './updateDownloader';
-import { UpdateInstaller } from './updateInstaller';
-import { UpdateChannel, UpdateState, UpdateInfo } from './types';
+import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
+import { UpdateChannel, UpdateState } from './types';
+
+// Configure structured logging
+autoUpdater.logger = log;
+(autoUpdater.logger as any).transports.file.level = 'info';
 
 export class UpdateEngine extends EventEmitter {
   private state: UpdateState = { status: 'idle' };
-  private checker: UpdateChecker;
-  private downloader: UpdateDownloader;
-  private installer: UpdateInstaller;
   private channel: UpdateChannel = 'stable';
   private autoCheckInterval: NodeJS.Timeout | null = null;
   private mainWindow: BrowserWindow | null = null;
 
   constructor() {
     super();
-    this.checker = new UpdateChecker();
-    this.downloader = new UpdateDownloader();
-    this.installer = new UpdateInstaller();
 
-    // Bubble up progress events
-    this.downloader.on('progress', (progress) => {
-       if (this.state.status !== 'downloading') return;
-       this.state.progress = progress;
-       this.emitStateChange();
+    // Configure autoUpdater
+    autoUpdater.autoDownload = false; // We trigger download manually for better UI control, or can be true for totally silent
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    // Hook up events
+    autoUpdater.on('checking-for-update', () => {
+      this.setState({ status: 'checking', error: undefined });
+    });
+
+    autoUpdater.on('update-available', (info) => {
+      this.setState({ 
+        status: 'available', 
+        updateInfo: {
+          version: info.version,
+          changelogUrl: '', // electron-updater handles release notes naturally
+          downloadUrl: '',
+          releaseDate: info.releaseDate || new Date().toISOString(),
+          channel: this.channel,
+          assetName: info.files?.[0]?.url || 'update'
+        } 
+      });
+    });
+
+    autoUpdater.on('update-not-available', (info) => {
+      this.setState({ status: 'up-to-date' });
+      // Clear up-to-date status after a bit so user can re-check later
+      setTimeout(() => {
+        if (this.state.status === 'up-to-date') this.setState({ status: 'idle' });
+      }, 3000);
+    });
+
+    autoUpdater.on('error', (err) => {
+      log.error('UpdateError:', err);
+      this.setState({ status: 'error', error: err == null ? "unknown" : (err.stack || err).toString() });
+    });
+
+    autoUpdater.on('download-progress', (progressObj) => {
+      this.setState({
+        status: 'downloading',
+        progress: {
+          bytesDownloaded: progressObj.transferred,
+          totalBytes: progressObj.total,
+          percent: progressObj.percent,
+          speedBps: progressObj.bytesPerSecond
+        }
+      });
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+      this.setState({ status: 'downloaded', progress: undefined });
+      log.info('Update downloaded. Will install on quit or manually.');
     });
   }
 
@@ -34,6 +77,7 @@ export class UpdateEngine extends EventEmitter {
 
   public setChannel(channel: UpdateChannel) {
       this.channel = channel;
+      autoUpdater.channel = channel === 'stable' ? 'latest' : channel;
   }
 
   public getChannel(): UpdateChannel {
@@ -61,8 +105,10 @@ export class UpdateEngine extends EventEmitter {
    * Runs on startup and every 6 hours by default.
    */
   public startAutoCheck(intervalHours: number = 6) {
-      console.log(`[UpdateEngine] Starting auto check loop on channel '${this.channel}'`);
+      log.info(`[UpdateEngine] Starting auto check loop on channel '${this.channel}'`);
       
+      this.setChannel(this.channel); // synchronize internal channel state
+
       // Delay initial check slightly so app startup isn't bogged down
       setTimeout(() => this.checkForUpdates(false), 5 * 1000);
 
@@ -84,88 +130,50 @@ export class UpdateEngine extends EventEmitter {
          return; // Already working
      }
 
-     this.setState({ status: 'checking', error: undefined });
-
+     log.info(`Checking for updates... (Manual: ${isManualCheck})`);
      try {
-         const updateInfo = await this.checker.checkForUpdates(this.channel);
-         
-         if (updateInfo) {
-             this.setState({ status: 'available', updateInfo });
-         } else {
-             this.setState({ status: 'up-to-date' });
-             // If manual check, reset back to idle after a few seconds so it can be checked again
-             if (isManualCheck) {
-                 setTimeout(() => {
-                    if (this.state.status === 'up-to-date') this.setState({ status: 'idle' });
-                 }, 3000);
-             }
-         }
+        await autoUpdater.checkForUpdates();
      } catch (err: any) {
-         this.setState({ status: 'error', error: err.message || 'Failed to check for updates' });
+        log.error('Check for updates failed', err);
+        // Handled via error event
      }
   }
 
   public async downloadUpdate() {
       if (this.state.status !== 'available' && this.state.status !== 'error') {
-          console.warn('[UpdateEngine] Cannot download: no update available or already downloading.');
-          return;
+          log.warn('[UpdateEngine] Cannot download: no update available or already downloading.');
+          // Don't early return if it's auto-downloading natively just in case, but keep the guard
       }
 
-      if (!this.state.updateInfo) return;
-
-      this.setState({ status: 'downloading', error: undefined, progress: { bytesDownloaded: 0, totalBytes: 0, percent: 0 } });
-
+      log.info('Downloading update...');
       try {
-          const installerPath = await this.downloader.download(this.state.updateInfo);
-          this.setState({ status: 'downloaded', progress: undefined });
+        await autoUpdater.downloadUpdate();
       } catch (err: any) {
-          console.error('[UpdateEngine] Download failed:', err);
-          this.setState({ status: 'error', error: err.message || 'Failed to download update' });
+        log.error('[UpdateEngine] Download start failed:', err);
       }
   }
 
   public pauseDownload() {
-      if (this.state.status === 'downloading') {
-          this.downloader.pause();
-          this.setState({ status: 'available' }); // Revert back to available state so UI can show resume
-      }
+      log.warn('[UpdateEngine] Pause not directly supported by basic electron-updater without custom provider.');
+      // Stub for compatibility with previous UI expectations
   }
 
   public resumeDownload() {
-      if (this.state.status === 'available' && this.state.updateInfo) {
-          this.setState({ status: 'downloading' });
-          this.downloader.resume();
-      }
+      log.warn('[UpdateEngine] Resume not directly supported by basic electron-updater without custom provider.');
   }
 
   public cancelDownload() {
-     this.downloader.cancel();
-     if (this.state.updateInfo) {
-         this.setState({ status: 'available', progress: undefined });
-     } else {
-         this.setState({ status: 'idle', progress: undefined });
-     }
+      // Stub for compatibility
+      this.setState({ status: 'available', progress: undefined });
   }
 
   public async installUpdate() {
       if (this.state.status !== 'downloaded') {
-          console.warn('[UpdateEngine] Cannot install: download not complete.');
+          log.warn('[UpdateEngine] Cannot install: download not complete.');
           return;
       }
 
-      const installerPath = this.downloader.getTargetPath();
-      
-      try {
-         await this.installer.install(installerPath);
-         
-         // Give spawn a moment to detach cleanly before destroying the process
-         setTimeout(() => {
-            app.quit();
-         }, 1000);
-      } catch (err: any) {
-         console.error('[UpdateEngine] Installation failed:', err);
-         this.installer.rollback(installerPath); // Delete corrupted file
-         this.setState({ status: 'error', error: err.message || 'Failed to install update. Package may be corrupt.' });
-      }
+      log.info('[UpdateEngine] Quitting and installing...');
+      autoUpdater.quitAndInstall(true, true);
   }
 }

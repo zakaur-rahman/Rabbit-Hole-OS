@@ -158,6 +158,7 @@ jobs:
             apps/desktop/dist/*.dmg
             apps/desktop/dist/*.zip
             apps/desktop/dist/*.blockmap
+            apps/desktop/dist/*.yml
 
   # -----------------------------------------------------------------------
   # Job 3: Create GitHub Release and attach binaries (Only on tags)
@@ -230,5 +231,9 @@ jobs:
           body: ${{ steps.build_changelog.outputs.changelog }}
           files: |
             dist-win/*.exe
+            dist-win/*.blockmap
+            dist-win/*.yml
             dist-mac/*.dmg
             dist-mac/*.zip
+            dist-mac/*.blockmap
+            dist-mac/*.yml
