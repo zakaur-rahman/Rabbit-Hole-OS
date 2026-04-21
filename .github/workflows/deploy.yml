@@ -1,22 +1,14 @@
-name: Docker Build & Deploy
+name: Production Deployment
 
-# Runs only on push to main (after PR is merged) or manual trigger.
-# Never runs on PRs — Docker builds are expensive.
 on:
   push:
-    branches: [main]
-    paths:
-      - "apps/web/**"
-      - "apps/backend/**"
-      - "packages/**"
-      - "turbo.json"
-      - "package.json"
-      - "package-lock.json"
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 concurrency:
-  group: docker-deploy-${{ github.ref }}
-  cancel-in-progress: false  # Never cancel in-progress deploys
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -24,38 +16,54 @@ env:
 
 jobs:
   # -----------------------------------------------------------------------
-  # Job 0: Detect which apps changed to skip unnecessary builds
+  # Job 0: Detect which apps changed relative to the previous tag
   # -----------------------------------------------------------------------
-  detect:
-    name: Detect Changes
+  analyze:
+    name: Analyze Changes
     runs-on: ubuntu-latest
     outputs:
       web_changed: ${{ steps.filter.outputs.web }}
       backend_changed: ${{ steps.filter.outputs.backend }}
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Detect changes
+        with:
+          fetch-depth: 0
+
+      - name: Get Version from Tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Detect changes since last tag
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          # For tags, we want to know what changed since the PREVIOUS tag
+          # if none, it will compare against the initial commit.
+          base: ${{ github.event.before }}
           filters: |
             web:
               - 'apps/web/**'
               - 'packages/**'
+              - 'turbo.json'
               - 'package.json'
               - 'package-lock.json'
             backend:
               - 'apps/backend/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'package-lock.json'
 
   # -----------------------------------------------------------------------
   # Job 1: Build & push web image to GHCR
   # -----------------------------------------------------------------------
   docker-web:
-    name: Docker — Web (Next.js)
+    name: Docker — Web
     runs-on: ubuntu-latest
-    needs: detect
-    if: needs.detect.outputs.web_changed == 'true' || github.event_name == 'workflow_dispatch'
+    needs: analyze
+    if: needs.analyze.outputs.web_changed == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -74,39 +82,39 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata for web image
-        id: meta-web
+      - name: Extract metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_PREFIX }}/cognode-web
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
             type=sha,prefix=sha-,format=short
 
-      - name: Build & push web image
+      - name: Build & push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/web/Dockerfile
           push: true
-          tags: ${{ steps.meta-web.outputs.tags }}
-          labels: ${{ steps.meta-web.outputs.labels }}
-          # GitHub Actions cache — free, fast layer caching
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
           build-args: |
             NEXT_PUBLIC_API_URL=https://api.cognode.tech/api/v1
-            NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://cognode.tech/auth/google
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
 
   # -----------------------------------------------------------------------
   # Job 2: Build & push backend image to GHCR
   # -----------------------------------------------------------------------
   docker-backend:
-    name: Docker — Backend (FastAPI)
+    name: Docker — Backend
     runs-on: ubuntu-latest
-    needs: detect
-    if: needs.detect.outputs.backend_changed == 'true' || github.event_name == 'workflow_dispatch'
+    needs: analyze
+    if: needs.analyze.outputs.backend_changed == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -125,55 +133,56 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata for backend image
-        id: meta-backend
+      - name: Extract metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_PREFIX }}/cognode-backend
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
             type=sha,prefix=sha-,format=short
 
-      - name: Build & push backend image
+      - name: Build & push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/backend/Dockerfile
           push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
   # -----------------------------------------------------------------------
-  # Job 3: Trigger Render deploys after BOTH images are pushed
+  # Job 3: Deploy to Render
   # -----------------------------------------------------------------------
   deploy:
     name: Deploy to Render
     runs-on: ubuntu-latest
-    needs: [detect, docker-web, docker-backend]
+    needs: [analyze, docker-web, docker-backend]
     if: |
       always() &&
-      (needs.docker-web.result == 'success' || needs.docker-backend.result == 'success')
+      (needs.docker-web.result == 'success' || needs.docker-backend.result == 'success' || github.event_name == 'workflow_dispatch')
 
     steps:
       - name: Trigger Render deploy — Web
-        if: needs.docker-web.result == 'success'
+        if: needs.docker-web.result == 'success' || (github.event_name == 'workflow_dispatch' && needs.analyze.outputs.web_changed == 'true')
         run: |
           curl --fail -X POST \
-            "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-web:latest"
+            "${{ secrets.RENDER_WEB_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-web:${{ needs.analyze.outputs.version }}"
 
       - name: Trigger Render deploy — Backend
-        if: needs.docker-backend.result == 'success'
+        if: needs.docker-backend.result == 'success' || (github.event_name == 'workflow_dispatch' && needs.analyze.outputs.backend_changed == 'true')
         run: |
           curl --fail -X POST \
-            "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-backend:latest"
+            "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}&imgURL=ghcr.io/${{ github.repository_owner }}/cognode-backend:${{ needs.analyze.outputs.version }}"
 
       - name: Summary
         run: |
-          echo "## 🚀 Deploy triggered" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Web | ${{ needs.docker-web.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.docker-backend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Production Deployment: ${{ needs.analyze.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status | Build |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | ${{ needs.docker-web.result }} | ghcr.io/${{ github.repository_owner }}/cognode-web:${{ needs.analyze.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.docker-backend.result }} | ghcr.io/${{ github.repository_owner }}/cognode-backend:${{ needs.analyze.outputs.version }} |" >> $GITHUB_STEP_SUMMARY

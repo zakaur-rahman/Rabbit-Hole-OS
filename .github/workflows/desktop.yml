@@ -2,18 +2,6 @@ name: Desktop CI & Release
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "apps/desktop/**"
-      - "apps/backend/**"
-      - "apps/frontend/**"
-      - "packages/**"
-      - "turbo.json"
-      - "package.json"
-      - "package-lock.json"
-    tags:
-      - 'v*'
   pull_request:
     paths:
       - "apps/desktop/**"
@@ -23,6 +11,9 @@ on:
       - "turbo.json"
       - "package.json"
       - "package-lock.json"
+  push:
+    tags:
+      - 'v*'
 
 concurrency:
   group: desktop-${{ github.ref }}
