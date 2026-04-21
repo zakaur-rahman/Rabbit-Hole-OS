@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -19,9 +20,10 @@ import {
     Strikethrough, CheckSquare, Highlighter,
     Superscript as SupIcon, Subscript as SubIcon,
     AlignLeft, AlignCenter, AlignRight, AlignJustify,
-    Image as ImageIcon, Upload
+    Image as ImageIcon, Upload, Loader2
 } from 'lucide-react';
-import { useEffect, useCallback, useState, useRef } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
+import SlashCommand, { getSuggestionItems } from './editor/slash-command';
 
 const Separator = () => <div className="w-px h-4 bg-white/10 mx-0.5" />;
 
@@ -45,8 +47,15 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
                     }
                 }
             }),
+            SlashCommand.configure({
+                suggestion: {
+                    items: getSuggestionItems,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    command: (props: { editor: any, range: any, props: any }) => handleAICommand(props),
+                },
+            }),
             Placeholder.configure({
-                placeholder: 'Start writing...',
+                placeholder: 'Type / for AI commands...',
                 emptyEditorClass: 'is-editor-empty',
             }),
             Link.configure({
@@ -111,6 +120,66 @@ const TiptapEditor = ({ content, onChange, onBlur, autoFocus = false }: TiptapEd
             inputRef.current.focus();
         }
     }, [inputMode]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleAICommand = useCallback(async ({ editor: localEditor, range, props }: { editor: any, range: any, props: any }) => {
+        const item = props;
+        const selection = localEditor.state.selection;
+        const selectedText = localEditor.state.doc.textBetween(selection.from, selection.to, ' ');
+        
+        // Use selection if available, otherwise use context around cursor
+        const prompt = selectedText || localEditor.state.doc.textBetween(Math.max(0, selection.from - 500), selection.from, ' ');
+
+        // 1. Delete the slash command trigger and selection if replacing
+        const shouldReplace = ['summarize', 'fix_grammar', 'professional'].includes(item.id);
+        
+        if (shouldReplace && selectedText) {
+            localEditor.chain().focus().deleteRange(range).deleteSelection().run();
+        } else {
+            localEditor.chain().focus().deleteRange(range).run();
+            // If expanding, move to end of selection
+            if (item.id === 'expand') {
+                localEditor.chain().focus().setTextSelection(selection.to).run();
+            }
+        }
+
+        try {
+            const response = await fetch('/api/v1/chat/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    operation: item.id,
+                }),
+            });
+
+            if (!response.body) return;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const dataStr = line.replace('data: ', '').trim();
+                        if (dataStr === '[DONE]') break;
+                        try {
+                            const data = JSON.parse(dataStr);
+                            if (data.content) {
+                                localEditor.commands.insertContent(data.content);
+                            }
+                        } catch (_e) { /* ignore parse errors */ }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('AI Command failed:', error);
+        }
+    }, []);
 
     const addImage = useCallback(() => {
         setInputMode('image');

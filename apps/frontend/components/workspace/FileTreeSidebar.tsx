@@ -25,7 +25,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 export default function FileTreeSidebar({ onSelectNode }: FileTreeSidebarProps) {
-    const { nodes } = useGraphStore();
+    const { nodes, selectedNodeIds } = useGraphStore();
     const [expandedTypes, setExpandedTypes] = React.useState<Record<string, boolean>>({
         note: true,
         article: true,
@@ -157,8 +157,7 @@ export default function FileTreeSidebar({ onSelectNode }: FileTreeSidebarProps) 
                             <div className={`overflow-hidden transition-all duration-200 mt-1 ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                                 <div className="flex flex-col gap-[2px]">
                                     {typeNodes.map(node => {
-                                        const { selectedNodeId } = useGraphStore.getState();
-                                        const isActive = selectedNodeId === node.id;
+                                        const isActive = selectedNodeIds.includes(node.id);
                                         
                                         return (
                                             <button

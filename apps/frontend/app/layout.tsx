@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Syne, JetBrains_Mono, Playfair_Display, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { UpdateModal } from "../components/updater/UpdateModal";
+import { ServiceWorkerNotifier } from "../components/updater/ServiceWorkerNotifier";
 
 const syne = Syne({
   variable: "--font-syne",
@@ -42,6 +43,7 @@ export default function RootLayout({
       >
         {children}
         <UpdateModal />
+        <ServiceWorkerNotifier />
       </body>
     </html>
   );
