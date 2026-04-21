@@ -158,8 +158,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
       // If we closed the active whiteboard, switch to another one
       if (activeWhiteboardId === id) {
-          // Switch to main or the previous one in list
           get().setWhiteboard('main');
+      }
+
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('open_whiteboard_ids', JSON.stringify(newOpenIds));
       }
   },
 
@@ -391,10 +394,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const newWb = { id, name };
 
     // Optimistic Update
-    set(state => ({
-        whiteboards: [...state.whiteboards, newWb],
-        openWhiteboardIds: [...state.openWhiteboardIds, id],
-    }));
+    set(state => {
+        const newOpenIds = [...state.openWhiteboardIds, id];
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('open_whiteboard_ids', JSON.stringify(newOpenIds));
+        }
+        return {
+            whiteboards: [...state.whiteboards, newWb],
+            openWhiteboardIds: newOpenIds,
+        };
+    });
 
     try {
         const hasAuth = !!localStorage.getItem('auth_token');
@@ -425,7 +434,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Ensure it's in open tabs
     const { openWhiteboardIds } = get();
     if (!openWhiteboardIds.includes(id)) {
-        set({ openWhiteboardIds: [...openWhiteboardIds, id] });
+        const newOpenIds = [...openWhiteboardIds, id];
+        set({ openWhiteboardIds: newOpenIds });
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('open_whiteboard_ids', JSON.stringify(newOpenIds));
+        }
     }
 
     // Try to load state from Electron
