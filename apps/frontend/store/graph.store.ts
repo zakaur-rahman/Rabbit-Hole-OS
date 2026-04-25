@@ -12,10 +12,13 @@ import { AnyNodeData } from '@/types/nodes';
 import { localStorage as storage, isElectron } from '@/lib/local-storage';
 import { nodesApi, edgesApi, whiteboardsApi, SynthesisAST } from '@/lib/api';
 
-// Module-level guards to prevent duplicate API calls
-const _pendingDeletes = new Set<string>();
-const _positionSaveTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-let _browserStateSaveTimer: ReturnType<typeof setTimeout> | null = null;
+// Internal store state for side effects (not reactive)
+const _internal = {
+    pendingDeletes: new Set<string>(),
+    positionSaveTimers: {} as Record<string, ReturnType<typeof setTimeout>>,
+    browserStateSaveTimer: null as ReturnType<typeof setTimeout> | null,
+    electronStoreSaveTimers: new Map<string, ReturnType<typeof setTimeout>>()
+};
 
 export interface Whiteboard {
   id: string;
@@ -84,6 +87,53 @@ interface RawEdge {
     animated?: number;
     style?: string;
 }
+
+// --- Helpers ---
+
+const mapRawNodeToFlow = (n: RawNode): Node => {
+    const meta = typeof n.metadata === 'string'
+        ? (() => { try { return JSON.parse(n.metadata); } catch { return {}; } })()
+        : ((n.metadata as Record<string, unknown>) || {});
+    return {
+        id: n.id,
+        type: n.type || 'article',
+        position: meta.position || (
+            n.position_x !== undefined
+                ? { x: n.position_x || 0, y: n.position_y || 0 }
+                : { x: Math.random() * 500, y: Math.random() * 500 }
+        ),
+        data: { 
+            title: n.title,
+            url: n.url,
+            content: n.content,
+            outline: n.outline,
+            ...meta,
+        },
+        width: n.width,
+        height: n.height,
+        style: { 
+            width: n.width, 
+            height: n.height,
+            ...(meta.style || {})
+        },
+        parentId: meta.parentId,
+    };
+};
+
+const mapRawEdgeToFlow = (e: RawEdge): Edge => ({
+    id: e.id,
+    source: e.source_id || e.source || '',
+    target: e.target_id || e.target || '',
+    sourceHandle: e.source_handle || e.sourceHandle || null,
+    targetHandle: e.target_handle || e.targetHandle || null,
+    type: e.edge_type || 'simplebezier',
+    animated: Boolean(e.animated),
+    style: typeof e.style === 'string' ? JSON.parse(e.style) : (e.style || {}),
+    markerEnd: {
+        type: MarkerType.Arrow,
+        color: 'var(--sub)', // Use theme var
+    },
+});
 
 export interface GraphState {
   nodes: Node[];
@@ -197,19 +247,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       
       // Debounced localStorage write to avoid blocking main thread
       if (typeof window !== 'undefined') {
-          if (_browserStateSaveTimer) clearTimeout(_browserStateSaveTimer);
-          _browserStateSaveTimer = setTimeout(() => {
-              _browserStateSaveTimer = null;
+          if (_internal.browserStateSaveTimer) clearTimeout(_internal.browserStateSaveTimer);
+          _internal.browserStateSaveTimer = setTimeout(() => {
+              _internal.browserStateSaveTimer = null;
               localStorage.setItem('browser_states', JSON.stringify(get().browserStates));
           }, 400);
       }
 
       // Debounced Persistence (Electron)
       if (isElectron()) {
-          const store = get() as GraphState & { _saveTimeout?: NodeJS.Timeout };
-          if (store._saveTimeout) clearTimeout(store._saveTimeout);
+          const existingTimer = _internal.electronStoreSaveTimers.get(whiteboardId);
+          if (existingTimer) clearTimeout(existingTimer);
           
-          store._saveTimeout = setTimeout(() => {
+          const newTimer = setTimeout(() => {
+              _internal.electronStoreSaveTimers.delete(whiteboardId);
               const currentState = get().browserStates[whiteboardId];
               if (currentState) {
                   // Save Tabs
@@ -226,6 +277,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                   });
               }
           }, 1000);
+          _internal.electronStoreSaveTimers.set(whiteboardId, newTimer);
       }
   },
 
@@ -263,7 +315,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                             // If ID is '1' OR we've seen this ID before in another whiteboard (or this one)
                             if (tab.id === '1' || seenIds.has(tab.id)) {
                                 const oldId = tab.id;
-                                tab.id = `tab-legacy-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                                tab.id = `tab-${crypto.randomUUID()}`;
                                 
                                 // Update activeTabId if it matched the changed ID
                                 if (parsed[wbId].activeTabId === oldId) {
@@ -380,10 +432,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         ...edge,
         type: 'simplebezier',
         animated: false,
-        style: { stroke: '#9ca3af', strokeWidth: 2, strokeDasharray: 'none' },
+        style: { stroke: 'var(--sub)', strokeWidth: 2, strokeDasharray: 'none' },
         markerEnd: {
             type: MarkerType.Arrow,
-            color: '#9ca3af',
+            color: 'var(--sub)',
         },
     }));
     set({ edges: uniqueEdges });
@@ -408,7 +460,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       name = `Untitled-${maxNum + 1}`;
     }
 
-    const id = `board-${Date.now()}`;
+    const id = crypto.randomUUID();
     const newWb = { id, name };
 
     // Optimistic Update
@@ -520,50 +572,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             ]);
         
         // Transform ApiNodes to ReactFlow Nodes
-        const flowNodes = (apiNodes as RawNode[]).map((n) => {
-            // Parse metadata once per node (avoids triple JSON.parse)
-            const meta = typeof n.metadata === 'string'
-                ? (() => { try { return JSON.parse(n.metadata); } catch { return {}; } })()
-                : (n.metadata || {});
-            return {
-                id: n.id,
-                type: n.type || 'article',
-                position: meta.position || { x: n.position_x || 0, y: n.position_y || 0 },
-                data: { 
-                    title: n.title,
-                    url: n.url,
-                    content: n.content,
-                    outline: n.outline,
-                    ...meta,
-                },
-                width: n.width,
-                height: n.height,
-                style: { 
-                    width: n.width, 
-                    height: n.height,
-                    ...(meta.style || {})
-                },
-                parentId: meta.parentId,
-            };
-        });
+        const flowNodes = (apiNodes as RawNode[]).map(mapRawNodeToFlow);
 
         // Transform Edges if from Electron (SQLite uses source_id/target_id and snake_case handles)
-        const flowEdges = isElectron() 
-            ? (apiEdges as RawEdge[] || []).map((e): Edge => ({
-                id: e.id,
-                source: e.source_id || e.source || '',
-                target: e.target_id || e.target || '',
-                sourceHandle: e.source_handle || e.sourceHandle || null,
-                targetHandle: e.target_handle || e.targetHandle || null,
-                type: e.edge_type || 'simplebezier',
-                animated: Boolean(e.animated),
-                style: typeof e.style === 'string' ? JSON.parse(e.style) : e.style,
-                markerEnd: {
-                    type: MarkerType.Arrow,
-                    color: '#9ca3af',
-                },
-            }))
-            : (apiEdges as Edge[] || []);
+        const flowEdges = (apiEdges as RawEdge[] || []).map(mapRawEdgeToFlow);
         
         // Deduplicate
         const uniqueNodes = Array.from(new Map(flowNodes.map((node) => [node.id, node])).values());
@@ -595,46 +607,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 edgesApi.list(activeWhiteboardId)
               ]);
 
-        const flowNodes = (apiNodes as RawNode[]).map((n) => {
-            // Parse metadata once per node (avoids triple JSON.parse)
-            const meta = typeof n.metadata === 'string'
-                ? (() => { try { return JSON.parse(n.metadata); } catch { return {}; } })()
-                : ((n.metadata as Record<string, unknown>) || {});
-            return {
-                id: n.id,
-                type: n.type || 'article',
-                position: meta.position || (
-                    n.position_x !== undefined
-                        ? { x: n.position_x || 0, y: n.position_y || 0 }
-                        : { x: Math.random() * 500, y: Math.random() * 500 }
-                ),
-                data: { 
-                    title: n.title,
-                    url: n.url,
-                    content: n.content,
-                    ...meta,
-                },
-                style: meta.style,
-                parentId: meta.parentId,
-            };
-        });
+        const flowNodes = (apiNodes as RawNode[]).map(mapRawNodeToFlow);
 
-        const flowEdges = isElectron() 
-            ? (apiEdges as RawEdge[] || []).map((e): Edge => ({
-                id: e.id,
-                source: e.source_id || e.source || '',
-                target: e.target_id || e.target || '',
-                sourceHandle: e.source_handle || e.sourceHandle || null,
-                targetHandle: e.target_handle || e.targetHandle || null,
-                type: e.edge_type || 'simplebezier',
-                animated: Boolean(e.animated),
-                style: typeof e.style === 'string' ? JSON.parse(e.style) : e.style,
-                markerEnd: {
-                    type: MarkerType.Arrow,
-                    color: '#9ca3af',
-                },
-            }))
-            : (apiEdges as Edge[] || []);
+        const flowEdges = (apiEdges as RawEdge[] || []).map(mapRawEdgeToFlow);
 
         const uniqueNodes = Array.from(new Map(flowNodes.map((node) => [node.id, node])).values());
 
@@ -652,7 +627,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   addNode: async (node: Node, persist = true) => {
-    const { activeWhiteboardId } = get();
+    const { activeWhiteboardId, nodes } = get();
+    
+    // Deduplicate
+    if (nodes.some(n => n.id === node.id)) {
+        console.warn(`[Store] Node ${node.id} already exists`);
+        return;
+    }
+
     const nodeWithWb = {
         ...node,
         data: {
@@ -713,10 +695,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         ...edge,
         type: 'simplebezier',
         animated: false,
-        style: { stroke: '#9ca3af', strokeWidth: 2, strokeDasharray: 'none' },
+        style: { stroke: 'var(--sub)', strokeWidth: 2, strokeDasharray: 'none' },
         markerEnd: {
           type: MarkerType.Arrow,
-          color: '#9ca3af',
+          color: 'var(--sub)',
         },
     };
 
@@ -750,7 +732,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const { activeWhiteboardId, edges } = get();
     
     // Register intent to delete so onNodesChange doesn't duplicate the API call
-    _pendingDeletes.add(id);
+    _internal.pendingDeletes.add(id);
 
     // Optimistic update
     set((state) => ({
@@ -779,7 +761,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
             }
         }));
     } catch(e) {
-        _pendingDeletes.delete(id); // Clean up on failure
+        _internal.pendingDeletes.delete(id); // Clean up on failure
         console.error("Failed to persist node deletion", e);
     }
   },
@@ -948,8 +930,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     changes.forEach(change => {
         if (change.type === 'remove') {
             // Skip if removeNode already initiated the delete
-            if (_pendingDeletes.has(change.id)) {
-                _pendingDeletes.delete(change.id);
+            if (_internal.pendingDeletes.has(change.id)) {
+                _internal.pendingDeletes.delete(change.id);
                 return;
             }
             if (isElectron()) {
@@ -1016,9 +998,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                      storage.nodes.update(change.id, payload as any).catch(console.error);
                  } else {
                      // Debounce cloud position saves — avoid flooding API while dragging
-                     if (_positionSaveTimers[change.id]) clearTimeout(_positionSaveTimers[change.id]);
-                     _positionSaveTimers[change.id] = setTimeout(() => {
-                         delete _positionSaveTimers[change.id];
+                     if (_internal.positionSaveTimers[change.id]) clearTimeout(_internal.positionSaveTimers[change.id]);
+                     _internal.positionSaveTimers[change.id] = setTimeout(() => {
+                         delete _internal.positionSaveTimers[change.id];
                          const currentNode = get().nodes.find(n => n.id === change.id);
                          if (currentNode) {
                              nodesApi.update(change.id, {
