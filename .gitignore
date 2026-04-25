@@ -68,4 +68,14 @@ apps/frontend/lint_output.txt
 
 # CI local testing secrets (for act)
 .secrets
+<<<<<<< Updated upstream
 graphify-out/
+=======
+<<<<<<< Updated upstream
+=======
+graphify-out/
+.agent/
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
+GEMINI.md
+.gemini/settings.json
