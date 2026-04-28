@@ -9,7 +9,7 @@
         "dev": "tsc && npx electron .",
         "build": "tsc",
         "start": "npx electron .",
-        "dist": "tsc && electron-builder"
+        "dist": "tsc && electron-builder --win nsis"
     },
     "build": {
         "appId": "com.cognode.app",
@@ -64,9 +64,9 @@
             "installerIcon": "build/icon.ico",
             "uninstallerIcon": "build/icon.ico",
             "installerHeaderIcon": "build/icon.ico",
-            "installerSidebar": "build/installerSidebar.png",
-            "uninstallerSidebar": "build/installerSidebar.png",
-            "installerHeader": "build/installerHeader.png",
+            "installerSidebar": "build/installerSidebar.bmp",
+            "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+            "installerHeader": "build/installerHeader.bmp",
             "license": "build/license.txt"
         }
     },
