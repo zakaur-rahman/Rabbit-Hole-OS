@@ -9,7 +9,8 @@
         "dev": "tsc && npx electron .",
         "build": "tsc",
         "start": "npx electron .",
-        "dist": "tsc && electron-builder"
+        "predist": "node generate_nsis_images.js",
+        "dist": "tsc && electron-builder --win nsis"
     },
     "build": {
         "appId": "com.cognode.app",
@@ -64,22 +65,23 @@
             "installerIcon": "build/icon.ico",
             "uninstallerIcon": "build/icon.ico",
             "installerHeaderIcon": "build/icon.ico",
-            "installerSidebar": "build/installerSidebar.png",
-            "uninstallerSidebar": "build/installerSidebar.png",
-            "installerHeader": "build/installerHeader.png",
+            "installerSidebar": "build/installerSidebar.bmp",
+            "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+            "installerHeader": "build/installerHeader.bmp",
             "license": "build/license.txt"
         }
     },
     "dependencies": {
         "better-sqlite3": "^11.7.0",
-        "electron-updater": "^6.1.8",
-        "electron-log": "^5.1.2"
+        "electron-log": "^5.1.2",
+        "electron-updater": "^6.1.8"
     },
     "devDependencies": {
         "@types/better-sqlite3": "^7.6.12",
         "@types/node": "^20.0.0",
         "electron": "33.4.11",
         "electron-builder": "^26.0.12",
+        "sharp": "^0.34.5",
         "typescript": "^5.3.0"
     }
 }
